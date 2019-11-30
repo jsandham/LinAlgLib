@@ -218,15 +218,18 @@ int CUDA_DEBUG_TEST_MATRIX(std::string filename, unsigned int nnz, unsigned int 
 		temp[i] = 0.0f;
 	}
 
+
+	float eigenValue = powerIterationCuda(&row_ptr[0], &cols_total[0], &vals_total[0], &b[0], 10e-12, Nr - 1, 100);
+
 	
-	int* d_rowPtr;
+	/*int* d_rowPtr;
 	int* d_col;
 	float* d_val;
 	float* d_b;
 	float* d_temp;
 	float* d_normAb;
-	float* d_alpha1;
-	float* d_alpha2;
+	float* d_bAb;
+	float* d_bb;
 
 	cudaMalloc((void**)&d_rowPtr, row_ptr.size() * sizeof(int));
 	cudaMalloc((void**)&d_col, cols_total.size() * sizeof(int));
@@ -234,8 +237,8 @@ int CUDA_DEBUG_TEST_MATRIX(std::string filename, unsigned int nnz, unsigned int 
 	cudaMalloc((void**)&d_b, (Nr - 1) * sizeof(float));
 	cudaMalloc((void**)&d_temp, (Nr - 1) * sizeof(float));
 	cudaMalloc((void**)&d_normAb, sizeof(float));
-	cudaMalloc((void**)&d_alpha1, sizeof(float));
-	cudaMalloc((void**)&d_alpha2, sizeof(float));
+	cudaMalloc((void**)&d_bAb, sizeof(float));
+	cudaMalloc((void**)&d_bb, sizeof(float));
 
 	cudaMemcpy(d_rowPtr, &row_ptr[0], row_ptr.size() * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_col, &cols_total[0], cols_total.size() * sizeof(int), cudaMemcpyHostToDevice);
@@ -246,16 +249,16 @@ int CUDA_DEBUG_TEST_MATRIX(std::string filename, unsigned int nnz, unsigned int 
 
 	dim3 gridSize(2, 1);
 	dim3 blockSize(2, 1);
-	updateEigenValue << <gridSize, blockSize >> > (d_rowPtr, d_col, d_val, d_b, d_temp, d_normAb, d_alpha1, d_alpha2, Nr - 1);
+	updateEigenValue << <gridSize, blockSize >> > (d_rowPtr, d_col, d_val, d_b, d_temp, d_normAb, d_bAb, d_bb, Nr - 1);
 
 	float h_normAb = 0.0f;
-	float h_alpha1 = 0.0f;
-	float h_alpha2 = 0.0f;
+	float h_bAb = 0.0f;
+	float h_bb = 0.0f;
 	cudaMemcpy(&h_normAb, d_normAb, sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&h_alpha1, d_alpha1, sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&h_alpha2, d_alpha2, sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&h_bAb, d_bAb, sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&h_bb, d_bb, sizeof(float), cudaMemcpyDeviceToHost);
 
-	std::cout << "normAB: " << h_normAb << " alpha1: " << h_alpha1 << " alpha2: " << h_alpha2 << std::endl;
+	std::cout << "normAB: " << h_normAb << " bAb: " << h_bAb << " bb: " << h_bb << std::endl;
 
 	cudaFree(d_rowPtr);
 	cudaFree(d_col);
@@ -263,6 +266,8 @@ int CUDA_DEBUG_TEST_MATRIX(std::string filename, unsigned int nnz, unsigned int 
 	cudaFree(d_b);
 	cudaFree(d_temp);
 	cudaFree(d_normAb);
+	cudaFree(d_bAb);
+	cudaFree(d_bb);*/
 
 	return 0;
 }

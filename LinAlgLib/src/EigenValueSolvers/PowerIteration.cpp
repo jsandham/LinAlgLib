@@ -35,16 +35,16 @@
 double powerIteration(const int rowptr[], const int col[], const double val[], double eigenVec[], const double tol, const int n, const int maxIter)
 {
 	std::vector<double> b;
-	std::vector<double> temp;
+	std::vector<double> Ab;
 	b.resize(n);
-	temp.resize(n);
+	Ab.resize(n);
 
 	std::default_random_engine generator;
 	std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
 	for (int i = 0; i < n; i++) {
 		double number = distribution(generator);
-		b[i] = 2.0 * number - 1.0;
+		b[i] = 1.0f;// 2.0 * number - 1.0;
 	}
 
 	double lambda = 0.0;
@@ -56,13 +56,13 @@ double powerIteration(const int rowptr[], const int col[], const double val[], d
 			s += val[j] * b[col[j]];
 		}
 
-		temp[i] = s;
+		Ab[i] = s;
 	}
 
 	// residual resSqr = ||A*b - lambda*b||^2
 	double resSqr = 0.0;
 	for (int i = 0; i < n; i++) {
-		resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
+		resSqr += (Ab[i] - lambda * b[i]) * ((Ab[i] - lambda * b[i]));
 	}
 
 	int iter = 0;
@@ -75,37 +75,37 @@ double powerIteration(const int rowptr[], const int col[], const double val[], d
 				s += val[j] * b[col[j]];
 			}
 
-			temp[i] = s;
+			Ab[i] = s;
 		}
 
 		// calculate norm(A*b);
-		double normAb = 0.0;
+		double normAbSqr = 0.0;
 		for (int i = 0; i < n; i++) {
-			normAb += temp[i] * temp[i];
+			normAbSqr += Ab[i] * Ab[i];
 		}
 
 		// update eigenvalue
-		double alpha1 = 0.0;
-		double alpha2 = 0.0;
+		double bAb = 0.0;
+		double bb = 0.0;
 		for (int i = 0; i < n; i++) {
-			alpha1 += b[i] * temp[i];
-			alpha2 += b[i] * b[i];
+			bAb += b[i] * Ab[i];
+			bb += b[i] * b[i];
 		}
 
-		lambda = alpha1 / alpha2;
+		lambda = bAb / bb;
 
-		std::cout << "eigen value: " << lambda << " normAb: " << normAb << " res sqr: " << resSqr << std::endl;
+		std::cout << "eigen value: " << lambda << " normAbSqr: " << normAbSqr << " bAb: " << bAb << " bb: " << bb << " res sqr: " << resSqr << std::endl;
 
 		// update b
-		normAb = sqrt(normAb);
+		double normAb = sqrt(normAbSqr);
 		for (int i = 0; i < n; i++) {
-			b[i] = temp[i] / normAb;
+			b[i] = Ab[i] / normAb;
 		}
 
 		// update resSqr
 		resSqr = 0.0;
 		for (int i = 0; i < n; i++) {
-			resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
+			resSqr += (Ab[i] - lambda * b[i]) * ((Ab[i] - lambda * b[i]));
 		}
 
 		iter++;

@@ -39,7 +39,7 @@ int main()
 
 	// tests
 	for (int i = 3; i < 4; i++) {
-		//erro_code = DEBUG_TEST_MATRIX_AMG("C:\\Users\\jsand\\Documents\\LinAlgLib\\LinAlgLib\\tests\\test.mtx", 10, 5, i);
+		erro_code = DEBUG_TEST_MATRIX_AMG("C:\\Users\\jsand\\Documents\\LinAlgLib\\LinAlgLib\\tests\\test.mtx", 10, 5, i);
 		//erro_code = DEBUG_TEST_MATRIX_AMG("C:\\Users\\jsand\\Documents\\LinAlgLib\\LinAlgLib\\tests\\test2.mtx", 6, 4, i);
 		
 		//erro_code = DEBUG_TEST_MATRIX_AMG("C:\\Users\\jsand\\Documents\\LinAlgLib\\LinAlgLib\\tests\\bcsstk01.mtx", 224, 49, i);

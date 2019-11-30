@@ -29,9 +29,10 @@
 
 #include "cuda_runtime.h"
 
-float powerIterationCuda(const int rowptr[], const int col[], const float val[], float eigenVec[], const int n, const int maxIter);
+float powerIterationCuda(const int* rowptr, const int* col, const float* val, float* eigenVec, float tol, int n, int maxIter);
 
-__global__ void updateEigenValue(int* d_rowPtr, int* d_col, float* d_val, float* d_b, float* d_temp, float* d_normAb, float* d_alpha1, float* d_alpha2, int n);
-__global__ void updateEigenVector(float* d_b, float* temp, float* normAb, int n);
+__global__ void updateEigenValue(const int* d_rowPtr, const int* d_col, const float* d_val, const float* d_b, float* d_Ab, float* d_normAbSqr, float* d_bAb, float* d_bb, int n);
+__global__ void updateEigenVector(float* d_b, const float* d_Ab, const float* d_normAbSqr, int n);
+__global__ void updateResidualSqr(const float* d_b, const float* d_Ab, float lambda, float* d_resSqr, int n);
 
 #endif
