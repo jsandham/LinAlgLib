@@ -1,0 +1,54 @@
+//********************************************************************************
+//
+// IterSolvers: A collection of Iterative Solvers
+// Written by James Sandham
+// 31 March 2015
+//
+//********************************************************************************
+
+//********************************************************************************
+//
+// IterSolvers is free software; you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License (as published by the Free
+// Software Foundation) version 2.1 dated February 1999.
+//
+//********************************************************************************
+
+FILE DESCRIPTION:
+  -AMG.cpp     // algebraic multigrid
+  -PCG.cpp     // preconditioned conjugate gradient
+  -RICH.cpp    // richardson iteration
+  -JGS.cpp     // jacobi, gauss seidel, sor, symmetric gauss seidel, symmetric sor
+  -SLAF.cpp    // sparse linear algebra functions
+
+
+NOTES:
+  - last updated 9 April 2015
+  - we have tested the AMG code against the following test matrices from the 
+    University of Florida's matrix database (yifanhu.net/GALLERY/GRAPHS/search.html): 
+
+    t2dal_e.mtx  
+    mesh1em6.mtx 
+    mesh2em5.mtx
+    mesh3em5.mtx
+    fv1.mtx
+    fv2.mtx
+    fv3.mtx
+    crystm02.mtx
+    shallow_water1.mtx
+    shallow_water2.mtx
+    thermal1.mtx
+    thermal2.mtx
+    thermomech_TC.mtx
+    thermomech_dM.mtx
+    ted_B.mtx
+    G2_circuit.mtx
+    G3_circuit.mtx
+    parabolic_fem.mtx
+    apache2.mtx
+
+  - the file UFMatrixParse.cpp is included to test the code using these matrices
+  - we have tried to make this code reasonably fast however this is primarily created for 
+    educational purposes
+  - for the parallel version of this functions see the pAMG directory 
+  

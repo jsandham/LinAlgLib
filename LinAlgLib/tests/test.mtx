@@ -1,0 +1,24 @@
+%%MatrixMarket matrix coordinate real symmetric
+%-------------------------------------------------------------------------------
+% UF Sparse Matrix Collection, Tim Davis
+% http://www.cise.ufl.edu/research/sparse/matrices/Bindel/ted_B
+% name: Bindel/ted_B
+% [FEM, coupled linear thermoeslasticity eqns on a bar. D Bindel, UC Berkeley]
+% id: 1406
+% date: 2006
+% author: D. Bindel
+% ed: T. Davis
+% fields: name title A id date author ed kind
+% kind: thermal problem
+%-------------------------------------------------------------------------------
+4 4 10
+1 1 2
+2 1 1
+2 2 2
+3 1 0 
+3 2 1
+3 3 2
+4 1 0
+4 2 0
+4 3 1
+4 4 2

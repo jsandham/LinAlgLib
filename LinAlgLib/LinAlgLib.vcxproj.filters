@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="src\cuda_debug.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\EigenValueSolvers\PowerIterationCuda.cu">
+      <Filter>src\EigenValueSolvers</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{fc2cf5d0-4eb6-44be-841d-33475026089f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{e7fc6444-05c7-4799-87fd-432ef0bf2d6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\EigenValueSolvers">
+      <UniqueIdentifier>{637d045b-31bb-4d03-9a69-8f9b4dd3862f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\LinearSolvers">
+      <UniqueIdentifier>{580ee946-656f-44ab-b1d3-310be80b2b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\EigenValueSolvers">
+      <UniqueIdentifier>{498e5921-6f76-49d6-b9dc-dab9d40a60af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\LinearSolvers">
+      <UniqueIdentifier>{f38f8222-03c0-4e84-9dc8-51f0bf65df05}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\cuda_debug.cuh">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EigenValueSolvers\PowerIteration.h">
+      <Filter>include\EigenValueSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EigenValueSolvers\PowerIterationCuda.cuh">
+      <Filter>include\EigenValueSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\AMG.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\GMRES.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\JGS.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\PCG.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\RICH.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\SLAF.h">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\debug.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EigenValueSolvers\PowerIteration.cpp">
+      <Filter>src\EigenValueSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\AMG.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\GMRES.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\JGS.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\PCG.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\RICH.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinearSolvers\SLAF.cpp">
+      <Filter>src\LinearSolvers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
