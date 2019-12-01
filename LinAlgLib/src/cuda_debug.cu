@@ -219,7 +219,7 @@ int CUDA_DEBUG_TEST_MATRIX(std::string filename, unsigned int nnz, unsigned int 
 	}
 
 
-	float eigenValue = powerIterationCuda<float, 2>(&row_ptr[0], &cols_total[0], &vals_total[0], &b[0], 10e-12, Nr - 1, 100);
+	float eigenValue = powerIterationCuda<float, 128>(&row_ptr[0], &cols_total[0], &vals_total[0], &b[0], 10e-12, Nr - 1, 100);
 	//double eigenValue2 = powerIterationCuda<double, 256>(&row_ptr[0], &cols_total[0], &vals_total[0], &b[0], 10e-12, Nr - 1, 100);
 
 	
