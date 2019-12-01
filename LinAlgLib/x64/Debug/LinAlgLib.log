@@ -1,53 +1,21 @@
-﻿Build started 2019-11-30 3:36:19 PM.
+﻿Build started 2019-11-30 6:56:57 PM.
      1>Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" on node 2 (Build target(s)).
      1>InitializeBuildStatus:
          Touching "x64\Debug\LinAlgLib.tlog\unsuccessfulbuild".
        AddCudaCompileDeps:
-         C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DWIN64 /D_DEBUG /D_CONSOLE /D_MBCS /IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" /I. /FIcuda_runtime.h /c C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\cuda_debug.cu 
-       AddCudaCompileDeps:
-         C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DWIN64 /D_DEBUG /D_CONSOLE /D_MBCS /IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" /I. /FIcuda_runtime.h /c C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\EigenValueSolvers\PowerIterationCuda.cu 
+       Skipping target "AddCudaCompileDeps" because all output files are up-to-date with respect to the input files.
        AddCudaCompilePropsDeps:
        Skipping target "AddCudaCompilePropsDeps" because all output files are up-to-date with respect to the input files.
-       AddCudaCompilePropsDeps:
-       Skipping target "AddCudaCompilePropsDeps" because all output files are up-to-date with respect to the input files.
+       WriteCudaCompileTlogs:
+       Skipping target "WriteCudaCompileTlogs" because all output files are up-to-date with respect to the input files.
      1>Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (1) is building "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (1:2) on node 2 (CudaBuildCore target(s)).
      1>CudaBuildCore:
-         Compiling CUDA source file src\cuda_debug.cu...
-     1>Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (1) is building "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (1:3) on node 1 (CudaBuildCore target(s)).
-     1>CudaBuildCore:
-         Compiling CUDA source file src\EigenValueSolvers\PowerIterationCuda.cu...
-     1>CudaBuildCore:
-         cmd.exe /C "C:\Users\jsand\AppData\Local\Temp\tmpd2f9aaebc3044666a8ed87a2701e98dc.cmd"
-         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_35,code=\"sm_35,compute_35\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64" -x cu  -IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\cuda_debug.cu.obj "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\cuda_debug.cu"
-         
-         C:\Users\jsand\Documents\LinAlgLib\LinAlgLib>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_35,code=\"sm_35,compute_35\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64" -x cu  -IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\cuda_debug.cu.obj "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\cuda_debug.cu" 
-     1>CudaBuildCore:
-         cmd.exe /C "C:\Users\jsand\AppData\Local\Temp\tmpb8af4242dcf54f0b9761d2e1816faf62.cmd"
-         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_35,code=\"sm_35,compute_35\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64" -x cu  -IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\PowerIterationCuda.cu.obj "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\EigenValueSolvers\PowerIterationCuda.cu"
-         
-         C:\Users\jsand\Documents\LinAlgLib\LinAlgLib>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_35,code=\"sm_35,compute_35\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64" -x cu  -IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\PowerIterationCuda.cu.obj "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\src\EigenValueSolvers\PowerIterationCuda.cu" 
-     1>CudaBuildCore:
-         cuda_debug.cu
-     1>CudaBuildCore:
-         PowerIterationCuda.cu
-     1>C:/Users/jsand/Documents/LinAlgLib/LinAlgLib/src/cuda_debug.cu(222): warning C4305: 'argument': truncation from 'double' to 'float'
-     1>Done Building Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (CudaBuildCore target(s)).
+       Skipping target "CudaBuildCore" because all output files are up-to-date with respect to the input files.
      1>Done Building Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (CudaBuildCore target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64\CL.exe /c /IC:\Users\jsand\Documents\LinAlgLib\LinAlgLib\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include" /ZI /JMC /nologo /W3 /WX- /diagnostics:column /Od /D WIN32 /D WIN64 /D _DEBUG /D _CONSOLE /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc142.pdb" /Gd /TP /FC /errorReport:prompt src\debug.cpp
-         debug.cpp
+         All outputs are up-to-date.
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\HostX86\x64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\jsand\Documents\LinAlgLib\x64\Debug\LinAlgLib.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64" cudart_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG:FASTLINK /PDB:"C:\Users\jsand\Documents\LinAlgLib\x64\Debug\LinAlgLib.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\jsand\Documents\LinAlgLib\x64\Debug\LinAlgLib.lib" /MACHINE:X64 x64\Debug\cuda_debug.cu.obj
-         x64\Debug\PowerIterationCuda.cu.obj
-         x64\Debug\debug.obj
-         x64\Debug\PowerIteration.obj
-         x64\Debug\main.obj
-         x64\Debug\AMG.obj
-         x64\Debug\GMRES.obj
-         x64\Debug\JGS.obj
-         x64\Debug\PCG.obj
-         x64\Debug\RICH.obj
-         x64\Debug\SLAF.obj
+         All outputs are up-to-date.
          LinAlgLib.vcxproj -> C:\Users\jsand\Documents\LinAlgLib\x64\Debug\LinAlgLib.exe
        FinalizeBuildStatus:
          Deleting file "x64\Debug\LinAlgLib.tlog\unsuccessfulbuild".
@@ -55,13 +23,7 @@
      1>Done Building Project "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (Build target(s)).
 
 Build succeeded.
-
-       "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (Build target) (1) ->
-       "C:\Users\jsand\Documents\LinAlgLib\LinAlgLib\LinAlgLib.vcxproj" (CudaBuildCore target) (1:2) ->
-       (CudaBuildCore target) -> 
-         C:/Users/jsand/Documents/LinAlgLib/LinAlgLib/src/cuda_debug.cu(222): warning C4305: 'argument': truncation from 'double' to 'float'
-
-    1 Warning(s)
+    0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:04.95
+Time Elapsed 00:00:00.07

@@ -4,9 +4,6 @@
     <CudaCompile Include="src\cuda_debug.cu">
       <Filter>src</Filter>
     </CudaCompile>
-    <CudaCompile Include="src\EigenValueSolvers\PowerIterationCuda.cu">
-      <Filter>src\EigenValueSolvers</Filter>
-    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
