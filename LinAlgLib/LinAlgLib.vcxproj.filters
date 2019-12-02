@@ -4,6 +4,9 @@
     <CudaCompile Include="src\cuda_debug.cu">
       <Filter>src</Filter>
     </CudaCompile>
+    <CudaCompile Include="src\BLAS\BLASCuda.cu">
+      <Filter>src\BLAS</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
@@ -23,6 +26,12 @@
     </Filter>
     <Filter Include="src\LinearSolvers">
       <UniqueIdentifier>{f38f8222-03c0-4e84-9dc8-51f0bf65df05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\BLAS">
+      <UniqueIdentifier>{f8152be3-9bc9-4ade-b9bf-1a64a7eda7f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\BLAS">
+      <UniqueIdentifier>{39cb279d-af59-43b3-834e-f17e83558efc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +64,18 @@
     </ClInclude>
     <ClInclude Include="include\LinearSolvers\SLAF.h">
       <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LinearSolvers\PCGCuda.cuh">
+      <Filter>include\LinearSolvers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BLAS\BLASCuda.cuh">
+      <Filter>include\BLAS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BLAS\BLASCudaKernels.cuh">
+      <Filter>include\BLAS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BLAS\SparseBLASCudaKernels.cuh">
+      <Filter>include\BLAS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

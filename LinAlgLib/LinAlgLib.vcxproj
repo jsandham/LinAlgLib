@@ -81,9 +81,13 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="src\BLAS\BLASCuda.cu" />
     <CudaCompile Include="src\cuda_debug.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\BLAS\BLASCuda.cuh" />
+    <ClInclude Include="include\BLAS\BLASCudaKernels.cuh" />
+    <ClInclude Include="include\BLAS\SparseBLASCudaKernels.cuh" />
     <ClInclude Include="include\cuda_debug.cuh" />
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\EigenValueSolvers\PowerIteration.h" />
@@ -92,6 +96,7 @@
     <ClInclude Include="include\LinearSolvers\GMRES.h" />
     <ClInclude Include="include\LinearSolvers\JGS.h" />
     <ClInclude Include="include\LinearSolvers\PCG.h" />
+    <ClInclude Include="include\LinearSolvers\PCGCuda.cuh" />
     <ClInclude Include="include\LinearSolvers\RICH.h" />
     <ClInclude Include="include\LinearSolvers\SLAF.h" />
   </ItemGroup>

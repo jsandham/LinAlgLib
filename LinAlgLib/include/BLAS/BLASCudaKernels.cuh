@@ -24,11 +24,12 @@
 //
 //********************************************************************************
 
-#ifndef __BLAS_CUDA_CUH__
-#define __BLAS_CUDA_CUH__
+#ifndef __BLAS_CUDA_KERNELS_CUH__
+#define __BLAS_CUDA_KERNELS_CUH__
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "device_functions.h"
 
 #include <stdio.h>
 #include <vector>
@@ -36,6 +37,24 @@
 #include <iostream>
 
 // Level 1 BLAS
+
+// apply givens rotation
+template<typename T, int BlockSize>
+__global__ void rot(T* d_x, T* d_y, T s, T c, int n)
+{
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+	int stride = 0;
+
+	while (index + stride < n) {
+		T x = d_x[index + stride];
+		T y = d_y[index + stride];
+
+		d_x[index + stride] = c * x + s * y;
+		d_y[index + stride] = -s * x + c * y;
+
+		stride += blockDim.x * gridDim.x;
+	}
+}
 
 // swap x and y
 template<typename T, int BlockSize>
@@ -128,6 +147,114 @@ __global__ void dot(const T* d_x, const T* d_y, T* d_product, int n)
 	}
 }
 
+// sum of absolute values
+template<typename T, int BlockSize>
+__global__ void asum(const T* d_x, T* d_sum, int n)
+{
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+	int stride = 0;
+
+	extern __shared__ __align__(sizeof(T)) unsigned char shared[];
+	T* smem = reinterpret_cast<T*>(shared);
+
+	T temp = 0.0;
+	while (index + stride < n) {
+		temp += fabs(d_x[index + stride]);
+
+		stride += blockDim.x * gridDim.x;
+	}
+
+	smem[threadIdx.x] = temp;
+
+	// parallel reduction;
+	for (int i = blockDim.x / 2; i > 0; i /= 2) {
+		if (threadIdx.x < i) {
+			smem[threadIdx.x] += smem[threadIdx.x + i];
+		}
+
+		__syncthreads();
+	}
+
+	if (threadIdx.x == 0) {
+		atomicAdd(d_sum, smem[0]);
+	}
+}
+
+// finds the (smallest) index of the element of the minimum abs value
+template<typename T, int BlockSize>
+__global__ void amin(const T* d_x, int* d_aminIndex, int n)
+{
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+	int stride = 0;
+
+	extern __shared__ int shared[];
+
+	int indexOfThreadAMin = 0;
+	T threadAMin = d_x[threadIdx.x];
+	while (index + stride < n) {
+		T temp = fabs(d_x[index + stride]);
+
+		if (temp < threadAMin) {
+			threadAMin = temp;
+			indexOfThreadAMin = index + stride;
+		}
+
+		stride += blockDim.x * gridDim.x;
+	}
+
+	shared[threadIdx.x] = indexOfThreadAMin;
+
+	// parallel reduction
+	for (int i = blockDim.x / 2; i > 0; i /= 2) {
+		if (threadIdx.x < i) {
+			shared[threadIdx.x] = min(shared[threadIdx.x], shared[threadIdx.x + i]);
+		}
+
+		__syncthreads();
+	}
+
+	if (threadIdx.x == 0) {
+		atomicMin(d_aminIndex, shared[0]);
+	}
+}
+
+// finds the (smallest) index of the element of the maximum abs value
+template<typename T, int BlockSize>
+__global__ void amax(const T* d_x, int* d_amaxIndex, int n)
+{
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+	int stride = 0;
+
+	extern __shared__ int shared[];
+
+	int indexOfThreadAMax = 0;
+	T threadAMax = d_x[threadIdx.x];
+	while (index + stride < n) {
+		T temp = fabs(d_x[index + stride]);
+
+		if (temp < threadAMax) {
+			threadAMax = temp;
+			indexOfThreadAMax = index + stride;
+		}
+
+		stride += blockDim.x * gridDim.x;
+	}
+
+	shared[threadIdx.x] = indexOfThreadAMax;
+
+	// parallel reduction
+	for (int i = blockDim.x / 2; i > 0; i /= 2) {
+		if (threadIdx.x < i) {
+			shared[threadIdx.x] = max(shared[threadIdx.x], shared[threadIdx.x + i]);
+		}
+
+		__syncthreads();
+	}
+
+	if (threadIdx.x == 0) {
+		atomicMax(d_amaxIndex, shared[0]);
+	}
+}
 
 // Level 2 BLAS
 

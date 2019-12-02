@@ -24,8 +24,8 @@
 //
 //********************************************************************************
 
-#ifndef __SPARSE_BLAS_CUDA_CUH__
-#define __SPARSE_BLAS_CUDA_CUH__
+#ifndef __SPARSE_BLAS_CUDA_KERNELS_CUH__
+#define __SPARSE_BLAS_CUDA_KERNELS_CUH__
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -39,7 +39,7 @@
 
 // y = alpha * A * x + beta * y
 template<typename T, int BlockSize>
-__global__ void crs_gemv(const T* d_rowPtr, const T* d_col, const T* d_val, const T* d_x, T* d_y, T alpha, T beta, int n)
+__global__ void crs_gemv(const int* d_rowPtr, const int* d_col, const T* d_val, const T* d_x, T* d_y, T alpha, T beta, int n)
 {
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
 	int stride = 0;
@@ -58,7 +58,7 @@ __global__ void crs_gemv(const T* d_rowPtr, const T* d_col, const T* d_val, cons
 
 // y = alpha * A * x + beta * y where A is symmetric
 template<typename T, int BlockSize>
-__global__ void crs_symv(const T* d_rowPtr, const T* d_col, const T* d_val, const T* d_x, T* d_y, T alpha, T beta, int n)
+__global__ void crs_symv(const int* d_rowPtr, const int* d_col, const T* d_val, const T* d_x, T* d_y, T alpha, T beta, int n)
 {
 
 }
