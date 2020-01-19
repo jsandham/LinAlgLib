@@ -82,11 +82,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="src\BLAS\BLASCuda.cu" />
+    <CudaCompile Include="src\BLAS\SparseBLASCuda.cu" />
     <CudaCompile Include="src\cuda_debug.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\BLAS\BLASCuda.cuh" />
     <ClInclude Include="include\BLAS\BLASCudaKernels.cuh" />
+    <ClInclude Include="include\BLAS\SparseBLASCuda.cuh" />
     <ClInclude Include="include\BLAS\SparseBLASCudaKernels.cuh" />
     <ClInclude Include="include\cuda_debug.cuh" />
     <ClInclude Include="include\debug.h" />

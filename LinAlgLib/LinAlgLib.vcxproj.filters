@@ -7,6 +7,9 @@
     <CudaCompile Include="src\BLAS\BLASCuda.cu">
       <Filter>src\BLAS</Filter>
     </CudaCompile>
+    <CudaCompile Include="src\BLAS\SparseBLASCuda.cu">
+      <Filter>src\BLAS</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
@@ -75,6 +78,9 @@
       <Filter>include\BLAS</Filter>
     </ClInclude>
     <ClInclude Include="include\BLAS\SparseBLASCudaKernels.cuh">
+      <Filter>include\BLAS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BLAS\SparseBLASCuda.cuh">
       <Filter>include\BLAS</Filter>
     </ClInclude>
   </ItemGroup>
