@@ -15,6 +15,7 @@ build/*.ilk
 build/*.pdb
 build/*.exe
 build/*.lib
+build/*.obj
 
 build/lib/debug/*.lib
 build/lib/release/*.lib
