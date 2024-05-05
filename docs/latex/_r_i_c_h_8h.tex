@@ -1,0 +1,65 @@
+\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/\+RICH.h File Reference}
+\hypertarget{_r_i_c_h_8h}{}\label{_r_i_c_h_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/RICH.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/RICH.h}}
+
+
+\doxylink{_r_i_c_h_8h}{RICH.\+h} provides interface for richardson solver.  
+
+
+\doxysubsubsection*{Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{_r_i_c_h_8h_a7674f38849a4880ccd336c6c691febb7}{rich}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double theta, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em Richardson iterative linear solver. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+
+\doxysubsection{Detailed Description}
+\doxylink{_r_i_c_h_8h}{RICH.\+h} provides interface for richardson solver. 
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_r_i_c_h_8h_a7674f38849a4880ccd336c6c691febb7}\label{_r_i_c_h_8h_a7674f38849a4880ccd336c6c691febb7} 
+\index{RICH.h@{RICH.h}!rich@{rich}}
+\index{rich@{rich}!RICH.h@{RICH.h}}
+\doxysubsubsection{\texorpdfstring{rich()}{rich()}}
+{\footnotesize\ttfamily int rich (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{theta,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+Richardson iterative linear solver. 
+
+{\ttfamily rich} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the Richardson iterative solver.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}

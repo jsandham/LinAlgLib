@@ -1,0 +1,261 @@
+\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/\+JGS.h File Reference}
+\hypertarget{_j_g_s_8h}{}\label{_j_g_s_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/JGS.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/JGS.h}}
+
+
+\doxylink{_j_g_s_8h}{JGS.\+h} provides interface for jacobi, Gauss-\/\+Siedel, SOR, symmetric Gauss-\/\+Siedel, and symmetrix SOR solvers.  
+
+
+\doxysubsubsection*{Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{_j_g_s_8h_ad00e57eb4e9a357dbfb7dcede1f5c086}{jac}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em Jacobi iterative linear solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{_j_g_s_8h_ab4d4f966bde25f22f2ae0cf024dd0ca5}{gs}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em Gauss-\/\+Siedel iterative linear solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{_j_g_s_8h_a9342eeac7ca51d501db2096f669b267a}{sor}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double omega, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em SOR iterative linear solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{_j_g_s_8h_ac155243e5b042e24d7282ea64f2edd53}{sgs}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em Symmetric Gauss-\/\+Siedel iterative linear solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{_j_g_s_8h_a2a62fba4919802e6e49359e063a6f3f8}{ssor}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double omega, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em SSOR iterative linear solver. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+
+\doxysubsection{Detailed Description}
+\doxylink{_j_g_s_8h}{JGS.\+h} provides interface for jacobi, Gauss-\/\+Siedel, SOR, symmetric Gauss-\/\+Siedel, and symmetrix SOR solvers. 
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_j_g_s_8h_ab4d4f966bde25f22f2ae0cf024dd0ca5}\label{_j_g_s_8h_ab4d4f966bde25f22f2ae0cf024dd0ca5} 
+\index{JGS.h@{JGS.h}!gs@{gs}}
+\index{gs@{gs}!JGS.h@{JGS.h}}
+\doxysubsubsection{\texorpdfstring{gs()}{gs()}}
+{\footnotesize\ttfamily int gs (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+Gauss-\/\+Siedel iterative linear solver. 
+
+{\ttfamily gs} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the Gauss-\/\+Siedel iterative solver.
+
+\begin{DoxyNote}{Note}
+Convergence is only guaranteed if A is either strictly diagonally dominant or symmetric and positive definite
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}
+\Hypertarget{_j_g_s_8h_ad00e57eb4e9a357dbfb7dcede1f5c086}\label{_j_g_s_8h_ad00e57eb4e9a357dbfb7dcede1f5c086} 
+\index{JGS.h@{JGS.h}!jac@{jac}}
+\index{jac@{jac}!JGS.h@{JGS.h}}
+\doxysubsubsection{\texorpdfstring{jac()}{jac()}}
+{\footnotesize\ttfamily int jac (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+Jacobi iterative linear solver. 
+
+{\ttfamily jac} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the Jacobi iterative solver.
+
+\begin{DoxyNote}{Note}
+Convergence is only guaranteed if A is strictly diagonally dominant
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}
+\Hypertarget{_j_g_s_8h_ac155243e5b042e24d7282ea64f2edd53}\label{_j_g_s_8h_ac155243e5b042e24d7282ea64f2edd53} 
+\index{JGS.h@{JGS.h}!sgs@{sgs}}
+\index{sgs@{sgs}!JGS.h@{JGS.h}}
+\doxysubsubsection{\texorpdfstring{sgs()}{sgs()}}
+{\footnotesize\ttfamily int sgs (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+Symmetric Gauss-\/\+Siedel iterative linear solver. 
+
+{\ttfamily sgs} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the symmetrix Gauss-\/\+Siedel iterative solver.
+
+\begin{DoxyNote}{Note}
+Requires the sparse matrix A to be symmetric
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}
+\Hypertarget{_j_g_s_8h_a9342eeac7ca51d501db2096f669b267a}\label{_j_g_s_8h_a9342eeac7ca51d501db2096f669b267a} 
+\index{JGS.h@{JGS.h}!sor@{sor}}
+\index{sor@{sor}!JGS.h@{JGS.h}}
+\doxysubsubsection{\texorpdfstring{sor()}{sor()}}
+{\footnotesize\ttfamily int sor (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{omega,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+SOR iterative linear solver. 
+
+{\ttfamily sor} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the successsive overrelaxation iterative solver.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em omega} & relaxation factor between 0 and 2 \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}
+\Hypertarget{_j_g_s_8h_a2a62fba4919802e6e49359e063a6f3f8}\label{_j_g_s_8h_a2a62fba4919802e6e49359e063a6f3f8} 
+\index{JGS.h@{JGS.h}!ssor@{ssor}}
+\index{ssor@{ssor}!JGS.h@{JGS.h}}
+\doxysubsubsection{\texorpdfstring{ssor()}{ssor()}}
+{\footnotesize\ttfamily int ssor (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const double}]{omega,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+SSOR iterative linear solver. 
+
+{\ttfamily ssor} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the symmetric successive overrelaxation iterative solver.
+
+\begin{DoxyNote}{Note}
+Requires the sparse matrix A to be symmetric
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em omega} & relaxation factor between 0 and 2 \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}

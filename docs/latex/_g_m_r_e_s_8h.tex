@@ -1,0 +1,67 @@
+\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/\+GMRES.h File Reference}
+\hypertarget{_g_m_r_e_s_8h}{}\label{_g_m_r_e_s_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/GMRES.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/GMRES.h}}
+
+
+\doxylink{_g_m_r_e_s_8h}{GMRES.\+h} provides interface for generalized minimum residual solver.  
+
+
+\doxysubsubsection*{Functions}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{_g_m_r_e_s_8h_a00813dbcba66da02438a1e1011fbdc79}{gmres}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const int restart, const double tol, const int max\+\_\+iter)
+\begin{DoxyCompactList}\small\item\em Generalized minimum residual iterative linear solver. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+
+\doxysubsection{Detailed Description}
+\doxylink{_g_m_r_e_s_8h}{GMRES.\+h} provides interface for generalized minimum residual solver. 
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{_g_m_r_e_s_8h_a00813dbcba66da02438a1e1011fbdc79}\label{_g_m_r_e_s_8h_a00813dbcba66da02438a1e1011fbdc79} 
+\index{GMRES.h@{GMRES.h}!gmres@{gmres}}
+\index{gmres@{gmres}!GMRES.h@{GMRES.h}}
+\doxysubsubsection{\texorpdfstring{gmres()}{gmres()}}
+{\footnotesize\ttfamily int gmres (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{double \texorpdfstring{$\ast$}{*}}]{x,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{b,  }\item[{const int}]{n,  }\item[{const int}]{restart,  }\item[{const double}]{tol,  }\item[{const int}]{max\+\_\+iter }\end{DoxyParamCaption})}
+
+
+
+Generalized minimum residual iterative linear solver. 
+
+{\ttfamily gmres} solves the sparse linear system A\texorpdfstring{$\ast$}{*}x = b using the generalized minimum residual iterative solver.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily n+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em x} & array of {\ttfamily n} elements containing the solution values of A\texorpdfstring{$\ast$}{*}x=b \\
+\hline
+\mbox{\texttt{ in}}  & {\em b} & array of {\ttfamily n} elements containing the righthad side values of A\texorpdfstring{$\ast$}{*}x=b.\\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & size of the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em omega} & omega \\
+\hline
+\mbox{\texttt{ in}}  & {\em tol} & stopping tolerance \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+iter} & maximum iterations allowed\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em number} & of iterations actually used in the solver\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}

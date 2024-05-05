@@ -1,0 +1,63 @@
+\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/\+AMG.h File Reference}
+\hypertarget{_a_m_g_8h}{}\label{_a_m_g_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/AMG.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/AMG.h}}
+
+
+\doxylink{_a_m_g_8h}{AMG.\+h} provides interface for algebraic multigrid solver.  
+
+
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{_a_m_g_8h_a9f54281b077a9caf53d05ffd02e31bae}\label{_a_m_g_8h_a9f54281b077a9caf53d05ffd02e31bae} 
+void {\bfseries amg} (const int r\mbox{[}$\,$\mbox{]}, const int c\mbox{[}$\,$\mbox{]}, const double v\mbox{[}$\,$\mbox{]}, double x\mbox{[}$\,$\mbox{]}, const double b\mbox{[}$\,$\mbox{]}, const int n, const double theta, const double tol)
+\item 
+\Hypertarget{_a_m_g_8h_a5bc6bcc00c3772bb02242a013ea83977}\label{_a_m_g_8h_a5bc6bcc00c3772bb02242a013ea83977} 
+void {\bfseries amg\+\_\+solve} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, double x\mbox{[}$\,$\mbox{]}, const double b\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int n1, int n2, int level, int count)
+\item 
+\Hypertarget{_a_m_g_8h_ae41e387594edd2c19eb38aa926abbb21}\label{_a_m_g_8h_ae41e387594edd2c19eb38aa926abbb21} 
+void {\bfseries amg\+\_\+init} (const int r\mbox{[}$\,$\mbox{]}, const int c\mbox{[}$\,$\mbox{]}, const double v\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, const int n)
+\item 
+\Hypertarget{_a_m_g_8h_a8d5b3067ca3df6be56683a1044887b28}\label{_a_m_g_8h_a8d5b3067ca3df6be56683a1044887b28} 
+int {\bfseries amg\+\_\+setup} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int level, const double theta)
+\item 
+\Hypertarget{_a_m_g_8h_afa2fdcfa4c4fafff18c817018128012f}\label{_a_m_g_8h_afa2fdcfa4c4fafff18c817018128012f} 
+int {\bfseries strength\+\_\+matrix\+\_\+size} (const int r\mbox{[}$\,$\mbox{]}, const int c\mbox{[}$\,$\mbox{]}, const double v\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, const double theta)
+\item 
+\Hypertarget{_a_m_g_8h_af676aa0ef2af838424afe3ec2d980498}\label{_a_m_g_8h_af676aa0ef2af838424afe3ec2d980498} 
+void {\bfseries strength\+\_\+matrix} (const int r\mbox{[}$\,$\mbox{]}, const int c\mbox{[}$\,$\mbox{]}, const double v\mbox{[}$\,$\mbox{]}, int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, double sv\mbox{[}$\,$\mbox{]}, int lambda\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, const double theta)
+\item 
+\Hypertarget{_a_m_g_8h_aeb88d675354b9c555ed5715a5ee0aeb4}\label{_a_m_g_8h_aeb88d675354b9c555ed5715a5ee0aeb4} 
+void {\bfseries strength\+\_\+transpose\+\_\+matrix} (int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, double sv\mbox{[}$\,$\mbox{]}, int str\mbox{[}$\,$\mbox{]}, int stc\mbox{[}$\,$\mbox{]}, double stv\mbox{[}$\,$\mbox{]}, int lambda\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, const double theta)
+\item 
+\Hypertarget{_a_m_g_8h_ac9832565fad76621f0ab63878a4dc6c0}\label{_a_m_g_8h_ac9832565fad76621f0ab63878a4dc6c0} 
+void {\bfseries pre\+\_\+cpoint} (int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, int str\mbox{[}$\,$\mbox{]}, int stc\mbox{[}$\,$\mbox{]}, int lambda\mbox{[}$\,$\mbox{]}, unsigned cfpoints\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size)
+\item 
+\Hypertarget{_a_m_g_8h_ad4329a20786945b171e57ca8455a5a46}\label{_a_m_g_8h_ad4329a20786945b171e57ca8455a5a46} 
+void {\bfseries pre\+\_\+cpoint3} (int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, int str\mbox{[}$\,$\mbox{]}, int stc\mbox{[}$\,$\mbox{]}, int lambda\mbox{[}$\,$\mbox{]}, unsigned cfpoints\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size)
+\item 
+\Hypertarget{_a_m_g_8h_af77e2bfdda065719d8805b79266e46cf}\label{_a_m_g_8h_af77e2bfdda065719d8805b79266e46cf} 
+void {\bfseries post\+\_\+cpoint} (int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, unsigned cfpoints\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size)
+\item 
+\Hypertarget{_a_m_g_8h_a2fc5a4049e61b6fffe37ad35705daefb}\label{_a_m_g_8h_a2fc5a4049e61b6fffe37ad35705daefb} 
+int {\bfseries weight\+\_\+matrix} (const int r\mbox{[}$\,$\mbox{]}, const int c\mbox{[}$\,$\mbox{]}, const double v\mbox{[}$\,$\mbox{]}, double d\mbox{[}$\,$\mbox{]}, int sr\mbox{[}$\,$\mbox{]}, int sc\mbox{[}$\,$\mbox{]}, double sv\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, unsigned cfpoints\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, int level)
+\item 
+\Hypertarget{_a_m_g_8h_a23090442bf109dfbe9a25e722baa348c}\label{_a_m_g_8h_a23090442bf109dfbe9a25e722baa348c} 
+void {\bfseries galerkin\+\_\+prod} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, int m, int level)
+\item 
+\Hypertarget{_a_m_g_8h_a7911852e22a594fa1835cf6acc2c3b59}\label{_a_m_g_8h_a7911852e22a594fa1835cf6acc2c3b59} 
+void {\bfseries galerkin\+\_\+prod2} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, int m, int level)
+\item 
+\Hypertarget{_a_m_g_8h_ae95922b1c2d2d74dc83a2b02c646c73a}\label{_a_m_g_8h_ae95922b1c2d2d74dc83a2b02c646c73a} 
+void {\bfseries galerkin\+\_\+prod3} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int rptr\+\_\+size, int m, int level)
+\item 
+\Hypertarget{_a_m_g_8h_a7bb01b16a34ccf759ca632568049562a}\label{_a_m_g_8h_a7bb01b16a34ccf759ca632568049562a} 
+void {\bfseries sort} (int array1\mbox{[}$\,$\mbox{]}, double array2\mbox{[}$\,$\mbox{]}, int start, int end)
+\item 
+\Hypertarget{_a_m_g_8h_a97312e2b0cb6ebc15688e72bd78014a7}\label{_a_m_g_8h_a97312e2b0cb6ebc15688e72bd78014a7} 
+int {\bfseries compare\+\_\+structs} (const void \texorpdfstring{$\ast$}{*}a, const void \texorpdfstring{$\ast$}{*}b)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\doxylink{_a_m_g_8h}{AMG.\+h} provides interface for algebraic multigrid solver. 
+
