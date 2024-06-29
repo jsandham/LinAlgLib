@@ -29,7 +29,7 @@
 #define RSAMG_H
 
 /*! \file
-*  \brief AMG.h provides interface for algebraic multigrid solver
+*  \brief raamg.h provides interface for classical algebraic multigrid solver
 */
 
 void amg(const int r[], const int c[], const double v[], double x[], const double b[], 

@@ -27,24 +27,22 @@
 #ifndef SLAF_H
 #define SLAF_H
 
-void matrixVectorProduct(const int r[], const int c[], const double v[],
-                         const double x[], double y[], const int n);
+void matrixVectorProduct(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val,
+                         const double* x, double* y, const int n);
 
-double dotProduct(const double x[], const double y[], const int n);
+double dotProduct(const double* x, const double* y, const int n);
 
-void diagonal(const int r[], const int c[], const double v[], double d[], const int n);
+void diagonal(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* d, const int n);
 
-void forwardSolve(const int r[], const int c[], const double v[], const double b[], double x[], const int n);
+void forwardSolve(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* b, double* x, const int n);
 
-void backwardSolve(const int r[], const int c[], const double v[], const double b[], double x[], const int n);
+void backwardSolve(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* b, double* x, const int n);
 
-double error(const int r[], const int c[], const double v[], const double x[],
-             const double b[], const int n);
+double error(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* x,
+             const double* b, const int n);
 
-double fast_error(const int r[], const int c[], const double v[], const double x[],
-                  const double b[], const int n, const double tol);
-
-void printMatrix(const int r[], const int c[], const double v[], const int n);
+double fast_error(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* x,
+                  const double* b, const int n, const double tol);
 
 #endif
 

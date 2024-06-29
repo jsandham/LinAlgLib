@@ -28,16 +28,36 @@
 #define JGS_H
 
 /*! \file
-*  \brief JGS.h provides interface for jacobi, Gauss-Siedel, SOR, symmetric Gauss-Siedel, and symmetrix SOR solvers
+*  \brief jgs.h provides interface for jacobi, Gauss-Siedel, SOR, symmetric Gauss-Siedel, and symmetrix SOR solvers
 */
 
 /*! \ingroup linear_solvers
 *  \brief Jacobi iterative linear solver
 *
 *  \details
-*  \p jac solves the sparse linear system A*x = b using the Jacobi iterative solver.
+*  \p jac solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the Jacobi iterative solver. 
+*  Consider decomposing the sparse matrix \f$A\f$ as:
 *
-*  \note Convergence is only guaranteed if A is strictly diagonally dominant
+*  \f[
+*    A := L + U + D,
+*  \f]
+*  where
+*  \f[
+*    \begin{array}{ll}
+*        L, & \text{Is the strictly lower part of A} \\
+*        U, & \text{Is the strictly upper part of A} \\
+*        D, & \text{Is the diagaonal part of A}
+*    \end{array}
+*  \f]
+*  Inserting into \f$A\f$ * \f$x\f$ = \f$b\f$ we get:
+*  \f[
+*    \begin{array}{ll}
+*        D * x^{k+1} + (L + U) * x^{k} = b, \\
+*        x^{k+1} = D^{-1} * (b - (L + U) * x^{k}), &
+*    \end{array}
+*  \f]
+* 
+*  \note Convergence is only guaranteed if \f$A\f$ is strictly diagonally dominant
 * 
 *  @param[in]
 *  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
@@ -49,9 +69,9 @@
 *  csr_val     array of \p nnz elements containing the values of the sparse
 *              CSR matrix.
 *  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
+*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
 *  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
+*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
 *
 *  @param[in]
 *  n           size of the sparse CSR matrix
@@ -74,9 +94,9 @@ int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  \brief Gauss-Siedel iterative linear solver
 *
 *  \details
-*  \p gs solves the sparse linear system A*x = b using the Gauss-Siedel iterative solver.
+*  \p gs solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the Gauss-Siedel iterative solver.
 * 
-*  \note Convergence is only guaranteed if A is either strictly diagonally dominant or symmetric and positive definite
+*  \note Convergence is only guaranteed if \f$A\f$ is either strictly diagonally dominant or symmetric and positive definite
 *
 *  @param[in]
 *  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
@@ -88,9 +108,9 @@ int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  csr_val     array of \p nnz elements containing the values of the sparse
 *              CSR matrix.
 *  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
+*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
 *  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
+*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
 *
 *  @param[in]
 *  n           size of the sparse CSR matrix
@@ -113,7 +133,7 @@ int gs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, do
 *  \brief SOR iterative linear solver
 *
 *  \details
-*  \p sor solves the sparse linear system A*x = b using the successsive overrelaxation iterative solver.
+*  \p sor solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the successsive overrelaxation iterative solver.
 *
 *  @param[in]
 *  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
@@ -125,9 +145,9 @@ int gs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, do
 *  csr_val     array of \p nnz elements containing the values of the sparse
 *              CSR matrix.
 *  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
+*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
 *  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
+*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
 *
 *  @param[in]
 *  n           size of the sparse CSR matrix
@@ -152,9 +172,9 @@ int sor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  \brief Symmetric Gauss-Siedel iterative linear solver
 *
 *  \details
-*  \p sgs solves the sparse linear system A*x = b using the symmetrix Gauss-Siedel iterative solver.
+*  \p sgs solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the symmetric Gauss-Siedel iterative solver.
 *
-*  \note Requires the sparse matrix A to be symmetric
+*  \note Requires the sparse matrix \f$A\f$ to be symmetric
 * 
 *  @param[in]
 *  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
@@ -166,9 +186,9 @@ int sor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  csr_val     array of \p nnz elements containing the values of the sparse
 *              CSR matrix.
 *  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
+*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
 *  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
+*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
 *
 *  @param[in]
 *  n           size of the sparse CSR matrix
@@ -191,9 +211,9 @@ int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  \brief SSOR iterative linear solver
 *
 *  \details
-*  \p ssor solves the sparse linear system A*x = b using the symmetric successive overrelaxation iterative solver.
+*  \p ssor solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the symmetric successive overrelaxation iterative solver.
 *
-*  \note Requires the sparse matrix A to be symmetric
+*  \note Requires the sparse matrix \f$A\f$ to be symmetric
 * 
 *  @param[in]
 *  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
@@ -205,9 +225,9 @@ int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  csr_val     array of \p nnz elements containing the values of the sparse
 *              CSR matrix.
 *  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
+*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
 *  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
+*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
 *
 *  @param[in]
 *  n           size of the sparse CSR matrix

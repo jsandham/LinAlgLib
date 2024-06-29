@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['pcg_2eh_0',['PCG.h',['../_p_c_g_8h.html',1,'']]]
+  ['richardson_2eh_0',['richardson.h',['../richardson_8h.html',1,'']]],
+  ['rsamg_2eh_1',['rsamg.h',['../rsamg_8h.html',1,'']]]
 ];

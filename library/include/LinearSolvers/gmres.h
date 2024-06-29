@@ -28,7 +28,7 @@
 #define GMRES_H
 
 /*! \file
-*  \brief GMRES.h provides interface for generalized minimum residual solver
+*  \brief gmres.h provides interface for generalized minimum residual solver
 */
 
 /*! \ingroup linear_solvers

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['jgs_2eh_0',['JGS.h',['../_j_g_s_8h.html',1,'']]]
+  ['linalg_2eh_0',['linalg.h',['../linalg_8h.html',1,'']]]
 ];

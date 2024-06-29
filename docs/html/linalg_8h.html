@@ -14,6 +14,13 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  extensions: ["tex2jax.js"],
+  jax: ["input/TeX","output/HTML-CSS"],
+});
+</script>
+<script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -81,11 +88,11 @@ $(function() {
 
 <p><a class="el" href="linalg_8h.html" title="linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers">linalg.h</a> includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="_a_m_g_8h_source.html">LinearSolvers/AMG.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_g_m_r_e_s_8h_source.html">LinearSolvers/GMRES.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_j_g_s_8h_source.html">LinearSolvers/JGS.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_p_c_g_8h_source.html">LinearSolvers/PCG.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_r_i_c_h_8h_source.html">LinearSolvers/RICH.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="rsamg_8h_source.html">LinearSolvers/rsamg.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="gmres_8h_source.html">LinearSolvers/gmres.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="jgs_8h_source.html">LinearSolvers/jgs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="pcg_8h_source.html">LinearSolvers/pcg.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="richardson_8h_source.html">LinearSolvers/richardson.h</a>&quot;</code><br />
 <code>#include &quot;EigenValueSolvers/PowerIteration.h&quot;</code><br />
 </div>
 <p><a href="linalg_8h_source.html">Go to the source code of this file.</a></p>

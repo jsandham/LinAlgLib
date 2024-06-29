@@ -14,6 +14,13 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  extensions: ["tex2jax.js"],
+  jax: ["input/TeX","output/HTML-CSS"],
+});
+</script>
+<script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -113,21 +120,21 @@ $(function() { codefold.init(0); });
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#define LINALG_H__</span></div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment">// Linear solvers</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &quot;<a class="code" href="_a_m_g_8h.html">LinearSolvers/AMG.h</a>&quot;</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &quot;<a class="code" href="_g_m_r_e_s_8h.html">LinearSolvers/GMRES.h</a>&quot;</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">#include &quot;<a class="code" href="_j_g_s_8h.html">LinearSolvers/JGS.h</a>&quot;</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#include &quot;<a class="code" href="_p_c_g_8h.html">LinearSolvers/PCG.h</a>&quot;</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="preprocessor">#include &quot;<a class="code" href="_r_i_c_h_8h.html">LinearSolvers/RICH.h</a>&quot;</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &quot;<a class="code" href="rsamg_8h.html">LinearSolvers/rsamg.h</a>&quot;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &quot;<a class="code" href="gmres_8h.html">LinearSolvers/gmres.h</a>&quot;</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">#include &quot;<a class="code" href="jgs_8h.html">LinearSolvers/jgs.h</a>&quot;</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#include &quot;<a class="code" href="pcg_8h.html">LinearSolvers/pcg.h</a>&quot;</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="preprocessor">#include &quot;<a class="code" href="richardson_8h.html">LinearSolvers/richardson.h</a>&quot;</span></div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment">// Eigenvalues solvers</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">#include &quot;EigenValueSolvers/PowerIteration.h&quot;</span></div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="a_a_m_g_8h_html"><div class="ttname"><a href="_a_m_g_8h.html">AMG.h</a></div><div class="ttdoc">AMG.h provides interface for algebraic multigrid solver.</div></div>
-<div class="ttc" id="a_g_m_r_e_s_8h_html"><div class="ttname"><a href="_g_m_r_e_s_8h.html">GMRES.h</a></div><div class="ttdoc">GMRES.h provides interface for generalized minimum residual solver.</div></div>
-<div class="ttc" id="a_j_g_s_8h_html"><div class="ttname"><a href="_j_g_s_8h.html">JGS.h</a></div><div class="ttdoc">JGS.h provides interface for jacobi, Gauss-Siedel, SOR, symmetric Gauss-Siedel, and symmetrix SOR sol...</div></div>
-<div class="ttc" id="a_p_c_g_8h_html"><div class="ttname"><a href="_p_c_g_8h.html">PCG.h</a></div><div class="ttdoc">PCG.h provides interface for preconditioned conjugate gradient solver.</div></div>
-<div class="ttc" id="a_r_i_c_h_8h_html"><div class="ttname"><a href="_r_i_c_h_8h.html">RICH.h</a></div><div class="ttdoc">RICH.h provides interface for richardson solver.</div></div>
+<div class="ttc" id="agmres_8h_html"><div class="ttname"><a href="gmres_8h.html">gmres.h</a></div><div class="ttdoc">gmres.h provides interface for generalized minimum residual solver</div></div>
+<div class="ttc" id="ajgs_8h_html"><div class="ttname"><a href="jgs_8h.html">jgs.h</a></div><div class="ttdoc">jgs.h provides interface for jacobi, Gauss-Siedel, SOR, symmetric Gauss-Siedel, and symmetrix SOR sol...</div></div>
+<div class="ttc" id="apcg_8h_html"><div class="ttname"><a href="pcg_8h.html">pcg.h</a></div><div class="ttdoc">pcg.h provides interface for preconditioned conjugate gradient solver</div></div>
+<div class="ttc" id="arichardson_8h_html"><div class="ttname"><a href="richardson_8h.html">richardson.h</a></div><div class="ttdoc">richardson.h provides interface for richardson solver</div></div>
+<div class="ttc" id="arsamg_8h_html"><div class="ttname"><a href="rsamg_8h.html">rsamg.h</a></div><div class="ttdoc">raamg.h provides interface for classical algebraic multigrid solver</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

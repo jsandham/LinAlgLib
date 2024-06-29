@@ -1,0 +1,27 @@
+\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/saamg.h File Reference}
+\hypertarget{saamg_8h}{}\label{saamg_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h}}
+
+
+\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation algebraic multigrid solver  
+
+
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{saamg_8h_a680f18eb61a986af2ae235855f6ff5bd}\label{saamg_8h_a680f18eb61a986af2ae235855f6ff5bd} 
+void {\bfseries saamg} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double theta, const double tol)
+\item 
+\Hypertarget{saamg_8h_a14bca4207e90d563064a771546012c23}\label{saamg_8h_a14bca4207e90d563064a771546012c23} 
+void {\bfseries saamg\+\_\+solve} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, double x\mbox{[}$\,$\mbox{]}, const double b\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int n1, int n2, int level, int count)
+\item 
+\Hypertarget{saamg_8h_ae6ae8ef9e5d15530e93853952abaffb5}\label{saamg_8h_ae6ae8ef9e5d15530e93853952abaffb5} 
+void {\bfseries saamg\+\_\+init} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, const int n)
+\item 
+\Hypertarget{saamg_8h_aec9b99524b1c513d09153fbcc32b187e}\label{saamg_8h_aec9b99524b1c513d09153fbcc32b187e} 
+int {\bfseries saamg\+\_\+setup} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int level, const double theta)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation algebraic multigrid solver 
+

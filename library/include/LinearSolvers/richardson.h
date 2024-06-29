@@ -28,7 +28,7 @@
 #define RICHARDSON_H
 
 /*! \file
-*  \brief RICH.h provides interface for richardson solver
+*  \brief richardson.h provides interface for richardson solver
 */
 
 /*! \ingroup linear_solvers

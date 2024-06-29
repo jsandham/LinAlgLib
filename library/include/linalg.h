@@ -33,6 +33,7 @@
 
 // Linear solvers
 #include "LinearSolvers/rsamg.h"
+#include "LinearSolvers/saamg.h"
 #include "LinearSolvers/gmres.h"
 #include "LinearSolvers/jgs.h"
 #include "LinearSolvers/pcg.h"

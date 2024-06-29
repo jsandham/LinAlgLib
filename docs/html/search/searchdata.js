@@ -1,7 +1,7 @@
 var indexSectionsWithContent =
 {
-  0: "agjlprs",
-  1: "agjlpr",
+  0: "gjlprs",
+  1: "gjlprs",
   2: "gjprs"
 };
 

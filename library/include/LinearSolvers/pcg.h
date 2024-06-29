@@ -28,7 +28,7 @@
 #define PCG_H
 
 /*! \file
-*  \brief PCG.h provides interface for preconditioned conjugate gradient solver
+*  \brief pcg.h provides interface for preconditioned conjugate gradient solver
 */
 
 /*! \ingroup linear_solvers
