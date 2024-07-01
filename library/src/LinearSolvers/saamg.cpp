@@ -217,7 +217,7 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix& A, con
 
 }
 
-static bool compute_aggregates_with_pmis(const csr_matrix& A, std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
+static bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
 {
 	// Extract diagaonl
 	std::vector<double> diag(A.m);
@@ -336,7 +336,7 @@ static bool compute_aggregates_with_pmis(const csr_matrix& A, std::vector<int>& 
 	return true;
 }
 
-static bool construct_prolongation_with_smoothed_aggregation(const csr_matrix& A,
+static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& A,
 	const std::vector<int>& connections,
 	const std::vector<int64_t>& aggregates,
 	const std::vector<int64_t>& aggregate_root_nodes,
@@ -510,9 +510,33 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 	restriction.m = prolongation.n;
 	restriction.n = prolongation.m;
 	restriction.nnz = prolongation.nnz;
-	restriction.csr_row_ptr.resize(restriction.m + 1);
-	restriction.csr_col_ind.resize(restriction.nnz);
+	restriction.csr_row_ptr.resize(restriction.m + 1, 0);
+	restriction.csr_col_ind.resize(restriction.nnz, -1);
 	restriction.csr_val.resize(restriction.nnz);
+
+
+	std::cout << "prolongation" << std::endl;
+	for (int i = 0; i < prolongation.m; i++)
+	{
+		int row_start = prolongation.csr_row_ptr[i];
+		int row_end = prolongation.csr_row_ptr[i + 1];
+
+		std::vector<double> temp(prolongation.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
+		}
+
+		for (int j = 0; j < prolongation.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
+	}
+	std::cout << "" << std::endl;
+
+
+
 
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -521,9 +545,60 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 
 		for (int j = row_start; j < row_end; j++)
 		{
-
+			restriction.csr_row_ptr[prolongation.csr_col_ind[j] + 1]++;
 		}
 	}
+
+	// Exclusive scan on row pointer array
+	for (int i = 0; i < restriction.m; i++)
+	{
+		restriction.csr_row_ptr[i + 1] += restriction.csr_row_ptr[i];
+	}
+
+	for (int i = 0; i < prolongation.m; i++)
+	{
+		int row_start = prolongation.csr_row_ptr[i];
+		int row_end = prolongation.csr_row_ptr[i + 1];
+
+		for (int j = row_start; j < row_end; j++)
+		{
+			int col = prolongation.csr_col_ind[j];
+			double val = prolongation.csr_val[j];
+
+			int start = restriction.csr_row_ptr[col];
+			int end = restriction.csr_row_ptr[col + 1];
+
+			for (int k = start; k < end; k++)
+			{
+				if (restriction.csr_col_ind[k] == -1)
+				{
+					restriction.csr_col_ind[k] = i;
+					restriction.csr_val[k] = val;
+					break;
+				}
+			}
+		}
+	}
+
+	std::cout << "restriction" << std::endl;
+	for (int i = 0; i < restriction.m; i++)
+	{
+		int row_start = restriction.csr_row_ptr[i];
+		int row_end = restriction.csr_row_ptr[i + 1];
+
+		std::vector<double> temp(restriction.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
+		}
+
+		for (int j = 0; j < restriction.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
+	}
+	std::cout << "" << std::endl;
 }
 
 // Compute y = alpha * A * x + beta * y
@@ -758,28 +833,6 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 		nullptr, nullptr, nullptr, A_coarse.csr_row_ptr.data(), A_coarse.csr_col_ind.data(), A_coarse.csr_val.data());
 }
 
-// Call in while loop in setup for each level
-static bool aggregation(const csr_matrix& A, csr_matrix& prolongation, csr_matrix& restriction, csr_matrix& A_coarse)
-{
-	std::vector<int> connections;
-	std::vector<int64_t> aggregates;
-	std::vector<int64_t> aggregate_root_nodes;
-
-	// Parallel maximal independent set aggregation
-	compute_aggregates_with_pmis(A, connections, aggregates, aggregate_root_nodes);
-
-	// Construct prolongation matrix using smoothed aggregation
-	construct_prolongation_with_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, 1.0, prolongation);
-
-	// Compute restriction matrix by transpose of prolongation matrix
-	transpose(prolongation, restriction);
-
-	// Compute coarse grid matrix using Galarkin triple product A_c = R * A * P
-	galarkinTripleProduct(restriction, A, prolongation, A_coarse);
-
-	return true;
-}
-
 void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, double theta, saamg_heirarchy& hierarchy)
 {
 	hierarchy.prolongations.resize(max_level);
@@ -808,12 +861,33 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 	int level = 0;
 	while (level < max_level)
 	{
-		std::cout << "Compute aggregation at level: " << level << std::endl;
-		// Compute aggregations
-		aggregation(hierarchy.A_cs[level], hierarchy.prolongations[level], hierarchy.restrictions[level], hierarchy.A_cs[level + 1]);
+		std::cout << "Compute operators at coarse level: " << level << std::endl;
+		
+		csr_matrix& A = hierarchy.A_cs[level];
+		csr_matrix& A_coarse = hierarchy.A_cs[level + 1];
+		csr_matrix& P = hierarchy.prolongations[level];
+		csr_matrix& R = hierarchy.restrictions[level];
+
+		std::vector<int> connections;
+		std::vector<int64_t> aggregates;
+		std::vector<int64_t> aggregate_root_nodes;
+
+		// Compute aggregations using parallel maximal independent set
+		compute_aggregates_using_pmis(A, connections, aggregates, aggregate_root_nodes);
+
+		// Construct prolongation matrix using smoothed aggregation
+		construct_prolongation_using_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, 1.0, P);
+
+		// Compute restriction matrix by transpose of prolongation matrix
+		transpose(P, R);
+
+		// Compute coarse grid matrix using Galarkin triple product A_c = R * A * P
+		galarkinTripleProduct(R, A, P, A_coarse);
 
 		level++;
 	}
+
+	std::cout << "Total number of levels in operator hierarchy at the end of the setup phase: " << level << std::endl;
 }
 
 void gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n);

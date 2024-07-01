@@ -69,7 +69,7 @@ int main()
 	std::vector<double> b(m, 1.0);
 
 	saamg_heirarchy hierachy;
-	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 1, 0.5, hierachy);
+	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, 0.5, hierachy);
 
 
 	//amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
