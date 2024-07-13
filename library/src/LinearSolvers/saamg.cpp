@@ -193,16 +193,22 @@ static void find_maximum_distance_two_node(const csr_matrix& A, const std::vecto
 
 		if (state[i] == 0)
 		{
+			// If max node is current node, then make current node an aggregate root.
 			if (max_node.row == i)
 			{
 				max_state[i] = 1;
 				aggregates[i] = 1;
 			}
+			// If max node is not current node, but max node has a state of 1, then the max node must be an already existing aggregate root 
+			// and therefore the current node is too close to an existing aggregate root for it to also be an aggregate root. We mark it 
+			// with state -1 to indicate it cannot be an aggregate root.
 			else if (max_node.state == 1)
 			{
 				max_state[i] = -1;
 				aggregates[i] = 0;
 			}
+			// If max node is not current node, and also does not have a state of 1, then we must call this function again so we mark 
+			// the work as not complete.
 			else
 			{
 				complete = false;
@@ -214,7 +220,33 @@ static void find_maximum_distance_two_node(const csr_matrix& A, const std::vecto
 static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix& A, const std::vector<int>& connections, const std::vector<int>& state,
 	std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes, std::vector<int>& max_state)
 {
+	for (int i = 0; i < A.m; i++)
+	{
+		if (state[i] == -1)
+		{
+			int start = A.csr_row_ptr[i];
+			int end = A.csr_row_ptr[i + 1];
 
+			for (int j = start; j < end; j++)
+			{
+				if (connections[j] == 1)
+				{
+					int col = A.csr_col_ind[j];
+
+					if (state[col] == 1)
+					{
+						aggregates[i] = aggregates[col];
+						max_state[i] = 1;
+						break;
+					}
+				}
+			}
+		}
+		else if(state[i] == -2)
+		{
+			aggregates[i] = -2;
+		}
+	}
 }
 
 static bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
@@ -234,7 +266,6 @@ static bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>&
 
 	connections.resize(A.nnz, 0);
 	aggregates.resize(A.m, 0);
-	aggregate_root_nodes.resize(A.m, 0);
 
 	// Compute connections
 	compute_strong_connections(A, diag, connections);
@@ -293,21 +324,19 @@ static bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>&
 		iter++;
 	}
 
-	std::cout << "max_state" << std::endl;
-	for (size_t i = 0; i < max_state.size(); i++)
-	{
-		std::cout << max_state[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	aggregate_root_nodes.resize(A.m, -1);
 
-	std::cout << "aggregates" << std::endl;
+	for (size_t i = 0; i < aggregates.size(); i++)
+	{
+		aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
+	}
+
+	std::cout << "aggregates before exclusive sum" << std::endl;
 	for (size_t i = 0; i < aggregates.size(); i++)
 	{
 		std::cout << aggregates[i] << " ";
 	}
 	std::cout << "" << std::endl;
-
-	//
 
 	// 1 0 0 1 1 1
 	// 0 1 1 1 2 3
@@ -321,17 +350,44 @@ static bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>&
 		sum += temp;
 	}
 
-	std::cout << "aggregates" << std::endl;
+	std::cout << "max_state" << std::endl;
+	for (size_t i = 0; i < max_state.size(); i++)
+	{
+		std::cout << max_state[i] << " ";
+	}
+	std::cout << "" << std::endl;
+
+	std::cout << "aggregates after exclusive sum" << std::endl;
 	for (size_t i = 0; i < aggregates.size(); i++)
 	{
 		std::cout << aggregates[i] << " ";
 	}
 	std::cout << "" << std::endl;
 
+	std::cout << "aggregate_root_nodes" << std::endl;
+	for (size_t i = 0; i < aggregate_root_nodes.size(); i++)
+	{
+		std::cout << aggregate_root_nodes[i] << " ";
+	}
+	std::cout << "" << std::endl;
+
 	// Add any unassigned nodes to an existing aggregation
 	for (int k = 0; k < 2; k++)
 	{
+		for (int i = 0; i < A.m; i++)
+		{
+			state[i] = max_state[i];
+		}
+
+		add_unassigned_nodes_to_closest_aggregation(A, connections, state, aggregates, aggregate_root_nodes, max_state);
 	}
+
+	std::cout << "aggregates final" << std::endl;
+	for (size_t i = 0; i < aggregates.size(); i++)
+	{
+		std::cout << aggregates[i] << " ";
+	}
+	std::cout << "" << std::endl;
 
 	return true;
 }
@@ -349,7 +405,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 
 	// Determine number of columns in the prolongation matrix. This will be 
 	// the maximum aggregate plus one.
-	prolongation.n = 0;
+	prolongation.n = -1;
 	for (size_t i = 0; i < aggregates.size(); i++)
 	{
 		if (prolongation.n < aggregates[i])
@@ -472,14 +528,10 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 			}
 		}
 
-		std::cout << "i: " << i << " prolongation_start: " << prolongation_start << " prolongation_end: " << prolongation_end << std::endl;
-
 		assert(prolongation_start == prolongation.csr_row_ptr[i]);
 		assert(prolongation_end == prolongation.csr_row_ptr[i + 1]);
 
 		int prolongation_row_nnz = prolongation_end - prolongation_start;
-
-		std::cout << "prolongation_row_nnz: " << prolongation_row_nnz << " prolongation_start: " << prolongation_start << std::endl;
 
 		// sort columns
 		std::vector<int> perm(prolongation_row_nnz);
@@ -514,7 +566,6 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 	restriction.csr_col_ind.resize(restriction.nnz, -1);
 	restriction.csr_val.resize(restriction.nnz);
 
-
 	std::cout << "prolongation" << std::endl;
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -534,9 +585,6 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		std::cout << "" << std::endl;
 	}
 	std::cout << "" << std::endl;
-
-
-
 
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -831,6 +879,28 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 		R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(),
 		AP.csr_row_ptr.data(), AP.csr_col_ind.data(), AP.csr_val.data(), beta,
 		nullptr, nullptr, nullptr, A_coarse.csr_row_ptr.data(), A_coarse.csr_col_ind.data(), A_coarse.csr_val.data());
+
+
+
+	std::cout << "A coarse" << std::endl;
+	for (int i = 0; i < A_coarse.m; i++)
+	{
+		int row_start = A_coarse.csr_row_ptr[i];
+		int row_end = A_coarse.csr_row_ptr[i + 1];
+
+		std::vector<double> temp(A_coarse.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
+		}
+
+		for (int j = 0; j < A_coarse.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
+	}
+	std::cout << "" << std::endl;
 }
 
 void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, double theta, saamg_heirarchy& hierarchy)
@@ -858,6 +928,8 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		hierarchy.A_cs[0].csr_val[i] = csr_val[i];
 	}
 
+	double relax = 0.001;
+
 	int level = 0;
 	while (level < max_level)
 	{
@@ -876,7 +948,12 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		compute_aggregates_using_pmis(A, connections, aggregates, aggregate_root_nodes);
 
 		// Construct prolongation matrix using smoothed aggregation
-		construct_prolongation_using_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, 1.0, P);
+		construct_prolongation_using_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, relax, P);
+
+		if (P.n == 0)
+		{
+			break;
+		}
 
 		// Compute restriction matrix by transpose of prolongation matrix
 		transpose(P, R);
@@ -885,6 +962,7 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		galarkinTripleProduct(R, A, P, A_coarse);
 
 		level++;
+		relax *= 0.5;
 	}
 
 	std::cout << "Total number of levels in operator hierarchy at the end of the setup phase: " << level << std::endl;

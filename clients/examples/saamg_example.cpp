@@ -72,15 +72,15 @@ int main()
 	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, 0.5, hierachy);
 
 
-	//amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
+	amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
 
 	// Print solution
-	//std::cout << "x" << std::endl;
-	//for (size_t i = 0; i < x.size(); i++)
-	//{
-	//	std::cout << x[i] << " ";
-	//}
-	//std::cout << "" << std::endl;
+	std::cout << "x" << std::endl;
+	for (size_t i = 0; i < x.size(); i++)
+	{
+		std::cout << x[i] << " ";
+	}
+	std::cout << "" << std::endl;
 
 	return 0;
 }
