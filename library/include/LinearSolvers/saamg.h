@@ -51,6 +51,8 @@ struct saamg_heirarchy
 
 	// Coarse level Amatrices
 	std::vector<csr_matrix> A_cs;
+
+	int total_levels;
 };
 
 void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, double theta, saamg_heirarchy& hierarchy);

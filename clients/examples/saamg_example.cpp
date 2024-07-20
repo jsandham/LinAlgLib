@@ -35,13 +35,13 @@ int main()
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val);
+	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val);
 
 	int m = (int)csr_row_ptr.size() - 1;
 	int n = m;
 	int nnz = (int)csr_val.size();
 
-	std::cout << "A" << std::endl;
+	/*std::cout << "A" << std::endl;
 	for (int i = 0; i < m; i++)
 	{
 		int start = csr_row_ptr[i];
@@ -59,7 +59,7 @@ int main()
 		}
 		std::cout << "" << std::endl;
 	}
-	std::cout << "" << std::endl;
+	std::cout << "" << std::endl;*/
 
 
 	// Solution vector
@@ -71,8 +71,8 @@ int main()
 	saamg_heirarchy hierachy;
 	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, 0.5, hierachy);
 
-
-	amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
+	saamg_solve(hierachy, x.data(), b.data(), 2, 2, 0.5,  0.00001);
+	//amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
 
 	// Print solution
 	std::cout << "x" << std::endl;
