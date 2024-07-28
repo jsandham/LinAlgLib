@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,24 +24,16 @@
 //
 //********************************************************************************
 
-#ifndef LINALG_H__
-#define LINALG_H__
+
+#ifndef UAAMG_H
+#define UAAMG_H
+
+#include "amg.h"
 
 /*! \file
-*  \brief linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers
+*  \brief uaamg.h provides interface for unsmoothed aggregation used in algebraic multigrid
 */
 
-// Linear solvers
-#include "LinearSolvers/amg.h"
-#include "LinearSolvers/rsamg.h"
-#include "LinearSolvers/saamg.h"
-#include "LinearSolvers/uaamg.h"
-#include "LinearSolvers/gmres.h"
-#include "LinearSolvers/jgs.h"
-#include "LinearSolvers/pcg.h"
-#include "LinearSolvers/richardson.h"
-
-// Eigenvalues solvers
-#include "EigenValueSolvers/PowerIteration.h"
+void uaamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy);
 
 #endif

@@ -28,35 +28,12 @@
 #ifndef SAAMG_H
 #define SAAMG_H
 
+#include "amg.h"
+
 /*! \file
-*  \brief saamg.h provides interface for smoothed aggregation algebraic multigrid solver
+*  \brief saamg.h provides interface for smoothed aggregation used in algebraic multigrid
 */
-struct csr_matrix
-{
-	int m;
-	int n;
-	int nnz;
-	std::vector<int> csr_row_ptr;
-	std::vector<int> csr_col_ind;
-	std::vector<double> csr_val;
-};
 
-struct saamg_heirarchy
-{
-	// Prolongation matrices 
-	std::vector<csr_matrix> prolongations;
-
-	// Restriction matrices
-	std::vector<csr_matrix> restrictions;
-
-	// Coarse level Amatrices
-	std::vector<csr_matrix> A_cs;
-
-	int total_levels;
-};
-
-void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, double theta, saamg_heirarchy& hierarchy);
-
-void saamg_solve(const saamg_heirarchy& hierarchy, double* x, const double* b, int n1, int n2, double theta, double tol);
+void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy);
 
 #endif

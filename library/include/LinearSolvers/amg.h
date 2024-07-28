@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,24 +24,55 @@
 //
 //********************************************************************************
 
-#ifndef LINALG_H__
-#define LINALG_H__
+
+#ifndef AMG_H
+#define AMG_H
+
+#include <vector>
 
 /*! \file
-*  \brief linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers
+*  \brief amg.h provides interface for algebraic multigrid solver
 */
+struct csr_matrix
+{
+	int m;
+	int n;
+	int nnz;
+	std::vector<int> csr_row_ptr;
+	std::vector<int> csr_col_ind;
+	std::vector<double> csr_val;
+};
 
-// Linear solvers
-#include "LinearSolvers/amg.h"
-#include "LinearSolvers/rsamg.h"
-#include "LinearSolvers/saamg.h"
-#include "LinearSolvers/uaamg.h"
-#include "LinearSolvers/gmres.h"
-#include "LinearSolvers/jgs.h"
-#include "LinearSolvers/pcg.h"
-#include "LinearSolvers/richardson.h"
+struct heirarchy
+{
+	// Prolongation matrices 
+	std::vector<csr_matrix> prolongations;
 
-// Eigenvalues solvers
-#include "EigenValueSolvers/PowerIteration.h"
+	// Restriction matrices
+	std::vector<csr_matrix> restrictions;
+
+	// Coarse level Amatrices
+	std::vector<csr_matrix> A_cs;
+
+	int total_levels;
+};
+
+enum class Cycle
+{
+	Vcycle,
+	Wcycle,
+	Fcycle
+};
+
+enum class Smoother
+{
+	Jacobi,
+	Gauss_Siedel,
+	Symm_Gauss_Siedel,
+	SOR,
+	SSOR
+};
+
+void amg_solve(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, double tol, Cycle cycle, Smoother smoother);
 
 #endif

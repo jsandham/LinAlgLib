@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,24 +24,16 @@
 //
 //********************************************************************************
 
-#ifndef LINALG_H__
-#define LINALG_H__
+
+#ifndef AMG_AGGREGATION_H
+#define AMG_AGGREGATION_H
+
+#include <vector>
+
+#include "amg.h"
 
 /*! \file
-*  \brief linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers
+*  \brief amg_aggregation.h provides interface for creating aggregations used algebraic multigrid solvers
 */
-
-// Linear solvers
-#include "LinearSolvers/amg.h"
-#include "LinearSolvers/rsamg.h"
-#include "LinearSolvers/saamg.h"
-#include "LinearSolvers/uaamg.h"
-#include "LinearSolvers/gmres.h"
-#include "LinearSolvers/jgs.h"
-#include "LinearSolvers/pcg.h"
-#include "LinearSolvers/richardson.h"
-
-// Eigenvalues solvers
-#include "EigenValueSolvers/PowerIteration.h"
-
+bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes);
 #endif
