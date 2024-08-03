@@ -71,8 +71,8 @@ int main()
 	heirarchy hierachy;
 	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, hierachy);
 
-	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Jacobi);
-	amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+	amg_solve(hierachy, x.data(), b.data(), 4, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
 	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
 
 	// Print solution

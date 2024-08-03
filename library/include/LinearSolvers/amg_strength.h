@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,50 +24,14 @@
 //
 //********************************************************************************
 
+
+#ifndef AMG_STRENGTH_H
+#define AMG_STRENGTH_H
+
 #include <vector>
-#include <iostream>
 
-#include "linalg.h"
-#include "utility.h"
+#include "amg.h"
 
-int main()
-{
-	//int m = 5;
+void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int>& connections);
 
-	////  4 -1  0  0 -1
-	//// -1  4 -1  0  0
-	////  0 -1  4 -1  0
-	////  0  0 -1  4 -1
-	//// -1  0  0 -1  4
-	//std::vector<int> csr_row_ptr = { 0, 3, 6, 9, 12, 15 };
-	//std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
-	//std::vector<double> csr_val = { 4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0 };
-	std::vector<int> csr_row_ptr;
-	std::vector<int> csr_col_ind;
-	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val);
-
-	int m = (int)csr_row_ptr.size() - 1;
-	int n = m;
-	int nnz = (int)csr_val.size();
-
-	// Solution vector
-	std::vector<double> x(m, 0.0);
-
-	// Righthand side vector
-	std::vector<double> b(m, 1.0);
-
-	int iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
-
-	std::cout << "iter: " << iter << std::endl;
-
-	// Print solution
-	std::cout << "x" << std::endl;
-	for (size_t i = 0; i < x.size(); i++)
-	{
-		std::cout << x[i] << " ";
-	}
-	std::cout << "" << std::endl;
-
-	return 0;
-}
+#endif

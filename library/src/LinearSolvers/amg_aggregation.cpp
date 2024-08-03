@@ -36,50 +36,6 @@
 //
 //********************************************************************************
 
-static void extract_diaganal(const csr_matrix& A, std::vector<double>& diag)
-{
-	assert(A.m == diag.size());
-
-	for (int i = 0; i < A.m; i++)
-	{
-		int row_start = A.csr_row_ptr[i];
-		int row_end = A.csr_row_ptr[i + 1];
-
-		for (int j = row_start; j < row_end; j++)
-		{
-			if (A.csr_col_ind[j] == i)
-			{
-				diag[i] = A.csr_val[j];
-				break;
-			}
-		}
-	}
-}
-
-static void compute_strong_connections(const csr_matrix& A, const std::vector<double>& diag, std::vector<int>& connections)
-{
-	double eps2 = 0.1;
-
-	for (int i = 0; i < A.m; i++)
-	{
-		double eps_dia_i = eps2 * diag[i];
-
-		int row_start = A.csr_row_ptr[i];
-		int row_end = A.csr_row_ptr[i + 1];
-
-		for (int j = row_start; j < row_end; j++)
-		{
-			int       c = A.csr_col_ind[j];
-			double v = A.csr_val[j];
-
-			assert(c >= 0);
-			assert(c < A.m);
-
-			connections[j] = (c != i) && (v * v > eps_dia_i * diag[c]);
-		}
-	}
-}
-
 static unsigned int hash1(unsigned int x)
 {
 	x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -118,7 +74,7 @@ struct pmis_node
 	int row;
 };
 
-static pmis_node lexographical_max(pmis_node* ti, pmis_node* tj)
+static pmis_node lexographical_max(const pmis_node* ti, const pmis_node* tj)
 {
 	// find lexographical maximum
 	if (tj->state > ti->state)
@@ -242,33 +198,14 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix& A, con
 	}
 }
 
-bool compute_aggregates_using_pmis(const csr_matrix& A, std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
+bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
 {
-	// Extract diagaonl
-	std::vector<double> diag(A.m);
-	extract_diaganal(A, diag);
-
-	/*std::cout << "diag" << std::endl;
-	for (size_t i = 0; i < diag.size(); i++)
-	{
-		std::cout << diag[i] << " ";
-	}
-	std::cout << "" << std::endl;
-
-	std::cout << "A.nnz: " << A.nnz << " A.m: " << A.m << std::endl;*/
-
-	connections.resize(A.nnz, 0);
-	aggregates.resize(A.m, 0);
-
-	// Compute connections
-	compute_strong_connections(A, diag, connections);
-
-	/*std::cout << "connections" << std::endl;
+	std::cout << "connections" << std::endl;
 	for (size_t i= 0; i < connections.size(); i++)
 	{
 		std::cout << connections[i] << " ";
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 
 	std::vector<int> hash(A.m);
 	std::vector<int> state(A.m);

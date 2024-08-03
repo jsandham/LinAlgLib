@@ -24,16 +24,62 @@
 //
 //********************************************************************************
 
+#include <iostream>
+#include <assert.h>
+#include "../../include/LinearSolvers/amg_strength.h"
 
-#ifndef AMG_AGGREGATION_H
-#define AMG_AGGREGATION_H
+static void extract_diagonal(const csr_matrix& A, std::vector<double>& diag)
+{
+	assert(A.m == diag.size());
 
-#include <vector>
+	for (int i = 0; i < A.m; i++)
+	{
+		int row_start = A.csr_row_ptr[i];
+		int row_end = A.csr_row_ptr[i + 1];
 
-#include "amg.h"
+		for (int j = row_start; j < row_end; j++)
+		{
+			if (A.csr_col_ind[j] == i)
+			{
+				diag[i] = A.csr_val[j];
+				break;
+			}
+		}
+	}
+}
 
-/*! \file
-*  \brief amg_aggregation.h provides interface for creating aggregations used algebraic multigrid solvers
-*/
-bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes);
-#endif
+void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int>& connections)
+{
+	// Extract diagaonl
+	std::vector<double> diag(A.m);
+	extract_diagonal(A, diag);
+
+	//std::cout << "diag" << std::endl;
+	//for (size_t i = 0; i < diag.size(); i++)
+	//{
+	//	std::cout << diag[i] << " ";
+	//}
+	//std::cout << "" << std::endl;
+
+	//double eps2 = eps * eps;
+
+	for (int i = 0; i < A.m; i++)
+	{
+		//double eps_dia_i = eps2 * diag[i];
+
+		int row_start = A.csr_row_ptr[i];
+		int row_end = A.csr_row_ptr[i + 1];
+
+		for (int j = row_start; j < row_end; j++)
+		{
+			int    c = A.csr_col_ind[j];
+			double v = A.csr_val[j];
+
+			assert(c >= 0);
+			assert(c < A.m);
+
+			//connections[j] = (c != i) && (v * v > eps_dia_i * diag[c]);
+			connections[j] = (c != i) && (std::abs(v) >= eps * std::sqrt(std::abs(diag[i]) * std::abs(diag[c])));
+		}
+	}
+}

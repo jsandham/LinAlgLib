@@ -142,9 +142,9 @@ static void vcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 		std::vector<double> ec(Nc, 0.0);
 
 		// recursively solve Ac*ec = R*r = wres
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 
 		// correct x = x + P*ec
 		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -157,7 +157,7 @@ static void vcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 	}
 	else
 	{
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		// solve A*x=b exactly
 		for (int i = 0; i < 100; i++)
 		{
@@ -231,9 +231,9 @@ static void wcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 		std::vector<double> ec(Nc, 0.0);
 
 		// recursively solve Ac*ec = R*r = wres
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 
 		// correct x = x + P*ec
 		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -256,7 +256,7 @@ static void wcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 
 		// recursively solve Ac*ec = R*r = wres
 		wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 
 		// correct x = x + P*ec
 		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -269,7 +269,7 @@ static void wcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 	}
 	else
 	{
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		// solve A*x=b exactly
 		for (int i = 0; i < 100; i++)
 		{
@@ -343,9 +343,9 @@ static void fcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 		std::vector<double> ec(Nc, 0.0);
 
 		// recursively solve Ac*ec = R*r = wres
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		fcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 
 		// correct x = x + P*ec
 		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -368,7 +368,7 @@ static void fcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 
 		// recursively solve Ac*ec = R*r = wres
 		vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 
 		// correct x = x + P*ec
 		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -381,7 +381,7 @@ static void fcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 	}
 	else
 	{
-		std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		// solve A*x=b exactly
 		for (int i = 0; i < 100; i++)
 		{

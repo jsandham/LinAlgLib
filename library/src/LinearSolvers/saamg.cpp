@@ -28,6 +28,7 @@
 #include <vector>
 #include <algorithm>
 #include <assert.h>
+#include "../../include/LinearSolvers/amg_strength.h"
 #include "../../include/LinearSolvers/amg_aggregation.h"
 #include "../../include/LinearSolvers/saamg.h"
 #include "../../include/LinearSolvers/slaf.h"
@@ -554,7 +555,8 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		hierarchy.A_cs[0].csr_val[i] = csr_val[i];
 	}
 
-	double relax = 0.001;
+	double eps = 0.08;
+	double relax = 0.6667;
 
 	int level = 0;
 	while (level < max_level)
@@ -569,6 +571,12 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		std::vector<int> connections;
 		std::vector<int64_t> aggregates;
 		std::vector<int64_t> aggregate_root_nodes;
+
+		connections.resize(A.nnz, 0);
+		aggregates.resize(A.m, 0);
+
+		// Compute strength of connections
+		compute_strong_connections(A, eps, connections);
 
 		// Compute aggregations using parallel maximal independent set
 		compute_aggregates_using_pmis(A, connections, aggregates, aggregate_root_nodes);
@@ -588,7 +596,7 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		galarkinTripleProduct(R, A, P, A_coarse);
 
 		level++;
-		relax *= 0.5;
+		eps *= 0.5;
 	}
 
 	hierarchy.total_levels = level;
