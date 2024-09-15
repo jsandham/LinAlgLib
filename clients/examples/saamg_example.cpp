@@ -35,7 +35,7 @@ int main()
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val);
+	load_mtx_file("../clients/matrices/ash85.mtx", csr_row_ptr, csr_col_ind, csr_val);
 
 	int m = (int)csr_row_ptr.size() - 1;
 	int n = m;
@@ -69,9 +69,9 @@ int main()
 	std::vector<double> b(m, 1.0);
 
 	heirarchy hierachy;
-	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, hierachy);
+	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
 
-	amg_solve(hierachy, x.data(), b.data(), 4, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+	amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001, Cycle::Vcycle, Smoother::Gauss_Siedel);
 	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
 	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
 

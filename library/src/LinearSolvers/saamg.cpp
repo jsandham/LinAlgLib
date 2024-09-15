@@ -28,6 +28,8 @@
 #include <vector>
 #include <algorithm>
 #include <assert.h>
+#include <unordered_set>
+#include <map>
 #include "../../include/LinearSolvers/amg_strength.h"
 #include "../../include/LinearSolvers/amg_aggregation.h"
 #include "../../include/LinearSolvers/saamg.h"
@@ -65,13 +67,13 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 
 	//std::cout << "prolongation.n: " << prolongation.n << " A.m: " << A.m << " A.nnz: " << A.nnz << std::endl;
 
-	std::vector<int> table(prolongation.n, -1);
-
 	// Determine number of non-zeros for P
 	for (int i = 0; i < A.m; i++)
 	{
 		int start = A.csr_row_ptr[i];
 		int end = A.csr_row_ptr[i + 1];
+
+		std::unordered_set<int> table;
 
 		for (int j = start; j < end; j++)
 		{
@@ -82,15 +84,15 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 			{
 				int aggregate = aggregates[col];
 
-				if (aggregate >= 0 && table[aggregate] != i)
+				if (aggregate >= 0)
 				{
-					prolongation.nnz++;
-					prolongation.csr_row_ptr[i + 1]++;
-
-					table[aggregate] = i;
+					table.insert(aggregate);
 				}
 			}
 		}
+
+		prolongation.csr_row_ptr[i + 1] = table.size();
+		prolongation.nnz += table.size();
 	}
 
 	// exclusive scan on prolongation row pointer array
@@ -100,27 +102,23 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 		prolongation.csr_row_ptr[i + 1] += prolongation.csr_row_ptr[i];
 	}
 
-	//std::cout << "prolongation.csr_row_ptr" << std::endl;
-	//for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
-	//{
-	//	std::cout << prolongation.csr_row_ptr[i] << " ";
-	//}
-	//std::cout << "" << std::endl;
+	std::cout << "prolongation.csr_row_ptr" << std::endl;
+	for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
+	{
+		std::cout << prolongation.csr_row_ptr[i] << " ";
+	}
+	std::cout << "" << std::endl;
 
 	assert(prolongation.nnz == prolongation.csr_row_ptr[prolongation.m]);
 
 	prolongation.csr_col_ind.resize(prolongation.nnz);
 	prolongation.csr_val.resize(prolongation.nnz);
 
-	// reset table to -1
-	for (size_t i = 0; i < table.size(); i++)
-	{
-		table[i] = -1;
-	}
-
 	// Fill P
 	for (int i = 0; i < A.m; i++)
 	{
+		std::map<int, double> table;
+
 		int start = A.csr_row_ptr[i];
 		int end = A.csr_row_ptr[i + 1];
 
@@ -135,16 +133,13 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 			{
 				diagonal += A.csr_val[j];
 			}
-			else if (connections[j] == 0)
+			else if (connections[j] == 0) // substract weak connections
 			{
 				diagonal -= A.csr_val[j];
 			}
 		}
 
 		double invDiagonal = 1.0 / diagonal;
-
-		int prolongation_start = prolongation.csr_row_ptr[i];
-		int prolongation_end = prolongation_start;
 
 		for (int j = start; j < end; j++)
 		{
@@ -159,45 +154,26 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 				{
 					double value = (col == i) ? 1.0 - relax : -relax * invDiagonal * A.csr_val[j];
 				
-					if (table[aggregate] < prolongation_start)
+					if(table.find(aggregate) != table.end())
 					{
-						prolongation.csr_col_ind[prolongation_end] = aggregate;
-						prolongation.csr_val[prolongation_end] = value;
-						
-						table[aggregate] = prolongation_end;
-						prolongation_end++;
+						table[aggregate] += value;
 					}
 					else
 					{
-						prolongation.csr_val[table[aggregate]] += value;
+						table[aggregate] = value;
 					}
 				}
 			}
 		}
 
-		assert(prolongation_start == prolongation.csr_row_ptr[i]);
-		assert(prolongation_end == prolongation.csr_row_ptr[i + 1]);
+		int prolongation_start = prolongation.csr_row_ptr[i];
 
-		int prolongation_row_nnz = prolongation_end - prolongation_start;
-
-		// sort columns
-		std::vector<int> perm(prolongation_row_nnz);
-		for (int j = 0; j < prolongation_row_nnz; j++)
+		int count = 0;
+		for(auto it = table.begin(); it != table.end(); it++)
 		{
-			perm[j] = j;
-		}
-
-		int* col_entry = prolongation.csr_col_ind.data() + prolongation_start;
-		double* val_entry = prolongation.csr_val.data() + prolongation_start;
-
-		std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {
-			return col_entry[a] < col_entry[b];
-			});
-
-		for (int j = 0; j < prolongation_row_nnz; j++)
-		{
-			prolongation.csr_col_ind[prolongation_start + j] = col_entry[perm[j]];
-			prolongation.csr_val[prolongation_start + j] = val_entry[perm[j]];
+			prolongation.csr_col_ind[prolongation_start + count] = it->first;
+			prolongation.csr_val[prolongation_start + count] = it->second;
+			++count;
 		}
 	}
 
@@ -213,7 +189,7 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 	restriction.csr_col_ind.resize(restriction.nnz, -1);
 	restriction.csr_val.resize(restriction.nnz);
 
-	/*std::cout << "prolongation" << std::endl;
+	std::cout << "prolongation" << std::endl;
 	for (int i = 0; i < prolongation.m; i++)
 	{
 		int row_start = prolongation.csr_row_ptr[i];
@@ -231,7 +207,7 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		}
 		std::cout << "" << std::endl;
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -275,7 +251,7 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		}
 	}
 
-	/*std::cout << "restriction" << std::endl;
+	std::cout << "restriction" << std::endl;
 	for (int i = 0; i < restriction.m; i++)
 	{
 		int row_start = restriction.csr_row_ptr[i];
@@ -293,7 +269,7 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		}
 		std::cout << "" << std::endl;
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 }
 
 // Compute C = alpha * A * B + beta * D
@@ -509,7 +485,7 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 
 
 
-	/*std::cout << "A coarse" << std::endl;
+	std::cout << "A coarse" << std::endl;
 	for (int i = 0; i < A_coarse.m; i++)
 	{
 		int row_start = A_coarse.csr_row_ptr[i];
@@ -527,7 +503,7 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 		}
 		std::cout << "" << std::endl;
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 }
 
 void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy)
@@ -555,8 +531,8 @@ void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		hierarchy.A_cs[0].csr_val[i] = csr_val[i];
 	}
 
-	double eps = 0.08;
-	double relax = 0.6667;
+	double eps = 0.08; // strength_of_connection/coupling strength
+	double relax = 2.0 / 3.0;
 
 	int level = 0;
 	while (level < max_level)

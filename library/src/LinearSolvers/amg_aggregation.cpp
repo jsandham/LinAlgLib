@@ -214,7 +214,7 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 	// Initialize parallel maximal independent set state
 	initialize_pmis_state(A, connections, max_state, hash);
 
-	/*std::cout << "max_state" << std::endl;
+	std::cout << "max_state" << std::endl;
 	for (size_t i = 0; i < max_state.size(); i++)
 	{
 		std::cout << max_state[i] << " ";
@@ -226,7 +226,7 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 	{
 		std::cout << hash[i] << " ";
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 
 	int iter = 0;
 	while (iter < 20)
@@ -261,12 +261,12 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 		aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
 	}
 
-	/*std::cout << "aggregates before exclusive sum" << std::endl;
+	std::cout << "aggregates before exclusive sum" << std::endl;
 	for (size_t i = 0; i < aggregates.size(); i++)
 	{
 		std::cout << aggregates[i] << " ";
 	}
-	std::cout << "" << std::endl;*/
+	std::cout << "" << std::endl;
 
 	// 1 0 0 1 1 1
 	// 0 1 1 1 2 3

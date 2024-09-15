@@ -74,9 +74,13 @@ bool load_mtx_file(const std::string& filename, std::vector<int>& csr_row_ptr, s
 					line.erase(0, line.find(space) + space.length());
 					token = line.substr(0, line.find(space));
 					int c = atoi(token.c_str()) - 1;
-					line.erase(0, line.find(space) + space.length());
-					token = line.substr(0, line.find(space));
-					double v = strtod(token.c_str(), NULL);
+					double v = 1.0;
+					if(line.find(space) != std::string::npos) // some mtx files do not have any values. In these cases just use a value of 1
+					{
+						line.erase(0, line.find(space) + space.length());
+						token = line.substr(0, line.find(space));
+						v = strtod(token.c_str(), NULL);
+					}
 
 					row_ind[index] = r;
 					col_ind[index] = c;
