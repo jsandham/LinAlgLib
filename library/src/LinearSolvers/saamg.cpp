@@ -185,9 +185,20 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 	restriction.m = prolongation.n;
 	restriction.n = prolongation.m;
 	restriction.nnz = prolongation.nnz;
-	restriction.csr_row_ptr.resize(restriction.m + 1, 0);
-	restriction.csr_col_ind.resize(restriction.nnz, -1);
+	restriction.csr_row_ptr.resize(restriction.m + 1);
+	restriction.csr_col_ind.resize(restriction.nnz);
 	restriction.csr_val.resize(restriction.nnz);
+
+	// Fill arrays
+	for(size_t i = 0; i < restriction.csr_row_ptr.size(); i++)
+	{
+		restriction.csr_row_ptr[i] = 0;
+	}
+
+	for(size_t i = 0; i < restriction.csr_col_ind.size(); i++)
+	{
+		restriction.csr_col_ind[i] = -1;
+	}
 
 	std::cout << "prolongation" << std::endl;
 	for (int i = 0; i < prolongation.m; i++)

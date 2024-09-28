@@ -35,33 +35,9 @@ int main()
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	// load_mtx_file("../clients/matrices/ash85.mtx", csr_row_ptr, csr_col_ind, csr_val);
-	load_mtx_file("../clients/matrices/bcsstk01.mtx", csr_row_ptr, csr_col_ind, csr_val);
+	load_mtx_file("../clients/matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val);
 
-	int m = (int)csr_row_ptr.size() - 1;
-	int n = m;
-	int nnz = (int)csr_val.size();
-
-	/*std::cout << "A" << std::endl;
-	for (int i = 0; i < m; i++)
-	{
-		int start = csr_row_ptr[i];
-		int end = csr_row_ptr[i + 1];
-
-		std::vector<double> temp(n, 0);
-		for (int j = start; j < end; j++)
-		{
-			temp[csr_col_ind[j]] = csr_val[j];
-		}
-
-		for (size_t j = 0; j < temp.size(); j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;*/
-
+	int m = csr_row_ptr.size() - 1;
 
 	// Solution vector
 	std::vector<double> x(m, 0.0);
@@ -69,20 +45,15 @@ int main()
 	// Righthand side vector
 	std::vector<double> b(m, 1.0);
 
-	heirarchy hierachy;
-	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
-
-	amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001, Cycle::Vcycle, Smoother::Gauss_Siedel);
-	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
-	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
+	amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
 
 	// Print solution
-	std::cout << "x" << std::endl;
-	for (size_t i = 0; i < x.size(); i++)
-	{
-		std::cout << x[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	//std::cout << "x" << std::endl;
+	//for (size_t i = 0; i < x.size(); i++)
+	//{
+	//	std::cout << x[i] << " ";
+	//}
+	//std::cout << "" << std::endl;
 
 	return 0;
 }

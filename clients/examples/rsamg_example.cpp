@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -35,9 +35,11 @@ int main()
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/fv1.mtx", csr_row_ptr, csr_col_ind, csr_val);
+	load_mtx_file("../clients/matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val);
 
-	int m = csr_row_ptr.size() - 1;
+	int m = (int)csr_row_ptr.size() - 1;
+	int n = m;
+	int nnz = (int)csr_val.size();
 
 	// Solution vector
 	std::vector<double> x(m, 0.0);
@@ -45,7 +47,14 @@ int main()
 	// Righthand side vector
 	std::vector<double> b(m, 1.0);
 
-	amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
+	heirarchy hierachy;
+	rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
+
+	amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001, Cycle::Vcycle, Smoother::Gauss_Siedel);
+	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+	//amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
+
+	//amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
 
 	// Print solution
 	//std::cout << "x" << std::endl;

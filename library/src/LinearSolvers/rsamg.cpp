@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -25,327 +25,378 @@
 //********************************************************************************
 
 #include <iostream>
-#include <stdlib.h>
+#include <vector>
+#include <algorithm>
+#include <assert.h>
+#include <unordered_set>
+#include <map>
+#include "../../include/LinearSolvers/amg_strength.h"
+#include "../../include/LinearSolvers/amg_aggregation.h"
 #include "../../include/LinearSolvers/rsamg.h"
 #include "../../include/LinearSolvers/slaf.h"
-#include "math.h"
 
-//********************************************************************************
-//
-// AMG: Classical Algebraic Multigrid
-//
-//********************************************************************************
-
-#define DEBUG 1
-#define FAST_ERROR 0
-#define MAX_VCYCLES 100
-
-
-//-------------------------------------------------------------------------------
-// structure representing an array
-//-------------------------------------------------------------------------------
-struct array{
-  int value;
-  unsigned id;
-};
-
-
-//-------------------------------------------------------------------------------
-// AMG main function
-//-------------------------------------------------------------------------------
-void amg(const int r[], const int c[], const double v[], double x[], const double b[], 
-         const int n, const double theta, const double tol)
+static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 {
-	int n1 = 4;                              //
-	int n2 = 2;                              // number of smoothing steps and maximum number of levels
-	int level = 40;                          //
+	restriction.m = prolongation.n;
+	restriction.n = prolongation.m;
+	restriction.nnz = prolongation.nnz;
+	restriction.csr_row_ptr.resize(restriction.m + 1);
+	restriction.csr_col_ind.resize(restriction.nnz);
+	restriction.csr_val.resize(restriction.nnz);
 
-	int *matrixSizes = new int[level + 1];   // size of A matrix at each level 
-
-	int **ar = new int*[level + 1];          //
-	int **ac = new int*[level + 1];          // pointers to A-matrix at each level
-	double **av = new double*[level + 1];    // and diagonal entries of A-matrix
-	double **ad = new double*[level + 1];    //
-
-	int **wr = new int*[level];              //
-	int **wc = new int*[level];              // pointers to W-matrix at each level
-	double **wv = new double*[level];        //
-
-	//initialize first level to original A matrix 
-	amg_init(r, c, v, ar, ac, av, ad, matrixSizes, n);
-
-	//Phase 1: AMG setup
-	level = amg_setup(ar, ac, av, ad, wr, wc, wv, matrixSizes, level, theta);
-  
-	//Phase 2: AMG recursive solve
-	int ii = 0;
-	double err = 1.0;
-	while(err > tol && ii < MAX_VCYCLES){
-		amg_solve(ar, ac, av, ad, wr, wc, wv, x, b, matrixSizes, n1, n2, level, 0);
-		#if(FAST_ERROR)
-			err = fast_error(ar[0], ac[0], av[0], x, b, n, tol);
-		#else
-			err = error(ar[0], ac[0], av[0], x, b, n);
-		#endif
-		#if(DEBUG)
-			std::cout << "error: " << err << std::endl;
-		#endif
-		ii++;
-	}
- 
-	//delete temporary arrays that were allocated on the heap
-	for(int i = 0; i < level + 1; i++)
+	// Fill arrays
+	for(size_t i = 0; i < restriction.csr_row_ptr.size(); i++)
 	{
-		delete[] ar[i];
-		delete[] ac[i];
-		delete[] av[i];
-		delete[] ad[i];
-	}
-	for(int i = 0; i < level; i++)
-	{   
-		delete[] wr[i];
-		delete[] wc[i];
-		delete[] wv[i];
+		restriction.csr_row_ptr[i] = 0;
 	}
 
-	delete[] ar;
-	delete[] ac;
-	delete[] av;
-	delete[] ad;
-	delete[] wr;
-	delete[] wc;
-	delete[] wv;
-	delete[] matrixSizes;
-}
+	for(size_t i = 0; i < restriction.csr_col_ind.size(); i++)
+	{
+		restriction.csr_col_ind[i] = -1;
+	}
 
+	/*std::cout << "prolongation" << std::endl;
+	for (int i = 0; i < prolongation.m; i++)
+	{
+		int row_start = prolongation.csr_row_ptr[i];
+		int row_end = prolongation.csr_row_ptr[i + 1];
 
+		std::vector<double> temp(prolongation.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
+		}
 
+		for (int j = 0; j < prolongation.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
+	}
+	std::cout << "" << std::endl;*/
 
-//-------------------------------------------------------------------------------
-// AMG recursive solve function
-//-------------------------------------------------------------------------------
-void amg_solve(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], 
-               double *wv[], double x[], const double b[], int ASizes[], int n1, 
-               int n2, int level, int currentLevel)
-{
-	int N = ASizes[currentLevel];     //size of A at each level
+	for (int i = 0; i < prolongation.m; i++)
+	{
+		int row_start = prolongation.csr_row_ptr[i];
+		int row_end = prolongation.csr_row_ptr[i + 1];
 
-	if(currentLevel < level){
-		int Nc = ASizes[currentLevel+1];  //size of A at next course level
+		for (int j = row_start; j < row_end; j++)
+		{
+			restriction.csr_row_ptr[prolongation.csr_col_ind[j] + 1]++;
+		}
+	}
 
-		//do n1 smoothing steps on A*x=b
-		for(int i = 0; i < n1; i++){
-			//Gauss-Seidel iteration
-			double sigma;
-			double ajj;
-			for(int j = 0; j < N; j++){
-				sigma = 0.0;
-				ajj = ad[currentLevel][j];   //diagonal entry a_jj
-				for(int k = ar[currentLevel][j]; k < ar[currentLevel][j + 1]; k++){
-					sigma = sigma + av[currentLevel][k] * x[ac[currentLevel][k]];
+	// Exclusive scan on row pointer array
+	for (int i = 0; i < restriction.m; i++)
+	{
+		restriction.csr_row_ptr[i + 1] += restriction.csr_row_ptr[i];
+	}
+
+	for (int i = 0; i < prolongation.m; i++)
+	{
+		int row_start = prolongation.csr_row_ptr[i];
+		int row_end = prolongation.csr_row_ptr[i + 1];
+
+		for (int j = row_start; j < row_end; j++)
+		{
+			int col = prolongation.csr_col_ind[j];
+			double val = prolongation.csr_val[j];
+
+			int start = restriction.csr_row_ptr[col];
+			int end = restriction.csr_row_ptr[col + 1];
+
+			for (int k = start; k < end; k++)
+			{
+				if (restriction.csr_col_ind[k] == -1)
+				{
+					restriction.csr_col_ind[k] = i;
+					restriction.csr_val[k] = val;
+					break;
 				}
-				x[j] = x[j] + (b[j] - sigma) / ajj;
-			}
-		}
-
-		//compute residual r=b-A*x=A*e
-		double *r = new double[N];
-		for(int i = 0; i < N; i++){
-			double Ax = 0.0;  //matrix vector product Ax
-			for(int j = ar[currentLevel][i]; j < ar[currentLevel][i + 1]; j++){
-				Ax = Ax + av[currentLevel][j] * x[ac[currentLevel][j]];
-			}
-			r[i] = b[i] - Ax;
-		}   
-
-		//compute W'r 
-		double *wres = new double[Nc];
-		for(int i = 0; i < Nc; i++){
-			wres[i] = 0.0;
-		}
-		for(int i = 0; i < N; i++){
-			for(int j = wr[currentLevel][i]; j < wr[currentLevel][i + 1]; j++){
-				wres[wc[currentLevel][j]] = wres[wc[currentLevel][j]] + wv[currentLevel][j] * r[i];     
-			}
-		}
-
-		delete[] r;
-
-		//set e = 0
-		double *e = new double[Nc];
-		for(int i = 0; i < Nc; i++){
-			e[i] = 0.0;
-		}
-
-		//recursizely solve Ac*ec=W'*r
-		amg_solve(ar, ac, av, ad, wr, wc, wv, e, wres, ASizes, n1, n2, level, currentLevel + 1);
-    
-		//correct x = x + W*ec
-		N = ASizes[currentLevel];   //size of A at each level
-		for(int i = 0; i < N; i++){
-			for(int j = wr[currentLevel][i]; j < wr[currentLevel][i + 1]; j++){
-				x[i] = x[i] + wv[currentLevel][j] * e[wc[currentLevel][j]];
-			}
-		}
-
-		//do n2 smoothing steps on A*x=b
-		for(int i = 0; i < n2; i++){
-			//Gauss-Seidel iteration
-			double sigma;
-			double ajj;
-			for(int j = 0; j < N; j++){
-				sigma = 0.0;
-				ajj = ad[currentLevel][j];  //diagonal entry a_jj
-				for(int k = ar[currentLevel][j]; k < ar[currentLevel][j + 1]; k++){
-					sigma = sigma + av[currentLevel][k] * x[ac[currentLevel][k]];
-				}
-				x[j] = x[j] + (b[j] - sigma) / ajj;
-			}
-		}
-  
-		delete[] e;
-		delete[] wres;
-	}
-	else{
-		//solve A*x=b exactly
-		for(int i = 0; i < 100; i++){
-			//Gauss-Seidel iteration
-			double sigma;
-			double ajj;
-			for(int j = 0; j < N; j++){
-				sigma = 0.0;
-				ajj = ad[currentLevel][j];  //diagonal entry a_jj
-				for(int k = ar[currentLevel][j]; k < ar[currentLevel][j + 1]; k++){
-					sigma = sigma + av[currentLevel][k] * x[ac[currentLevel][k]];
-				}
-				x[j] = x[j] + (b[j] - sigma) / ajj;
 			}
 		}
 	}
+
+	/*std::cout << "restriction" << std::endl;
+	for (int i = 0; i < restriction.m; i++)
+	{
+		int row_start = restriction.csr_row_ptr[i];
+		int row_end = restriction.csr_row_ptr[i + 1];
+
+		std::vector<double> temp(restriction.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
+		}
+
+		for (int j = 0; j < restriction.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
+	}
+	std::cout << "" << std::endl;*/
 }
 
-
-
-
-
-//-------------------------------------------------------------------------------
-// AMG initialize  function
-//-------------------------------------------------------------------------------
-void amg_init(const int r[], const int c[], const double v[], int *ar[], int *ac[], 
-              double *av[], double *ad[], int ASizes[], const int n)
+// Compute C = alpha * A * B + beta * D
+static void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
+	const int* csr_row_ptr_A, const int* csr_col_ind_A, const int* csr_row_ptr_B, const int* csr_col_ind_B,
+	double beta, const int* csr_row_ptr_D, const int* csr_col_ind_D, int* csr_row_ptr_C, int* nnz_C)
 {
-	ASizes[0] = n;
-	ar[0] = new int[n+1];
-	ac[0] = new int[r[n]];
-	av[0] = new double[r[n]];
-	ad[0] = new double[n];
-	for(int i = 0; i < n + 1; i++){ar[0][i] = r[i];}
-	for(int i = 0; i < r[n]; i++){ac[0][i] = c[i];}
-	for(int i = 0; i < r[n]; i++){av[0][i] = v[i];}
+	std::vector<int> nnz(n, -1);
 
-	//find diagonal entries of A matrix
-	for(int i = 0; i < n; i++){
-		for(int j = r[i]; j < r[i+1]; j++){
-			if(c[j] == i){
-				ad[0][i] = v[j];
-				break;
+	// A is mxk, B is kxn, and C is mxn
+	for (int i = 0; i < m + 1; i++)
+	{
+		csr_row_ptr_C[i] = 0;
+	}
+
+	for (int i = 0; i < m; ++i)
+	{
+		int row_begin_A = csr_row_ptr_A[i];
+		int row_end_A = csr_row_ptr_A[i + 1];
+
+		for (int j = row_begin_A; j < row_end_A; j++)
+		{
+			int col_A = csr_col_ind_A[j];
+
+			int row_begin_B = csr_row_ptr_B[col_A];
+			int row_end_B = csr_row_ptr_B[col_A + 1];
+
+			for (int p = row_begin_B; p < row_end_B; p++)
+			{
+				int col_B = csr_col_ind_B[p];
+
+				if (nnz[col_B] != i)
+				{
+					nnz[col_B] = i;
+					csr_row_ptr_C[i + 1]++;
+				}
 			}
+		}
+
+		if (beta != 0.0)
+		{
+			int row_begin_D = csr_row_ptr_D[i];
+			int row_end_D = csr_row_ptr_D[i + 1];
+
+			for (int j = row_begin_D; j < row_end_D; j++)
+			{
+				int col_D = csr_col_ind_D[j];
+
+				if (nnz[col_D] != i)
+				{
+					nnz[col_D] = i;
+					csr_row_ptr_C[i + 1]++;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < m; i++)
+	{
+		csr_row_ptr_C[i + 1] += csr_row_ptr_C[i];
+	}
+
+	*nnz_C = csr_row_ptr_C[m];
+}
+
+static void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
+	const int* csr_row_ptr_A, const int* csr_col_ind_A, const double* csr_val_A,
+	const int* csr_row_ptr_B, const int* csr_col_ind_B, const double* csr_val_B,
+	double beta, const int* csr_row_ptr_D, const int* csr_col_ind_D, const double* csr_val_D,
+	const int* csr_row_ptr_C, int* csr_col_ind_C, double* csr_val_C)
+{
+	std::vector<int> nnzs(n, -1);
+
+	for (int i = 0; i < m; i++)
+	{
+		int row_begin_C = csr_row_ptr_C[i];
+		int row_end_C = row_begin_C;
+
+		int row_begin_A = csr_row_ptr_A[i];
+		int row_end_A = csr_row_ptr_A[i + 1];
+
+		for (int j = row_begin_A; j < row_end_A; j++)
+		{
+			int col_A = csr_col_ind_A[j];
+			double val_A = alpha * csr_val_A[j];
+
+			int row_begin_B = csr_row_ptr_B[col_A];
+			int row_end_B = csr_row_ptr_B[col_A + 1];
+
+			for (int p = row_begin_B; p < row_end_B; p++)
+			{
+				int col_B = csr_col_ind_B[p];
+				double val_B = csr_val_B[p];
+
+				if (nnzs[col_B] < row_begin_C)
+				{
+					nnzs[col_B] = row_end_C;
+					csr_col_ind_C[row_end_C] = col_B;
+					csr_val_C[row_end_C] = val_A * val_B;
+					row_end_C++;
+				}
+				else
+				{
+					csr_val_C[nnzs[col_B]] += val_A * val_B;
+				}
+			}
+		}
+
+		if (beta != 0.0)
+		{
+			int row_begin_D = csr_row_ptr_D[i];
+			int row_end_D = csr_row_ptr_D[i + 1];
+
+			for (int j = row_begin_D; j < row_end_D; j++)
+			{
+				int col_D = csr_col_ind_D[j];
+				double val_D = beta * csr_val_D[j];
+
+				// Check if a new nnz is generated or if the value is added
+				if (nnzs[col_D] < row_begin_C)
+				{
+					nnzs[col_D] = row_end_C;
+
+					csr_col_ind_C[row_end_C] = col_D;
+					csr_val_C[row_end_C] = val_D;
+					row_end_C++;
+				}
+				else
+				{
+					csr_val_C[nnzs[col_D]] += val_D;
+				}
+			}
+		}
+	}
+
+	int nnz = csr_row_ptr_C[m];
+
+	std::vector<int> cols(nnz);
+	std::vector<double> vals(nnz);
+
+	memcpy(cols.data(), csr_col_ind_C, sizeof(int) * nnz);
+	memcpy(vals.data(), csr_val_C, sizeof(double) * nnz);
+
+	for (int i = 0; i < m; i++)
+	{
+		int row_begin = csr_row_ptr_C[i];
+		int row_end = csr_row_ptr_C[i + 1];
+		int row_nnz = row_end - row_begin;
+
+		std::vector<int> perm(row_nnz);
+		for (int j = 0; j < row_nnz; j++)
+		{
+			perm[j] = j;
+		}
+
+		int* col_entry = cols.data() + row_begin;
+		double* val_entry = vals.data() + row_begin;
+
+		std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {
+			return col_entry[a] < col_entry[b];
+			});
+
+		for (int j = 0; j < row_nnz; j++)
+		{
+			csr_col_ind_C[row_begin + j] = col_entry[perm[j]];
+			csr_val_C[row_begin + j] = val_entry[perm[j]];
 		}
 	}
 }
 
-
-
-
-
-//-------------------------------------------------------------------------------
-// AMG setup phase
-//-------------------------------------------------------------------------------
-int amg_setup(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], int ASizes[], int level, const double theta)
+static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, const csr_matrix& P, csr_matrix& A_coarse)
 {
-	int rptr_size = 0;
+	// Compute A_c = R * A * P
+	double alpha = 1.0;
+	double beta = 0.0;
 
-	int i = 0;
-	while(ASizes[i] > 20 && i < level){
-		rptr_size = ASizes[i] + 1;  //rptr_size is the size of the row pointer array ar at the current ith level
+	// Determine number of non-zeros in A * P product
+	csr_matrix AP;
+	AP.m = A.m;
+	AP.n = P.n;
+	AP.nnz = 0;
+	AP.csr_row_ptr.resize(AP.m + 1, 0);
 
-		//determine size of strength matrix
-		int ssize = strength_matrix_size(ar[i], ac[i], av[i], rptr_size, theta);
+	csrgemm_nnz(A.m, P.n, A.n, A.nnz, P.nnz, 0, alpha, A.csr_row_ptr.data(), A.csr_col_ind.data(),
+		P.csr_row_ptr.data(), P.csr_col_ind.data(), beta, nullptr, nullptr, AP.csr_row_ptr.data(), &AP.nnz);
 
-		//intialize temporary arrays
-		unsigned* cfpoints = new unsigned[rptr_size - 1];
-		int *lambda = new int[rptr_size-1];
-		int *srow = new int[rptr_size];
-		int *scol = new int[ssize];
-		double *sval = new double[ssize];
-		int *strow = new int[rptr_size];
-		int *stcol = new int[ssize];
-		double *stval = new double[ssize];
-		for(int j = 0; j < rptr_size-1; j++){lambda[j] = 0;}
-		for(int j = 0; j < rptr_size-1; j++){cfpoints[j] = 0;}
-		for(int j = 0; j < rptr_size; j++){srow[j] = 0;}
-		for(int j = 0; j < ssize; j++){scol[j] = 0;}
-		for(int j = 0; j < ssize; j++){sval[j] = 0.0;}
-		for(int j = 0; j < rptr_size; j++){strow[j] = 0;}
-		for(int j = 0; j < ssize; j++){stcol[j] = 0;}
-		for(int j = 0; j < ssize; j++){stval[j] = 0.0;}
+	//std::cout << "AP.nnz: " << AP.nnz << std::endl;
+	AP.csr_col_ind.resize(AP.nnz);
+	AP.csr_val.resize(AP.nnz);
 
-		//compute strength matrix S
-		strength_matrix(ar[i], ac[i], av[i], srow, scol, sval, lambda, rptr_size, theta);
+	csrgemm(A.m, P.n, A.n, A.nnz, P.nnz, 0, alpha,
+		A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(),
+		P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), beta,
+		nullptr, nullptr, nullptr, AP.csr_row_ptr.data(), AP.csr_col_ind.data(), AP.csr_val.data());
 
-		//compute strength transpose matrix S^T
-		strength_transpose_matrix(srow, scol, sval, strow, stcol, stval, lambda, rptr_size, theta);
+	// Determine number of non-zeros in A_coarse = R * AP product
+	A_coarse.m = R.m;
+	A_coarse.n = AP.n;
+	A_coarse.nnz = 0;
+	A_coarse.csr_row_ptr.resize(A_coarse.m + 1, 0);
 
-		//determine c-points and f-points (first pass)
-		pre_cpoint3(srow, scol, strow, stcol, lambda, cfpoints, rptr_size);
+	csrgemm_nnz(R.m, AP.n, R.n, R.nnz, AP.nnz, 0, alpha, R.csr_row_ptr.data(), R.csr_col_ind.data(),
+		AP.csr_row_ptr.data(), AP.csr_col_ind.data(), beta, nullptr, nullptr, A_coarse.csr_row_ptr.data(), &A_coarse.nnz);
 
-		//determine c-points and f-points (second pass)
-		post_cpoint(srow, scol, cfpoints, rptr_size);
+	//std::cout << "A_coarse.nnz: " << A_coarse.nnz << std::endl;
+	A_coarse.csr_col_ind.resize(A_coarse.nnz);
+	A_coarse.csr_val.resize(A_coarse.nnz);
 
-		//compute interpolation matrix W
-		int numCPoints = weight_matrix(ar[i], ac[i], av[i], ad[i], srow, scol, sval, wr, wc, wv, cfpoints, rptr_size, i);
+	csrgemm(R.m, AP.n, R.n, R.nnz, AP.nnz, 0, alpha,
+		R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(),
+		AP.csr_row_ptr.data(), AP.csr_col_ind.data(), AP.csr_val.data(), beta,
+		nullptr, nullptr, nullptr, A_coarse.csr_row_ptr.data(), A_coarse.csr_col_ind.data(), A_coarse.csr_val.data());
 
-		//perform galarkin product Ac = W'*A*W
-		galerkin_prod2(ar, ac, av, ad, wr, wc, wv, rptr_size, numCPoints, i);
 
-		ASizes[i + 1] = numCPoints;  //size of the A matrix at the next level
 
-		i++;
+	std::cout << "A coarse" << std::endl;
+	for (int i = 0; i < A_coarse.m; i++)
+	{
+		int row_start = A_coarse.csr_row_ptr[i];
+		int row_end = A_coarse.csr_row_ptr[i + 1];
 
-		//delete temporary arrays
-		delete[] cfpoints;
-		delete[] lambda;
-		delete[] srow;
-		delete[] scol;
-		delete[] sval;
-		delete[] strow;
-		delete[] stcol;
-		delete[] stval;
+		std::vector<double> temp(A_coarse.n, 0);
+		for (int j = row_start; j < row_end; j++)
+		{
+			temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
+		}
+
+		for (int j = 0; j < A_coarse.n; j++)
+		{
+			std::cout << temp[j] << " ";
+		}
+		std::cout << "" << std::endl;
 	}
-
-	return i;
+	std::cout << "" << std::endl;
 }
-
-
-
 
 //-------------------------------------------------------------------------------
 // function for finding strength matrix size
 //-------------------------------------------------------------------------------
-int strength_matrix_size(const int r[], const int c[], const double v[], int rptr_size, const double theta)
+static int strength_matrix_size(const csr_matrix& A, const double theta)
 {
 	int str_size = 0;
-	for(int i = 0; i < rptr_size - 1; i++){
+	for(int i = 0; i < A.m; i++)
+	{
+		int start = A.csr_row_ptr[i];
+		int end = A.csr_row_ptr[i + 1];
+
 		double max_value = 0.0;
-		for(int j = r[i]; j < r[i + 1]; j++){
-			if(-v[j] > max_value && i != c[j]){
-				max_value = fabs(v[j]);
+		for(int j = start; j < end; j++)
+		{
+			if(-A.csr_val[j] > max_value && i != A.csr_col_ind[j])
+			{
+				max_value = fabs(A.csr_val[j]);
 			}
 		}
 
 		max_value = max_value * theta;
-		for(int j = r[i]; j < r[i + 1]; j++){
-			if(-v[j] > max_value && i != c[j]){
+		for(int j = start; j < end; j++)
+		{
+			if(-A.csr_val[j] > max_value && i != A.csr_col_ind[j])
+			{
 				str_size++;
 			}
 		}
@@ -354,186 +405,105 @@ int strength_matrix_size(const int r[], const int c[], const double v[], int rpt
 	return str_size;
 }
 
-
-
-
 //-------------------------------------------------------------------------------
 // function for finding strength matrix and lambda array
 //-------------------------------------------------------------------------------
-void strength_matrix(const int r[], const int c[], const double v[], int sr[], int sc[], 
-                     double sv[], int lambda[], int rptr_size, const double theta)
+static void strength_matrix(const csr_matrix& A, csr_matrix& strength, std::vector<int>& lambda, const double theta)
 {
+	strength.csr_row_ptr[0] = 0;
+
 	//determine strength matrix
 	int ind = 0;
-	for(int i = 0; i < rptr_size - 1; i++){
+	for(int i = 0; i < A.m; i++)
+	{
+		int start = A.csr_row_ptr[i];
+		int end = A.csr_row_ptr[i + 1];
+
 		double max_value = 0.0;
-		for(int j = r[i]; j < r[i + 1]; j++){
-			if(-v[j] > max_value && i != c[j]){
-				max_value = fabs(v[j]);
+		for(int j = start; j < end; j++)
+		{
+			if(-A.csr_val[j] > max_value && i != A.csr_col_ind[j])
+			{
+				max_value = fabs(A.csr_val[j]);
 			}
 		}
 
 		max_value = max_value * theta;
-		sr[i + 1] = sr[i];
-		for(int j = r[i]; j < r[i + 1]; j++){
-			if(-v[j] > max_value && i != c[j]){
-				sc[ind] = c[j];
-				lambda[sc[ind]]++;  // how many strong points are in each column??
-				sv[ind] = v[j];
+		
+		strength.csr_row_ptr[i + 1] = strength.csr_row_ptr[i];
+
+		for(int j = start; j < end; j++)
+		{
+			if(-A.csr_val[j] > max_value && i != A.csr_col_ind[j])
+			{
+				strength.csr_col_ind[ind] = A.csr_col_ind[j];
+				lambda[strength.csr_col_ind[ind]]++;  // how many strong points are in each column??
+				strength.csr_val[ind] = A.csr_val[j];
 				ind++;
-				sr[i + 1]++;
+				strength.csr_row_ptr[i + 1]++;
 			}
 		}
 	}
 }
 
-
-
+//-------------------------------------------------------------------------------
+// structure representing an array
+//-------------------------------------------------------------------------------
+struct array{
+  int value;
+  size_t id;
+};
 
 //-------------------------------------------------------------------------------
-// function for finding strength transpose matrix
+// compare function for sorting structure array
 //-------------------------------------------------------------------------------
-void strength_transpose_matrix(int sr[], int sc[], double sv[], int str[], int stc[], 
-                               double stv[], int lambda[], int rptr_size, const double theta)
+static int compare_structs(const void *a, const void *b)
 {
-	//determine transpose strength matrix
-	for(int i = 1; i < rptr_size; i++){
-		str[i] = lambda[i - 1] + str[i - 1];
-	}
+    array *struct_a = (array *) a;
+    array *struct_b = (array *) b;
 
-	unsigned *tmp = new unsigned[rptr_size - 1];
-	for(int i = 0; i < rptr_size - 1; i++){
-		tmp[i] = 0;
-	}
-
-	for(int i = 0; i < rptr_size - 1; i++){
-		for(int j = sr[i]; j < sr[i + 1]; j++){
-			stc[str[sc[j]] + tmp[sc[j]]] = i;
-			stv[str[sc[j]] + tmp[sc[j]]] = sv[j];
-			tmp[sc[j]]++;
-		}
-	}
-  
-	delete[] tmp;
-
-	//DEBUG
-	//cout<<""<<endl; cout<<"sr"<<endl;
-	//for(int i=0;i<rptr_size;i++){
-	//  cout<<str[i]<<" ";
-	//}
-	//cout<<""<<endl; cout<<"sc"<<endl;
-	//for(int i=0;i<str[rptr_size-1];i++){
-	//  cout<<stc[i]<<" ";
-	//}
-	//cout<<""<<endl; cout<<"sv"<<endl;
-	//for(int i=0;i<str[rptr_size-1];i++){
-	//  cout<<stv[i]<<" ";
-	//}
-	//cout<<""<<endl;
+    if (struct_a->value < struct_b->value) return 1;
+    else if (struct_a->value == struct_b->value) return 0;
+    else return -1;
 }
-
-
-
- 
-//-------------------------------------------------------------------------------
-// function for finding c-points and f-points (first pass)
-//-------------------------------------------------------------------------------
-void pre_cpoint(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size)
-{
-	unsigned idSize = rptr_size - 1;
-	unsigned *id = new unsigned[idSize];
-	for(unsigned i = 0; i < idSize; i++){id[i] = i;}
-
-	int num_nodes_not_assign = rptr_size - 1;
-	while(num_nodes_not_assign > 0)
-	{
-		int max_value = -999;
-		unsigned max_index = 0;
-		unsigned index = 0;
-		for(int i = 0; i < idSize; i++){
-			if(lambda[id[i]] != -999){
-				if(lambda[id[i]] > max_value){
-					max_value = lambda[id[i]];
-					max_index = id[i];
-				}
-				id[index] = id[i];
-				index++;
-			}
-		}
-		idSize = index;
-
-		cfpoints[max_index] = 1;
-		lambda[max_index] = -999;
-		num_nodes_not_assign--;
-
-		//determine how many nonzero entries are in the max_index column of S and 
-		//what rows those nonzero values are in
-		int count = 0;
-		int nnz_in_col = str[max_index+1]-str[max_index]; 
-		int *index_of_nz = new int[nnz_in_col];
-		for(int i = str[max_index]; i < str[max_index + 1]; i++){
-			index_of_nz[i - str[max_index]] = stc[i];
-		}
-
-		//make all connections to cpoint fpoints and update lambda array
-		for(int i = 0; i < nnz_in_col; i++){
-			if(lambda[index_of_nz[i]] != -999){
-				lambda[index_of_nz[i]] = -999;
-				num_nodes_not_assign--;
-				for(int j = sr[index_of_nz[i]]; j < sr[index_of_nz[i] + 1]; j++){
-					if(lambda[sc[j]] != -999){
-						lambda[sc[j]]++;
-					}
-				}
-			}
-		}
-		delete[] index_of_nz;
-	}
-	delete[] id;
-
-	//DEBUG
-	//cout<<"cfpoints: "<<" "<<endl;
-	//for(int i=0;i<rptr_size-1;i++){cout<<cfpoints[i]<<"  ";}
-	//cout<<""<<endl;
-}
-
-
-
-
 
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (first pass)
 //-------------------------------------------------------------------------------
-void pre_cpoint3(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size)
+static void pre_cpoint3(const csr_matrix& strength, const csr_matrix& strength_transpose, std::vector<int>& lambda, std::vector<unsigned int>& cfpoints)
 {
 	unsigned locInSortedLambda = 0;
 	unsigned numOfNodesToCheck = 0;
-	unsigned *nodesToCheck = new unsigned[rptr_size - 1];
-	struct array *sortedLambda = new array[rptr_size - 1];
-	for(unsigned i = 0; i < rptr_size - 1; i++){nodesToCheck[i] = 0;}
+	std::vector<unsigned int> nodesToCheck(strength.m, 0);
+	std::vector<array> sortedLambda(strength.m);
 
 	//copy lambda into struct array and then sort
-	for(unsigned i = 0; i < rptr_size - 1; i++){
+	for(size_t i = 0; i < lambda.size(); i++)
+	{
 		sortedLambda[i].value = lambda[i];
 		sortedLambda[i].id = i;
 	}
 
-	qsort(sortedLambda, rptr_size - 1, sizeof(sortedLambda[0]), compare_structs);
+	qsort(sortedLambda.data(), sortedLambda.size(), sizeof(array), compare_structs);
+	
 	nodesToCheck[0] = sortedLambda[0].id;
 	numOfNodesToCheck++;
 
-	int num_nodes_not_assign = rptr_size - 1;
+	int num_nodes_not_assign = strength.m;
 	while(num_nodes_not_assign > 0)
 	{
 		int max_value = -999;
 		unsigned max_index = 0;
-		while(locInSortedLambda < rptr_size - 2 && lambda[sortedLambda[locInSortedLambda].id] == -999){
+		while(locInSortedLambda < strength.m - 1 && lambda[sortedLambda[locInSortedLambda].id] == -999)
+		{
 			locInSortedLambda++;
 		}
 		nodesToCheck[0] = sortedLambda[locInSortedLambda].id;
 
-		for(unsigned int i = 0; i < numOfNodesToCheck; i++){
-			if(lambda[nodesToCheck[i]] > max_value){
+		for(unsigned int i = 0; i < numOfNodesToCheck; i++)
+		{
+			if(lambda[nodesToCheck[i]] > max_value)
+			{
 				max_value = lambda[nodesToCheck[i]];
 				max_index = nodesToCheck[i];
 			}
@@ -546,64 +516,82 @@ void pre_cpoint3(int sr[], int sc[], int str[], int stc[], int lambda[], unsigne
 
 		//determine how many nonzero entries are in the max_index column of S and 
 		//what rows those nonzero values are in
-		int nnz_in_col = str[max_index+1] - str[max_index];
-		int *index_of_nz = new int[nnz_in_col];
-		for(int i = 0; i < nnz_in_col; i++){index_of_nz[i] = stc[i + str[max_index]];}
+		int nnz_in_col = strength_transpose.csr_row_ptr[max_index + 1] - strength_transpose.csr_row_ptr[max_index];
+		
+		std::vector<int> index_of_nz(nnz_in_col); 
+		for(int i = 0; i < nnz_in_col; i++)
+		{
+			index_of_nz[i] = strength_transpose.csr_col_ind[i + strength_transpose.csr_row_ptr[max_index]];
+		}
 
 		//make all connections to cpoint fpoints and update lambda array
-		for(int i = 0; i < nnz_in_col; i++){
-			if(lambda[index_of_nz[i]] != -999){
+		for(int i = 0; i < nnz_in_col; i++)
+		{
+			if(lambda[index_of_nz[i]] != -999)
+			{
 				lambda[index_of_nz[i]] = -999;
 				num_nodes_not_assign--;
-				for(int j = sr[index_of_nz[i]]; j < sr[index_of_nz[i] + 1]; j++){
-					if(lambda[sc[j]] != -999){
-						lambda[sc[j]]++;
+				for(int j = strength.csr_row_ptr[index_of_nz[i]]; j < strength.csr_row_ptr[index_of_nz[i] + 1]; j++)
+				{
+					if(lambda[strength.csr_col_ind[j]] != -999)
+					{
+						lambda[strength.csr_col_ind[j]]++;
 						int flag = 0;
-						for(unsigned int k = 0; k < numOfNodesToCheck; k++){
-							if(nodesToCheck[k] == sc[j]){
+						for(unsigned int k = 0; k < numOfNodesToCheck; k++)
+						{
+							if(nodesToCheck[k] == strength.csr_col_ind[j])
+							{
 								flag = 1;
 								break;
 							}
 						}
-						if(flag == 0){
-							nodesToCheck[numOfNodesToCheck] = sc[j];
+						if(flag == 0)
+						{
+							nodesToCheck[numOfNodesToCheck] = strength.csr_col_ind[j];
 							numOfNodesToCheck++;
 						}
 					}
 				}
 			}
 		}
-		delete[] index_of_nz;
 	}
-	delete[] nodesToCheck;
-	delete[] sortedLambda;
 }
-
-
-
 
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (second pass)
 //-------------------------------------------------------------------------------
-void post_cpoint(int sr[], int sc[], unsigned cfpoints[], int rptr_size)
+static void post_cpoint(const csr_matrix& strength, std::vector<unsigned int>& cfpoints)
 {
 	int max_nstrc = 0;  //max number of strong connections in any row
-	for(int i = 0; i < rptr_size - 1; i++){
-		if(max_nstrc < sr[i + 1] - sr[i]){
-			max_nstrc = sr[i + 1] - sr[i];
+	for(int i = 0; i < strength.m; i++)
+	{
+		int start = strength.csr_row_ptr[i];
+		int end = strength.csr_row_ptr[i + 1];
+
+		if(max_nstrc < (end - start))
+		{
+			max_nstrc = end - start;
 		}
 	}
  
-	int *scpoints = new int[max_nstrc]; 
+	std::vector<int> scpoints(max_nstrc);
 
 	//perform second pass adding c-points where necessary
-	for(int i = 0; i < rptr_size - 1; i++){
-		if(cfpoints[i] == 0){                //i is an fpoint
-			int nstrc = sr[i+1] - sr[i];       //number of strong connections in row i
-			int scindex = 0;                 //number of c-points in row i
-			for(int j = sr[i]; j < sr[i+1]; j++){
-				if(cfpoints[sc[j]] == 1){
-					scpoints[scindex] = sc[j];
+	for(int i = 0; i < strength.m; i++)
+	{
+		if(cfpoints[i] == 0)  //i is an fpoint
+		{
+			int start = strength.csr_row_ptr[i];
+			int end = strength.csr_row_ptr[i + 1];
+
+			int nstrc = end - start; //number of strong connections in row i
+			int scindex = 0;         //number of c-points in row i
+			for(int j = start; j < end; j++)
+			{
+				int col = strength.csr_col_ind[j];
+				if(cfpoints[col] == 1)
+				{
+					scpoints[scindex] = col;
 					scindex++;
 				}
 			}
@@ -612,63 +600,68 @@ void post_cpoint(int sr[], int sc[], unsigned cfpoints[], int rptr_size)
 			if(scindex==0){std::cout<<"ERROR: no cpoint for the f-point "<<i<<std::endl;}
 			#endif
 
-			for(int j = sr[i]; j < sr[i+1]; j++){
-				if(cfpoints[sc[j]] == 0){  //sc[j] is an fpoint
+			for(int j = start; j < end; j++)
+			{
+				int col = strength.csr_col_ind[j];
+				if(cfpoints[col] == 0) //col is an fpoint
+				{
 					int ind1 = 0, ind2 = 0, flag = 1;
-					while(ind1 < scindex && ind2 < (sr[sc[j] + 1] - sr[sc[j]])){
-						if(scpoints[ind1] == sc[sr[sc[j]] + ind2]){
+					while(ind1 < scindex && ind2 < (strength.csr_row_ptr[col + 1] - strength.csr_row_ptr[col]))
+					{
+						if(scpoints[ind1] == strength.csr_col_ind[strength.csr_row_ptr[col] + ind2])
+						{
 							flag = 0;
 							break;
 						}
-						else if(scpoints[ind1] < sc[sr[sc[j]] + ind2]){
+						else if(scpoints[ind1] < strength.csr_col_ind[strength.csr_row_ptr[col] + ind2])
+						{
 							ind1++;
 						}
-						else if(scpoints[ind1] > sc[sr[sc[j]] + ind2]){
+						else if(scpoints[ind1] > strength.csr_col_ind[strength.csr_row_ptr[col] + ind2])
+						{
 							ind2++;
 						}
 					}
-					if(flag){
-					cfpoints[sc[j]] = 1; // sc[j] was an fpoint, but now is a cpoint 
-					scpoints[scindex] = sc[j];
-					scindex++;
+
+					if(flag)
+					{
+						cfpoints[col] = 1; // col was an fpoint, but now is a cpoint 
+						scpoints[scindex] = col;
+						scindex++;
 					}
 				}
 			}
 		}
 	}
-
-	delete[] scpoints;
-
-	//DEBUG
-	//cout<<"cfpoints: "<<" "<<endl;
-	//for(int i=0;i<rptr_size-1;i++){cout<<cfpoints[i]<<"  ";}
-	//cout<<""<<endl;
 }
-
-
-
 
 //-------------------------------------------------------------------------------
 // function for finding interpolation weight matrix
 //-------------------------------------------------------------------------------
-int weight_matrix(const int r[], const int c[], const double v[], double d[], int sr[], 
-                  int sc[], double sv[], int *wr[], int *wc[], double *wv[], 
-                  unsigned cfpoints[], int rptr_size, int level)
+static int weight_matrix(const csr_matrix& A, const csr_matrix& strength, csr_matrix& W, std::vector<unsigned int> cfpoints)
 {
-	//determine the number of c-points and f-points
+	// determine the number of c-points and f-points
 	int cnum = 0;
 	int fnum = 0;
-	for(int i = 0; i < rptr_size - 1; i++){
+	for(int i = 0; i < A.m; i++)
+	{
 		cnum += cfpoints[i];
 	}
-	fnum = rptr_size - 1 - cnum;
+	fnum = A.m - cnum;
 
 	//determine the size of the interpolation matrix W
 	int wsize = cnum;
-	for(int i = 0; i < rptr_size - 1; i++){
-		if(cfpoints[i] == 0){
-			for(int j = sr[i]; j < sr[i+1]; j++){
-				if(cfpoints[sc[j]] == 1){
+	for(int i = 0; i < strength.m; i++)
+	{
+		int start = strength.csr_row_ptr[i];
+		int end = strength.csr_row_ptr[i + 1];
+
+		if(cfpoints[i] == 0)
+		{
+			for(int j = start; j < end; j++)
+			{
+				if(cfpoints[strength.csr_col_ind[j]] == 1)
+				{
 					wsize++;
 				}
 			}
@@ -676,17 +669,19 @@ int weight_matrix(const int r[], const int c[], const double v[], double d[], in
 	}
 
 	//initialize interpolation matrix W
-	wr[level] = new int[rptr_size];
-	wc[level] = new int[wsize];
-	wv[level] = new double[wsize];
-	for(int j = 0; j < rptr_size; j++){wr[level][j]=0;}
-	for(int j = 0; j < wsize; j++){wc[level][j]=-1;}
-	for(int j = 0; j < wsize; j++){wv[level][j]=0.0;}
+	W.csr_row_ptr.resize(A.m + 1, 0);
+	W.csr_col_ind.resize(wsize, -1);
+	W.csr_val.resize(wsize, 0.0);
+	W.m = A.m;
+	W.n = cnum;
+	W.nnz = wsize;
 
 	//modify cfpoints array so that nonzeros now correspond to the cpoint location
 	int loc = 0;
-	for(int i = 0; i < rptr_size - 1; i++){
-		if(cfpoints[i] == 1){
+	for(size_t i = 0; i < cfpoints.size(); i++)
+	{
+		if(cfpoints[i] == 1)
+		{
 			cfpoints[i] = cfpoints[i] + loc;
 			loc++;
 		}
@@ -694,27 +689,41 @@ int weight_matrix(const int r[], const int c[], const double v[], double d[], in
 
 	//find beta array (sum of weak f-points)
 	int ind1 = 0, ind2 = 0, ii = 0;
-	double *beta = new double[fnum];
-	for(int i = 0; i < fnum; i++){beta[i] = 0.0;}
-		for(int i = 0; i < rptr_size - 1; i++){
-		if(cfpoints[i] == 0){
+
+	std::vector<double> beta(fnum, 0.0);
+	for(size_t i = 0; i < cfpoints.size(); i++)
+	{
+		int A_start = A.csr_row_ptr[i];
+		int A_end = A.csr_row_ptr[i + 1];
+
+		int strength_start = strength.csr_row_ptr[i];
+		int strength_end = strength.csr_row_ptr[i + 1];
+
+		if(cfpoints[i] == 0)
+		{
 			ind1 = 0;
 			ind2 = 0;
-			while(ind1 < (r[i + 1] - r[i]) && ind2 < (sr[i + 1] - sr[i])){
-				if(c[r[i] + ind1] == sc[sr[i] + ind2]){
+			while(ind1 < (A_end - A_start) && ind2 < (strength_end - strength_start))
+			{
+				if(A.csr_col_ind[A_start + ind1] == strength.csr_col_ind[strength_start + ind2])
+				{
 					ind1++;
 					ind2++;
 				}
-				else if(c[r[i] + ind1] < sc[sr[i] + ind2]){
-					if(c[r[i] + ind1] != i){
-						beta[ii] = beta[ii] + v[r[i] + ind1];
+				else if(A.csr_col_ind[A_start + ind1] < strength.csr_col_ind[strength_start + ind2])
+				{
+					if(A.csr_col_ind[A_start + ind1] != i)
+					{
+						beta[ii] = beta[ii] + A.csr_val[A_start + ind1];
 					}
 					ind1++;
 				}
 			}
-			while(ind1 < (r[i + 1] - r[i])){
-				if(c[r[i] + ind1] != i){
-					beta[ii] = beta[ii] + v[r[i] + ind1];
+			while(ind1 < (A_end - A_start))
+			{
+				if(A.csr_col_ind[A_start + ind1] != i)
+				{
+					beta[ii] = beta[ii] + A.csr_val[A_start + ind1];
 				}
 				ind1++;
 			}
@@ -722,21 +731,44 @@ int weight_matrix(const int r[], const int c[], const double v[], double d[], in
 		}
 	}  
 
+	// find diagonal of A
+	std::vector<double> d(A.m, 0.0);
+	for(int i = 0; i < A.m; i++)
+	{
+		int start = A.csr_row_ptr[i];
+		int end = A.csr_row_ptr[i + 1];
+
+		for(int j = start; j < end; j++)
+		{
+			if(i == A.csr_col_ind[j])
+			{
+				d[i] = A.csr_val[j];
+				break;
+			}
+		}
+	}
+
 	//create interpolation matrix W
 	double aii = 0.0, aij = 0.0, temp = 0.0;
 	int index = 0, rindex = 0;
 	ind1 = 0;
 	ind2 = 0;
-	for(int i = 0;i < rptr_size - 1; i++){
-		if(cfpoints[i] >= 1){
-			wc[level][index] = ind1;
-			wv[level][index] = 1.0;
+	for(size_t i = 0; i < cfpoints.size(); i++)
+	{
+		int strength_start = strength.csr_row_ptr[i];
+		int strength_end = strength.csr_row_ptr[i + 1];
+
+		if(cfpoints[i] >= 1)
+		{
+			W.csr_col_ind[index] = ind1;
+			W.csr_val[index] = 1.0;
 			ind1++;
 			index++;
 			rindex++;
-			wr[level][rindex] = wr[level][rindex - 1] + 1;
+			W.csr_row_ptr[rindex] = W.csr_row_ptr[rindex - 1] + 1;
 		}
-		else{
+		else
+		{
 			//determine diagonal element a_ii
 			aii = d[i];
   
@@ -744,28 +776,29 @@ int weight_matrix(const int r[], const int c[], const double v[], double d[], in
 			int ind3 = 0, ind4 = 0;
 			int scnum = 0;
 			int sfnum = 0;
-			int *scpts = new int[sr[i + 1] - sr[i]];
-			int *sfpts = new int[sr[i + 1] - sr[i]];
-			int *scind = new int[sr[i + 1] - sr[i]];
-			double *scval = new double[sr[i + 1] - sr[i]];
-			double *sfval = new double[sr[i + 1] - sr[i]];
-			for(int j = 0; j < (sr[i + 1] - sr[i]); j++){
-				scpts[j] = -1;
-				sfpts[j] = -1;
-				scind[j] = -1;
-				scval[j] = 0.0;
-				sfval[j] = 0.0;
-			}
-			for(int j = sr[i]; j < sr[i + 1]; j++){
-				if(cfpoints[sc[j]] >= 1){
-					scpts[scnum] = sc[j];
-					scval[scnum] = sv[j];
-					scind[scnum] = cfpoints[sc[j]] - 1;
+
+			std::vector<int> scpts(strength_end - strength_start, -1);
+			std::vector<int> sfpts(strength_end - strength_start, -1);
+			std::vector<int> scind(strength_end - strength_start, -1);
+			std::vector<double> scval(strength_end - strength_start, 0.0);
+			std::vector<double> sfval(strength_end - strength_start, 0.0);
+
+			for(int j = strength_start; j < strength_end; j++)
+			{
+				int strength_col = strength.csr_col_ind[j];
+				double strength_val = strength.csr_val[j];
+
+				if(cfpoints[strength_col] >= 1)
+				{
+					scpts[scnum] = strength_col;
+					scval[scnum] = strength_val;
+					scind[scnum] = cfpoints[strength_col] - 1;
 					scnum++;
 				}
-				else{
-					sfpts[sfnum] = sc[j];
-					sfval[sfnum] = sv[j];
+				else
+				{
+					sfpts[sfnum] = strength_col;
+					sfval[sfnum] = strength_val;
 					sfnum++;
 				}
 			}
@@ -774,780 +807,170 @@ int weight_matrix(const int r[], const int c[], const double v[], double d[], in
 				if(scnum == 0){std::cout << "ERROR: no cpoints in row " << i << std::endl;}
 			#endif
    
-			if(sfnum == 0){
+			if(sfnum == 0)
+			{
 			    //loop all strong c-points 
-				for(int k = 0; k < scnum; k++){
+				for(int k = 0; k < scnum; k++)
+				{
 					aij = scval[k];
-					wc[level][index] = scind[k];
-					wv[level][index] = -(aij)/(aii + beta[ind2]);
+					W.csr_col_ind[index] = scind[k];
+					W.csr_val[index] = -(aij)/(aii + beta[ind2]);
 					index++;
 				}
 			}
-			else{
+			else
+			{
 				//loop thru all the strong f-points to find alpha array
-				double *alpha = new double[sfnum];
-				for(int k = 0; k < sfnum; k++){
-					alpha[k] = 0.0;
-				}
-				for(int k = 0; k < sfnum; k++){
+				std::vector<double> alpha(sfnum, 0.0);
+				for(int k = 0; k < sfnum; k++)
+				{
 					ind3 = 0;
 					ind4 = 0;
-					while(ind3 < scnum && ind4 < (r[sfpts[k] + 1] - r[sfpts[k]])){
-						if(scpts[ind3] == c[r[sfpts[k]] + ind4]){
-							alpha[k] = alpha[k] + v[r[sfpts[k]] + ind4];
+					while(ind3 < scnum && ind4 < (A.csr_row_ptr[sfpts[k] + 1] - A.csr_row_ptr[sfpts[k]]))
+					{
+						if(scpts[ind3] == A.csr_col_ind[A.csr_row_ptr[sfpts[k]] + ind4])
+						{
+							alpha[k] = alpha[k] + A.csr_val[A.csr_row_ptr[sfpts[k]] + ind4];
 							ind3++;
 							ind4++; 
 						}
-						else if(scpts[ind3] < c[r[sfpts[k]] + ind4]){
+						else if(scpts[ind3] < A.csr_col_ind[A.csr_row_ptr[sfpts[k]] + ind4])
+						{
 							ind3++;
 						}
-						else if(scpts[ind3] > c[r[sfpts[k]] + ind4]){
+						else if(scpts[ind3] > A.csr_col_ind[A.csr_row_ptr[sfpts[k]] + ind4])
+						{
 							ind4++;
 						}
 					}
 				}
 
 				//loop all strong c-points 
-				for(int k = 0; k < scnum; k++){
+				for(int k = 0; k < scnum; k++)
+				{
 					aij = scval[k];
 					temp = 0.0;
-					for(int l = 0; l < sfnum; l++){
-						for(int m = r[sfpts[l]]; m < r[sfpts[l] + 1]; m++){
-							if(c[m] == scpts[k]){
+					for(int l = 0; l < sfnum; l++)
+					{
+						for(int m = A.csr_row_ptr[sfpts[l]]; m < A.csr_row_ptr[sfpts[l] + 1]; m++)
+						{
+							if(A.csr_col_ind[m] == scpts[k])
+							{
 								#if(DEBUG)
 									if(alpha[l] == 0.0){std::cout << "ERROR: alpha is zero" << std::endl;}
 								#endif
-								temp = temp + sfval[l] * v[m] / alpha[l];
+								temp = temp + sfval[l] * A.csr_val[m] / alpha[l];
 								break;
 							} 
 						}
 					}
-					wc[level][index] = scind[k];
-					wv[level][index] = -(aij + temp)/(aii + beta[ind2]);
+					W.csr_col_ind[index] = scind[k];
+					W.csr_val[index] = -(aij + temp)/(aii + beta[ind2]);
 					index++;
 				}
-
-				delete[] alpha;
 			}
 			ind2++;
 			rindex++;
-			wr[level][rindex] = wr[level][rindex - 1] + scnum;
-
-			delete[] scpts;
-			delete[] sfpts;
-			delete[] scind;
-			delete[] scval;
-			delete[] sfval;
+			W.csr_row_ptr[rindex] = W.csr_row_ptr[rindex - 1] + scnum;
 		}
 	}
-
-	delete[] beta;
-
-	//DEBUG
-	//cout<<""<<endl;
-	//for(int i=0;i<rptr_size;i++){
-	//  cout<<wr[level][i]<<" "<<endl;
-	//}
-	//cout<<""<<endl;
-	//for(int i=0;i<wsize;i++){
-	//  cout<<wc[level][i]<<" "<<endl;
-	//}
-	//cout<<""<<endl;
-	//for(int i=0;i<wsize;i++){
-	//  cout<<wv[level][i]<<" "<<endl;
-	//}
-	//cout<<""<<endl;
  
 	return cnum;
 }
 
-
-
-
-//-------------------------------------------------------------------------------
-// function for performing galarkin product: W'*A*W
-//-------------------------------------------------------------------------------
-void galerkin_prod(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], 
-                   int rptr_size, int m, int level)
+void rsamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy)
 {
-	int n = rptr_size-1; //number of rows in A and W. 
-	int *nnzIthWCol = new int[m];
-	int *nnzJthARow = new int[n];
-	int *nnzIthAWRow = new int[n];
-	int *nnzIthWAWRow = new int[m];
+	hierarchy.prolongations.resize(max_level);
+	hierarchy.restrictions.resize(max_level);
+	hierarchy.A_cs.resize(max_level + 1);
 
-	int *temp1 = new int[m];
-	double *temp2 = new double[m];
+	// Set original matrix at level 0 in the hierarchy
+	hierarchy.A_cs[0].m = m;
+	hierarchy.A_cs[0].n = m;
+	hierarchy.A_cs[0].nnz = nnz;
+	hierarchy.A_cs[0].csr_row_ptr.resize(m + 1);
+	hierarchy.A_cs[0].csr_col_ind.resize(nnz);
+	hierarchy.A_cs[0].csr_val.resize(nnz);
 
-	int *wpr = new int[m+1];
-	int *wpc = new int[wr[level][n]];
-	double *wpv = new double[wr[level][n]];
-
-	//initialize nnzIthWCol, nnzJthARow, nnzIthAWRow, and nnzIthWAWRow to zero
-	for(int i = 0; i < m; i++){nnzIthWCol[i] = 0;}
-	for(int i = 0; i < n; i++){nnzJthARow[i] = 0;}
-	for(int i = 0; i < n; i++){nnzIthAWRow[i] = 0;}
-	for(int i = 0; i < m; i++){nnzIthWAWRow[i] = 0;}
-
-	//first determine how many non-zeros exist in each column of W and store in array nnzIthWCol
-	for(int i = 0; i < wr[level][n]; i++){
-		nnzIthWCol[wc[level][i]] = nnzIthWCol[wc[level][i]] + 1;
+	for (int i = 0; i < m + 1; i++)
+	{
+		hierarchy.A_cs[0].csr_row_ptr[i] = csr_row_ptr[i];
 	}
 
-	//second determine how many non-zeros exist in each row of A and store in array nnzJthARow
-	for(int i = 0; i < n; i++){
-		nnzJthARow[i] = ar[level][i + 1] - ar[level][i];
+	for (int i = 0; i < nnz; i++)
+	{
+		hierarchy.A_cs[0].csr_col_ind[i] = csr_col_ind[i];
+		hierarchy.A_cs[0].csr_val[i] = csr_val[i];
 	}
 
-	//find W' in CRS format from W
-	temp1[0] = 0; wpr[0] = 0;
-	for(int i = 1; i < m; i++){
-		temp1[i] = temp1[i-1] + nnzIthWCol[i-1];
-	}
-	for(int i = 1; i < m + 1; i++){
-		wpr[i] = wpr[i-1] + nnzIthWCol[i-1];
-	}
-	for(int i = 0; i < n; i++){
-		for(int j = wr[level][i]; j < wr[level][i + 1]; j++){
-			wpc[temp1[wc[level][j]]] = i;
-			wpv[temp1[wc[level][j]]] = wv[level][j];
-			temp1[wc[level][j]]++;
+	double theta = 0.5;
+
+	int level = 0;
+	while (level < max_level)
+	{
+		std::cout << "Compute operators at coarse level: " << level << std::endl;
+		
+		csr_matrix& A = hierarchy.A_cs[level];
+		csr_matrix& A_coarse = hierarchy.A_cs[level + 1];
+		csr_matrix& P = hierarchy.prolongations[level];
+		csr_matrix& R = hierarchy.restrictions[level];
+
+		//determine size of strength matrix
+		int ssize = strength_matrix_size(A, theta);
+
+		std::cout << "ssize: " << ssize << std::endl;
+
+		csr_matrix strength;
+		strength.m = A.m;
+		strength.n = A.n;
+		strength.nnz = ssize;
+		strength.csr_row_ptr.resize(A.m + 1, 0);
+		strength.csr_col_ind.resize(ssize, 0);
+		strength.csr_val.resize(ssize, 0.0);
+
+		csr_matrix strength_transpose;
+		strength_transpose.m = A.m;
+		strength_transpose.n = A.n;
+		strength_transpose.nnz = ssize;
+		strength_transpose.csr_row_ptr.resize(A.m + 1, 0);
+		strength_transpose.csr_col_ind.resize(ssize, 0);
+		strength_transpose.csr_val.resize(ssize, 0.0);
+
+		std::vector<unsigned int> cfpoints(A.m, 0);
+		std::vector<int> lambda(A.m, 0);
+
+		//compute strength matrix S
+		strength_matrix(A, strength, lambda, theta);
+
+		//compute strength transpose matrix S^T
+		transpose(strength, strength_transpose);
+
+		//determine c-points and f-points (first pass)
+		pre_cpoint3(strength, strength_transpose, lambda, cfpoints);
+
+		//determine c-points and f-points (second pass)
+		post_cpoint(strength, cfpoints);
+
+		//compute interpolation matrix W
+		int numCPoints = weight_matrix(A, strength, P, cfpoints);
+
+		std::cout << "numCPoints: " << numCPoints << " P.n: " << P.n << std::endl;
+
+		if (P.n == 0)
+		{
+			break;
 		}
+
+		// Compute restriction matrix by transpose of prolongation matrix
+		transpose(P, R);
+
+		// Compute coarse grid matrix using Galarkin triple product A_c = R * A * P
+		galarkinTripleProduct(R, A, P, A_coarse);
+
+		level++;
 	}
 
-	//Now determine how many non-zeros exist in the matrix product of A*W
-	int nnz = 0;
-	for(int i = 0; i < m; i++){
-		temp1[i] = 0;
-	}
-	for(int i = 0; i < n; i++){ //loop through each row of A
-		for(int j = ar[level][i]; j < ar[level][i + 1]; j++){
-			for(int k = wr[level][ac[level][j]]; k < wr[level][ac[level][j] + 1]; k++){
-				if(temp1[wc[level][k]]!=-(i+1)){
-					nnz++;
-					temp1[wc[level][k]] =- (i + 1);
-				}
-			}
-		}
-	}
+	hierarchy.total_levels = level;
 
-	//create temporary arrays for storing the result of A*W and initialize to zeros
-	int *tr = new int[n+1];
-	int *tc = new int[nnz];
-	double *tv = new double[nnz];
-	for(int i = 0; i < nnz; i++){
-		tc[i] = 0;
-		tv[i] = 0.0;
-	}
-
-	//now compute the matrix product A*W and store the result in tc and tv
-	int indx = 0;
-	for(int i = 0; i < n; i++){ //loop through each row of A
-		for(int j = 0; j < m; j++){
-			temp1[j] = -1;
-		}
-		for(int j = 0; j < m; j++){
-			temp2[j] = 0.0;
-		}
-		for(int j = ar[level][i]; j < ar[level][i + 1]; j++){
-			for(int k = wr[level][ac[level][j]]; k < wr[level][ac[level][j] + 1]; k++){
-				if(temp1[wc[level][k]] == -1){  //new column 
-					temp1[wc[level][k]] = wc[level][k];
-					temp2[wc[level][k]] = temp2[wc[level][k]] + av[level][j] * wv[level][k];
-				}
-				else{
-					temp2[wc[level][k]] = temp2[wc[level][k]] + av[level][j] * wv[level][k];
-				}
-			}
-		}
-		for(int l = 0; l < m; l++){
-			if(temp1[l]!=-1){
-				tc[indx] = temp1[l];
-				tv[indx] = tv[indx] + temp2[l];
-				nnzIthAWRow[i]++;
-				indx++;
-			}
-		}
-	}
-
-	//update tc pointer array
-	tr[0] = 0;
-	for(int i = 1; i < n + 1; i++){
-		tr[i] = tr[i-1] + nnzIthAWRow[i-1];
-	}
-
-	//We know have the produxt T=A*W given by the arrays: tr, tc, & tv. Need to perform the product B=W'T 
-	//Now determine how many non-zeros exist in the matrix product of W'T
-	nnz = 0;
-	for(int i = 0; i < m; i++){
-		temp1[i] = 0;
-	}
-	for(int i = 0; i < m; i++){ //loop through each row of W'
-		for(int j = wpr[i]; j < wpr[i + 1]; j++){
-			for(int k = tr[wpc[j]]; k < tr[wpc[j] + 1]; k++){
-				if(temp1[tc[k]] != -(i + 1)){
-					nnz++;
-					temp1[tc[k]] = -(i + 1);
-				}
-			}
-		}
-	}
- 
-	//create arrays for storing the result of W'*A*W and initialize to zeros
-	ar[level + 1] = new int[m + 1];
-	ac[level + 1] = new int[nnz];
-	av[level + 1] = new double[nnz];
-
-	for(int i = 0; i < m + 1; i++){
-		ar[level + 1][i] = 0;
-	}
-	for(int i = 0; i < nnz; i++){
-		ac[level + 1][i] = 0;
-		av[level + 1][i] = 0.0;
-	}
-
-	//now compute the matrix product W'T and store the result in ac and av
-	indx = 0;
-	for(int i = 0; i < m; i++){ //loop through each row of W'
-		for(int j = 0; j < m; j++){temp1[j] = -1;}
-		for(int j = 0; j < m; j++){temp2[j] = 0.0;}
-		for(int j = wpr[i]; j < wpr[i + 1]; j++){
-			for(int k = tr[wpc[j]]; k < tr[wpc[j] + 1]; k++){
-				if(temp1[tc[k]] == -1){  //new column 
-					temp1[tc[k]] = tc[k];
-					temp2[tc[k]] = temp2[tc[k]] + wpv[j]*tv[k];
-				}
-				else{
-					temp2[tc[k]] = temp2[tc[k]] + wpv[j]*tv[k];
-				}
-			}
-		}
-		for(int l = 0; l < m; l++){
-			if(temp1[l] != -1){
-				ac[level + 1][indx] = temp1[l];
-				av[level + 1][indx] = av[level + 1][indx] + temp2[l];
-				nnzIthWAWRow[i]++;
-				indx++;
-			}
-		}
-	}
-
-	//update ar pointer array
-	ar[level+1][0] = 0;
-	for(int i = 1; i < m + 1; i++){
-		ar[level + 1][i] = ar[level + 1][i - 1] + nnzIthWAWRow[i-1];
-	}
-
-	delete[] nnzIthWCol;
-	delete[] nnzJthARow;
-	delete[] nnzIthAWRow;
-	delete[] nnzIthWAWRow;
-	delete[] temp1;
-	delete[] temp2;
-	delete[] wpr;
-	delete[] wpc;
-	delete[] wpv;
-	delete[] tr;
-	delete[] tc;
-	delete[] tv;
-
-	//DEBUG
-	//cout<<"ar: "<<endl;
-	//for(int i=0;i<m+1;i++){cout<<ar[level+1][i]<<endl;}
-	//cout<<"ac: "<<endl;
-	//for(int i=0;i<nnz;i++){cout<<ac[level+1][i]<<endl;}
-	//cout<<"av: "<<endl;
-	//for(int i=0;i<nnz;i++){cout<<av[level+1][i]<<endl;}
+	std::cout << "Total number of levels in operator hierarchy at the end of the setup phase: " << level << std::endl;
 }
-
-
-
-
-//-------------------------------------------------------------------------------
-// function for performing galarkin product: W'*A*W
-//-------------------------------------------------------------------------------
-void galerkin_prod2(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], 
-                    int *wc[], double *wv[], int rptr_size, int m, int level)
-{
-	int n = rptr_size-1; //number of rows in A and W. 
-	//int *nnzIthWCol = new int[m];
-
-	int *temp1 = new int[m];
-
-	int *wpr = new int[m + 1];
-	int *wpc = new int[wr[level][n]];
-	double *wpv = new double[wr[level][n]];
-
-	//initialize nnzIthWCol to zero
-	//for(int i=0;i<m;i++){nnzIthWCol[i]=0;}
-	for(int i = 0; i < m; i++){
-		temp1[i]=0;
-	}
-
-	//first determine how many non-zeros exist in each column of W and store in array nnzIthWCol
-	//for(int i=0;i<wr[level][n];i++){nnzIthWCol[wc[level][i]] = nnzIthWCol[wc[level][i]] + 1;}
-	for(int i = 0; i < wr[level][n]; i++){
-		temp1[wc[level][i]]++;
-	}
-
-	//find W' in CRS format from W
-	wpr[0] = 0;
-	//for(int i=1;i<m+1;i++){wpr[i] = wpr[i-1] + nnzIthWCol[i-1];}
-	for(int i = 1; i < m + 1; i++){
-		wpr[i] = wpr[i-1] + temp1[i-1];
-	}
-	//for(int i=1;i<m;i++){temp1[i] = temp1[i-1] + nnzIthWCol[i-1];}
-	temp1[0] = 0;
-	for(int i = 1; i < m; i++){
-		temp1[i] = temp1[i-1] + wpr[i] - wpr[i-1];
-	}
-	for(int i = 0; i < n; i++){
-		for(int j = wr[level][i]; j < wr[level][i + 1]; j++){
-			wpc[temp1[wc[level][j]]] = i;
-			wpv[temp1[wc[level][j]]] = wv[level][j];
-			temp1[wc[level][j]]++;
-		}
-	}
-
-	//Now determine how many non-zeros exist in the matrix product of A*W
-	int nnz = 0;
-	for(int i = 0; i < m; i++){
-		temp1[i] = 0;
-	}
-	for(int i = 0; i < n; i++){ //loop through each row of A
-		for(int j = ar[level][i]; j < ar[level][i + 1]; j++){
-			for(int k = wr[level][ac[level][j]]; k < wr[level][ac[level][j] + 1]; k++){
-				if(temp1[wc[level][k]] != -(i + 1)){
-					nnz++;
-					temp1[wc[level][k]] = -(i + 1);
-				}
-			}
-		}
-	}
-
-	//create temporary arrays for storing the result of A*W and initialize to zeros
-	int *tr = new int[n + 1];
-	int *tc = new int[nnz];
-	double *tv = new double[nnz];
-	for(int i = 0; i < nnz; i++){
-		tc[i] = 0;
-		tv[i] = 0.0;
-	}
-
-	//now compute the matrix product A*W and store the result in tr, tc and tv
-	tr[0] = 0;
-	int indx = 0, start = 0;
-	for(int i = 0; i < n; i++){ //loop through each row of A
-		for(int j = ar[level][i]; j < ar[level][i + 1]; j++){
-			for(int k = wr[level][ac[level][j]]; k < wr[level][ac[level][j] + 1]; k++){
-				int found = 0;
-				for(int l = start; l < indx; l++){
-					if(tc[l]==wc[level][k]){
-						tv[l] = tv[l] + av[level][j] * wv[level][k];
-						found = 1;
-						break;
-					}
-				}
-				if(found == 0){
-					tc[indx] = wc[level][k];
-					tv[indx] = av[level][j] * wv[level][k];
-					indx++;
-				}
-			}
-		}
-		//sort tc[start:indx-1]
-		sort(tc,tv,start,indx);
-		start = indx;
-		tr[i+1] = indx;
-	}
-
-	//We know have the produxt T=A*W given by the arrays: tr, tc, & tv. Need to perform the 
-	//product B=W'T. Now determine how many non-zeros exist in the matrix product of W'T
-	nnz = 0;
-	for(int i = 0; i < m; i++){
-		temp1[i] = 0;
-	}
-	for(int i = 0; i < m; i++){ //loop through each row of W'
-		for(int j = wpr[i]; j < wpr[i + 1]; j++){
-			for(int k = tr[wpc[j]]; k < tr[wpc[j] + 1]; k++){
-				if(temp1[tc[k]] != -(i + 1)){
-					nnz++;
-					temp1[tc[k]] = -(i + 1);
-				}
-			}
-		}
-	}
-
-	//create arrays for storing the result of W'*A*W and initialize to zeros
-	ar[level+1] = new int[m + 1];
-	ac[level+1] = new int[nnz];
-	av[level+1] = new double[nnz];
-	ad[level+1] = new double[m];
-	for(int i = 0; i < nnz; i++){
-		ac[level + 1][i] = 0;
-		av[level + 1][i] = 0.0;
-	}
-
-	//now compute the matrix product W'T and store the result in ac and av
-	ar[level + 1][0] = 0;
-	indx = 0, start = 0;
-	for(int i = 0; i < m; i++){ //loop through each row of W'
-		for(int j = wpr[i]; j < wpr[i + 1]; j++){
-			for(int k = tr[wpc[j]]; k < tr[wpc[j] + 1]; k++){
-				int found = 0;
-				for(int l = start; l < indx; l++){
-					if(ac[level + 1][l] == tc[k]){
-						av[level + 1][l] = av[level + 1][l] + wpv[j] * tv[k];
-						found = 1;
-						break;
-					}
-				}
-				if(found == 0){
-					ac[level + 1][indx] = tc[k];
-					av[level + 1][indx] = wpv[j] * tv[k];
-					indx++;
-				}
-			}
-		}
-		//sort tc[start:indx-1]
-		sort(ac[level + 1], av[level + 1], start, indx);
-		start = indx;
-		ar[level + 1][i + 1] = indx;
-	}
-
-	//find diagonal entries of A matrix
-	for(int i = 0; i < m; i++){
-		for(int j = ar[level + 1][i]; j < ar[level + 1][i + 1]; j++){
-			if(ac[level + 1][j] == i){
-				ad[level + 1][i] = av[level + 1][j];
-				break;
-			}
-		} 
-	}
-
-	//delete[] nnzIthWCol;
-	delete[] temp1;
-	delete[] wpr;
-	delete[] wpc;
-	delete[] wpv;
-	delete[] tr;
-	delete[] tc;
-	delete[] tv;
-
-	//DEBUG
-	//cout<<"ar: "<<endl;
-	//for(int i=0;i<m+1;i++){cout<<ar[level+1][i]<<"  ";}
-	//cout<<"ac: "<<endl;
-	//for(int i=0;i<nnz;i++){cout<<ac[level+1][i]<<endl;}
-	//cout<<"av: "<<endl;
-	//for(int i=0;i<nnz;i++){cout<<av[level+1][i]<<endl;}
-	//std::cout<<"ad: "<<std::endl;
-	//for(int i=0;i<m;i++){std::cout<<ad[level+1][i]<<std::endl;}
-}
-
-
-
-
-
-//-------------------------------------------------------------------------------
-// sort function used in galarkin2
-//-------------------------------------------------------------------------------
-inline void sort(int array1[], double array2[], int start, int end)
-{
-	for(int i=start;i<end;i++){
-		int index = i;
-		for(int j=i+1;j<end;j++){
-			if(array1[index]>array1[j]){
-			index = j;
-			}
-		}
-		int temp1 = array1[i];
-		double temp2 = array2[i];
-		array1[i] = array1[index];
-		array2[i] = array2[index];
-		array1[index] = temp1;
-		array2[index] = temp2;
-	}
-}
-
-
-
-//-------------------------------------------------------------------------------
-// compare function for sorting structure array
-//-------------------------------------------------------------------------------
-int compare_structs(const void *a, const void *b){
-    array *struct_a = (array *) a;
-    array *struct_b = (array *) b;
-
-    if (struct_a->value < struct_b->value) return 1;
-    else if (struct_a->value == struct_b->value) return 0;
-    else return -1;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//-------------------------------------------------------------------------------
-// function for performing galarkin product: W'*A*W
-//-------------------------------------------------------------------------------
-void galerkin_prod3(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], 
-                    int rptr_size, int m, int level)
-{
-  int n = rptr_size-1; //number of rows in A and W. 
-  int *nnzIthWCol = new int[m];
-
-  int *temp1 = new int[m];
-  int *temp2 = new int[n];
-
-  int *wpr = new int[m+1];
-  int *wpc = new int[wr[level][n]];
-  double *wpv = new double[wr[level][n]];
-
-  //initialize nnzIthWCol to zero
-  for(int i=0;i<m;i++){nnzIthWCol[i]=0;}
-
-  //first determine how many non-zeros exist in each column of W and store in array nnzIthWCol
-  for(int i=0;i<wr[level][n];i++){nnzIthWCol[wc[level][i]] = nnzIthWCol[wc[level][i]] + 1;}
-
-  //find W' in CRS format from W
-  temp1[0] = 0; wpr[0] = 0;
-  for(int i=1;i<m;i++){temp1[i] = temp1[i-1] + nnzIthWCol[i-1];}
-  for(int i=1;i<m+1;i++){wpr[i] = wpr[i-1] + nnzIthWCol[i-1];}
-  for(int i=0;i<n;i++){
-    for(int j=wr[level][i];j<wr[level][i+1];j++){
-      wpc[temp1[wc[level][j]]] = i;
-      wpv[temp1[wc[level][j]]] = wv[level][j];
-      temp1[wc[level][j]]++;
-    }
-  }
-
-
-  //Now determine how many non-zeros exist in the matrix product of W'A
-  int nnz = 0;
-  for(int i=0;i<n;i++){temp2[i] = 0;}
-  for(int i=0;i<m;i++){ //loop through each row of W'
-    for(int j=wpr[i];j<wpr[i+1];j++){
-      for(int k=ar[level][wpc[j]];k<ar[level][wpc[j]+1];k++){
-        if(temp2[ac[level][k]]!=-(i+1)){
-          nnz++;
-          temp2[ac[level][k]]=-(i+1);
-        }
-      }
-    }
-  }
-
-  //cout<<"nnz: "<<nnz<<endl;
-  //cout<<"n: "<<n<<endl;
-  //cout<<"m: "<<m<<endl;
-
-  //create temporary arrays for storing the result of W'*A and initialize to zeros
-  int *tr = new int[m+1];
-  int *tc = new int[nnz];
-  double *tv = new double[nnz];
-  for(int i=0;i<m+1;i++){tr[i] = 0;}
-  for(int i=0;i<nnz;i++){
-    tc[i] = 0;
-    tv[i] = 0.0;
-  }
-
-  //now compute the matrix product W'*A and store the result in tr, tc, and tv
-  int indx = 0;
-  for(int i=0;i<m;i++){  //loop through rows of W'
-    for(int j=0;j<n;j++){  //loop through cols of A (use fact that A is symmetric)
-      int ind1 = 0, ind2 = 0, found = 0;
-      while(ind1<(wpr[i+1]-wpr[i]) && ind2<(ar[level][j+1]-ar[level][j])){
-        if(wpc[ind1+wpr[i]]==ac[level][ind2+ar[level][j]]){
-          tc[indx] = j;
-          tv[indx] = tv[indx] + av[level][ind2+ar[level][j]]*wpv[ind1+wpr[i]];
-          ind1++;
-          ind2++;
-          found = 1;
-        }
-        else if(wpc[ind1+wpr[i]]<ac[level][ind2+ar[level][j]]){
-          ind1++;
-        }
-        else if(wpc[ind1+wpr[i]]>ac[level][ind2+ar[level][j]]){
-          ind2++;
-        }
-      }
-      if(found==1){indx++;}
-    }
-    //cout<<"indx: "<<indx<<endl;
-    tr[i+1] = indx;
-  }
-
-  //for(int i=0;i<m+1;i++){cout<<tr[i]<<"  ";}
-
-  //We now have the produxt T=W'*A given by the arrays: tr, tc, & tv. Need to perform the product B=T*W 
-  //Now determine how many non-zeros exist in the matrix product of T*W
-  nnz = 0;
-  for(int i=0;i<m;i++){  //loop through rows of T
-    for(int j=0;j<m;j++){  //loop through cols of W
-      int ind1 = 0, ind2 = 0, found = 0;
-      while(ind1<(tr[i+1]-tr[i]) && ind2<(wpr[j+1]-wpr[j])){
-        if(tc[ind1+tr[i]]==wpc[ind2+wpr[j]]){
-          nnz++;
-          break;
-        }
-        else if(tc[ind1+tr[i]]<wpc[ind2+wpr[j]]){
-          ind1++;
-        }
-        else if(tc[ind1+tr[i]]>wpc[ind2+wpr[j]]){
-          ind2++;
-        }
-      }
-    }
-  }
-
-
-  //for(int i=0;i<n;i++){temp2[i] = 0;}
-  //for(int i=0;i<m;i++){ //loop through each row of T
-  //  for(int j=tr[i];j<tr[i+1];j++){
-  //    for(int k=wpr[tc[j]];k<wpr[tc[j]+1];k++){
-  //      if(temp2[wpc[k]]!=-(i+1)){
-  //        nnz++;
-  //        temp2[wpc[k]]=-(i+1);
-  //      }
-  //    }
-  //  }
-  //}
-
-  //create arrays for storing the result of W'*A*W and initialize to zeros
-  ar[level+1] = new int[m+1];
-  ac[level+1] = new int[nnz];
-  av[level+1] = new double[nnz];
-
-  for(int i=0;i<m+1;i++){ar[level+1][i] = 0;}
-  for(int i=0;i<nnz;i++){
-    ac[level+1][i] = 0;
-    av[level+1][i] = 0.0;
-  }
-
-  //now compute the matrix product T*W and store the result in ar, ac, and av
-  indx = 0;
-  for(int i=0;i<m;i++){  //loop through rows of T
-    for(int j=0;j<m;j++){  //loop through cols of W 
-      int ind1 = 0, ind2 = 0, found = 0;
-      while(ind1<(tr[i+1]-tr[i]) && ind2<(wpr[j+1]-wpr[j])){
-        if(tc[ind1+tr[i]]==wpc[ind2+wpr[j]]){
-          ac[level+1][indx] = j;
-          av[level+1][indx] = av[level+1][indx] + tv[ind1+tr[i]]*wpv[ind2+wpr[j]];
-          ind1++;
-          ind2++;
-          found = 1;
-        }
-        else if(tc[ind1+tr[i]]<wpc[ind2+wpr[j]]){
-          ind1++;
-        }
-        else if(tc[ind1+tr[i]]>wpc[ind2+wpr[j]]){
-          ind2++;
-        }
-      }
-      if(found==1){indx++;}
-    }
-    ar[level+1][i+1] = indx;
-  }
-
-  delete[] nnzIthWCol;
-  delete[] temp1;
-  delete[] temp2;
-  delete[] wpr;
-  delete[] wpc;
-  delete[] wpv;
-  delete[] tr;
-  delete[] tc;
-  delete[] tv;
-}
-
-
-
-
-//#if(DEBUG)
-//  if((aii + beta[ind2])==0.0){
-//    std::cout<<"ERROR: "<<-(aij + temp)/(aii + beta[ind2])<<std::endl;
-//    std::cout<<"row: "<<i<<std::endl;
-//    std::cout<<(aii + beta[ind2])<<std::endl;
-//    std::cout<<"aii: "<<aii<<std::endl;
-//    std::cout<<"ind2: "<<ind2<<std::endl;
-//    std::cout<<"beta[ind2]: "<<beta[ind2]<<std::endl;
-//  }
-//#endif

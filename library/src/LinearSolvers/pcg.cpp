@@ -25,7 +25,6 @@
 //********************************************************************************
 
 #include <iostream>
-#include "../../include/LinearSolvers/rsamg.h"
 #include "../../include/LinearSolvers/pcg.h"
 #include "../../include/LinearSolvers/slaf.h"
 #include "math.h"

@@ -61,11 +61,11 @@ void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int
 	}
 	std::cout << "" << std::endl;
 
-	double eps2 = eps * eps;
+	//double eps2 = eps * eps;
 
 	for (int i = 0; i < A.m; i++)
 	{
-		double eps_dia_i = eps2 * diag[i];
+		//double eps_dia_i = eps2 * diag[i];
 
 		int row_start = A.csr_row_ptr[i];
 		int row_end = A.csr_row_ptr[i + 1];
@@ -78,8 +78,8 @@ void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int
 			assert(c >= 0);
 			assert(c < A.m);
 
-			connections[j] = (c != i) && (v * v > eps_dia_i * diag[c]);
-			//connections[j] = (c != i) && (std::abs(v) >= eps * std::sqrt(std::abs(diag[i]) * std::abs(diag[c])));
+			//connections[j] = (c != i) && (v * v > eps_dia_i * diag[c]);
+			connections[j] = (c != i) && (std::abs(v) >= eps * std::sqrt(std::abs(diag[i]) * std::abs(diag[c])));
 		}
 	}
 }

@@ -34,6 +34,7 @@
 // Linear solvers
 #include "LinearSolvers/amg.h"
 #include "LinearSolvers/rsamg.h"
+#include "LinearSolvers/rsamg_old.h"
 #include "LinearSolvers/saamg.h"
 #include "LinearSolvers/uaamg.h"
 #include "LinearSolvers/gmres.h"
