@@ -54,12 +54,12 @@ void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int
 	std::vector<double> diag(A.m);
 	extract_diagonal(A, diag);
 
-	std::cout << "diag" << std::endl;
-	for (size_t i = 0; i < diag.size(); i++)
-	{
-		std::cout << diag[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "diag" << std::endl;
+	// for (size_t i = 0; i < diag.size(); i++)
+	// {
+	// 	std::cout << diag[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	//double eps2 = eps * eps;
 

@@ -351,25 +351,25 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 
 
 
-	std::cout << "A coarse" << std::endl;
-	for (int i = 0; i < A_coarse.m; i++)
-	{
-		int row_start = A_coarse.csr_row_ptr[i];
-		int row_end = A_coarse.csr_row_ptr[i + 1];
+	// std::cout << "A coarse" << std::endl;
+	// for (int i = 0; i < A_coarse.m; i++)
+	// {
+	// 	int row_start = A_coarse.csr_row_ptr[i];
+	// 	int row_end = A_coarse.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(A_coarse.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
-		}
+	// 	std::vector<double> temp(A_coarse.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < A_coarse.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;
+	// 	for (int j = 0; j < A_coarse.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 }
 
 //-------------------------------------------------------------------------------

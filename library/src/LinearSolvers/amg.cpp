@@ -33,9 +33,9 @@
 #include "../../include/LinearSolvers/slaf.h"
 #include "math.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #define FAST_ERROR 0
-#define MAX_VCYCLES 100
+#define MAX_VCYCLES 1000
 
 void jacobi_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* xold, const double* b, const int n);
 void gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n);
@@ -159,7 +159,7 @@ static void vcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 	{
 		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
 		// solve A*x=b exactly
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1000; i++)
 		{
 			// Gauss-Seidel iteration
 			for (int j = 0; j < N; j++)

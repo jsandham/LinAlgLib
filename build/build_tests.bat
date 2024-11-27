@@ -8,6 +8,9 @@ set MODEFLAGS=/FS /MTd /Zi
 set MODE=debug
 set FLAGS=-nologo /EHsc
 
+set GTEST_INCLUDE="C:\Users\James\Documents\googletest\googletest\include"
+set GTEST_LIB="C:\Users\James\Documents\googletest\build\lib"
+
 :: run through batch file parameter inputs
 for %%x in (%*) do (
 	if "%%x"=="/help" (
@@ -31,7 +34,4 @@ echo [92mBuild mode: %MODE%[0m
 echo [92mOptimization level: %OPT%[0m	
 
 :: compile c++ examples
-for /R "../clients/examples/" %%f in (*.cpp) do (
-	echo [92mCompiling C++ example...%%f[0m
-	call cl /std:c++17 %OPT% %WARN% %MODEFLAGS% %FLAGS% /I"../library/include" /I"../clients/common" %%f "lib/debug/linalg.lib" "../clients/common/utility.cpp"
-)
+call cl /std:c++17 %OPT% %WARN% %MODEFLAGS% %FLAGS% /I"../library/include" /I"../clients/common" /I%GTEST_INCLUDE% /I"../clients/tests" "../clients/tests/test_main.cpp" "lib/debug/linalg.lib" "../clients/common/utility.cpp" %GTEST_LIB%"/Debug/gtest.lib" "../clients/tests/test_pcg.cpp" "../clients/tests/test_saamg.cpp" "../clients/tests/test_rsamg.cpp"

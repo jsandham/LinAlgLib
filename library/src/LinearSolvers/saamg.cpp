@@ -102,12 +102,12 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& 
 		prolongation.csr_row_ptr[i + 1] += prolongation.csr_row_ptr[i];
 	}
 
-	std::cout << "prolongation.csr_row_ptr" << std::endl;
-	for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
-	{
-		std::cout << prolongation.csr_row_ptr[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "prolongation.csr_row_ptr" << std::endl;
+	// for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
+	// {
+	// 	std::cout << prolongation.csr_row_ptr[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	assert(prolongation.nnz == prolongation.csr_row_ptr[prolongation.m]);
 
@@ -200,25 +200,25 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		restriction.csr_col_ind[i] = -1;
 	}
 
-	std::cout << "prolongation" << std::endl;
-	for (int i = 0; i < prolongation.m; i++)
-	{
-		int row_start = prolongation.csr_row_ptr[i];
-		int row_end = prolongation.csr_row_ptr[i + 1];
+	// std::cout << "prolongation" << std::endl;
+	// for (int i = 0; i < prolongation.m; i++)
+	// {
+	// 	int row_start = prolongation.csr_row_ptr[i];
+	// 	int row_end = prolongation.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(prolongation.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
-		}
+	// 	std::vector<double> temp(prolongation.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < prolongation.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;
+	// 	for (int j = 0; j < prolongation.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -262,25 +262,25 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		}
 	}
 
-	std::cout << "restriction" << std::endl;
-	for (int i = 0; i < restriction.m; i++)
-	{
-		int row_start = restriction.csr_row_ptr[i];
-		int row_end = restriction.csr_row_ptr[i + 1];
+	// std::cout << "restriction" << std::endl;
+	// for (int i = 0; i < restriction.m; i++)
+	// {
+	// 	int row_start = restriction.csr_row_ptr[i];
+	// 	int row_end = restriction.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(restriction.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
-		}
+	// 	std::vector<double> temp(restriction.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < restriction.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;
+	// 	for (int j = 0; j < restriction.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 }
 
 // Compute C = alpha * A * B + beta * D
@@ -496,25 +496,25 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 
 
 
-	std::cout << "A coarse" << std::endl;
-	for (int i = 0; i < A_coarse.m; i++)
-	{
-		int row_start = A_coarse.csr_row_ptr[i];
-		int row_end = A_coarse.csr_row_ptr[i + 1];
+	// std::cout << "A coarse" << std::endl;
+	// for (int i = 0; i < A_coarse.m; i++)
+	// {
+	// 	int row_start = A_coarse.csr_row_ptr[i];
+	// 	int row_end = A_coarse.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(A_coarse.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
-		}
+	// 	std::vector<double> temp(A_coarse.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < A_coarse.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;
+	// 	for (int j = 0; j < A_coarse.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 }
 
 void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy)

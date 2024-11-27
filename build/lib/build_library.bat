@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 set WARN=-W4 -wd4201 -wd4100 -wd4996
 set OPENMP=
 set OPT=/Od
-set MODEFLAGS=/FS /MDd /Zi /Fo"debug/obj"\ /Fd"debug/obj"\ 
+set MODEFLAGS=/FS /MTd /Zi /Fo"debug/obj"\ /Fd"debug/obj"\ 
 set MODE=debug
 set FLAGS=-nologo /EHsc
 
@@ -22,7 +22,7 @@ for %%x in (%*) do (
 	)
 	if "%%x"=="/debug" (
 		set MODE=debug
-		set MODEFLAGS=/FS /MDd /Zi /Fo"debug/obj"\ /Fd"debug/obj"\ 
+		set MODEFLAGS=/FS /MTd /Zi /Fo"debug/obj"\ /Fd"debug/obj"\ 
 	)
 	if "%%x"=="/release" (
 		set MODE=release

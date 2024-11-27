@@ -200,12 +200,12 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix& A, con
 
 bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes)
 {
-	std::cout << "connections" << std::endl;
-	for (size_t i= 0; i < connections.size(); i++)
-	{
-		std::cout << connections[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "connections" << std::endl;
+	// for (size_t i= 0; i < connections.size(); i++)
+	// {
+	// 	std::cout << connections[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	std::vector<int> hash(A.m);
 	std::vector<int> state(A.m);
@@ -214,19 +214,19 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 	// Initialize parallel maximal independent set state
 	initialize_pmis_state(A, connections, max_state, hash);
 
-	std::cout << "max_state" << std::endl;
-	for (size_t i = 0; i < max_state.size(); i++)
-	{
-		std::cout << max_state[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "max_state" << std::endl;
+	// for (size_t i = 0; i < max_state.size(); i++)
+	// {
+	// 	std::cout << max_state[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
-	std::cout << "hash" << std::endl;
-	for (size_t i = 0; i < hash.size(); i++)
-	{
-		std::cout << hash[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "hash" << std::endl;
+	// for (size_t i = 0; i < hash.size(); i++)
+	// {
+	// 	std::cout << hash[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	int iter = 0;
 	while (iter < 20)
@@ -261,12 +261,12 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 		aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
 	}
 
-	std::cout << "aggregates before exclusive sum" << std::endl;
-	for (size_t i = 0; i < aggregates.size(); i++)
-	{
-		std::cout << aggregates[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "aggregates before exclusive sum" << std::endl;
+	// for (size_t i = 0; i < aggregates.size(); i++)
+	// {
+	// 	std::cout << aggregates[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	// 1 0 0 1 1 1
 	// 0 1 1 1 2 3
@@ -312,19 +312,19 @@ bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& 
 		add_unassigned_nodes_to_closest_aggregation(A, connections, state, aggregates, aggregate_root_nodes, max_state);
 	}
 
-	std::cout << "aggregates final" << std::endl;
-	for (size_t i = 0; i < aggregates.size(); i++)
-	{
-		std::cout << aggregates[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "aggregates final" << std::endl;
+	// for (size_t i = 0; i < aggregates.size(); i++)
+	// {
+	// 	std::cout << aggregates[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
-	std::cout << "aggregate_root_nodes final" << std::endl;
-	for (size_t i = 0; i < aggregate_root_nodes.size(); i++)
-	{
-		std::cout << aggregate_root_nodes[i] << " ";
-	}
-	std::cout << "" << std::endl;
+	// std::cout << "aggregate_root_nodes final" << std::endl;
+	// for (size_t i = 0; i < aggregate_root_nodes.size(); i++)
+	// {
+	// 	std::cout << aggregate_root_nodes[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	return true;
 }
