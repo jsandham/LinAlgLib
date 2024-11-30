@@ -80,7 +80,8 @@
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}
@@ -119,7 +120,8 @@ int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}
@@ -158,7 +160,8 @@ int gs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, do
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}
@@ -197,7 +200,8 @@ int sor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}
@@ -238,7 +242,8 @@ int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}

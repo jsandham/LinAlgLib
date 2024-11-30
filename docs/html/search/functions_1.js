@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['jac_0',['jac',['../jgs_8h.html#ad00e57eb4e9a357dbfb7dcede1f5c086',1,'jgs.h']]]
+  ['gmres_0',['gmres',['../gmres_8h.html#a00813dbcba66da02438a1e1011fbdc79',1,'gmres.h']]],
+  ['gs_1',['gs',['../jgs_8h.html#ab4d4f966bde25f22f2ae0cf024dd0ca5',1,'jgs.h']]]
 ];

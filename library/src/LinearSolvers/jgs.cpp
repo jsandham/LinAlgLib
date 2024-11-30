@@ -96,7 +96,7 @@ int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 
 	delete[] xold;
 
-	return ii;
+	return err > tol ? -1 : ii;
 }
 
 
@@ -151,7 +151,7 @@ int gs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, do
 		ii++;
 	}
 
-	return ii;
+	return err > tol ? -1 : ii;
 }
 
 //-------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ int sor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 		ii++;
 	}
 
-	return ii;
+	return err > tol ? -1 : ii;
 }
 
 
@@ -268,7 +268,7 @@ int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, d
 		ii++;
 	}
 
-	return ii;
+	return err > tol ? -1 : ii;
 }
 
 //-------------------------------------------------------------------------------
@@ -336,5 +336,5 @@ int ssor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, 
 		ii++;
 	}
 
-	return ii;
+	return err > tol ? -1 : ii;
 }

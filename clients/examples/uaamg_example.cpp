@@ -32,14 +32,11 @@
 
 int main()
 {
+	int m, n, nnz;
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val);
-
-	int m = (int)csr_row_ptr.size() - 1;
-	int n = m;
-	int nnz = (int)csr_val.size();
+	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
 	/*std::cout << "A" << std::endl;
 	for (int i = 0; i < m; i++)
@@ -71,7 +68,7 @@ int main()
 	heirarchy hierachy;
 	uaamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, hierachy);
 
-	amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+	int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
 
 	// Print solution
 	std::cout << "x" << std::endl;

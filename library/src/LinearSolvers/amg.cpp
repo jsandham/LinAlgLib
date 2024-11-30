@@ -33,7 +33,7 @@
 #include "../../include/LinearSolvers/slaf.h"
 #include "math.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #define FAST_ERROR 0
 #define MAX_VCYCLES 1000
 
@@ -413,7 +413,7 @@ static void fcycle(const heirarchy& hierarchy, double* x, const double* b, int n
 	}
 }
 
-void amg_solve(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, double tol, Cycle cycle, Smoother smoother)
+int amg_solve(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, double tol, Cycle cycle, Smoother smoother)
 {
 	// AMG recursive solve
 	int n3 = n2;
@@ -445,4 +445,6 @@ void amg_solve(const heirarchy& hierarchy, double* x, const double* b, int n1, i
 	}
 
 	std::cout << "cycles: " << cycle_count << std::endl;
+
+	return err > tol ? -1 : cycle_count;
 }

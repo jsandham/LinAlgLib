@@ -1,12 +1,12 @@
 \doxysection{saamg.\+h}
-\hypertarget{saamg_8h_source}{}\label{saamg_8h_source}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h}}
+\hypertarget{saamg_8h_source}{}\label{saamg_8h_source}\index{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h@{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h}}
 \mbox{\hyperlink{saamg_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{00001\ \textcolor{comment}{//********************************************************************************}}
 \DoxyCodeLine{00002\ \textcolor{comment}{//}}
 \DoxyCodeLine{00003\ \textcolor{comment}{//\ MIT\ License}}
 \DoxyCodeLine{00004\ \textcolor{comment}{//}}
-\DoxyCodeLine{00005\ \textcolor{comment}{//\ Copyright(c)\ 2019\ James\ Sandham}}
+\DoxyCodeLine{00005\ \textcolor{comment}{//\ Copyright(c)\ 2024\ James\ Sandham}}
 \DoxyCodeLine{00006\ \textcolor{comment}{//}}
 \DoxyCodeLine{00007\ \textcolor{comment}{//\ Permission\ is\ hereby\ granted,\ free\ of\ charge,\ to\ any\ person\ obtaining\ a\ copy}}
 \DoxyCodeLine{00008\ \textcolor{comment}{//\ of\ this\ softwareand\ associated\ documentation\ files(the\ "{}Software"{}),\ to\ deal}}
@@ -32,20 +32,10 @@
 \DoxyCodeLine{00028\ \textcolor{preprocessor}{\#ifndef\ SAAMG\_H}}
 \DoxyCodeLine{00029\ \textcolor{preprocessor}{\#define\ SAAMG\_H}}
 \DoxyCodeLine{00030\ }
-\DoxyCodeLine{00035\ \textcolor{keywordtype}{void}\ saamg(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keywordtype}{double}*\ x,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ b,}
-\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ theta,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ tol);}
-\DoxyCodeLine{00037\ }
-\DoxyCodeLine{00038\ \textcolor{keywordtype}{void}\ saamg\_solve(\textcolor{keywordtype}{int}*\ ar[],\ \textcolor{keywordtype}{int}*\ ac[],\ \textcolor{keywordtype}{double}*\ av[],\ \textcolor{keywordtype}{double}*\ ad[],\ \textcolor{keywordtype}{int}*\ wr[],\ \textcolor{keywordtype}{int}*\ wc[],}
-\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keywordtype}{double}*\ wv[],\ \textcolor{keywordtype}{double}\ x[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ b[],\ \textcolor{keywordtype}{int}\ ASizes[],\ \textcolor{keywordtype}{int}\ n1,\ \textcolor{keywordtype}{int}\ n2,}
-\DoxyCodeLine{00040\ \ \ \ \ \textcolor{keywordtype}{int}\ level,\ \textcolor{keywordtype}{int}\ count);}
-\DoxyCodeLine{00041\ }
-\DoxyCodeLine{00042\ \textcolor{keywordtype}{void}\ saamg\_init(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keywordtype}{int}*\ ar[],\ \textcolor{keywordtype}{int}*\ ac[],}
-\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keywordtype}{double}*\ av[],\ \textcolor{keywordtype}{double}*\ ad[],\ \textcolor{keywordtype}{int}\ ASizes[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
-\DoxyCodeLine{00044\ }
-\DoxyCodeLine{00045\ \textcolor{keywordtype}{int}\ saamg\_setup(\textcolor{keywordtype}{int}*\ ar[],\ \textcolor{keywordtype}{int}*\ ac[],\ \textcolor{keywordtype}{double}*\ av[],\ \textcolor{keywordtype}{double}*\ ad[],\ \textcolor{keywordtype}{int}*\ wr[],\ \textcolor{keywordtype}{int}*\ wc[],}
-\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keywordtype}{double}*\ wv[],\ \textcolor{keywordtype}{int}\ ASizes[],\ \textcolor{keywordtype}{int}\ level,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ theta);}
-\DoxyCodeLine{00047\ }
-\DoxyCodeLine{00048\ }
-\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{amg_8h}{amg.h}}"{}}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00087\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{saamg_8h_a6f9aa565b311607c962284cba321039b}{saamg\_setup}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keywordtype}{int}\ m,\ \textcolor{keywordtype}{int}\ n,\ \textcolor{keywordtype}{int}\ nnz,\ \textcolor{keywordtype}{int}\ max\_level,\ \mbox{\hyperlink{structheirarchy}{heirarchy}}\&\ hierarchy);}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

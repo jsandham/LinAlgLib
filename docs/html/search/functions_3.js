@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rich_0',['rich',['../richardson_8h.html#a7674f38849a4880ccd336c6c691febb7',1,'richardson.h']]]
+  ['pcg_0',['pcg',['../pcg_8h.html#a618d885bf782f45224ee5841f21d4ff8',1,'pcg.h']]]
 ];

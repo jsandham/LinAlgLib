@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['gmres_0',['gmres',['../gmres_8h.html#a00813dbcba66da02438a1e1011fbdc79',1,'gmres.h']]],
-  ['gs_1',['gs',['../jgs_8h.html#ab4d4f966bde25f22f2ae0cf024dd0ca5',1,'jgs.h']]]
+  ['amg_5fsolve_0',['amg_solve',['../amg_8h.html#ab6d62270255fd599800587d9d801b6d6',1,'amg.h']]]
 ];

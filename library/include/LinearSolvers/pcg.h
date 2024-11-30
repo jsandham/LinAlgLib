@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -62,10 +62,31 @@
 *  @param[in]
 *  max_iter    maximum iterations allowed
 *
-*  \retval number of iterations actually used in the solver
+*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
+*  with the given input tolerance \p tol.
 *
 *  \par Example
 *  \code{.c}
+*  int m, n, nnz;
+*  std::vector<int> csr_row_ptr;
+*  std::vector<int> csr_col_ind;
+*  std::vector<double> csr_val;
+*  load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+*
+*  // Solution vector
+*  std::vector<double> x(m, 0.0);
+*
+*  // Righthand side vector
+*  std::vector<double> b(m, 1.0);
+*
+*  int it = pcg(csr_row_ptr.data(), 
+*               csr_col_ind.data(), 
+*               csr_val.data(), 
+*               x.data(), 
+*               b.data(), 
+*               m, 
+*               0.00001, 
+*               1000);
 *  \endcode
 */
 /**@{*/

@@ -1,27 +1,80 @@
-\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/saamg.h File Reference}
-\hypertarget{saamg_8h}{}\label{saamg_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h}}
+\doxysection{C\+:/\+Users/\+James/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/saamg.h File Reference}
+\hypertarget{saamg_8h}{}\label{saamg_8h}\index{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h@{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/saamg.h}}
 
 
-\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation algebraic multigrid solver  
+\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation used in algebraic multigrid  
 
 
+{\ttfamily \#include \"{}amg.\+h\"{}}\newline
 \doxysubsubsection*{Functions}
+\textbf{ }\par
 \begin{DoxyCompactItemize}
 \item 
-\Hypertarget{saamg_8h_a680f18eb61a986af2ae235855f6ff5bd}\label{saamg_8h_a680f18eb61a986af2ae235855f6ff5bd} 
-void {\bfseries saamg} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, double \texorpdfstring{$\ast$}{*}x, const double \texorpdfstring{$\ast$}{*}b, const int n, const double theta, const double tol)
-\item 
-\Hypertarget{saamg_8h_a14bca4207e90d563064a771546012c23}\label{saamg_8h_a14bca4207e90d563064a771546012c23} 
-void {\bfseries saamg\+\_\+solve} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, double x\mbox{[}$\,$\mbox{]}, const double b\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int n1, int n2, int level, int count)
-\item 
-\Hypertarget{saamg_8h_ae6ae8ef9e5d15530e93853952abaffb5}\label{saamg_8h_ae6ae8ef9e5d15530e93853952abaffb5} 
-void {\bfseries saamg\+\_\+init} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, const int n)
-\item 
-\Hypertarget{saamg_8h_aec9b99524b1c513d09153fbcc32b187e}\label{saamg_8h_aec9b99524b1c513d09153fbcc32b187e} 
-int {\bfseries saamg\+\_\+setup} (int \texorpdfstring{$\ast$}{*}ar\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}ac\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}av\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}ad\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wr\mbox{[}$\,$\mbox{]}, int \texorpdfstring{$\ast$}{*}wc\mbox{[}$\,$\mbox{]}, double \texorpdfstring{$\ast$}{*}wv\mbox{[}$\,$\mbox{]}, int ASizes\mbox{[}$\,$\mbox{]}, int level, const double theta)
-\end{DoxyCompactItemize}
+void \mbox{\hyperlink{saamg_8h_a6f9aa565b311607c962284cba321039b}{saamg\+\_\+setup}} (const int \texorpdfstring{$\ast$}{*}csr\+\_\+row\+\_\+ptr, const int \texorpdfstring{$\ast$}{*}csr\+\_\+col\+\_\+ind, const double \texorpdfstring{$\ast$}{*}csr\+\_\+val, int m, int n, int nnz, int max\+\_\+level, \mbox{\hyperlink{structheirarchy}{heirarchy}} \&hierarchy)
+\begin{DoxyCompactList}\small\item\em Smoothed Aggregation setup. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
 
 
 \doxysubsection{Detailed Description}
-\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation algebraic multigrid solver 
+\doxylink{saamg_8h}{saamg.\+h} provides interface for smoothed aggregation used in algebraic multigrid 
 
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{saamg_8h_a6f9aa565b311607c962284cba321039b}\label{saamg_8h_a6f9aa565b311607c962284cba321039b} 
+\index{saamg.h@{saamg.h}!saamg\_setup@{saamg\_setup}}
+\index{saamg\_setup@{saamg\_setup}!saamg.h@{saamg.h}}
+\doxysubsubsection{\texorpdfstring{saamg\_setup()}{saamg\_setup()}}
+{\footnotesize\ttfamily void saamg\+\_\+setup (\begin{DoxyParamCaption}\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+row\+\_\+ptr,  }\item[{const int \texorpdfstring{$\ast$}{*}}]{csr\+\_\+col\+\_\+ind,  }\item[{const double \texorpdfstring{$\ast$}{*}}]{csr\+\_\+val,  }\item[{int}]{m,  }\item[{int}]{n,  }\item[{int}]{nnz,  }\item[{int}]{max\+\_\+level,  }\item[{\mbox{\hyperlink{structheirarchy}{heirarchy}} \&}]{hierarchy }\end{DoxyParamCaption})}
+
+
+
+Smoothed Aggregation setup. 
+
+{\ttfamily saamg\+\_\+setup} generates the hierarchy of restriction, prolongation, and coarse grid operators using Smoothed Aggregation
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em csr\+\_\+row\+\_\+ptr} & array of {\ttfamily m+1} elements that point to the start of every row of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+col\+\_\+ind} & array of {\ttfamily nnz} elements containing the column indices of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em csr\+\_\+val} & array of {\ttfamily nnz} elements containing the values of the sparse CSR matrix. \\
+\hline
+\mbox{\texttt{ in}}  & {\em m} & number of rows in the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em n} & number of columns in the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em nnz} & number of non-\/zeros in the sparse CSR matrix \\
+\hline
+\mbox{\texttt{ in}}  & {\em max\+\_\+level} & maximum number of levels in the hierarchy of coarse grids \\
+\hline
+\mbox{\texttt{ out}}  & {\em heirarchy} & structure holding the heirarchy of restriction, prolongation, and coarse grid operators\\
+\hline
+\end{DoxyParams}
+\begin{DoxyParagraph}{Example}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{std::vector<int>\ csr\_row\_ptr;}
+\DoxyCodeLine{std::vector<int>\ csr\_col\_ind;}
+\DoxyCodeLine{std::vector<double>\ csr\_val;}
+\DoxyCodeLine{load\_mtx\_file(matrix\_file,\ csr\_row\_ptr,\ csr\_col\_ind,\ csr\_val);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ m\ =\ (int)csr\_row\_ptr.size()\ -\/\ 1;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ n\ =\ m;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ nnz\ =\ (int)csr\_val.size();}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Solution\ vector}}
+\DoxyCodeLine{std::vector<double>\ x(m,\ 0.0);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Righthand\ side\ vector}}
+\DoxyCodeLine{std::vector<double>\ b(m,\ 1.0);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\mbox{\hyperlink{structheirarchy}{heirarchy}}\ hierachy;}
+\DoxyCodeLine{\mbox{\hyperlink{saamg_8h_a6f9aa565b311607c962284cba321039b}{saamg\_setup}}(csr\_row\_ptr.data(),\ csr\_col\_ind.data(),\ csr\_val.data(),\ m,\ m,\ nnz,\ 100,\ hierachy);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\mbox{\hyperlink{amg_8h_ab6d62270255fd599800587d9d801b6d6}{amg\_solve}}(hierachy,\ x.data(),\ b.data(),\ 10,\ 10,\ 0.00001,\ Cycle::Vcycle,\ Smoother::Gauss\_Siedel);}
+
+\end{DoxyCode}
+ 
+\end{DoxyParagraph}

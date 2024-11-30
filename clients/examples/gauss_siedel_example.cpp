@@ -42,14 +42,11 @@ int main()
 	//std::vector<int> csr_row_ptr = { 0, 3, 6, 9, 12, 15 };
 	//std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
 	//std::vector<double> csr_val = { 4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0 };
+	int m, n, nnz;
 	std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val);
-
-	int m = (int)csr_row_ptr.size() - 1;
-	int n = m;
-	int nnz = (int)csr_val.size();
+	load_mtx_file("../clients/matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
 	// Solution vector
 	std::vector<double> x(m, 0.0);

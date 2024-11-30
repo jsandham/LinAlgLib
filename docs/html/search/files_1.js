@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['jgs_2eh_0',['jgs.h',['../jgs_8h.html',1,'']]]
+  ['gmres_2eh_0',['gmres.h',['../gmres_8h.html',1,'']]]
 ];

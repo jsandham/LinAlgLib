@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['rich_0',['rich',['../richardson_8h.html#a7674f38849a4880ccd336c6c691febb7',1,'richardson.h']]],
-  ['richardson_2eh_1',['richardson.h',['../richardson_8h.html',1,'']]],
-  ['rsamg_2eh_2',['rsamg.h',['../rsamg_8h.html',1,'']]]
+  ['jac_0',['jac',['../jgs_8h.html#ad00e57eb4e9a357dbfb7dcede1f5c086',1,'jgs.h']]],
+  ['jgs_2eh_1',['jgs.h',['../jgs_8h.html',1,'']]]
 ];

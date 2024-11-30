@@ -1,5 +1,5 @@
 \doxysection{slaf.\+h}
-\hypertarget{slaf_8h_source}{}\label{slaf_8h_source}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/slaf.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/slaf.h}}
+\hypertarget{slaf_8h_source}{}\label{slaf_8h_source}\index{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/slaf.h@{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/slaf.h}}
 
 \begin{DoxyCode}{0}
 \DoxyCodeLine{00001\ \textcolor{comment}{//********************************************************************************}}
@@ -31,26 +31,24 @@
 \DoxyCodeLine{00027\ \textcolor{preprocessor}{\#ifndef\ SLAF\_H}}
 \DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ SLAF\_H}}
 \DoxyCodeLine{00029\ }
-\DoxyCodeLine{00030\ \textcolor{keywordtype}{void}\ matrixVectorProduct(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],}
-\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ x[],\ \textcolor{keywordtype}{double}\ y[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00030\ \textcolor{keywordtype}{void}\ matrixVectorProduct(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ x,\ \textcolor{keywordtype}{double}*\ y,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00032\ }
-\DoxyCodeLine{00033\ \textcolor{keywordtype}{double}\ dotProduct(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ x[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ y[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00033\ \textcolor{keywordtype}{double}\ dotProduct(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ x,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ y,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00034\ }
-\DoxyCodeLine{00035\ \textcolor{keywordtype}{void}\ diagonal(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keywordtype}{double}\ d[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00035\ \textcolor{keywordtype}{void}\ diagonal(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keywordtype}{double}*\ d,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00036\ }
-\DoxyCodeLine{00037\ \textcolor{keywordtype}{void}\ forwardSolve(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ b[],\ \textcolor{keywordtype}{double}\ x[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00037\ \textcolor{keywordtype}{void}\ forwardSolve(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ b,\ \textcolor{keywordtype}{double}*\ x,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00038\ }
-\DoxyCodeLine{00039\ \textcolor{keywordtype}{void}\ backwardSolve(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ b[],\ \textcolor{keywordtype}{double}\ x[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00039\ \textcolor{keywordtype}{void}\ backwardSolve(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ b,\ \textcolor{keywordtype}{double}*\ x,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00040\ }
-\DoxyCodeLine{00041\ \textcolor{keywordtype}{double}\ error(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ x[],}
-\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ b[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00041\ \textcolor{keywordtype}{double}\ error(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ x,}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ b,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
 \DoxyCodeLine{00043\ }
-\DoxyCodeLine{00044\ \textcolor{keywordtype}{double}\ fast\_error(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ x[],}
-\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ b[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ tol);}
+\DoxyCodeLine{00044\ \textcolor{keywordtype}{double}\ fast\_error(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_row\_ptr,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}*\ csr\_col\_ind,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ csr\_val,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ x,}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}*\ b,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ tol);}
 \DoxyCodeLine{00046\ }
-\DoxyCodeLine{00047\ \textcolor{keywordtype}{void}\ printMatrix(\textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ r[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ c[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ v[],\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ n);}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#endif}}
 \DoxyCodeLine{00048\ }
-\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{00050\ }
 
 \end{DoxyCode}

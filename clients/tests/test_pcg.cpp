@@ -8,14 +8,11 @@
 
 bool Testing::test_pcg(const std::string& matrix_file)
 {
+    int m, n, nnz;
     std::vector<int> csr_row_ptr;
 	std::vector<int> csr_col_ind;
 	std::vector<double> csr_val;
-	load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val);
-
-	int m = (int)csr_row_ptr.size() - 1;
-	int n = m;
-	int nnz = (int)csr_val.size();
+	load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
 	// Solution vector
 	std::vector<double> x(m, 0.0);
@@ -34,45 +31,5 @@ bool Testing::test_pcg(const std::string& matrix_file)
 
     std::cout << "it: " << it << std::endl;
 
-    std::vector<double> residual(m, 0.0);
-    for (int i = 0; i < m; i++)
-	{
-		int row_begin = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
-
-		double sum = 0;
-		for (int j = row_begin; j < row_end; j++)
-		{
-			sum += csr_val[j] * x[csr_col_ind[j]];
-		}
-
-		residual[i] = sum - b[i];
-	}
-
-    bool solution_valid = true;
-    for(size_t i = 0; i < x.size(); i++)
-    {
-        if(std::isnan(x[i]) || std::isinf(x[i]))
-        {
-            solution_valid = false;
-            break;
-        }
-    }
-
-    double max_error = 0.0;
-    for(size_t i = 0; i < residual.size(); i++)
-    {
-        max_error = std::max(max_error, std::abs(residual[i]));
-    }
-
-    std::cout << "max_error: " << max_error << std::endl;
-
-    // std::cout << "residual" << std::endl;
-    // for(size_t i = 0; i < std::min((size_t)10, residual.size()); i++)
-    // {
-    //    std::cout << residual[i] << " " << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return (max_error < 0.00001 && solution_valid);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 0.00001);
 }

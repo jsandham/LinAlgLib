@@ -1,5 +1,5 @@
-\doxysection{C\+:/\+Users/jsand/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/pcg.h File Reference}
-\hypertarget{pcg_8h}{}\label{pcg_8h}\index{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/pcg.h@{C:/Users/jsand/Documents/LinAlgLib/library/include/LinearSolvers/pcg.h}}
+\doxysection{C\+:/\+Users/\+James/\+Documents/\+Lin\+Alg\+Lib/library/include/\+Linear\+Solvers/pcg.h File Reference}
+\hypertarget{pcg_8h}{}\label{pcg_8h}\index{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/pcg.h@{C:/Users/James/Documents/LinAlgLib/library/include/LinearSolvers/pcg.h}}
 
 
 \doxylink{pcg_8h}{pcg.\+h} provides interface for preconditioned conjugate gradient solver  
@@ -67,6 +67,29 @@ Requires the sparse matrix A to be symmetric
 \begin{DoxyParagraph}{Example}
 
 \begin{DoxyCode}{0}
+\DoxyCodeLine{std::vector<int>\ csr\_row\_ptr;}
+\DoxyCodeLine{std::vector<int>\ csr\_col\_ind;}
+\DoxyCodeLine{std::vector<double>\ csr\_val;}
+\DoxyCodeLine{load\_mtx\_file(matrix\_file,\ csr\_row\_ptr,\ csr\_col\_ind,\ csr\_val);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ m\ =\ (int)csr\_row\_ptr.size()\ -\/\ 1;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ n\ =\ m;}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ nnz\ =\ (int)csr\_val.size();}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Solution\ vector}}
+\DoxyCodeLine{std::vector<double>\ x(m,\ 0.0);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{comment}{//\ Righthand\ side\ vector}}
+\DoxyCodeLine{std::vector<double>\ b(m,\ 1.0);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{int}\ it\ =\ \mbox{\hyperlink{pcg_8h_a618d885bf782f45224ee5841f21d4ff8}{pcg}}(csr\_row\_ptr.data(),\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ csr\_col\_ind.data(),\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ csr\_val.data(),\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ x.data(),\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ b.data(),\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ m,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ 0.00001,\ }
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ 1000);}
 
 \end{DoxyCode}
  
