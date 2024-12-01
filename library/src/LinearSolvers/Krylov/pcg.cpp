@@ -25,8 +25,8 @@
 //********************************************************************************
 
 #include <iostream>
-#include "../../include/LinearSolvers/pcg.h"
-#include "../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/Krylov/pcg.h"
+#include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
 
 

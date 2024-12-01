@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -25,61 +25,75 @@
 //********************************************************************************
 
 #include"iostream"
-#include"../../include/LinearSolvers/richardson.h"
-#include"../../include/LinearSolvers/slaf.h"
-#include"math.h"
-
-//********************************************************************************
-//
-// Richardson Iteration
-//
-//********************************************************************************
+#include"../../../include/LinearSolvers/Classic/symmetric_gauss_seidel.h"
+#include"../../../include/LinearSolvers/slaf.h"
 
 #define DEBUG 1
 
-
 //-------------------------------------------------------------------------------
-// richardson method
+// symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
-int rich(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-         const int n, const double theta, const double tol, const int max_iter)
+void symm_gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n)
 {
-	//res = b-A*x and initial error
-	double *res = new double[n];
-	matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
-	
-	for(int i = 0; i < n; i++)
+	double sigma;
+	double ajj;
+
+	//forward pass
+	for (int j = 0; j < n; j++)
 	{
-		res[i] = b[i] - res[i];
+		sigma = 0.0;
+		ajj = 0.0;   //diagonal entry a_jj
+		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+		{
+			if (csr_col_ind[k] != j)
+			{
+				sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
+			}
+			else
+			{
+				ajj = csr_val[k];
+			}
+		}
+		x[j] = (b[j] - sigma) / ajj;
 	}
 
-	double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-	if(err < tol){ return 1; }
-  
-
-	int iter = 0;
-	while(iter < max_iter && err > tol)
+	//backward pass
+	for (int j = n - 1; j > -1; j--)
 	{
-		//find res = A*x
-		matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
-
-		//update approximation
-		for(int i = 0 ;i < n; i++)
+		sigma = 0.0;
+		ajj = 0.0;   //diagonal entry a_jj
+		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
 		{
-			x[i] = x[i] + theta * (b[i] - res[i]);
+			if (csr_col_ind[k] != j)
+			{
+				sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
+			}
+			else
+			{
+				ajj = csr_val[k];
+			}
 		}
+		x[j] = (b[j] - sigma) / ajj;
+	}
+}
 
-		//calculate error
+int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
+        const int n, const double tol, const int max_iter)
+{
+	int ii = 0;
+	double err = 1.0;
+	while(err > tol && ii < max_iter)
+	{
+		symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+
 		err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		
+	
 		#if(DEBUG)
 			std::cout<<"error: "<<err<<std::endl;
 		#endif
-
-		iter++;
+	
+		ii++;
 	}
 
-	delete[] res;
-
-	return iter;
+	return err > tol ? -1 : ii;
 }

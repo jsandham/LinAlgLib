@@ -27,8 +27,8 @@
 
 #include<iostream>
 #include <vector>
-#include"../../include/LinearSolvers/gmres.h"
-#include"../../include/LinearSolvers/slaf.h"
+#include"../../../include/LinearSolvers/Krylov/gmres.h"
+#include"../../../include/LinearSolvers/slaf.h"
 #include"math.h"
 
 

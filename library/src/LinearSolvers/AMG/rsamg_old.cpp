@@ -26,8 +26,8 @@
 
 #include <iostream>
 #include <stdlib.h>
-#include "../../include/LinearSolvers/rsamg_old.h"
-#include "../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/AMG/rsamg_old.h"
+#include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
 
 //********************************************************************************

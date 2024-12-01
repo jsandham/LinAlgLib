@@ -30,10 +30,10 @@
 #include <assert.h>
 #include <unordered_set>
 #include <map>
-#include "../../include/LinearSolvers/amg_strength.h"
-#include "../../include/LinearSolvers/amg_aggregation.h"
-#include "../../include/LinearSolvers/rsamg.h"
-#include "../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/AMG/amg_strength.h"
+#include "../../../include/LinearSolvers/AMG/amg_aggregation.h"
+#include "../../../include/LinearSolvers/AMG/rsamg.h"
+#include "../../../include/LinearSolvers/slaf.h"
 
 static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 {

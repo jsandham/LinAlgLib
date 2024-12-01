@@ -29,8 +29,8 @@
 #include <algorithm>
 #include <assert.h>
 #include <stdlib.h>
-#include "../../include/LinearSolvers/amg.h"
-#include "../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/AMG/amg.h"
+#include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
 
 #define DEBUG 1

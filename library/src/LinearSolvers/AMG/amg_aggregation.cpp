@@ -26,9 +26,9 @@
 
 #include <iostream>
 #include <assert.h>
-#include "../../include/LinearSolvers/amg.h"
-#include "../../include/LinearSolvers/amg_aggregation.h"
-#include "../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/AMG/amg.h"
+#include "../../../include/LinearSolvers/AMG/amg_aggregation.h"
+#include "../../../include/LinearSolvers/slaf.h"
 
 //********************************************************************************
 //

@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <assert.h>
-#include "../../include/LinearSolvers/amg_strength.h"
+#include "../../../include/LinearSolvers/AMG/amg_strength.h"
 
 static void extract_diagonal(const csr_matrix& A, std::vector<double>& diag)
 {

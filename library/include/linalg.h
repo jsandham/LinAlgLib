@@ -31,16 +31,24 @@
 *  \brief linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers
 */
 
-// Linear solvers
-#include "LinearSolvers/amg.h"
-#include "LinearSolvers/rsamg.h"
-#include "LinearSolvers/rsamg_old.h"
-#include "LinearSolvers/saamg.h"
-#include "LinearSolvers/uaamg.h"
-#include "LinearSolvers/gmres.h"
-#include "LinearSolvers/jgs.h"
-#include "LinearSolvers/pcg.h"
-#include "LinearSolvers/richardson.h"
+// Classic Linear solvers
+#include "LinearSolvers/Classic/jacobi.h"
+#include "LinearSolvers/Classic/gauss_seidel.h"
+#include "LinearSolvers/Classic/sor.h"
+#include "LinearSolvers/Classic/symmetric_gauss_seidel.h"
+#include "LinearSolvers/Classic/ssor.h"
+#include "LinearSolvers/Classic/richardson.h"
+
+// Krylov Linear solvers
+#include "LinearSolvers/Krylov/gmres.h"
+#include "LinearSolvers/Krylov/pcg.h"
+
+// Algrbraic multi-grid solvers
+#include "LinearSolvers/AMG/amg.h"
+#include "LinearSolvers/AMG/rsamg.h"
+#include "LinearSolvers/AMG/rsamg_old.h"
+#include "LinearSolvers/AMG/saamg.h"
+#include "LinearSolvers/AMG/uaamg.h"
 
 // Eigenvalues solvers
 #include "EigenValueSolvers/PowerIteration.h"

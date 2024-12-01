@@ -28,22 +28,24 @@
 #include <vector>
 #include <algorithm>
 #include <assert.h>
-#include "../../include/LinearSolvers/amg_strength.h"
-#include "../../include/LinearSolvers/amg_aggregation.h"
-#include "../../include/LinearSolvers/uaamg.h"
-#include "../../include/LinearSolvers/slaf.h"
-
+#include <unordered_set>
+#include <map>
+#include "../../../include/LinearSolvers/AMG/amg_strength.h"
+#include "../../../include/LinearSolvers/AMG/amg_aggregation.h"
+#include "../../../include/LinearSolvers/AMG/saamg.h"
+#include "../../../include/LinearSolvers/slaf.h"
 
 //********************************************************************************
 //
-// AMG: Unsmoothed Aggregation Algebraic Multigrid
+// AMG: Smoothed Aggregation Algebraic Multigrid
 //
 //********************************************************************************
 
-static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix& A,
+static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix& A,
 	const std::vector<int>& connections,
 	const std::vector<int64_t>& aggregates,
 	const std::vector<int64_t>& aggregate_root_nodes,
+	double relax,
 	csr_matrix& prolongation)
 {
 	prolongation.m = A.m;
@@ -65,18 +67,32 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 
 	//std::cout << "prolongation.n: " << prolongation.n << " A.m: " << A.m << " A.nnz: " << A.nnz << std::endl;
 
-	std::vector<int> table(prolongation.n, -1);
-
 	// Determine number of non-zeros for P
 	for (int i = 0; i < A.m; i++)
 	{
-		int64_t aggregate = aggregates[i];
+		int start = A.csr_row_ptr[i];
+		int end = A.csr_row_ptr[i + 1];
 
-		if (aggregate >= 0)
+		std::unordered_set<int> table;
+
+		for (int j = start; j < end; j++)
 		{
-			prolongation.csr_row_ptr[i + 1] = 1;
-			prolongation.nnz++;
+			int col = A.csr_col_ind[j];
+
+			// if diagonal entry or a strong connection, it contributes to prolongation
+			if (col == i || connections[j] == 1)
+			{
+				int aggregate = aggregates[col];
+
+				if (aggregate >= 0)
+				{
+					table.insert(aggregate);
+				}
+			}
 		}
+
+		prolongation.csr_row_ptr[i + 1] = table.size();
+		prolongation.nnz += table.size();
 	}
 
 	// exclusive scan on prolongation row pointer array
@@ -86,12 +102,12 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 		prolongation.csr_row_ptr[i + 1] += prolongation.csr_row_ptr[i];
 	}
 
-	//std::cout << "prolongation.csr_row_ptr" << std::endl;
-	//for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
-	//{
-	//	std::cout << prolongation.csr_row_ptr[i] << " ";
-	//}
-	//std::cout << "" << std::endl;
+	// std::cout << "prolongation.csr_row_ptr" << std::endl;
+	// for (size_t i = 0; i < prolongation.csr_row_ptr.size(); i++)
+	// {
+	// 	std::cout << prolongation.csr_row_ptr[i] << " ";
+	// }
+	// std::cout << "" << std::endl;
 
 	assert(prolongation.nnz == prolongation.csr_row_ptr[prolongation.m]);
 
@@ -101,14 +117,63 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 	// Fill P
 	for (int i = 0; i < A.m; i++)
 	{
-		int64_t aggregate = aggregates[i];
+		std::map<int, double> table;
 
-		if (aggregate >= 0)
+		int start = A.csr_row_ptr[i];
+		int end = A.csr_row_ptr[i + 1];
+
+		double diagonal = 0.0;
+
+		// Diagonal of prolongation matrix is the diagonal of the original matrix minus the original matrix weak connections
+		for (int j = start; j < end; j++)
 		{
-			int start = prolongation.csr_row_ptr[i];
+			int col = A.csr_col_ind[j];
 
-			prolongation.csr_col_ind[start] = aggregate;
-			prolongation.csr_val[start] = 1.0;
+			if (col == i)
+			{
+				diagonal += A.csr_val[j];
+			}
+			else if (connections[j] == 0) // substract weak connections
+			{
+				diagonal -= A.csr_val[j];
+			}
+		}
+
+		double invDiagonal = 1.0 / diagonal;
+
+		for (int j = start; j < end; j++)
+		{
+			int col = A.csr_col_ind[j];
+
+			// if diagonal entry or a strong connection, it contributes to prolongation
+			if (col == i || connections[j] == 1)
+			{
+				int aggregate = aggregates[col];
+
+				if (aggregate >= 0)
+				{
+					double value = (col == i) ? 1.0 - relax : -relax * invDiagonal * A.csr_val[j];
+				
+					if(table.find(aggregate) != table.end())
+					{
+						table[aggregate] += value;
+					}
+					else
+					{
+						table[aggregate] = value;
+					}
+				}
+			}
+		}
+
+		int prolongation_start = prolongation.csr_row_ptr[i];
+
+		int count = 0;
+		for(auto it = table.begin(); it != table.end(); it++)
+		{
+			prolongation.csr_col_ind[prolongation_start + count] = it->first;
+			prolongation.csr_val[prolongation_start + count] = it->second;
+			++count;
 		}
 	}
 
@@ -120,29 +185,40 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 	restriction.m = prolongation.n;
 	restriction.n = prolongation.m;
 	restriction.nnz = prolongation.nnz;
-	restriction.csr_row_ptr.resize(restriction.m + 1, 0);
-	restriction.csr_col_ind.resize(restriction.nnz, -1);
+	restriction.csr_row_ptr.resize(restriction.m + 1);
+	restriction.csr_col_ind.resize(restriction.nnz);
 	restriction.csr_val.resize(restriction.nnz);
 
-	/*std::cout << "prolongation" << std::endl;
-	for (int i = 0; i < prolongation.m; i++)
+	// Fill arrays
+	for(size_t i = 0; i < restriction.csr_row_ptr.size(); i++)
 	{
-		int row_start = prolongation.csr_row_ptr[i];
-		int row_end = prolongation.csr_row_ptr[i + 1];
-
-		std::vector<double> temp(prolongation.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
-		}
-
-		for (int j = 0; j < prolongation.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
+		restriction.csr_row_ptr[i] = 0;
 	}
-	std::cout << "" << std::endl;*/
+
+	for(size_t i = 0; i < restriction.csr_col_ind.size(); i++)
+	{
+		restriction.csr_col_ind[i] = -1;
+	}
+
+	// std::cout << "prolongation" << std::endl;
+	// for (int i = 0; i < prolongation.m; i++)
+	// {
+	// 	int row_start = prolongation.csr_row_ptr[i];
+	// 	int row_end = prolongation.csr_row_ptr[i + 1];
+
+	// 	std::vector<double> temp(prolongation.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[prolongation.csr_col_ind[j]] = prolongation.csr_val[j];
+	// 	}
+
+	// 	for (int j = 0; j < prolongation.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 
 	for (int i = 0; i < prolongation.m; i++)
 	{
@@ -186,25 +262,25 @@ static void transpose(const csr_matrix& prolongation, csr_matrix& restriction)
 		}
 	}
 
-	/*std::cout << "restriction" << std::endl;
-	for (int i = 0; i < restriction.m; i++)
-	{
-		int row_start = restriction.csr_row_ptr[i];
-		int row_end = restriction.csr_row_ptr[i + 1];
+	// std::cout << "restriction" << std::endl;
+	// for (int i = 0; i < restriction.m; i++)
+	// {
+	// 	int row_start = restriction.csr_row_ptr[i];
+	// 	int row_end = restriction.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(restriction.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
-		}
+	// 	std::vector<double> temp(restriction.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[restriction.csr_col_ind[j]] = restriction.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < restriction.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;*/
+	// 	for (int j = 0; j < restriction.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 }
 
 // Compute C = alpha * A * B + beta * D
@@ -420,28 +496,28 @@ static void galarkinTripleProduct(const csr_matrix& R, const csr_matrix& A, cons
 
 
 
-	/*std::cout << "A coarse" << std::endl;
-	for (int i = 0; i < A_coarse.m; i++)
-	{
-		int row_start = A_coarse.csr_row_ptr[i];
-		int row_end = A_coarse.csr_row_ptr[i + 1];
+	// std::cout << "A coarse" << std::endl;
+	// for (int i = 0; i < A_coarse.m; i++)
+	// {
+	// 	int row_start = A_coarse.csr_row_ptr[i];
+	// 	int row_end = A_coarse.csr_row_ptr[i + 1];
 
-		std::vector<double> temp(A_coarse.n, 0);
-		for (int j = row_start; j < row_end; j++)
-		{
-			temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
-		}
+	// 	std::vector<double> temp(A_coarse.n, 0);
+	// 	for (int j = row_start; j < row_end; j++)
+	// 	{
+	// 		temp[A_coarse.csr_col_ind[j]] = A_coarse.csr_val[j];
+	// 	}
 
-		for (int j = 0; j < A_coarse.n; j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;*/
+	// 	for (int j = 0; j < A_coarse.n; j++)
+	// 	{
+	// 		std::cout << temp[j] << " ";
+	// 	}
+	// 	std::cout << "" << std::endl;
+	// }
+	// std::cout << "" << std::endl;
 }
 
-void uaamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy)
+void saamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy)
 {
 	hierarchy.prolongations.resize(max_level);
 	hierarchy.restrictions.resize(max_level);
@@ -466,13 +542,14 @@ void uaamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		hierarchy.A_cs[0].csr_val[i] = csr_val[i];
 	}
 
-	double eps = 0.001;
+	double eps = 0.08; // strength_of_connection/coupling strength
+	double relax = 2.0 / 3.0;
 
 	int level = 0;
 	while (level < max_level)
 	{
 		std::cout << "Compute operators at coarse level: " << level << std::endl;
-
+		
 		csr_matrix& A = hierarchy.A_cs[level];
 		csr_matrix& A_coarse = hierarchy.A_cs[level + 1];
 		csr_matrix& P = hierarchy.prolongations[level];
@@ -492,7 +569,7 @@ void uaamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 		compute_aggregates_using_pmis(A, connections, aggregates, aggregate_root_nodes);
 
 		// Construct prolongation matrix using smoothed aggregation
-		construct_prolongation_using_unsmoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, P);
+		construct_prolongation_using_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, relax, P);
 
 		if (P.n == 0)
 		{
@@ -513,4 +590,3 @@ void uaamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* c
 
 	std::cout << "Total number of levels in operator hierarchy at the end of the setup phase: " << level << std::endl;
 }
-
