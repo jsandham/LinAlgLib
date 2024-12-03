@@ -24,427 +24,454 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <assert.h>
-#include <stdlib.h>
 #include "../../../include/LinearSolvers/AMG/amg.h"
 #include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
+#include <algorithm>
+#include <assert.h>
+#include <iostream>
+#include <stdlib.h>
+#include <vector>
 
 #define DEBUG 1
 #define FAST_ERROR 0
 #define MAX_VCYCLES 1000
 
-void jacobi_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* xold, const double* b, const int n);
-void gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n);
-void symm_gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n);
-void sor_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n, const double omega);
-void ssor_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n, const double omega);
+void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                      const double *xold, const double *b, const int n);
+void gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                            const double *b, const int n);
+void symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                                 const double *b, const int n);
+void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+                   const int n, const double omega);
+void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+                    const int n, const double omega);
 
 // Compute y = alpha * A * x + beta * y
-static void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val,
-	const double* x, double beta, double* y)
+static void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind,
+                  const double *csr_val, const double *x, double beta, double *y)
 {
-	for (int i = 0; i < m; i++)
-	{
-		int row_begin = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
+    for (int i = 0; i < m; i++)
+    {
+        int row_begin = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
-		double sum = 0;
-		for (int j = row_begin; j < row_end; j++)
-		{
-			sum += csr_val[j] * x[csr_col_ind[j]];
-		}
+        double sum = 0;
+        for (int j = row_begin; j < row_end; j++)
+        {
+            sum += csr_val[j] * x[csr_col_ind[j]];
+        }
 
-		if (beta == 0.0)
-		{
-			y[i] = alpha * sum;
-		}
-		else
-		{
-			y[i] = alpha * sum + beta * y[i];
-		}
-	}
+        if (beta == 0.0)
+        {
+            y[i] = alpha * sum;
+        }
+        else
+        {
+            y[i] = alpha * sum + beta * y[i];
+        }
+    }
 }
 
-static void apply_smoother(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n, Smoother smoother)
+static void apply_smoother(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                           const double *b, const int n, Smoother smoother)
 {
-	switch (smoother)
-	{
-	case Smoother::Jacobi:
-	{
-		std::vector<double> xold(n);
-		for (int i = 0; i < n; i++)
-		{
-			xold[i] = x[i];
-		}
-		jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold.data(), b, n);
-		break;
-	}
-	case Smoother::Gauss_Siedel:
-		gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		break;
-	case Smoother::Symm_Gauss_Siedel:
-		gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		break;
-	case Smoother::SOR:
-		sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, 0.5f);
-		break;
-	case Smoother::SSOR:
-		ssor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, 0.5f);
-		break;
-	default:
-		break;
-	}
+    switch (smoother)
+    {
+    case Smoother::Jacobi: {
+        std::vector<double> xold(n);
+        for (int i = 0; i < n; i++)
+        {
+            xold[i] = x[i];
+        }
+        jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold.data(), b, n);
+        break;
+    }
+    case Smoother::Gauss_Siedel:
+        gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        break;
+    case Smoother::Symm_Gauss_Siedel:
+        gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        break;
+    case Smoother::SOR:
+        sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, 0.5f);
+        break;
+    case Smoother::SSOR:
+        ssor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, 0.5f);
+        break;
+    default:
+        break;
+    }
 }
 
-static void vcycle(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, int currentLevel, Smoother smoother)
+static void vcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int currentLevel,
+                   Smoother smoother)
 {
-	// A_coarse = R*A*P
-	const csr_matrix& A = hierarchy.A_cs[currentLevel];
+    // A_coarse = R*A*P
+    const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
-	int N = A.m; // size of A at current level
+    int N = A.m; // size of A at current level
 
-	if (currentLevel < hierarchy.total_levels)
-	{
-		const csr_matrix& R = hierarchy.restrictions[currentLevel];
-		const csr_matrix& P = hierarchy.prolongations[currentLevel];
-		const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+    if (currentLevel < hierarchy.total_levels)
+    {
+        const csr_matrix &R = hierarchy.restrictions[currentLevel];
+        const csr_matrix &P = hierarchy.prolongations[currentLevel];
+        const csr_matrix &A_coarse = hierarchy.A_cs[currentLevel + 1];
 
-		int Nc = A_coarse.m; //size of A at next course level
+        int Nc = A_coarse.m; // size of A at next course level
 
-		assert(Nc == R.m);
-		assert(N == R.n);
-		assert(N == P.m);
-		assert(Nc == P.n);
+        assert(Nc == R.m);
+        assert(N == R.n);
+        assert(N == P.m);
+        assert(Nc == P.n);
 
-		// do n1 smoothing steps on A*x=b
-		for (int i = 0; i < n1; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
+        // do n1 smoothing steps on A*x=b
+        for (int i = 0; i < n1; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
 
-		// compute residual r = b - A*x = A*e
-		std::vector<double> r(N);
-		for (int i = 0; i < N; i++)
-		{
-			r[i] = b[i];
-		}
-		csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
+        // compute residual r = b - A*x = A*e
+        std::vector<double> r(N);
+        for (int i = 0; i < N; i++)
+        {
+            r[i] = b[i];
+        }
+        csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
 
-		// compute wres = R*r 
-		std::vector<double> wres(Nc, 0.0);
-		csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0, wres.data());
+        // compute wres = R*r
+        std::vector<double> wres(Nc, 0.0);
+        csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0,
+              wres.data());
 
-		// set e = 0
-		std::vector<double> ec(Nc, 0.0);
+        // set e = 0
+        std::vector<double> ec(Nc, 0.0);
 
-		// recursively solve Ac*ec = R*r = wres
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+        // recursively solve Ac*ec = R*r = wres
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
 
-		// correct x = x + P*ec
-		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
+        // correct x = x + P*ec
+        csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
 
-		// do n2 smoothing steps on A*x=b
-		for (int i = 0; i < n2; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
-	}
-	else
-	{
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		// solve A*x=b exactly
-		for (int i = 0; i < 1000; i++)
-		{
-			// Gauss-Seidel iteration
-			for (int j = 0; j < N; j++)
-			{
-				double sigma = 0.0;
-				double ajj = 0.0; // diagonal entry a_jj
+        // do n2 smoothing steps on A*x=b
+        for (int i = 0; i < n2; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
+    }
+    else
+    {
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        //  solve A*x=b exactly
+        for (int i = 0; i < 1000; i++)
+        {
+            // Gauss-Seidel iteration
+            for (int j = 0; j < N; j++)
+            {
+                double sigma = 0.0;
+                double ajj = 0.0; // diagonal entry a_jj
 
-				int row_start = A.csr_row_ptr[j];
-				int row_end = A.csr_row_ptr[j + 1];
+                int row_start = A.csr_row_ptr[j];
+                int row_end = A.csr_row_ptr[j + 1];
 
-				for (int k = row_start; k < row_end; k++)
-				{
-					int col = A.csr_col_ind[k];
-					double val = A.csr_val[k];
-					if (col != j)
-					{
-						sigma = sigma + val * x[col];
-					}
-					else
-					{
-						ajj = val;
-					}
-				}
-				x[j] = (b[j] - sigma) / ajj;
-			}
-		}
-	}
+                for (int k = row_start; k < row_end; k++)
+                {
+                    int col = A.csr_col_ind[k];
+                    double val = A.csr_val[k];
+                    if (col != j)
+                    {
+                        sigma = sigma + val * x[col];
+                    }
+                    else
+                    {
+                        ajj = val;
+                    }
+                }
+                x[j] = (b[j] - sigma) / ajj;
+            }
+        }
+    }
 }
 
-static void wcycle(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, int n3, int currentLevel, Smoother smoother)
+static void wcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int n3, int currentLevel,
+                   Smoother smoother)
 {
-	// A_coarse = R*A*P
-	const csr_matrix& A = hierarchy.A_cs[currentLevel];
+    // A_coarse = R*A*P
+    const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
-	int N = A.m; // size of A at current level
+    int N = A.m; // size of A at current level
 
-	if (currentLevel < hierarchy.total_levels)
-	{
-		const csr_matrix& R = hierarchy.restrictions[currentLevel];
-		const csr_matrix& P = hierarchy.prolongations[currentLevel];
-		const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+    if (currentLevel < hierarchy.total_levels)
+    {
+        const csr_matrix &R = hierarchy.restrictions[currentLevel];
+        const csr_matrix &P = hierarchy.prolongations[currentLevel];
+        const csr_matrix &A_coarse = hierarchy.A_cs[currentLevel + 1];
 
-		int Nc = A_coarse.m; //size of A at next course level
+        int Nc = A_coarse.m; // size of A at next course level
 
-		assert(Nc == R.m);
-		assert(N == R.n);
-		assert(N == P.m);
-		assert(Nc == P.n);
+        assert(Nc == R.m);
+        assert(N == R.n);
+        assert(N == P.m);
+        assert(Nc == P.n);
 
-		// do n1 smoothing steps on A*x=b
-		for (int i = 0; i < n1; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
+        // do n1 smoothing steps on A*x=b
+        for (int i = 0; i < n1; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
 
-		// compute residual r = b - A*x = A*e
-		std::vector<double> r(N);
-		for (int i = 0; i < N; i++)
-		{
-			r[i] = b[i];
-		}
-		csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
+        // compute residual r = b - A*x = A*e
+        std::vector<double> r(N);
+        for (int i = 0; i < N; i++)
+        {
+            r[i] = b[i];
+        }
+        csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
 
-		// compute wres = R*r 
-		std::vector<double> wres(Nc, 0.0);
-		csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0, wres.data());
+        // compute wres = R*r
+        std::vector<double> wres(Nc, 0.0);
+        csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0,
+              wres.data());
 
-		// set ec = 0
-		std::vector<double> ec(Nc, 0.0);
+        // set ec = 0
+        std::vector<double> ec(Nc, 0.0);
 
-		// recursively solve Ac*ec = R*r = wres
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+        // recursively solve Ac*ec = R*r = wres
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
 
-		// correct x = x + P*ec
-		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
+        // correct x = x + P*ec
+        csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
 
-		// do n2 smoothing steps on A*x=b
-		for (int i = 0; i < n2; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
+        // do n2 smoothing steps on A*x=b
+        for (int i = 0; i < n2; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
 
-		// compute residual r = b - A*x = A*e
-		for (int i = 0; i < N; i++)
-		{
-			r[i] = b[i];
-		}
-		csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
+        // compute residual r = b - A*x = A*e
+        for (int i = 0; i < N; i++)
+        {
+            r[i] = b[i];
+        }
+        csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
 
-		// compute wres = R*r 
-		csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0, wres.data());
+        // compute wres = R*r
+        csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0,
+              wres.data());
 
-		// recursively solve Ac*ec = R*r = wres
-		wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+        // recursively solve Ac*ec = R*r = wres
+        wcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
 
-		// correct x = x + P*ec
-		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
+        // correct x = x + P*ec
+        csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
 
-		// do n3 smoothing steps on A*x=b
-		for (int i = 0; i < n3; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
-	}
-	else
-	{
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		// solve A*x=b exactly
-		for (int i = 0; i < 100; i++)
-		{
-			// Gauss-Seidel iteration
-			for (int j = 0; j < N; j++)
-			{
-				double sigma = 0.0;
-				double ajj = 0.0; // diagonal entry a_jj
+        // do n3 smoothing steps on A*x=b
+        for (int i = 0; i < n3; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
+    }
+    else
+    {
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        //  solve A*x=b exactly
+        for (int i = 0; i < 100; i++)
+        {
+            // Gauss-Seidel iteration
+            for (int j = 0; j < N; j++)
+            {
+                double sigma = 0.0;
+                double ajj = 0.0; // diagonal entry a_jj
 
-				int row_start = A.csr_row_ptr[j];
-				int row_end = A.csr_row_ptr[j + 1];
+                int row_start = A.csr_row_ptr[j];
+                int row_end = A.csr_row_ptr[j + 1];
 
-				for (int k = row_start; k < row_end; k++)
-				{
-					int col = A.csr_col_ind[k];
-					double val = A.csr_val[k];
-					if (col != j)
-					{
-						sigma = sigma + val * x[col];
-					}
-					else
-					{
-						ajj = val;
-					}
-				}
-				x[j] = (b[j] - sigma) / ajj;
-			}
-		}
-	}
+                for (int k = row_start; k < row_end; k++)
+                {
+                    int col = A.csr_col_ind[k];
+                    double val = A.csr_val[k];
+                    if (col != j)
+                    {
+                        sigma = sigma + val * x[col];
+                    }
+                    else
+                    {
+                        ajj = val;
+                    }
+                }
+                x[j] = (b[j] - sigma) / ajj;
+            }
+        }
+    }
 }
 
-static void fcycle(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, int n3, int currentLevel, Smoother smoother)
+static void fcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int n3, int currentLevel,
+                   Smoother smoother)
 {
-	// A_coarse = R*A*P
-	const csr_matrix& A = hierarchy.A_cs[currentLevel];
+    // A_coarse = R*A*P
+    const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
-	int N = A.m; // size of A at current level
+    int N = A.m; // size of A at current level
 
-	if (currentLevel < hierarchy.total_levels)
-	{
-		const csr_matrix& R = hierarchy.restrictions[currentLevel];
-		const csr_matrix& P = hierarchy.prolongations[currentLevel];
-		const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+    if (currentLevel < hierarchy.total_levels)
+    {
+        const csr_matrix &R = hierarchy.restrictions[currentLevel];
+        const csr_matrix &P = hierarchy.prolongations[currentLevel];
+        const csr_matrix &A_coarse = hierarchy.A_cs[currentLevel + 1];
 
-		int Nc = A_coarse.m; //size of A at next course level
+        int Nc = A_coarse.m; // size of A at next course level
 
-		assert(Nc == R.m);
-		assert(N == R.n);
-		assert(N == P.m);
-		assert(Nc == P.n);
+        assert(Nc == R.m);
+        assert(N == R.n);
+        assert(N == P.m);
+        assert(Nc == P.n);
 
-		// do n1 smoothing steps on A*x=b
-		for (int i = 0; i < n1; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
+        // do n1 smoothing steps on A*x=b
+        for (int i = 0; i < n1; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
 
-		// compute residual r = b - A*x = A*e
-		std::vector<double> r(N);
-		for (int i = 0; i < N; i++)
-		{
-			r[i] = b[i];
-		}
-		csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
+        // compute residual r = b - A*x = A*e
+        std::vector<double> r(N);
+        for (int i = 0; i < N; i++)
+        {
+            r[i] = b[i];
+        }
+        csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
 
-		// compute wres = R*r 
-		std::vector<double> wres(Nc, 0.0);
-		csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0, wres.data());
+        // compute wres = R*r
+        std::vector<double> wres(Nc, 0.0);
+        csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0,
+              wres.data());
 
-		// set ec = 0
-		std::vector<double> ec(Nc, 0.0);
+        // set ec = 0
+        std::vector<double> ec(Nc, 0.0);
 
-		// recursively solve Ac*ec = R*r = wres
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		fcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+        // recursively solve Ac*ec = R*r = wres
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        fcycle(hierarchy, ec.data(), wres.data(), n1, n2, n3, currentLevel + 1, smoother);
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
 
-		// correct x = x + P*ec
-		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
+        // correct x = x + P*ec
+        csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
 
-		// do n2 smoothing steps on A*x=b
-		for (int i = 0; i < n2; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
+        // do n2 smoothing steps on A*x=b
+        for (int i = 0; i < n2; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
 
-		// compute residual r = b - A*x = A*e
-		for (int i = 0; i < N; i++)
-		{
-			r[i] = b[i];
-		}
-		csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
+        // compute residual r = b - A*x = A*e
+        for (int i = 0; i < N; i++)
+        {
+            r[i] = b[i];
+        }
+        csrmv(A.m, A.n, A.nnz, -1.0, A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, 1.0, r.data());
 
-		// compute wres = R*r 
-		csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0, wres.data());
+        // compute wres = R*r
+        csrmv(R.m, R.n, R.nnz, 1.0, R.csr_row_ptr.data(), R.csr_col_ind.data(), R.csr_val.data(), r.data(), 0.0,
+              wres.data());
 
-		// recursively solve Ac*ec = R*r = wres
-		vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
+        // recursively solve Ac*ec = R*r = wres
+        vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
 
-		// correct x = x + P*ec
-		csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
+        // correct x = x + P*ec
+        csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
 
-		// do n3 smoothing steps on A*x=b
-		for (int i = 0; i < n3; i++)
-		{
-			apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
-		}
-	}
-	else
-	{
-		//std::cout << "currentLevel: " << currentLevel << " N: " << N << std::endl;
-		// solve A*x=b exactly
-		for (int i = 0; i < 100; i++)
-		{
-			// Gauss-Seidel iteration
-			for (int j = 0; j < N; j++)
-			{
-				double sigma = 0.0;
-				double ajj = 0.0; // diagonal entry a_jj
+        // do n3 smoothing steps on A*x=b
+        for (int i = 0; i < n3; i++)
+        {
+            apply_smoother(A.csr_row_ptr.data(), A.csr_col_ind.data(), A.csr_val.data(), x, b, N, smoother);
+        }
+    }
+    else
+    {
+        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
+        // std::endl;
+        //  solve A*x=b exactly
+        for (int i = 0; i < 100; i++)
+        {
+            // Gauss-Seidel iteration
+            for (int j = 0; j < N; j++)
+            {
+                double sigma = 0.0;
+                double ajj = 0.0; // diagonal entry a_jj
 
-				int row_start = A.csr_row_ptr[j];
-				int row_end = A.csr_row_ptr[j + 1];
+                int row_start = A.csr_row_ptr[j];
+                int row_end = A.csr_row_ptr[j + 1];
 
-				for (int k = row_start; k < row_end; k++)
-				{
-					int col = A.csr_col_ind[k];
-					double val = A.csr_val[k];
-					if (col != j)
-					{
-						sigma = sigma + val * x[col];
-					}
-					else
-					{
-						ajj = val;
-					}
-				}
-				x[j] = (b[j] - sigma) / ajj;
-			}
-		}
-	}
+                for (int k = row_start; k < row_end; k++)
+                {
+                    int col = A.csr_col_ind[k];
+                    double val = A.csr_val[k];
+                    if (col != j)
+                    {
+                        sigma = sigma + val * x[col];
+                    }
+                    else
+                    {
+                        ajj = val;
+                    }
+                }
+                x[j] = (b[j] - sigma) / ajj;
+            }
+        }
+    }
 }
 
-int amg_solve(const heirarchy& hierarchy, double* x, const double* b, int n1, int n2, double tol, Cycle cycle, Smoother smoother)
+int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, double tol, Cycle cycle,
+              Smoother smoother)
 {
-	// AMG recursive solve
-	int n3 = n2;
-	int cycle_count = 0;
-	double err = 1.0;
-	while (err > tol && cycle_count < MAX_VCYCLES)
-	{
-		switch (cycle)
-		{
-		case Cycle::Vcycle:
-			vcycle(hierarchy, x, b, n1, n2, 0, smoother);
-			break;
-		case Cycle::Wcycle:
-			wcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
-			break;
-		case Cycle::Fcycle:
-			fcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
-			break;
-		}
-#if(FAST_ERROR)
-		err = fast_error(hierarchy.A_cs[0].csr_row_ptr.data(), hierarchy.A_cs[0].csr_col_ind.data(), hierarchy.A_cs[0].csr_val.data(), x, b, hierarchy.A_cs[0].m, tol);
+    // AMG recursive solve
+    int n3 = n2;
+    int cycle_count = 0;
+    double err = 1.0;
+    while (err > tol && cycle_count < MAX_VCYCLES)
+    {
+        switch (cycle)
+        {
+        case Cycle::Vcycle:
+            vcycle(hierarchy, x, b, n1, n2, 0, smoother);
+            break;
+        case Cycle::Wcycle:
+            wcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
+            break;
+        case Cycle::Fcycle:
+            fcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
+            break;
+        }
+#if (FAST_ERROR)
+        err = fast_error(hierarchy.A_cs[0].csr_row_ptr.data(), hierarchy.A_cs[0].csr_col_ind.data(),
+                         hierarchy.A_cs[0].csr_val.data(), x, b, hierarchy.A_cs[0].m, tol);
 #else
-		err = error(hierarchy.A_cs[0].csr_row_ptr.data(), hierarchy.A_cs[0].csr_col_ind.data(), hierarchy.A_cs[0].csr_val.data(), x, b, hierarchy.A_cs[0].m);
+        err = error(hierarchy.A_cs[0].csr_row_ptr.data(), hierarchy.A_cs[0].csr_col_ind.data(),
+                    hierarchy.A_cs[0].csr_val.data(), x, b, hierarchy.A_cs[0].m);
 #endif
-#if(DEBUG)
-		std::cout << "error: " << err << std::endl;
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
 #endif
-		cycle_count++;
-	}
+        cycle_count++;
+    }
 
-	std::cout << "cycles: " << cycle_count << std::endl;
+    std::cout << "cycles: " << cycle_count << std::endl;
 
-	return err > tol ? -1 : cycle_count;
+    return err > tol ? -1 : cycle_count;
 }

@@ -24,7 +24,6 @@
 //
 //********************************************************************************
 
-
 #include "../../include/EigenValueSolvers/PowerIteration.h"
 #include "../../include/LinearSolvers/SLAF.h"
 
@@ -32,89 +31,102 @@
 #include <random>
 #include <vector>
 
-double powerIteration(const int rowptr[], const int col[], const double val[], double eigenVec[], const double tol, const int n, const int maxIter)
+double powerIteration(const int rowptr[], const int col[], const double val[], double eigenVec[], const double tol,
+                      const int n, const int maxIter)
 {
-	std::vector<double> b;
-	std::vector<double> temp;
-	b.resize(n);
-	temp.resize(n);
+    std::vector<double> b;
+    std::vector<double> temp;
+    b.resize(n);
+    temp.resize(n);
 
-	std::default_random_engine generator;
-	std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-	for (int i = 0; i < n; i++) {
-		double number = distribution(generator);
-		b[i] = 2.0 * number - 1.0;
-	}
+    for (int i = 0; i < n; i++)
+    {
+        double number = distribution(generator);
+        b[i] = 2.0 * number - 1.0;
+    }
 
-	double lambda = 0.0;
+    double lambda = 0.0;
 
-	// calculate A*b
-	for (int i = 0; i < n; i++) {
-		double s = 0.0;
-		for (int j = rowptr[i]; j < rowptr[i + 1]; j++) {
-			s += val[j] * b[col[j]];
-		}
+    // calculate A*b
+    for (int i = 0; i < n; i++)
+    {
+        double s = 0.0;
+        for (int j = rowptr[i]; j < rowptr[i + 1]; j++)
+        {
+            s += val[j] * b[col[j]];
+        }
 
-		temp[i] = s;
-	}
+        temp[i] = s;
+    }
 
-	// residual resSqr = ||A*b - lambda*b||^2
-	double resSqr = 0.0;
-	for (int i = 0; i < n; i++) {
-		resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
-	}
+    // residual resSqr = ||A*b - lambda*b||^2
+    double resSqr = 0.0;
+    for (int i = 0; i < n; i++)
+    {
+        resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
+    }
 
-	int iter = 0;
-	while (iter < maxIter && resSqr > tol) {
-		
-		// calculate A*b
-		for (int i = 0; i < n; i++) {
-			double s = 0.0;
-			for (int j = rowptr[i]; j < rowptr[i + 1]; j++) {
-				s += val[j] * b[col[j]];
-			}
+    int iter = 0;
+    while (iter < maxIter && resSqr > tol)
+    {
 
-			temp[i] = s;
-		}
+        // calculate A*b
+        for (int i = 0; i < n; i++)
+        {
+            double s = 0.0;
+            for (int j = rowptr[i]; j < rowptr[i + 1]; j++)
+            {
+                s += val[j] * b[col[j]];
+            }
 
-		// calculate norm(A*b);
-		double normAb = 0.0;
-		for (int i = 0; i < n; i++) {
-			normAb += temp[i] * temp[i];
-		}
+            temp[i] = s;
+        }
 
-		// update eigenvalue
-		double alpha1 = 0.0;
-		double alpha2 = 0.0;
-		for (int i = 0; i < n; i++) {
-			alpha1 += b[i] * temp[i];
-			alpha2 += b[i] * b[i];
-		}
+        // calculate norm(A*b);
+        double normAb = 0.0;
+        for (int i = 0; i < n; i++)
+        {
+            normAb += temp[i] * temp[i];
+        }
 
-		lambda = alpha1 / alpha2;
+        // update eigenvalue
+        double alpha1 = 0.0;
+        double alpha2 = 0.0;
+        for (int i = 0; i < n; i++)
+        {
+            alpha1 += b[i] * temp[i];
+            alpha2 += b[i] * b[i];
+        }
 
-		std::cout << "eigen value: " << lambda << " normAb: " << normAb << " res sqr: " << resSqr << std::endl;
+        lambda = alpha1 / alpha2;
 
-		// update b
-		normAb = sqrt(normAb);
-		for (int i = 0; i < n; i++) {
-			b[i] = temp[i] / normAb;
-		}
+        std::cout << "eigen value: " << lambda << " normAb: " << normAb << " res sqr: " << resSqr << std::endl;
 
-		// update resSqr
-		resSqr = 0.0;
-		for (int i = 0; i < n; i++) {
-			resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
-		}
+        // update b
+        normAb = sqrt(normAb);
+        for (int i = 0; i < n; i++)
+        {
+            b[i] = temp[i] / normAb;
+        }
 
-		iter++;
-	}
+        // update resSqr
+        resSqr = 0.0;
+        for (int i = 0; i < n; i++)
+        {
+            resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
+        }
 
-	// fill in eigen vector
-	for (int i = 0; i < n; i++) {
-		eigenVec[i] = b[i];
-	}
+        iter++;
+    }
 
-	return lambda;
+    // fill in eigen vector
+    for (int i = 0; i < n; i++)
+    {
+        eigenVec[i] = b[i];
+    }
+
+    return lambda;
 }

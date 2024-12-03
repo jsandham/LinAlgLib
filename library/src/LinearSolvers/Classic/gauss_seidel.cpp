@@ -24,61 +24,62 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../../include/LinearSolvers/Classic/gauss_seidel.h"
-#include"../../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/Classic/gauss_seidel.h"
+#include "../../../include/LinearSolvers/slaf.h"
+#include "iostream"
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // gauss-seidel method
 //-------------------------------------------------------------------------------
-void gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n)
+void gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                            const double *b, const int n)
 {
-	for (int j = 0; j < n; j++)
-	{
-		double sigma = 0.0;
-		double ajj = 0.0;   //diagonal entry a_jj
+    for (int j = 0; j < n; j++)
+    {
+        double sigma = 0.0;
+        double ajj = 0.0; // diagonal entry a_jj
 
-		int row_start = csr_row_ptr[j];
-		int row_end = csr_row_ptr[j + 1];
+        int row_start = csr_row_ptr[j];
+        int row_end = csr_row_ptr[j + 1];
 
-		for (int k = row_start; k < row_end; k++)
-		{
-			int col = csr_col_ind[k];
-			double val = csr_val[k];
-			if (col != j)
-			{
-				sigma = sigma + val * x[col];
-			}
-			else
-			{
-				ajj = val;
-			}
-		}
-		x[j] = (b[j] - sigma) / ajj;
-	}
+        for (int k = row_start; k < row_end; k++)
+        {
+            int col = csr_col_ind[k];
+            double val = csr_val[k];
+            if (col != j)
+            {
+                sigma = sigma + val * x[col];
+            }
+            else
+            {
+                ajj = val;
+            }
+        }
+        x[j] = (b[j] - sigma) / ajj;
+    }
 }
 
-int gs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-       const int n, const double tol, const int max_iter)
+int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+       const double tol, const int max_iter)
 {
-	int ii = 0;
-	double err = 1.0;
-	while(err > tol && ii < max_iter)
-	{
-		//Gauss-Seidel iteration
-		gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+    int ii = 0;
+    double err = 1.0;
+    while (err > tol && ii < max_iter)
+    {
+        // Gauss-Seidel iteration
+        gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-		//err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		err = fast_error(csr_row_ptr, csr_col_ind, csr_val, x, b, n, tol);
+        // err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        err = fast_error(csr_row_ptr, csr_col_ind, csr_val, x, b, n, tol);
 
-		#if(DEBUG)
-			std::cout<<"error: "<<err<<std::endl;
-		#endif
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
 
-		ii++;
-	}
+        ii++;
+    }
 
-	return err > tol ? -1 : ii;
+    return err > tol ? -1 : ii;
 }

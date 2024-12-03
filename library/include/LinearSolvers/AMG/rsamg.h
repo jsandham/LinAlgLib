@@ -24,16 +24,16 @@
 //
 //********************************************************************************
 
-
 #ifndef RSAMG_H
 #define RSAMG_H
 
 #include "amg.h"
 
 /*! \file
-*  \brief rsamg.h provides interface for classical algebraic multigrid
-*/
+ *  \brief rsamg.h provides interface for classical algebraic multigrid
+ */
 
-void rsamg_setup(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, int m, int n, int nnz, int max_level, heirarchy& hierarchy);
+void rsamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
+                 int max_level, heirarchy &hierarchy);
 
 #endif

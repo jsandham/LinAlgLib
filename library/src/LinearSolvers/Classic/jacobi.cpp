@@ -24,70 +24,70 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../../include/LinearSolvers/Classic/jacobi.h"
-#include"../../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/Classic/jacobi.h"
+#include "../../../include/LinearSolvers/slaf.h"
+#include "iostream"
 
 #define DEBUG 1
-
 
 //-------------------------------------------------------------------------------
 // jacobi method
 //-------------------------------------------------------------------------------
-void jacobi_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* xold, const double* b, const int n)
+void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                      const double *xold, const double *b, const int n)
 {
-	double sigma;
-	double ajj;
-	for (int j = 0; j < n; j++)
-	{
-		sigma = 0.0;
-		ajj = 0.0;   //diagonal entry a_jj
-		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
-		{
-			if (csr_col_ind[k] != j)
-			{
-				sigma = sigma + csr_val[k] * xold[csr_col_ind[k]];
-			}
-			else
-			{
-				ajj = csr_val[k];
-			}
-		}
-		x[j] = (b[j] - sigma) / ajj;
-	}
+    double sigma;
+    double ajj;
+    for (int j = 0; j < n; j++)
+    {
+        sigma = 0.0;
+        ajj = 0.0; // diagonal entry a_jj
+        for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+        {
+            if (csr_col_ind[k] != j)
+            {
+                sigma = sigma + csr_val[k] * xold[csr_col_ind[k]];
+            }
+            else
+            {
+                ajj = csr_val[k];
+            }
+        }
+        x[j] = (b[j] - sigma) / ajj;
+    }
 }
 
-int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-        const int n, const double tol, const int max_iter)
+int jac(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+        const double tol, const int max_iter)
 {
-	//copy of x
-	double *xold = new double[n];
-	for(int i = 0; i < n; i++)
-	{
-		xold[i] = x[i];
-	}
+    // copy of x
+    double *xold = new double[n];
+    for (int i = 0; i < n; i++)
+    {
+        xold[i] = x[i];
+    }
 
-	int ii = 0;
-	double err = 1.0;
-	while(err > tol && ii < max_iter)
-	{
-		//Jacobi iteration
-		jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold, b, n);
-		
-		for(int i = 0; i < n; i++)
-		{
-			xold[i] = x[i];
-		}
+    int ii = 0;
+    double err = 1.0;
+    while (err > tol && ii < max_iter)
+    {
+        // Jacobi iteration
+        jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold, b, n);
 
-		err = error(csr_row_ptr, csr_col_ind, csr_val, xold, b, n);
-		#if(DEBUG)
-			std::cout << "error: " << err << std::endl;
-		#endif
+        for (int i = 0; i < n; i++)
+        {
+            xold[i] = x[i];
+        }
 
-		ii++;
-	}
+        err = error(csr_row_ptr, csr_col_ind, csr_val, xold, b, n);
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
 
-	delete[] xold;
+        ii++;
+    }
 
-	return err > tol ? -1 : ii;
+    delete[] xold;
+
+    return err > tol ? -1 : ii;
 }

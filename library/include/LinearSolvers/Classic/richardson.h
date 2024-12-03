@@ -28,44 +28,46 @@
 #define RICHARDSON_H
 
 /*! \file
-*  \brief richardson.h provides interface for richardson solver
-*/
+ *  \brief richardson.h provides interface for richardson solver
+ */
 
 /*! \ingroup linear_solvers
-*  \brief Richardson iterative linear solver
-*
-*  \details
-*  \p rich solves the sparse linear system A*x = b using the Richardson iterative solver.
-*
-*  @param[in]
-*  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
-*              sparse CSR matrix.
-*  @param[in]
-*  csr_col_ind array of \p nnz elements containing the column indices of the sparse
-*              CSR matrix.
-*  @param[in]
-*  csr_val     array of \p nnz elements containing the values of the sparse
-*              CSR matrix.
-*  @param[inout]
-*  x           array of \p n elements containing the solution values of A*x=b
-*  @param[in]
-*  b           array of \p n elements containing the righthad side values of A*x=b.
-*             
-*  @param[in]
-*  n           size of the sparse CSR matrix
-*  @param[in]
-*  tol         stopping tolerance
-*  @param[in]
-*  max_iter    maximum iterations allowed
-*
-*  \retval number of iterations actually used in the solver
-*
-*  \par Example
-*  \code{.c}
-*  \endcode
-*/
+ *  \brief Richardson iterative linear solver
+ *
+ *  \details
+ *  \p rich solves the sparse linear system A*x = b using the Richardson
+ * iterative solver.
+ *
+ *  @param[in]
+ *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
+ * the sparse CSR matrix.
+ *  @param[in]
+ *  csr_col_ind array of \p nnz elements containing the column indices of the
+ * sparse CSR matrix.
+ *  @param[in]
+ *  csr_val     array of \p nnz elements containing the values of the sparse
+ *              CSR matrix.
+ *  @param[inout]
+ *  x           array of \p n elements containing the solution values of A*x=b
+ *  @param[in]
+ *  b           array of \p n elements containing the righthad side values of
+ * A*x=b.
+ *
+ *  @param[in]
+ *  n           size of the sparse CSR matrix
+ *  @param[in]
+ *  tol         stopping tolerance
+ *  @param[in]
+ *  max_iter    maximum iterations allowed
+ *
+ *  \retval number of iterations actually used in the solver
+ *
+ *  \par Example
+ *  \code{.c}
+ *  \endcode
+ */
 /**@{*/
-int rich(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-         const int n, const double theta, const double tol, const int max_iter);
+int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+         const double theta, const double tol, const int max_iter);
 
 #endif

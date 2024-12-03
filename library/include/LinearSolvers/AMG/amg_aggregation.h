@@ -24,7 +24,6 @@
 //
 //********************************************************************************
 
-
 #ifndef AMG_AGGREGATION_H
 #define AMG_AGGREGATION_H
 
@@ -33,7 +32,9 @@
 #include "amg.h"
 
 /*! \file
-*  \brief amg_aggregation.h provides interface for creating aggregations used algebraic multigrid solvers
-*/
-bool compute_aggregates_using_pmis(const csr_matrix& A, const std::vector<int>& connections, std::vector<int64_t>& aggregates, std::vector<int64_t>& aggregate_root_nodes);
+ *  \brief amg_aggregation.h provides interface for creating aggregations used
+ * algebraic multigrid solvers
+ */
+bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
+                                   std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes);
 #endif

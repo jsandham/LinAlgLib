@@ -24,7 +24,6 @@
 //
 //********************************************************************************
 
-
 #ifndef AMG_STRENGTH_H
 #define AMG_STRENGTH_H
 
@@ -33,8 +32,9 @@
 #include "amg.h"
 
 /*! \file
-*  \brief amg_strength.h provides interface for computing strong connections in a matrix. Used algebraic multigrid solvers
-*/
-void compute_strong_connections(const csr_matrix& A, double eps, std::vector<int>& connections);
+ *  \brief amg_strength.h provides interface for computing strong connections in
+ * a matrix. Used algebraic multigrid solvers
+ */
+void compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections);
 
 #endif

@@ -24,10 +24,10 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../../include/LinearSolvers/Classic/richardson.h"
-#include"../../../include/LinearSolvers/slaf.h"
-#include"math.h"
+#include "../../../include/LinearSolvers/Classic/richardson.h"
+#include "../../../include/LinearSolvers/slaf.h"
+#include "iostream"
+#include "math.h"
 
 //********************************************************************************
 //
@@ -37,49 +37,50 @@
 
 #define DEBUG 1
 
-
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
-int rich(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-         const int n, const double theta, const double tol, const int max_iter)
+int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+         const double theta, const double tol, const int max_iter)
 {
-	//res = b-A*x and initial error
-	double *res = new double[n];
-	matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
-	
-	for(int i = 0; i < n; i++)
-	{
-		res[i] = b[i] - res[i];
-	}
+    // res = b-A*x and initial error
+    double *res = new double[n];
+    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
 
-	double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-	if(err < tol){ return 1; }
-  
+    for (int i = 0; i < n; i++)
+    {
+        res[i] = b[i] - res[i];
+    }
 
-	int iter = 0;
-	while(iter < max_iter && err > tol)
-	{
-		//find res = A*x
-		matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+    double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+    if (err < tol)
+    {
+        return 1;
+    }
 
-		//update approximation
-		for(int i = 0 ;i < n; i++)
-		{
-			x[i] = x[i] + theta * (b[i] - res[i]);
-		}
+    int iter = 0;
+    while (iter < max_iter && err > tol)
+    {
+        // find res = A*x
+        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
 
-		//calculate error
-		err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		
-		#if(DEBUG)
-			std::cout<<"error: "<<err<<std::endl;
-		#endif
+        // update approximation
+        for (int i = 0; i < n; i++)
+        {
+            x[i] = x[i] + theta * (b[i] - res[i]);
+        }
 
-		iter++;
-	}
+        // calculate error
+        err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-	delete[] res;
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
 
-	return err > tol ? -1 : iter;
+        iter++;
+    }
+
+    delete[] res;
+
+    return err > tol ? -1 : iter;
 }

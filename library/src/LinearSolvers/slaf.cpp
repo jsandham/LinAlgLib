@@ -24,9 +24,9 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../include/LinearSolvers/slaf.h"
-#include"math.h"
+#include "../../include/LinearSolvers/slaf.h"
+#include "iostream"
+#include "math.h"
 
 //********************************************************************************
 //
@@ -34,159 +34,156 @@
 //
 //********************************************************************************
 
-
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
-void matrixVectorProduct(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val,
-                         const double* x, double* y, const int n)
+void matrixVectorProduct(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+                         double *y, const int n)
 {
-	for(int i = 0; i < n; i++)
-	{
-		int row_start = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
+    for (int i = 0; i < n; i++)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
-		double s = 0.0;
-		for (int j = row_start; j < row_end; j++)
-		{
-			s += csr_val[j] * x[csr_col_ind[j]];
-		}
+        double s = 0.0;
+        for (int j = row_start; j < row_end; j++)
+        {
+            s += csr_val[j] * x[csr_col_ind[j]];
+        }
 
-		y[i] = s;
-	}
+        y[i] = s;
+    }
 }
 
 //-------------------------------------------------------------------------------
 // dot product z = x*y
 //-------------------------------------------------------------------------------
-double dotProduct(const double* x, const double* y, const int n)
+double dotProduct(const double *x, const double *y, const int n)
 {
-	double dot_prod = 0.0;
-	for(int i = 0; i < n; i++)
-	{
-		dot_prod = dot_prod + x[i] * y[i];
-	}
+    double dot_prod = 0.0;
+    for (int i = 0; i < n; i++)
+    {
+        dot_prod = dot_prod + x[i] * y[i];
+    }
 
-	return dot_prod;
+    return dot_prod;
 }
 
 //-------------------------------------------------------------------------------
 // diagonal d = diag(A)
 //-------------------------------------------------------------------------------
-void diagonal(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* d, const int n)
+void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, const int n)
 {
-	for (int i = 0; i < n; i++) 
-	{
-		int row_start = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
+    for (int i = 0; i < n; i++)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
-		for (int j = row_start; j < row_end; j++) 
-		{
-			if (csr_col_ind[j] == i) 
-			{
-				d[i] = csr_val[j];
-				break;
-			}
-		}
-	}
+        for (int j = row_start; j < row_end; j++)
+        {
+            if (csr_col_ind[j] == i)
+            {
+                d[i] = csr_val[j];
+                break;
+            }
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------
 // solve Lx = b where L is a lower triangular sparse matrix
 //-------------------------------------------------------------------------------
-void forwardSolve(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* b, double* x, const int n)
+void forwardSolve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+                  const int n)
 {
-	for (int i = 0; i < n; i++) 
-	{
-		int row_start = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
+    for (int i = 0; i < n; i++)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
-		x[i] = b[i];
-		for (int j = row_start; j < row_end; j++) 
-		{
-			int col = csr_col_ind[j];
-			if (col < i) 
-			{
-				x[i] -= csr_val[j] * x[col];
-			}
-		}
-		x[i] /= csr_val[row_end - 1];
-	}
+        x[i] = b[i];
+        for (int j = row_start; j < row_end; j++)
+        {
+            int col = csr_col_ind[j];
+            if (col < i)
+            {
+                x[i] -= csr_val[j] * x[col];
+            }
+        }
+        x[i] /= csr_val[row_end - 1];
+    }
 }
 
 //-------------------------------------------------------------------------------
 // solve Ux = b where U is a upper triangular sparse matrix
 //-------------------------------------------------------------------------------
-void backwardSolve(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* b, double* x, const int n)
+void backwardSolve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+                   const int n)
 {
-	for (int i = n - 1; i >= 0; i--) 
-	{
-		int row_start = csr_row_ptr[i];
-		int row_end = csr_row_ptr[i + 1];
+    for (int i = n - 1; i >= 0; i--)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
-		x[i] = b[i];
-		for (int j = row_end - 1; j >= row_start; j--) 
-		{
-			int col = csr_col_ind[j];
-			if (col > i) 
-			{
-				x[i] -= csr_val[j] * x[col];
-			}
-		}
+        x[i] = b[i];
+        for (int j = row_end - 1; j >= row_start; j--)
+        {
+            int col = csr_col_ind[j];
+            if (col > i)
+            {
+                x[i] -= csr_val[j] * x[col];
+            }
+        }
 
-		x[i] /= csr_val[row_start];
-	}
+        x[i] /= csr_val[row_start];
+    }
 }
-
-
-
 
 //-------------------------------------------------------------------------------
 // error e = |b-A*x|
 //-------------------------------------------------------------------------------
-double error(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* x,
-             const double* b, const int n)
+double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
+             const int n)
 {
-  double e = 0.0;
-  for (int j = 0; j < n; j++)
-  {
-	  int row_start = csr_row_ptr[j];
-	  int row_end = csr_row_ptr[j + 1];
+    double e = 0.0;
+    for (int j = 0; j < n; j++)
+    {
+        int row_start = csr_row_ptr[j];
+        int row_end = csr_row_ptr[j + 1];
 
-	  double s = 0.0;
-	  for (int i = row_start; i < row_end; i++)
-	  {
-		  s += csr_val[i] * x[csr_col_ind[i]];
-	  }
-	  e = e + (b[j] - s) * (b[j] - s);
-  }
+        double s = 0.0;
+        for (int i = row_start; i < row_end; i++)
+        {
+            s += csr_val[i] * x[csr_col_ind[i]];
+        }
+        e = e + (b[j] - s) * (b[j] - s);
+    }
 
-  return sqrt(e);
+    return sqrt(e);
 }
 
-
 //-------------------------------------------------------------------------------
-// error e = |b-A*x| stops calculating error if error goes above tolerance 
+// error e = |b-A*x| stops calculating error if error goes above tolerance
 //-------------------------------------------------------------------------------
-double fast_error(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const double* x,
-                  const double* b, const int n, const double tol)
+double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+                  const double *b, const int n, const double tol)
 {
-  int j = 0;
-  double e = 0.0;
-  while (e < tol && j < n)
-  {
-	  int row_start = csr_row_ptr[j];
-	  int row_end = csr_row_ptr[j + 1];
+    int j = 0;
+    double e = 0.0;
+    while (e < tol && j < n)
+    {
+        int row_start = csr_row_ptr[j];
+        int row_end = csr_row_ptr[j + 1];
 
-	  double s = 0.0;
-	  for (int i = row_start; i < row_end; i++)
-	  {
-		  s += csr_val[i] * x[csr_col_ind[i]];
-	  }
+        double s = 0.0;
+        for (int i = row_start; i < row_end; i++)
+        {
+            s += csr_val[i] * x[csr_col_ind[i]];
+        }
 
-	  e = e + (b[j] - s) * (b[j] - s);
-	  j++;
-  }
+        e = e + (b[j] - s) * (b[j] - s);
+        j++;
+    }
 
-  return sqrt(e);
+    return sqrt(e);
 }

@@ -22,3 +22,6 @@ build/lib/release/*.lib
 
 build/lib/debug/obj/*.obj
 build/lib/release/obj/*.obj
+
+docs/html
+docs/latex

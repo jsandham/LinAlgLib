@@ -28,67 +28,71 @@
 #define JACOBI_H
 
 /*! \file
-*  \brief jacobi.h provides interface for jacobi solver
-*/
+ *  \brief jacobi.h provides interface for jacobi solver
+ */
 
 /*! \ingroup linear_solvers
-*  \brief Jacobi iterative linear solver
-*
-*  \details
-*  \p jac solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the Jacobi iterative solver. 
-*  Consider decomposing the sparse matrix \f$A\f$ as:
-*
-*  \f[
-*    A := L + U + D,
-*  \f]
-*  where
-*  \f[
-*    \begin{array}{ll}
-*        L, & \text{Is the strictly lower part of A} \\
-*        U, & \text{Is the strictly upper part of A} \\
-*        D, & \text{Is the diagaonal part of A}
-*    \end{array}
-*  \f]
-*  Inserting into \f$A\f$ * \f$x\f$ = \f$b\f$ we get:
-*  \f[
-*    \begin{array}{ll}
-*        D * x^{k+1} + (L + U) * x^{k} = b, \\
-*        x^{k+1} = D^{-1} * (b - (L + U) * x^{k}), &
-*    \end{array}
-*  \f]
-* 
-*  \note Convergence is only guaranteed if \f$A\f$ is strictly diagonally dominant
-* 
-*  @param[in]
-*  csr_row_ptr array of \p n+1 elements that point to the start of every row of the
-*              sparse CSR matrix.
-*  @param[in]
-*  csr_col_ind array of \p nnz elements containing the column indices of the sparse
-*              CSR matrix.
-*  @param[in]
-*  csr_val     array of \p nnz elements containing the values of the sparse
-*              CSR matrix.
-*  @param[inout]
-*  x           array of \p n elements containing the solution values of \f$A\f$ * \f$x\f$ = \f$b\f$
-*  @param[in]
-*  b           array of \p n elements containing the righthad side values of \f$A\f$ * \f$x\f$ = \f$b\f$.
-*
-*  @param[in]
-*  n           size of the sparse CSR matrix
-*  @param[in]
-*  tol         stopping tolerance
-*  @param[in]
-*  max_iter    maximum iterations allowed
-*
-*  \retval number of iterations actually used in the solver. If -1 is returned, the solver did not converge to a solution
-*  with the given input tolerance \p tol.
-*
-*  \par Example
-*  \code{.c}
-*  \endcode
-*/
+ *  \brief Jacobi iterative linear solver
+ *
+ *  \details
+ *  \p jac solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the
+ * Jacobi iterative solver. Consider decomposing the sparse matrix \f$A\f$ as:
+ *
+ *  \f[
+ *    A := L + U + D,
+ *  \f]
+ *  where
+ *  \f[
+ *    \begin{array}{ll}
+ *        L, & \text{Is the strictly lower part of A} \\
+ *        U, & \text{Is the strictly upper part of A} \\
+ *        D, & \text{Is the diagaonal part of A}
+ *    \end{array}
+ *  \f]
+ *  Inserting into \f$A\f$ * \f$x\f$ = \f$b\f$ we get:
+ *  \f[
+ *    \begin{array}{ll}
+ *        D * x^{k+1} + (L + U) * x^{k} = b, \\
+ *        x^{k+1} = D^{-1} * (b - (L + U) * x^{k}), &
+ *    \end{array}
+ *  \f]
+ *
+ *  \note Convergence is only guaranteed if \f$A\f$ is strictly diagonally
+ * dominant
+ *
+ *  @param[in]
+ *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
+ * the sparse CSR matrix.
+ *  @param[in]
+ *  csr_col_ind array of \p nnz elements containing the column indices of the
+ * sparse CSR matrix.
+ *  @param[in]
+ *  csr_val     array of \p nnz elements containing the values of the sparse
+ *              CSR matrix.
+ *  @param[inout]
+ *  x           array of \p n elements containing the solution values of \f$A\f$
+ * * \f$x\f$ = \f$b\f$
+ *  @param[in]
+ *  b           array of \p n elements containing the righthad side values of
+ * \f$A\f$ * \f$x\f$ = \f$b\f$.
+ *
+ *  @param[in]
+ *  n           size of the sparse CSR matrix
+ *  @param[in]
+ *  tol         stopping tolerance
+ *  @param[in]
+ *  max_iter    maximum iterations allowed
+ *
+ *  \retval number of iterations actually used in the solver. If -1 is returned,
+ * the solver did not converge to a solution with the given input tolerance \p
+ * tol.
+ *
+ *  \par Example
+ *  \code{.c}
+ *  \endcode
+ */
 /**@{*/
-int jac(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-        const int n, const double tol, const int max_iter);
+int jac(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+        const double tol, const int max_iter);
 
 #endif

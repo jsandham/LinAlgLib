@@ -24,76 +24,77 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../../include/LinearSolvers/Classic/symmetric_gauss_seidel.h"
-#include"../../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/Classic/symmetric_gauss_seidel.h"
+#include "../../../include/LinearSolvers/slaf.h"
+#include "iostream"
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
-void symm_gauss_siedel_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n)
+void symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                                 const double *b, const int n)
 {
-	double sigma;
-	double ajj;
+    double sigma;
+    double ajj;
 
-	//forward pass
-	for (int j = 0; j < n; j++)
-	{
-		sigma = 0.0;
-		ajj = 0.0;   //diagonal entry a_jj
-		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
-		{
-			if (csr_col_ind[k] != j)
-			{
-				sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
-			}
-			else
-			{
-				ajj = csr_val[k];
-			}
-		}
-		x[j] = (b[j] - sigma) / ajj;
-	}
+    // forward pass
+    for (int j = 0; j < n; j++)
+    {
+        sigma = 0.0;
+        ajj = 0.0; // diagonal entry a_jj
+        for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+        {
+            if (csr_col_ind[k] != j)
+            {
+                sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
+            }
+            else
+            {
+                ajj = csr_val[k];
+            }
+        }
+        x[j] = (b[j] - sigma) / ajj;
+    }
 
-	//backward pass
-	for (int j = n - 1; j > -1; j--)
-	{
-		sigma = 0.0;
-		ajj = 0.0;   //diagonal entry a_jj
-		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
-		{
-			if (csr_col_ind[k] != j)
-			{
-				sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
-			}
-			else
-			{
-				ajj = csr_val[k];
-			}
-		}
-		x[j] = (b[j] - sigma) / ajj;
-	}
+    // backward pass
+    for (int j = n - 1; j > -1; j--)
+    {
+        sigma = 0.0;
+        ajj = 0.0; // diagonal entry a_jj
+        for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+        {
+            if (csr_col_ind[k] != j)
+            {
+                sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
+            }
+            else
+            {
+                ajj = csr_val[k];
+            }
+        }
+        x[j] = (b[j] - sigma) / ajj;
+    }
 }
 
-int sgs(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-        const int n, const double tol, const int max_iter)
+int sgs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+        const double tol, const int max_iter)
 {
-	int ii = 0;
-	double err = 1.0;
-	while(err > tol && ii < max_iter)
-	{
-		symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+    int ii = 0;
+    double err = 1.0;
+    while (err > tol && ii < max_iter)
+    {
+        symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-		err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-	
-		#if(DEBUG)
-			std::cout<<"error: "<<err<<std::endl;
-		#endif
-	
-		ii++;
-	}
+        err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-	return err > tol ? -1 : ii;
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
+
+        ii++;
+    }
+
+    return err > tol ? -1 : ii;
 }

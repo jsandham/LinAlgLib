@@ -24,56 +24,57 @@
 //
 //********************************************************************************
 
-#include"iostream"
-#include"../../../include/LinearSolvers/Classic/sor.h"
-#include"../../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/Classic/sor.h"
+#include "../../../include/LinearSolvers/slaf.h"
+#include "iostream"
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // successive over-relaxation method
 //-------------------------------------------------------------------------------
-void sor_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, const int n, const double omega)
+void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+                   const int n, const double omega)
 {
-	double sigma;
-	double ajj;
-	for (int j = 0; j < n; j++)
-	{
-		sigma = 0.0;
-		ajj = 0.0;   //diagonal entry a_jj
-		for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
-		{
-			if (csr_col_ind[k] != j)
-			{
-				sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
-			}
-			else
-			{
-				ajj = csr_val[k];
-			}
-		}
-		x[j] = x[j] + omega * ((b[j] - sigma) / ajj - x[j]);
-	}
+    double sigma;
+    double ajj;
+    for (int j = 0; j < n; j++)
+    {
+        sigma = 0.0;
+        ajj = 0.0; // diagonal entry a_jj
+        for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+        {
+            if (csr_col_ind[k] != j)
+            {
+                sigma = sigma + csr_val[k] * x[csr_col_ind[k]];
+            }
+            else
+            {
+                ajj = csr_val[k];
+            }
+        }
+        x[j] = x[j] + omega * ((b[j] - sigma) / ajj - x[j]);
+    }
 }
 
-int sor(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* x, const double* b, 
-        const int n, const double omega, const double tol, const int max_iter)
+int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+        const double omega, const double tol, const int max_iter)
 {
-	int ii = 0;
-	double err = 1.0;
-	while(err > tol && ii < max_iter)
-	{
-		//SOR iteration
-		sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, omega);
+    int ii = 0;
+    double err = 1.0;
+    while (err > tol && ii < max_iter)
+    {
+        // SOR iteration
+        sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, omega);
 
-		err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-		
-		#if(DEBUG)
-			std::cout<<"error: "<<err<<std::endl;
-		#endif
+        err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-		ii++;
-	}
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
 
-	return err > tol ? -1 : ii;
+        ii++;
+    }
+
+    return err > tol ? -1 : ii;
 }
