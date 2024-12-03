@@ -24,41 +24,41 @@
 //
 //********************************************************************************
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include "linalg.h"
 
 int main()
 {
-	int m = 5;
+    int m = 5;
 
-	// 4 3 0 0 2
-	// 1 2 3 0 0
-	// 0 5 4 3 0
-	// 0 0 1 3 2
-	// 9 0 0 6 7
-	std::vector<int> csr_row_ptr = { 0, 3, 6, 9, 12, 15 };
-	std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
-	std::vector<double> csr_val = { 4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0 };
+    // 4 3 0 0 2
+    // 1 2 3 0 0
+    // 0 5 4 3 0
+    // 0 0 1 3 2
+    // 9 0 0 6 7
+    std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
+    std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
+    std::vector<double> csr_val = {4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0};
 
-	// Solution vector
-	std::vector<double> x(m, 0.0);
+    // Solution vector
+    std::vector<double> x(m, 0.0);
 
-	// Righthand side vector
-	std::vector<double> b(m, 1.0);
+    // Righthand side vector
+    std::vector<double> b(m, 1.0);
 
-	int iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 10, 0.00001, 1000);
+    int iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 10, 0.00001, 1000);
 
-	std::cout << "iter: " << iter << std::endl;
+    std::cout << "iter: " << iter << std::endl;
 
-	// Print solution
-	std::cout << "x" << std::endl;
-	for (size_t i = 0; i < x.size(); i++)
-	{
-		std::cout << x[i] << " ";
-	}
-	std::cout << "" << std::endl;
+    // Print solution
+    std::cout << "x" << std::endl;
+    for (size_t i = 0; i < x.size(); i++)
+    {
+        std::cout << x[i] << " ";
+    }
+    std::cout << "" << std::endl;
 
-	return 0;
+    return 0;
 }

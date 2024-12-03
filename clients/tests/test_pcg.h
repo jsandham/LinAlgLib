@@ -5,7 +5,7 @@
 
 namespace Testing
 {
-    bool test_pcg(const std::string& matrix_file);
+bool test_pcg(const std::string &matrix_file);
 }
 
 #endif

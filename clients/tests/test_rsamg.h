@@ -5,7 +5,7 @@
 
 namespace Testing
 {
-    bool test_rsamg(const std::string& matrix_file);
+bool test_rsamg(const std::string &matrix_file);
 }
 
 #endif

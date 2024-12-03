@@ -24,62 +24,61 @@
 //
 //********************************************************************************
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include "linalg.h"
 #include "utility.h"
 
 int main()
 {
-	int m, n, nnz;
-	std::vector<int> csr_row_ptr;
-	std::vector<int> csr_col_ind;
-	std::vector<double> csr_val;
-	// load_mtx_file("../clients/matrices/ash85.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-	load_mtx_file("../clients/matrices/bcsstk01.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    int m, n, nnz;
+    std::vector<int> csr_row_ptr;
+    std::vector<int> csr_col_ind;
+    std::vector<double> csr_val;
+    // load_mtx_file("../clients/matrices/ash85.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file("../clients/matrices/bcsstk01.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
-	/*std::cout << "A" << std::endl;
-	for (int i = 0; i < m; i++)
-	{
-		int start = csr_row_ptr[i];
-		int end = csr_row_ptr[i + 1];
+    /*std::cout << "A" << std::endl;
+    for (int i = 0; i < m; i++)
+    {
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
 
-		std::vector<double> temp(n, 0);
-		for (int j = start; j < end; j++)
-		{
-			temp[csr_col_ind[j]] = csr_val[j];
-		}
+        std::vector<double> temp(n, 0);
+        for (int j = start; j < end; j++)
+        {
+            temp[csr_col_ind[j]] = csr_val[j];
+        }
 
-		for (size_t j = 0; j < temp.size(); j++)
-		{
-			std::cout << temp[j] << " ";
-		}
-		std::cout << "" << std::endl;
-	}
-	std::cout << "" << std::endl;*/
+        for (size_t j = 0; j < temp.size(); j++)
+        {
+            std::cout << temp[j] << " ";
+        }
+        std::cout << "" << std::endl;
+    }
+    std::cout << "" << std::endl;*/
 
+    // Solution vector
+    std::vector<double> x(m, 0.0);
 
-	// Solution vector
-	std::vector<double> x(m, 0.0);
+    // Righthand side vector
+    std::vector<double> b(m, 1.0);
 
-	// Righthand side vector
-	std::vector<double> b(m, 1.0);
+    heirarchy hierachy;
+    saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
 
-	heirarchy hierachy;
-	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
+    int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001, Cycle::Vcycle, Smoother::Gauss_Siedel);
+    // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
+    // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
 
-	int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001, Cycle::Vcycle, Smoother::Gauss_Siedel);
-	//int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::Gauss_Siedel);
-	//int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 0.00001, Cycle::Wcycle, Smoother::SOR);
+    // Print solution
+    std::cout << "x" << std::endl;
+    for (size_t i = 0; i < x.size(); i++)
+    {
+        std::cout << x[i] << " ";
+    }
+    std::cout << "" << std::endl;
 
-	// Print solution
-	std::cout << "x" << std::endl;
-	for (size_t i = 0; i < x.size(); i++)
-	{
-		std::cout << x[i] << " ";
-	}
-	std::cout << "" << std::endl;
-
-	return 0;
+    return 0;
 }
