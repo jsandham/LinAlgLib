@@ -340,9 +340,9 @@ INSTANTIATE_TEST_CASE_P(saamg, saamg_parameters,
                                          testing::ValuesIn(saamg_postsmoothing_iterations),
                                          testing::ValuesIn(cycle_types), testing::ValuesIn(smoother_type)));
 
-int main()
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest();
+    testing::InitGoogleTest(&argc, argv);
 
     RUN_ALL_TESTS();
 
