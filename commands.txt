@@ -1,0 +1,5 @@
+// Clang formatting
+clang-format.exe -i --style microsoft library/src/LinearSolvers/AMG/*.cpp
+
+// Documentation
+doxygen docs/Doxyfile
