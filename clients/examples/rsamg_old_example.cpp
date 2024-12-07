@@ -36,7 +36,7 @@ int main()
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    load_mtx_file("../clients/matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file("../matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);

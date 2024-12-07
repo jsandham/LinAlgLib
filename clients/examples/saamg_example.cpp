@@ -37,7 +37,7 @@ int main()
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
     // load_mtx_file("../clients/matrices/ash85.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-    load_mtx_file("../clients/matrices/bcsstk01.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file("../matrices/bcsstk01.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     /*std::cout << "A" << std::endl;
     for (int i = 0; i < m; i++)

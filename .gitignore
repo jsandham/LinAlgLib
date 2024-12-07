@@ -8,6 +8,8 @@
 *.exe
 *.lib
 
+build
+
 build/*.log
 build/*.tlog
 build/*.idb
