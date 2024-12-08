@@ -67,7 +67,7 @@ set(LINALGLIB_SOURCE
 
 add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
 
-target_compile_options(linalglib PRIVATE /FS /MTd /Zi)
+target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
 
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>

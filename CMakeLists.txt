@@ -28,5 +28,7 @@ cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 project(linalglib LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_subdirectory(library)
 add_subdirectory(clients)

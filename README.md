@@ -7,7 +7,7 @@ cd LinAlgLib
 mkdir build
 cd build
 cmake ../
-cmake --build .
+cmake --build . --config Debug
 ```
 
 # Build documentation

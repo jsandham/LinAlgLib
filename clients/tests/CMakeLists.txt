@@ -23,7 +23,12 @@
 # SOFTWARE.
 #
 ##################################################################################
-#find_package(gtest REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest
+        GIT_TAG release-1.12.1)
+FetchContent_MakeAvailable(googletest)
 
 set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_iterative.cpp
@@ -38,12 +43,11 @@ set(LINALGLIB_CLIENTS_COMMON_SOURCE
 
 add_executable(test_main test_main.cpp ${LINALGLIB_CLIENTS_TEST_SOURCE} ${LINALGLIB_CLIENTS_COMMON_SOURCE})
 
-target_compile_options(test_main PRIVATE /FS /MTd /Zi)
+target_compile_options(test_main PRIVATE -W4 -wd4201 -wd4100 -wd4996)
 
 target_include_directories(test_main PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../common>)
-target_include_directories(test_main PRIVATE $<BUILD_INTERFACE:C:\\Users\\James\\Documents\\googletest\\googletest\\include>)
 
 target_link_libraries(test_main PRIVATE linalglib)
-target_link_libraries(test_main PRIVATE "C:\\Users\\James\\Documents\\googletest\\build\\lib\\Debug\\gtest.lib")
+target_link_libraries(test_main PRIVATE gtest_main gmock_main)
 
 file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/tests )
