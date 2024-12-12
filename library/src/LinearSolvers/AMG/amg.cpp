@@ -48,32 +48,6 @@ void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double 
 void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                     const int n, const double omega);
 
-// Compute y = alpha * A * x + beta * y
-static void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind,
-                  const double *csr_val, const double *x, double beta, double *y)
-{
-    for (int i = 0; i < m; i++)
-    {
-        int row_begin = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
-
-        double sum = 0;
-        for (int j = row_begin; j < row_end; j++)
-        {
-            sum += csr_val[j] * x[csr_col_ind[j]];
-        }
-
-        if (beta == 0.0)
-        {
-            y[i] = alpha * sum;
-        }
-        else
-        {
-            y[i] = alpha * sum + beta * y[i];
-        }
-    }
-}
-
 static void apply_smoother(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                            const double *b, const int n, Smoother smoother)
 {
@@ -149,11 +123,7 @@ static void vcycle(const heirarchy &hierarchy, double *x, const double *b, int n
         std::vector<double> ec(Nc, 0.0);
 
         // recursively solve Ac*ec = R*r = wres
-        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
-        // std::endl;
         vcycle(hierarchy, ec.data(), wres.data(), n1, n2, currentLevel + 1, smoother);
-        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
-        // std::endl;
 
         // correct x = x + P*ec
         csrmv(P.m, P.n, P.nnz, 1.0, P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), ec.data(), 1.0, x);
@@ -166,8 +136,6 @@ static void vcycle(const heirarchy &hierarchy, double *x, const double *b, int n
     }
     else
     {
-        // std::cout << "currentLevel: " << currentLevel << " N: " << N <<
-        // std::endl;
         //  solve A*x=b exactly
         for (int i = 0; i < 1000; i++)
         {

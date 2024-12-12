@@ -45,7 +45,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 {
     // r = b - A * x and initial error
     double *r = new double[n];
-    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, r, n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, r, n);
     for (int i = 0; i < n; i++)
     {
         r[i] = b[i] - r[i];
@@ -58,7 +58,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         r0[i] = r[i];
     }
 
-    double rho = dotProduct(r0, r, n);
+    double rho = dot_product(r0, r, n);
 
     // create p vector
     double *p = new double[n];
@@ -78,9 +78,9 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     int iter = 0;
     while (iter < max_iter && err > tol)
     {
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, p, v, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p, v, n);
 
-        double alpha = rho / dotProduct(r0, v, n);
+        double alpha = rho / dot_product(r0, v, n);
 
         for(int i = 0; i < n; i++)
         {
@@ -88,9 +88,9 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
             s[i] = r[i] - alpha * v[i];
         }
 
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, s, t, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, s, t, n);
 
-        double omega = dotProduct(t, s, n) / dotProduct(t, t, n);
+        double omega = dot_product(t, s, n) / dot_product(t, t, n);
 
         for(int i = 0; i < n; i++)
         {
@@ -102,7 +102,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         //     break;
 
         double rho_prev = rho;
-        rho = dotProduct(r0, r, n);
+        rho = dot_product(r0, r, n);
         double beta = (rho / rho_prev) / (alpha / omega);
 
         for(int i = 0; i < n; i++)

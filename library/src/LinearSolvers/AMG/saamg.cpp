@@ -34,6 +34,7 @@
 #include <map>
 #include <unordered_set>
 #include <vector>
+#include <cstring>
 
 //********************************************************************************
 //
@@ -285,173 +286,7 @@ static void transpose(const csr_matrix &prolongation, csr_matrix &restriction)
     // std::cout << "" << std::endl;
 }
 
-// Compute C = alpha * A * B + beta * D
-static void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
-                        const int *csr_col_ind_A, const int *csr_row_ptr_B, const int *csr_col_ind_B, double beta,
-                        const int *csr_row_ptr_D, const int *csr_col_ind_D, int *csr_row_ptr_C, int *nnz_C)
-{
-    std::vector<int> nnz(n, -1);
-
-    // A is mxk, B is kxn, and C is mxn
-    for (int i = 0; i < m + 1; i++)
-    {
-        csr_row_ptr_C[i] = 0;
-    }
-
-    for (int i = 0; i < m; ++i)
-    {
-        int row_begin_A = csr_row_ptr_A[i];
-        int row_end_A = csr_row_ptr_A[i + 1];
-
-        for (int j = row_begin_A; j < row_end_A; j++)
-        {
-            int col_A = csr_col_ind_A[j];
-
-            int row_begin_B = csr_row_ptr_B[col_A];
-            int row_end_B = csr_row_ptr_B[col_A + 1];
-
-            for (int p = row_begin_B; p < row_end_B; p++)
-            {
-                int col_B = csr_col_ind_B[p];
-
-                if (nnz[col_B] != i)
-                {
-                    nnz[col_B] = i;
-                    csr_row_ptr_C[i + 1]++;
-                }
-            }
-        }
-
-        if (beta != 0.0)
-        {
-            int row_begin_D = csr_row_ptr_D[i];
-            int row_end_D = csr_row_ptr_D[i + 1];
-
-            for (int j = row_begin_D; j < row_end_D; j++)
-            {
-                int col_D = csr_col_ind_D[j];
-
-                if (nnz[col_D] != i)
-                {
-                    nnz[col_D] = i;
-                    csr_row_ptr_C[i + 1]++;
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < m; i++)
-    {
-        csr_row_ptr_C[i + 1] += csr_row_ptr_C[i];
-    }
-
-    *nnz_C = csr_row_ptr_C[m];
-}
-
-static void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
-                    const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B,
-                    const int *csr_col_ind_B, const double *csr_val_B, double beta, const int *csr_row_ptr_D,
-                    const int *csr_col_ind_D, const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C,
-                    double *csr_val_C)
-{
-    std::vector<int> nnzs(n, -1);
-
-    for (int i = 0; i < m; i++)
-    {
-        int row_begin_C = csr_row_ptr_C[i];
-        int row_end_C = row_begin_C;
-
-        int row_begin_A = csr_row_ptr_A[i];
-        int row_end_A = csr_row_ptr_A[i + 1];
-
-        for (int j = row_begin_A; j < row_end_A; j++)
-        {
-            int col_A = csr_col_ind_A[j];
-            double val_A = alpha * csr_val_A[j];
-
-            int row_begin_B = csr_row_ptr_B[col_A];
-            int row_end_B = csr_row_ptr_B[col_A + 1];
-
-            for (int p = row_begin_B; p < row_end_B; p++)
-            {
-                int col_B = csr_col_ind_B[p];
-                double val_B = csr_val_B[p];
-
-                if (nnzs[col_B] < row_begin_C)
-                {
-                    nnzs[col_B] = row_end_C;
-                    csr_col_ind_C[row_end_C] = col_B;
-                    csr_val_C[row_end_C] = val_A * val_B;
-                    row_end_C++;
-                }
-                else
-                {
-                    csr_val_C[nnzs[col_B]] += val_A * val_B;
-                }
-            }
-        }
-
-        if (beta != 0.0)
-        {
-            int row_begin_D = csr_row_ptr_D[i];
-            int row_end_D = csr_row_ptr_D[i + 1];
-
-            for (int j = row_begin_D; j < row_end_D; j++)
-            {
-                int col_D = csr_col_ind_D[j];
-                double val_D = beta * csr_val_D[j];
-
-                // Check if a new nnz is generated or if the value is added
-                if (nnzs[col_D] < row_begin_C)
-                {
-                    nnzs[col_D] = row_end_C;
-
-                    csr_col_ind_C[row_end_C] = col_D;
-                    csr_val_C[row_end_C] = val_D;
-                    row_end_C++;
-                }
-                else
-                {
-                    csr_val_C[nnzs[col_D]] += val_D;
-                }
-            }
-        }
-    }
-
-    int nnz = csr_row_ptr_C[m];
-
-    std::vector<int> cols(nnz);
-    std::vector<double> vals(nnz);
-
-    memcpy(cols.data(), csr_col_ind_C, sizeof(int) * nnz);
-    memcpy(vals.data(), csr_val_C, sizeof(double) * nnz);
-
-    for (int i = 0; i < m; i++)
-    {
-        int row_begin = csr_row_ptr_C[i];
-        int row_end = csr_row_ptr_C[i + 1];
-        int row_nnz = row_end - row_begin;
-
-        std::vector<int> perm(row_nnz);
-        for (int j = 0; j < row_nnz; j++)
-        {
-            perm[j] = j;
-        }
-
-        int *col_entry = cols.data() + row_begin;
-        double *val_entry = vals.data() + row_begin;
-
-        std::sort(perm.begin(), perm.end(), [&](const int &a, const int &b) { return col_entry[a] < col_entry[b]; });
-
-        for (int j = 0; j < row_nnz; j++)
-        {
-            csr_col_ind_C[row_begin + j] = col_entry[perm[j]];
-            csr_val_C[row_begin + j] = val_entry[perm[j]];
-        }
-    }
-}
-
-static void galarkinTripleProduct(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
+static void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
 {
     // Compute A_c = R * A * P
     double alpha = 1.0;
@@ -578,7 +413,7 @@ void saamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *c
         transpose(P, R);
 
         // Compute coarse grid matrix using Galarkin triple product A_c = R * A * P
-        galarkinTripleProduct(R, A, P, A_coarse);
+        galarkin_triple_product(R, A, P, A_coarse);
 
         level++;
         eps *= 0.5;

@@ -67,7 +67,9 @@ set(LINALGLIB_SOURCE
 
 add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
 
-target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+  target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+endif()
 
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>

@@ -34,8 +34,10 @@ function(add_example EXAMPLE_SOURCE)
   add_executable(${EXAMPLE_TARGET} ${EXAMPLE_SOURCE} ${LINALGLIB_CLIENTS_COMMON_SOURCE})
 
   # Target compile options
-  target_compile_options(${EXAMPLE_TARGET} PRIVATE -W4 -wd4201 -wd4100 -wd4996)
-
+  if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+    target_compile_options(${EXAMPLE_TARGET} PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+  endif()
+  
   # Include common client headers
   target_include_directories(${EXAMPLE_TARGET} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../common>)
 

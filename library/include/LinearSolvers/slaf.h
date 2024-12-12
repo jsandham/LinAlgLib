@@ -27,17 +27,45 @@
 #ifndef SLAF_H
 #define SLAF_H
 
-void matrixVectorProduct(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+// Compute y = alpha * A * x + beta * y
+void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, 
+           const double* x, double beta, double* y);
+
+// Compute C = alpha * A * B + beta * D
+void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+                 const int *csr_col_ind_A, const int *csr_row_ptr_B, const int *csr_col_ind_B, double beta,
+                 const int *csr_row_ptr_D, const int *csr_col_ind_D, int *csr_row_ptr_C, int *nnz_C);
+
+void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+             const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B,
+             const int *csr_col_ind_B, const double *csr_val_B, double beta, const int *csr_row_ptr_D,
+             const int *csr_col_ind_D, const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C,
+             double *csr_val_C);
+
+
+// Compute C = alpha * A + beta * B
+void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A,
+                 const int *csr_col_ind_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
+                 int *csr_row_ptr_C, int *nnz_C);
+
+void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A,
+             const int *csr_col_ind_A, const double *csr_val_A, double beta, const int *csr_row_ptr_B,
+             const int *csr_col_ind_B, const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C,
+             double *csr_val_C);
+
+// Compute y = A * x
+void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                          double *y, const int n);
 
-double dotProduct(const double *x, const double *y, const int n);
+// Compute result = x * y
+double dot_product(const double *x, const double *y, const int n);
 
 void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, const int n);
 
-void forwardSolve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                   const int n);
 
-void backwardSolve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                    const int n);
 
 double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,

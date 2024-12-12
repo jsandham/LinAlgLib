@@ -49,7 +49,7 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
 
     // res = b-A*x and initial error
     double *res = new double[n];
-    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
     double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
     for (int i = 0; i < n; i++)
     {
@@ -82,7 +82,7 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         // restart algorithm to better handle round off error
         if (restart_iter == 100)
         {
-            matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+            matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
             for (int i = 0; i < n; i++)
             {
                 res[i] = b[i] - res[i];
@@ -109,7 +109,7 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         {
             alpha1 += z[i] * res[i];
         }
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, p, z, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p, z, n);
         for (int i = 0; i < n; i++)
         {
             alpha2 += z[i] * p[i];
@@ -176,7 +176,7 @@ int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
 {
     // res = b-A*x and initial error
     double *res = new double[n];
-    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
     double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
     for (int i = 0; i < n; i++)
     {
@@ -242,7 +242,7 @@ int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
         }
 
         // w = A*p
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, p, w, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p, w, n);
         double beta = 0;
         for (int i = 0; i < n; i++)
         {

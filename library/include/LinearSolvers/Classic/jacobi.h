@@ -58,23 +58,23 @@
  *  \f]
  *
  *  \note Convergence is only guaranteed if \f$A\f$ is strictly diagonally
- * dominant
+ *  dominant
  *
  *  @param[in]
  *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
- * the sparse CSR matrix.
+ *              the sparse CSR matrix.
  *  @param[in]
  *  csr_col_ind array of \p nnz elements containing the column indices of the
- * sparse CSR matrix.
+ *              sparse CSR matrix.
  *  @param[in]
  *  csr_val     array of \p nnz elements containing the values of the sparse
  *              CSR matrix.
  *  @param[inout]
- *  x           array of \p n elements containing the solution values of \f$A\f$
- * * \f$x\f$ = \f$b\f$
+ *  x           array of \p n elements containing the solution values of 
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$
  *  @param[in]
  *  b           array of \p n elements containing the righthad side values of
- * \f$A\f$ * \f$x\f$ = \f$b\f$.
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$.
  *
  *  @param[in]
  *  n           size of the sparse CSR matrix
@@ -84,15 +84,15 @@
  *  max_iter    maximum iterations allowed
  *
  *  \retval number of iterations actually used in the solver. If -1 is returned,
- * the solver did not converge to a solution with the given input tolerance \p
- * tol.
+ *  the solver did not converge to a solution with the given input tolerance \p
+ *  tol.
  *
  *  \par Example
  *  \code{.c}
  *  \endcode
  */
 /**@{*/
-int jac(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
         const double tol, const int max_iter);
 
 #endif

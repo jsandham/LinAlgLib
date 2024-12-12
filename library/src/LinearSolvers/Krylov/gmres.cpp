@@ -75,14 +75,14 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
         Q[i] = 0.0;
     }
 
-    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, &res[0], n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, &res[0], n);
     for (int i = 0; i < n; i++)
     {
         res[i] = b[i] - res[i];
     }
 
-    double res_norm = sqrt(dotProduct(&res[0], &res[0], n));
-    double b_norm = sqrt(dotProduct(b, b, n));
+    double res_norm = sqrt(dot_product(&res[0], &res[0], n));
+    double b_norm = sqrt(dot_product(b, b, n));
     double error = res_norm / b_norm;
     for (int i = 0; i < n; i++)
     {
@@ -111,17 +111,17 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
         std::cout << "k: " << k << std::endl;
 
         // Arnoldi iteration
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, &Q[(k - 1) * n], &v[0], n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, &Q[(k - 1) * n], &v[0], n);
         for (int i = 0; i < k; i++)
         {
-            H[i + (k - 1) * restart] = dotProduct(&Q[i * n], &v[0], n);
+            H[i + (k - 1) * restart] = dot_product(&Q[i * n], &v[0], n);
             for (int j = 0; j < n; j++)
             {
                 v[j] = v[j] - H[i + (k - 1) * restart] * Q[j + i * n];
             }
         }
 
-        double vv = dotProduct(&v[0], &v[0], n);
+        double vv = dot_product(&v[0], &v[0], n);
         H[k + (k - 1) * restart] = sqrt(vv);
         if (vv < 10e-12)
         {
@@ -282,7 +282,7 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
 //	//res = b-A*x and initial error
 //	std::vector<double> res;
 //	res.resize(n);
-//	matrixVectorProduct(row, col, val, x, &res[0], n);
+//	matrix_vector_product(row, col, val, x, &res[0], n);
 //	double err = error(row, col, val, x, b, n);
 //	for(int i = 0; i < n; i++){
 //		res[i] = b[i] - res[i];
@@ -316,7 +316,7 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
 //	}
 //	for(int i = 0; i < n * restart; i++){Q[i] = 0.0;}
 //
-//	double bb = dotProduct(b, b, n);
+//	double bb = dot_product(b, b, n);
 //	for (int i = 0; i < n; i++) {
 //		q[i] = b[i] / sqrt(bb);
 //	}
@@ -342,15 +342,15 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
 //			std::cout << "k: " << k << std::endl;
 //
 //			//Arnoldi iteration
-//			matrixVectorProduct(row, col, val, &q[0], &v[0], n);
+//			matrix_vector_product(row, col, val, &q[0], &v[0], n);
 //			for(int i = 0; i < k; i++){
-//				H[i + (k-1) * restart] = dotProduct(&Q[i*n],
+//				H[i + (k-1) * restart] = dot_product(&Q[i*n],
 //&v[0], n); 				for(int j = 0; j < n; j++){ 					v[j] = v[j] - H[i + (k-1) * restart] *
 // Q[j + i * n];
 //				}
 //			}
 //
-//			double vv = dotProduct(&v[0], &v[0], n);
+//			double vv = dot_product(&v[0], &v[0], n);
 //			H[k + (k-1) * restart] = sqrt(vv);
 //			if(vv < 10e-12){
 //				for(int i = 0; i < n; i++){

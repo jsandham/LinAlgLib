@@ -48,7 +48,7 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int iter = jac(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 10000);
+    int iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 10000);
 
     std::cout << "iter: " << iter << std::endl;
 

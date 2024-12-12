@@ -45,7 +45,7 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
 {
     // res = b-A*x and initial error
     double *res = new double[n];
-    matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
 
     for (int i = 0; i < n; i++)
     {
@@ -62,7 +62,7 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
     while (iter < max_iter && err > tol)
     {
         // find res = A*x
-        matrixVectorProduct(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
 
         // update approximation
         for (int i = 0; i < n; i++)

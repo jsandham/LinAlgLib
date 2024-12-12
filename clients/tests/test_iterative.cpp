@@ -20,7 +20,7 @@ bool Testing::test_jacobi(const std::string &matrix_file)
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int it = jac(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+    int it = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
 
     std::cout << "it: " << it << std::endl;
 

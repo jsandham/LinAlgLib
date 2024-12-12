@@ -36,23 +36,23 @@
  *
  *  \details
  *  \p sor solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the
- * successsive overrelaxation iterative solver.
+ *  successsive overrelaxation iterative solver.
  *
  *  @param[in]
  *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
- * the sparse CSR matrix.
+ *              the sparse CSR matrix.
  *  @param[in]
  *  csr_col_ind array of \p nnz elements containing the column indices of the
- * sparse CSR matrix.
+ *              sparse CSR matrix.
  *  @param[in]
  *  csr_val     array of \p nnz elements containing the values of the sparse
  *              CSR matrix.
  *  @param[inout]
- *  x           array of \p n elements containing the solution values of \f$A\f$
- * * \f$x\f$ = \f$b\f$
+ *  x           array of \p n elements containing the solution values of 
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$
  *  @param[in]
  *  b           array of \p n elements containing the righthad side values of
- * \f$A\f$ * \f$x\f$ = \f$b\f$.
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$.
  *
  *  @param[in]
  *  n           size of the sparse CSR matrix

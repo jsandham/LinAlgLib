@@ -93,13 +93,15 @@ enum class Smoother
  *
  *  @param[in]
  *  heirarchy   Structure holding the heirarchy of restriction, prolongation,
- *and coarse grid operators. Must be filled by calling \ref saamg_setup or \ref
- *rsamg_setup prior to calling \p amg_solve.
+ *              and coarse grid operators. Must be filled by calling 
+ *              \ref saamg_setup or \ref rsamg_setup prior to calling 
+ *              \p amg_solve.
  *  @param[inout]
- *  x           Array of \p m elements containing the solution values of A*x=b
+ *  x           Array of \p m elements containing the solution values of
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$.
  *  @param[in]
  *  b           Array of \p m elements containing the righthad side values of
- *A*x=b.
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$.
  *  @param[in]
  *  n1          Number pre-smoothing steps
  *  @param[in]
@@ -108,35 +110,35 @@ enum class Smoother
  *  tol         Tolerance used to determine stopping iteration.
  *  @param[in]
  *  cycle       Algebaric multigrid cycle type. Can be \ref Vcycle, \ref Wcycle,
- *\ref Fcycle.
+ *              \ref Fcycle.
  *  @param[in]
  *  smoother    Smoother type used. Can be \ref Jacobi, Gauss_Siedel, \ref
- *Symm_Gauss_Siedel, \ref SOR, or \ref SSOR.
+ *              Symm_Gauss_Siedel, \ref SOR, or \ref SSOR.
  *
  *  \retval number of cycles actually used in the solver. If -1 is returned, the
- *solver did not converge to a solution with the given input tolerance \p tol.
+ *  solver did not converge to a solution with the given input tolerance \p tol.
  *
  *  \par Example
  *  \code{.c}
  *   int m, n, nnz;
  *   std::vector<int> csr_row_ptr;
- *	std::vector<int> csr_col_ind;
- *	std::vector<double> csr_val;
- *	load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n,
- *nnz);
+ *	 std::vector<int> csr_col_ind;
+ *	 std::vector<double> csr_val;
+ *	 load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n,
+ *   nnz);
  *
- *	// Solution vector
- *	std::vector<double> x(m, 0.0);
+ *	 // Solution vector
+ *	 std::vector<double> x(m, 0.0);
  *
- *	// Righthand side vector
- *	std::vector<double> b(m, 1.0);
+ *	 // Righthand side vector
+ *	 std::vector<double> b(m, 1.0);
  *
- *	heirarchy hierachy;
- *	saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m,
- *m, nnz, 100, hierachy);
+ *	 heirarchy hierachy;
+ *	 saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m,
+ *   m, nnz, 100, hierachy);
  *
- *	int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001,
- *Cycle::Vcycle, Smoother::Gauss_Siedel);
+ *	 int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001,
+ *   Cycle::Vcycle, Smoother::Gauss_Siedel);
  *  \endcode
  */
 /**@{*/

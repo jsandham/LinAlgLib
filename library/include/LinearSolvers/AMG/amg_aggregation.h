@@ -28,6 +28,7 @@
 #define AMG_AGGREGATION_H
 
 #include <vector>
+#include <cstdint>
 
 #include "amg.h"
 

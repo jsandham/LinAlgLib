@@ -1,4 +1,4 @@
-#include "Utility.h"
+#include "utility.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -6,6 +6,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <cmath>
+#include <cstring>
 
 struct col_val
 {

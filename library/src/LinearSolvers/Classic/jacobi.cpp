@@ -57,7 +57,7 @@ void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doub
     }
 }
 
-int jac(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
         const double tol, const int max_iter)
 {
     // copy of x

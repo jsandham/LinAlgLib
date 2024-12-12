@@ -43,7 +43,9 @@ set(LINALGLIB_CLIENTS_COMMON_SOURCE
 
 add_executable(test_main test_main.cpp ${LINALGLIB_CLIENTS_TEST_SOURCE} ${LINALGLIB_CLIENTS_COMMON_SOURCE})
 
-target_compile_options(test_main PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+  target_compile_options(test_main PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+endif()
 
 target_include_directories(test_main PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../common>)
 

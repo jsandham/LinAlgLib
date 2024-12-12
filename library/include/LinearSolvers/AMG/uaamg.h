@@ -39,14 +39,14 @@
  *
  *  \details
  *  \p uaamg_setup generates the hierarchy of restriction, prolongation, and
- *coarse grid operators using Unsmoothed Aggregation
+ *  coarse grid operators using Unsmoothed Aggregation
  *
  *  @param[in]
  *  csr_row_ptr array of \p m+1 elements that point to the start of every row of
- *the sparse CSR matrix.
+ *              the sparse CSR matrix.
  *  @param[in]
  *  csr_col_ind array of \p nnz elements containing the column indices of the
- *sparse CSR matrix.
+ *              sparse CSR matrix.
  *  @param[in]
  *  csr_val     array of \p nnz elements containing the values of the sparse
  *              CSR matrix.
@@ -60,7 +60,7 @@
  *  max_level   maximum number of levels in the hierarchy of coarse grids
  *  @param[out]
  *  heirarchy   structure holding the heirarchy of restriction, prolongation,
- *and coarse grid operators
+ *              and coarse grid operators
  *
  *  \par Example
  *  \code{.c}
