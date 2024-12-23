@@ -26,16 +26,18 @@
 
 #include "../../../include/LinearSolvers/Classic/symmetric_gauss_seidel.h"
 #include "../../../include/LinearSolvers/slaf.h"
-#include "iostream"
+#include <iostream>
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
-void symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                                  const double *b, const int n)
 {
+    double err = 0.0;
+
     double sigma;
     double ajj;
 
@@ -74,27 +76,34 @@ void symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind,
                 ajj = csr_val[k];
             }
         }
+        double xold = x[j];
         x[j] = (b[j] - sigma) / ajj;
+
+        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
     }
+
+    return err;
 }
 
 int sgs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
         const double tol, const int max_iter)
 {
-    int ii = 0;
-    double err = 1.0;
-    while (err > tol && ii < max_iter)
+    int iter = 0;
+    while (iter < max_iter)
     {
-        symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-
-        err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        double err = symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
 #if (DEBUG)
         std::cout << "error: " << err << std::endl;
 #endif
 
-        ii++;
+        if(err <= tol)
+        {
+            break;
+        }
+
+        iter++;
     }
 
-    return err > tol ? -1 : ii;
+    return iter;
 }

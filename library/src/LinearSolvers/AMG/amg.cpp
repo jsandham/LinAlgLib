@@ -37,15 +37,15 @@
 #define FAST_ERROR 0
 #define MAX_VCYCLES 1000
 
-void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                       const double *xold, const double *b, const int n);
-void gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                             const double *b, const int n);
-void symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                                  const double *b, const int n);
-void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+double sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                    const int n, const double omega);
-void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+double ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                     const int n, const double omega);
 
 static void apply_smoother(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,

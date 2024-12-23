@@ -74,4 +74,6 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                   const double *b, const int n, const double tol);
 
+double norm_inf(const double* array, const int n);
+
 #endif

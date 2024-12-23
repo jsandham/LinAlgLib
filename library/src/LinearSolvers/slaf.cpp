@@ -28,6 +28,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 #include "math.h"
 
 //********************************************************************************
@@ -239,7 +240,45 @@ void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *cs
                  const int *csr_col_ind_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
                  int *csr_row_ptr_C, int *nnz_C)
 {
+    csr_row_ptr_C[0] = 0;
 
+    for(int i = 0; i < m; i++)
+    {
+        std::vector<int> nnz(n, -1);
+
+        csr_row_ptr_C[i] = 0;
+
+        int row_begin_A = csr_row_ptr_A[i];
+        int row_end_A = csr_row_ptr_A[i + 1];
+
+        for(int j = row_begin_A; j < row_end_A; i++)
+        {
+            nnz[csr_col_ind_A[j]] = 1;
+        }
+
+        int row_begin_B = csr_row_ptr_B[i];
+        int row_end_B = csr_row_ptr_B[i + 1];
+
+        for(int j = row_begin_B; j < row_end_B; j++)
+        {
+            nnz[csr_col_ind_B[j]] = 1;
+        }
+
+        for(int j = 0; j < n; j++)
+        {
+            if(nnz[j] != -1)
+            {
+                csr_row_ptr_C[i + 1]++;
+            }
+        }
+    }
+
+    for(int i = 0; i < m; i++)
+    {
+        csr_row_ptr_C[i + 1] += csr_row_ptr_C[i]; 
+    }
+
+    *nnz_C = csr_row_ptr_C[m];
 }
 
 void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A,
@@ -247,11 +286,77 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
              const int *csr_col_ind_B, const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C,
              double *csr_val_C)
 {
+    for(int i = 0; i < m; i++)
+    {
+        std::vector<int> nnz(n, -1);
 
+        int row_begin_C = csr_row_ptr_C[i];
+
+        int row_begin_A = csr_row_ptr_A[i];
+        int row_end_A = csr_row_ptr_A[i + 1];
+
+        for(int j = row_begin_A; j < row_end_A; j++)
+        {
+            csr_col_ind_C[row_begin_C] = csr_col_ind_A[j];
+            csr_val_C[row_begin_C] = alpha * csr_val_A[j];
+
+            nnz[csr_col_ind_A[j]] = row_begin_C;
+            row_begin_C++;
+        }
+
+        int row_begin_B = csr_row_ptr_B[i];
+        int row_end_B = csr_row_ptr_B[i + 1];
+
+        for(int j = row_begin_B; j < row_end_B; j++)
+        {
+            int col_B = csr_col_ind_B[j];
+
+            if(nnz[col_B] != -1)
+            {
+                csr_val_C[nnz[col_B]] += beta * csr_val_B[j];
+            }
+            else
+            {
+                csr_col_ind_C[row_begin_C] = csr_col_ind_B[j];
+                csr_val_C[row_begin_C] = beta * csr_val_B[j];
+
+                nnz[col_B] = row_begin_C;
+                row_begin_C++;
+            }
+        }
+    }
+
+    for(int i = 0; i < m; ++i)
+    {
+        int row_begin_C = csr_row_ptr_C[i];
+        int row_end_C = csr_row_ptr_C[i + 1];
+
+        int row_nnz = row_end_C - row_begin_C;
+
+        std::vector<int> perm(row_nnz);
+        for(int j = 0; j < row_nnz; ++j)
+        {
+            perm[j] = j;
+        }
+
+        std::vector<int> columns(row_nnz);
+        std::vector<double> values(row_nnz);
+
+        for(int j = 0; j < row_nnz; j++)
+        {
+            columns[j] = csr_col_ind_C[row_begin_C + j];
+            values[j] = csr_val_C[row_begin_C + j];
+        }
+
+        std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {return columns[a] < columns[b];});
+
+        for(int j = 0; j < row_nnz; ++j)
+        {
+            csr_col_ind_C[row_begin_C + j] = columns[perm[j]];
+            csr_val_C[row_begin_C + j]     = values[perm[j]];
+        }
+    }
 }
-
-
-
 
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
@@ -405,4 +510,18 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
     }
 
     return sqrt(e);
+}
+
+//-------------------------------------------------------------------------------
+// infinity norm
+//-------------------------------------------------------------------------------
+double norm_inf(const double* array, const int n)
+{
+    double norm = 0.0;
+    for(int i = 0; i < n; i++)
+    {
+        norm = std::max(std::abs(array[i]), norm);
+    }
+
+    return norm;
 }

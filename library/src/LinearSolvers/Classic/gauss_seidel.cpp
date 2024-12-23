@@ -26,16 +26,17 @@
 
 #include "../../../include/LinearSolvers/Classic/gauss_seidel.h"
 #include "../../../include/LinearSolvers/slaf.h"
-#include "iostream"
+#include <iostream>
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // gauss-seidel method
 //-------------------------------------------------------------------------------
-void gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                             const double *b, const int n)
 {
+    double err = 0.0;
     for (int j = 0; j < n; j++)
     {
         double sigma = 0.0;
@@ -57,29 +58,35 @@ void gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, cons
                 ajj = val;
             }
         }
+        double xold = x[j];
         x[j] = (b[j] - sigma) / ajj;
+
+        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
     }
+
+    return err;
 }
 
 int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
        const double tol, const int max_iter)
 {
-    int ii = 0;
-    double err = 1.0;
-    while (err > tol && ii < max_iter)
+    int iter = 0;
+    while (iter < max_iter)
     {
         // Gauss-Seidel iteration
-        gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-
-        // err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-        err = fast_error(csr_row_ptr, csr_col_ind, csr_val, x, b, n, tol);
+        double err = gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
 #if (DEBUG)
         std::cout << "error: " << err << std::endl;
 #endif
 
-        ii++;
+        if(err <= tol)
+        {
+            break;
+        }
+
+        iter++;
     }
 
-    return err > tol ? -1 : ii;
+    return iter;
 }

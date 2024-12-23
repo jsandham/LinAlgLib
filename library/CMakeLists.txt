@@ -42,6 +42,7 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/LinearSolvers/Krylov/bicgstab.h
   include/LinearSolvers/Krylov/gmres.h
   include/LinearSolvers/Krylov/pcg.h
+  include/LinearSolvers/Krylov/cg.h
   include/linalg.h
 )
 
@@ -63,6 +64,7 @@ set(LINALGLIB_SOURCE
   src/LinearSolvers/Krylov/bicgstab.cpp
   src/LinearSolvers/Krylov/gmres.cpp
   src/LinearSolvers/Krylov/pcg.cpp
+  src/LinearSolvers/Krylov/cg.cpp
 )
 
 add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})

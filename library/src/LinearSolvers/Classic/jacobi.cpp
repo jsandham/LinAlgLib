@@ -26,16 +26,19 @@
 
 #include "../../../include/LinearSolvers/Classic/jacobi.h"
 #include "../../../include/LinearSolvers/slaf.h"
-#include "iostream"
+#include <iostream>
+#include <vector>
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
 // jacobi method
 //-------------------------------------------------------------------------------
-void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                       const double *xold, const double *b, const int n)
 {
+    double err = 0.0;
+
     double sigma;
     double ajj;
     for (int j = 0; j < n; j++)
@@ -54,40 +57,45 @@ void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doub
             }
         }
         x[j] = (b[j] - sigma) / ajj;
+    
+        err = std::max(err, std::abs((x[j] - xold[j]) / x[j]) * 100);
     }
+
+    return err;
 }
 
 int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
         const double tol, const int max_iter)
 {
     // copy of x
-    double *xold = new double[n];
+    std::vector<double> xold(n);
     for (int i = 0; i < n; i++)
     {
         xold[i] = x[i];
     }
 
-    int ii = 0;
-    double err = 1.0;
-    while (err > tol && ii < max_iter)
+    int iter = 0;
+    while (iter < max_iter)
     {
         // Jacobi iteration
-        jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold, b, n);
+        double err = jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold.data(), b, n);
+
+#if (DEBUG)
+        std::cout << "error: " << err << std::endl;
+#endif
+
+        if(err <= tol)
+        {
+            break;
+        }
 
         for (int i = 0; i < n; i++)
         {
             xold[i] = x[i];
         }
 
-        err = error(csr_row_ptr, csr_col_ind, csr_val, xold, b, n);
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
-
-        ii++;
+        iter++;
     }
 
-    delete[] xold;
-
-    return err > tol ? -1 : ii;
+    return iter;
 }

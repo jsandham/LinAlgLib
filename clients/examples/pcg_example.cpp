@@ -48,7 +48,7 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+    int iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000, 100);
 
     std::cout << "iter: " << iter << std::endl;
 

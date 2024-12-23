@@ -26,8 +26,9 @@
 
 #include "../../../include/LinearSolvers/Classic/richardson.h"
 #include "../../../include/LinearSolvers/slaf.h"
-#include "iostream"
-#include "math.h"
+#include <iostream>
+#include <vector>
+#include <math.h>
 
 //********************************************************************************
 //
@@ -40,47 +41,53 @@
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
+double richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, double *res,
+                            const double *b, const int n, const double theta)
+{
+    double err = 0.0;
+    
+    // find res = A*x
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+
+    // update approximation
+    for (int j = 0; j < n; j++)
+    {
+        double xold = x[j];
+        x[j] = x[j] + theta * (b[j] - res[j]);
+        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
+    }
+
+    return err;
+}
+
 int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
          const double theta, const double tol, const int max_iter)
 {
-    // res = b-A*x and initial error
-    double *res = new double[n];
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
+    // res = b - A * x and initial error
+    std::vector<double> res(n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
 
     for (int i = 0; i < n; i++)
     {
         res[i] = b[i] - res[i];
     }
 
-    double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-    if (err < tol)
-    {
-        return 1;
-    }
-
     int iter = 0;
-    while (iter < max_iter && err > tol)
+    while (iter < max_iter)
     {
-        // find res = A*x
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
-
-        // update approximation
-        for (int i = 0; i < n; i++)
-        {
-            x[i] = x[i] + theta * (b[i] - res[i]);
-        }
-
-        // calculate error
-        err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        double err = richardson_iteration(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), b, n, theta);
 
 #if (DEBUG)
         std::cout << "error: " << err << std::endl;
 #endif
 
+        if(err <= tol)
+        {
+            break;
+        }
+
         iter++;
     }
 
-    delete[] res;
-
-    return err > tol ? -1 : iter;
+    return iter;
 }
