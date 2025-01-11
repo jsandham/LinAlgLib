@@ -51,7 +51,7 @@
  *  csr_val     array of \p nnz elements containing the values of the sparse
  *              CSR matrix.
  *  @param[inout]
- *  x           array of \p n elements containing the solution values of 
+ *  x           array of \p n elements containing the solution values of
  *              \f$A\f$ * \f$x\f$ = \f$b\f$
  *  @param[in]
  *  b           array of \p n elements containing the righthad side values of

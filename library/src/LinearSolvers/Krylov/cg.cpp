@@ -42,7 +42,7 @@
 // Conjugate gradient
 //-------------------------------------------------------------------------------
 int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter, int restart_iter)
+       double tol, int max_iter, int restart_iter)
 {
     // create z and p vector
     std::vector<double> z(n);
@@ -52,7 +52,7 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
     std::vector<double> res(n);
 
     double gamma = 0.0;
-    
+
     // start algorithm
     {
         // res = b - A * x
@@ -115,7 +115,7 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

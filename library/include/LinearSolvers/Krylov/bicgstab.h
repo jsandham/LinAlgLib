@@ -95,6 +95,6 @@
  */
 /**@{*/
 int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter);
+             double tol, int max_iter);
 
 #endif

@@ -34,7 +34,7 @@
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
 double symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
-                                 const double *b, int n)
+                                   const double *b, int n)
 {
     double err = 0.0;
 
@@ -97,7 +97,7 @@ int sgs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

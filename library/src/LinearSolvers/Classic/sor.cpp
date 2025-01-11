@@ -34,7 +34,7 @@
 // successive over-relaxation method
 //-------------------------------------------------------------------------------
 double sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
-                   int n, double omega)
+                     int n, double omega)
 {
     double err = 0.0;
 
@@ -77,7 +77,7 @@ int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

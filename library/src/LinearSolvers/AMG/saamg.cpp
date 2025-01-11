@@ -30,11 +30,11 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <algorithm>
 #include <assert.h>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <unordered_set>
 #include <vector>
-#include <cstring>
 
 //********************************************************************************
 //

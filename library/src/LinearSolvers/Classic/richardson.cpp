@@ -27,8 +27,8 @@
 #include "../../../include/LinearSolvers/Classic/richardson.h"
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
-#include <vector>
 #include <math.h>
+#include <vector>
 
 //********************************************************************************
 //
@@ -41,11 +41,11 @@
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
-double richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, double *res,
-                            const double *b, int n, double theta)
+double richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+                            double *res, const double *b, int n, double theta)
 {
     double err = 0.0;
-    
+
     // find res = A*x
     matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
 
@@ -81,7 +81,7 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

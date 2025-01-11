@@ -34,7 +34,7 @@
 // symmetric successive over-relaxation method
 //-------------------------------------------------------------------------------
 double ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
-                    int n, double omega)
+                      int n, double omega)
 {
     double err = 0.0;
 
@@ -97,7 +97,7 @@ int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

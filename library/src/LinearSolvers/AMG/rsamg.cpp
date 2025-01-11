@@ -30,12 +30,12 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <algorithm>
 #include <assert.h>
+#include <cmath>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <unordered_set>
 #include <vector>
-#include <cmath>
-#include <cstring>
 
 static void transpose(const csr_matrix &prolongation, csr_matrix &restriction)
 {

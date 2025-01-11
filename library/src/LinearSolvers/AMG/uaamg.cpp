@@ -30,9 +30,9 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <algorithm>
 #include <assert.h>
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <cstring>
 
 //********************************************************************************
 //

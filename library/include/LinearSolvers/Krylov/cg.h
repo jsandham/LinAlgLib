@@ -31,12 +31,11 @@
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
 
-
 /*! \ingroup linear_solvers
  *  \brief Conjugate gradient iterative linear solver
  *
  *  \details
- *  \p cg solves the sparse linear system A*x = b using the conjugate gradient 
+ *  \p cg solves the sparse linear system A*x = b using the conjugate gradient
  *  iterative solver.
  *
  *  \note Requires the sparse matrix A to be symmetric
@@ -97,6 +96,6 @@
  */
 /**@{*/
 int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter, int restart_iter);
+       double tol, int max_iter, int restart_iter);
 
 #endif

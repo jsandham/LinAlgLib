@@ -25,12 +25,12 @@
 //********************************************************************************
 
 #include "../../include/LinearSolvers/slaf.h"
+#include "math.h"
+#include <algorithm>
+#include <assert.h>
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <cstring>
-#include <assert.h>
-#include "math.h"
 
 //********************************************************************************
 //
@@ -41,8 +41,8 @@
 //-------------------------------------------------------------------------------
 // Compute y = alpha * A * x + beta * y
 //-------------------------------------------------------------------------------
-void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, 
-           const double* x, double beta, double* y)
+void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
+           const double *x, double beta, double *y)
 {
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -58,7 +58,7 @@ void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const in
             s += csr_val[j] * x[csr_col_ind[j]];
         }
 
-        if(beta == 0.0)
+        if (beta == 0.0)
         {
             y[i] = alpha * s;
         }
@@ -135,10 +135,9 @@ void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double al
 }
 
 void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
-             const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B,
-             const int *csr_col_ind_B, const double *csr_val_B, double beta, const int *csr_row_ptr_D,
-             const int *csr_col_ind_D, const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C,
-             double *csr_val_C)
+             const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B, const int *csr_col_ind_B,
+             const double *csr_val_B, double beta, const int *csr_row_ptr_D, const int *csr_col_ind_D,
+             const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
 {
     std::vector<int> nnzs(n, -1);
 
@@ -240,13 +239,12 @@ void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A + beta * B
 //-------------------------------------------------------------------------------
-void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A,
-                 const int *csr_col_ind_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
-                 int *csr_row_ptr_C, int *nnz_C)
+void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+                 double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B, int *csr_row_ptr_C, int *nnz_C)
 {
     csr_row_ptr_C[0] = 0;
 
-    for(int i = 0; i < m; i++)
+    for (int i = 0; i < m; i++)
     {
         std::vector<int> nnz(n, -1);
 
@@ -255,7 +253,7 @@ void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *cs
         int row_begin_A = csr_row_ptr_A[i];
         int row_end_A = csr_row_ptr_A[i + 1];
 
-        for(int j = row_begin_A; j < row_end_A; i++)
+        for (int j = row_begin_A; j < row_end_A; i++)
         {
             nnz[csr_col_ind_A[j]] = 1;
         }
@@ -263,34 +261,33 @@ void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *cs
         int row_begin_B = csr_row_ptr_B[i];
         int row_end_B = csr_row_ptr_B[i + 1];
 
-        for(int j = row_begin_B; j < row_end_B; j++)
+        for (int j = row_begin_B; j < row_end_B; j++)
         {
             nnz[csr_col_ind_B[j]] = 1;
         }
 
-        for(int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
-            if(nnz[j] != -1)
+            if (nnz[j] != -1)
             {
                 csr_row_ptr_C[i + 1]++;
             }
         }
     }
 
-    for(int i = 0; i < m; i++)
+    for (int i = 0; i < m; i++)
     {
-        csr_row_ptr_C[i + 1] += csr_row_ptr_C[i]; 
+        csr_row_ptr_C[i + 1] += csr_row_ptr_C[i];
     }
 
     *nnz_C = csr_row_ptr_C[m];
 }
 
-void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A,
-             const int *csr_col_ind_A, const double *csr_val_A, double beta, const int *csr_row_ptr_B,
-             const int *csr_col_ind_B, const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C,
-             double *csr_val_C)
+void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+             const double *csr_val_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
+             const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
 {
-    for(int i = 0; i < m; i++)
+    for (int i = 0; i < m; i++)
     {
         std::vector<int> nnz(n, -1);
 
@@ -299,7 +296,7 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
         int row_begin_A = csr_row_ptr_A[i];
         int row_end_A = csr_row_ptr_A[i + 1];
 
-        for(int j = row_begin_A; j < row_end_A; j++)
+        for (int j = row_begin_A; j < row_end_A; j++)
         {
             csr_col_ind_C[row_begin_C] = csr_col_ind_A[j];
             csr_val_C[row_begin_C] = alpha * csr_val_A[j];
@@ -311,11 +308,11 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
         int row_begin_B = csr_row_ptr_B[i];
         int row_end_B = csr_row_ptr_B[i + 1];
 
-        for(int j = row_begin_B; j < row_end_B; j++)
+        for (int j = row_begin_B; j < row_end_B; j++)
         {
             int col_B = csr_col_ind_B[j];
 
-            if(nnz[col_B] != -1)
+            if (nnz[col_B] != -1)
             {
                 csr_val_C[nnz[col_B]] += beta * csr_val_B[j];
             }
@@ -330,7 +327,7 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
         }
     }
 
-    for(int i = 0; i < m; ++i)
+    for (int i = 0; i < m; ++i)
     {
         int row_begin_C = csr_row_ptr_C[i];
         int row_end_C = csr_row_ptr_C[i + 1];
@@ -338,7 +335,7 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
         int row_nnz = row_end_C - row_begin_C;
 
         std::vector<int> perm(row_nnz);
-        for(int j = 0; j < row_nnz; ++j)
+        for (int j = 0; j < row_nnz; ++j)
         {
             perm[j] = j;
         }
@@ -346,34 +343,35 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
         std::vector<int> columns(row_nnz);
         std::vector<double> values(row_nnz);
 
-        for(int j = 0; j < row_nnz; j++)
+        for (int j = 0; j < row_nnz; j++)
         {
             columns[j] = csr_col_ind_C[row_begin_C + j];
             values[j] = csr_val_C[row_begin_C + j];
         }
 
-        std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {return columns[a] < columns[b];});
+        std::sort(perm.begin(), perm.end(), [&](const int &a, const int &b) { return columns[a] < columns[b]; });
 
-        for(int j = 0; j < row_nnz; ++j)
+        for (int j = 0; j < row_nnz; ++j)
         {
             csr_col_ind_C[row_begin_C + j] = columns[perm[j]];
-            csr_val_C[row_begin_C + j]     = values[perm[j]];
+            csr_val_C[row_begin_C + j] = values[perm[j]];
         }
     }
 }
 
-static double get_diagonal_value(int col, int diag_index, const double* csr_val, int* structural_zero, int* numeric_zero)
+static double get_diagonal_value(int col, int diag_index, const double *csr_val, int *structural_zero,
+                                 int *numeric_zero)
 {
     double diag_val = 1.0;
-    if(diag_index == -1)
+    if (diag_index == -1)
     {
         // Structural zero. No diagonal value exist in matrix. Use diagonal value of 1
         *structural_zero = std::min(*structural_zero, col);
     }
     else
     {
-        diag_val = csr_val[diag_index]; 
-        if(diag_val == 0.0)
+        diag_val = csr_val[diag_index];
+        if (diag_val == 0.0)
         {
             // Numerical zero. Use diagonal value of 1 to avoid inf/nan
             *numeric_zero = std::min(*numeric_zero, col);
@@ -387,31 +385,32 @@ static double get_diagonal_value(int col, int diag_index, const double* csr_val,
 //-------------------------------------------------------------------------------
 // Compute incomplete LU factorization inplace
 //-------------------------------------------------------------------------------
-void csrilu0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero)
+void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+             int *structural_zero, int *numeric_zero)
 {
     std::vector<int> diag_ptr(m, -1);
 
-    for(int row = 0; row < m; row++)
+    for (int row = 0; row < m; row++)
     {
         int row_begin = csr_row_ptr[row];
         int row_end = csr_row_ptr[row + 1];
 
         std::vector<int> col_offset_map(n);
-        for(int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
             col_offset_map[j] = -1;
         }
 
-        for(int j = row_begin; j < row_end; j++)
+        for (int j = row_begin; j < row_end; j++)
         {
             col_offset_map[csr_col_ind[j]] = j;
         }
 
-        for(int j = row_begin; j < row_end; j++)
+        for (int j = row_begin; j < row_end; j++)
         {
             int col_j = csr_col_ind[j];
 
-            if(col_j < row)
+            if (col_j < row)
             {
                 int diag_index = diag_ptr[col_j];
                 double diag_val = get_diagonal_value(col_j, diag_index, csr_val, structural_zero, numeric_zero);
@@ -420,18 +419,18 @@ void csrilu0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_i
 
                 csr_val[j] = csr_val[j] / diag_val;
 
-                for(int k = diag_index + 1; k < row_end_col_j; k++)
+                for (int k = diag_index + 1; k < row_end_col_j; k++)
                 {
                     int col_k = csr_col_ind[k];
 
                     int col_k_index = col_offset_map[col_k];
-                    if(col_k_index != -1)
+                    if (col_k_index != -1)
                     {
                         csr_val[col_k_index] = csr_val[col_k_index] - csr_val[j] * csr_val[k];
                     }
                 }
             }
-            else if(col_j == row)
+            else if (col_j == row)
             {
                 diag_ptr[row] = j;
                 break;
@@ -447,44 +446,45 @@ void csrilu0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_i
 //----------------------------------------------------------------------------------------
 // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
 //----------------------------------------------------------------------------------------
-void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero)
+void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+            int *structural_zero, int *numeric_zero)
 {
     std::vector<int> diag_ptr(m, -1);
 
-    for(int row = 0; row < m; row++)
+    for (int row = 0; row < m; row++)
     {
         int row_begin = csr_row_ptr[row];
         int row_end = csr_row_ptr[row + 1];
 
         std::vector<int> col_offset_map(n);
-        for(int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
             col_offset_map[j] = -1;
         }
 
-        for(int j = row_begin; j < row_end; j++)
+        for (int j = row_begin; j < row_end; j++)
         {
             col_offset_map[csr_col_ind[j]] = j;
         }
 
         double sum = 0.0;
 
-        for(int j = row_begin; j < row_end; j++)
+        for (int j = row_begin; j < row_end; j++)
         {
             int col_j = csr_col_ind[j];
 
-            if(col_j < row)
+            if (col_j < row)
             {
                 int row_begin_col_j = csr_row_ptr[col_j];
                 int diag_index = diag_ptr[col_j];
 
                 double s = 0.0;
-                for(int k = row_begin_col_j; k < diag_index; k++)
+                for (int k = row_begin_col_j; k < diag_index; k++)
                 {
                     int col_k = csr_col_ind[k];
 
                     int col_k_index = col_offset_map[col_k];
-                    if(col_k_index != -1)
+                    if (col_k_index != -1)
                     {
                         s = s + csr_val[col_k_index] * csr_val[k];
                     }
@@ -498,9 +498,10 @@ void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_in
 
                 csr_val[j] = val;
 
-                std::cout << "row: " << row << " col_j: " << col_j << " val: " << val << " sum: " << sum << " s: " << s << " diag_val: " << diag_val << std::endl;
+                std::cout << "row: " << row << " col_j: " << col_j << " val: " << val << " sum: " << sum << " s: " << s
+                          << " diag_val: " << diag_val << std::endl;
             }
-            else if(col_j == row)
+            else if (col_j == row)
             {
                 diag_ptr[row] = j;
 
@@ -519,7 +520,7 @@ void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_in
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
 void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
-                         double *y, int n)
+                           double *y, int n)
 {
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -581,7 +582,7 @@ void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
 // solve Lx = b where L is a lower triangular sparse matrix
 //-------------------------------------------------------------------------------
 void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                  int n, bool unit_diag)
+                   int n, bool unit_diag)
 {
     for (int i = 0; i < n; i++)
     {
@@ -598,7 +599,7 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
             {
                 x[i] -= csr_val[j] * x[col];
             }
-            else if(!unit_diag && col == i)
+            else if (!unit_diag && col == i)
             {
                 diag_val = csr_val[j];
             }
@@ -611,7 +612,7 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
 // solve Ux = b where U is a upper triangular sparse matrix
 //-------------------------------------------------------------------------------
 void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                   int n, bool unit_diag)
+                    int n, bool unit_diag)
 {
     for (int i = n - 1; i >= 0; i--)
     {
@@ -628,7 +629,7 @@ void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double
             {
                 x[i] -= csr_val[j] * x[col];
             }
-            else if(!unit_diag && col == i)
+            else if (!unit_diag && col == i)
             {
                 diag_val = csr_val[j];
             }
@@ -690,10 +691,10 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
 //-------------------------------------------------------------------------------
 // infinity norm
 //-------------------------------------------------------------------------------
-double norm_inf(const double* array, int n)
+double norm_inf(const double *array, int n)
 {
     double norm = 0.0;
-    for(int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++)
     {
         norm = std::max(std::abs(array[i]), norm);
     }
@@ -704,21 +705,22 @@ double norm_inf(const double* array, int n)
 //-------------------------------------------------------------------------------
 // print matrix to console
 //-------------------------------------------------------------------------------
-void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz)
+void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
+           int nnz)
 {
     std::cout << name << std::endl;
-    for(int i = 0; i < m; i++)
+    for (int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
         int end = csr_row_ptr[i + 1];
 
         std::vector<double> temp(n, 0.0);
-        for(int j = start; j < end; j++)
+        for (int j = start; j < end; j++)
         {
             temp[csr_col_ind[j]] = csr_val[j];
         }
 
-        for(int j = 0; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
             std::cout << temp[j] << " ";
         }

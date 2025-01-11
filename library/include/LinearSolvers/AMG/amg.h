@@ -93,8 +93,8 @@ enum class Smoother
  *
  *  @param[in]
  *  heirarchy   Structure holding the heirarchy of restriction, prolongation,
- *              and coarse grid operators. Must be filled by calling 
- *              \ref saamg_setup or \ref rsamg_setup prior to calling 
+ *              and coarse grid operators. Must be filled by calling
+ *              \ref saamg_setup or \ref rsamg_setup prior to calling
  *              \p amg_solve.
  *  @param[inout]
  *  x           Array of \p m elements containing the solution values of

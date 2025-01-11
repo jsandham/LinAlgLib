@@ -27,8 +27,8 @@
 #ifndef AMG_AGGREGATION_H
 #define AMG_AGGREGATION_H
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 #include "amg.h"
 

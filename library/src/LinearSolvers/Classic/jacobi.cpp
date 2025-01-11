@@ -35,7 +35,7 @@
 // jacobi method
 //-------------------------------------------------------------------------------
 double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
-                      const double *xold, const double *b, int n)
+                        const double *xold, const double *b, int n)
 {
     double err = 0.0;
 
@@ -57,7 +57,7 @@ double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const do
             }
         }
         x[j] = (b[j] - sigma) / ajj;
-    
+
         err = std::max(err, std::abs((x[j] - xold[j]) / x[j]) * 100);
     }
 
@@ -65,7 +65,7 @@ double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const do
 }
 
 int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter)
+           double tol, int max_iter)
 {
     // copy of x
     std::vector<double> xold(n);
@@ -84,7 +84,7 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }

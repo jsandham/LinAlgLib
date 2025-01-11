@@ -42,7 +42,7 @@
 // preconditioned conjugate gradient
 //-------------------------------------------------------------------------------
 int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        const preconditioner* precond, double tol, int max_iter, int restart_iter)
+        const preconditioner *precond, double tol, int max_iter, int restart_iter)
 {
     // jacobi preconditioner
     std::vector<double> diag(n);
@@ -125,7 +125,7 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         std::cout << "error: " << err << std::endl;
 #endif
 
-        if(err <= tol)
+        if (err <= tol)
         {
             break;
         }
@@ -153,7 +153,8 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
 // //-------------------------------------------------------------------------------
 // // preconditioned conjugate gradient
 // //-------------------------------------------------------------------------------
-// int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+// int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int
+// n,
 //          const double tol, const int max_iter)
 // {
 //     double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);

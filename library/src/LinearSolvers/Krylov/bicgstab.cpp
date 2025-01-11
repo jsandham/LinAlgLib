@@ -42,7 +42,7 @@
 // stabilized bi-conjugate gradient
 //-------------------------------------------------------------------------------
 int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter)
+             double tol, int max_iter)
 {
     // r = b - A * x and initial error
     std::vector<double> r(n);
@@ -83,7 +83,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 
         double alpha = rho / dot_product(r0.data(), v.data(), n);
 
-        for(int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
         {
             h[i] = x[i] + alpha * p[i];
             s[i] = r[i] - alpha * v[i];
@@ -93,7 +93,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 
         double omega = dot_product(t.data(), s.data(), n) / dot_product(t.data(), t.data(), n);
 
-        for(int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
         {
             x[i] = h[i] + omega * s[i];
             r[i] = s[i] - omega * t[i];
@@ -106,7 +106,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         rho = dot_product(r0.data(), r.data(), n);
         double beta = (rho / rho_prev) / (alpha / omega);
 
-        for(int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
         {
             p[i] = r[i] + beta * (p[i] - omega * v[i]);
         }
