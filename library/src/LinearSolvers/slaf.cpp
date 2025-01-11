@@ -44,6 +44,9 @@
 void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, 
            const double* x, double beta, double* y)
 {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
     for (int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];
@@ -518,6 +521,9 @@ void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_in
 void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                          double *y, int n)
 {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
     for (int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];
@@ -552,6 +558,9 @@ double dot_product(const double *x, const double *y, int n)
 //-------------------------------------------------------------------------------
 void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n)
 {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
     for (int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];

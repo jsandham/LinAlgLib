@@ -61,9 +61,9 @@ int main()
     std::vector<double> b(m, 1.0);
 
     // Jacobi preconditioner
-    jacobi_precond precond;
+    //jacobi_precond precond;
     //ic_precond precond;
-    //ilu_precond precond;
+    ilu_precond precond;
 
     precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
 
