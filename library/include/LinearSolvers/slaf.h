@@ -27,6 +27,8 @@
 #ifndef SLAF_H
 #define SLAF_H
 
+#include <string>
+
 // Compute y = alpha * A * x + beta * y
 void csrmv(int m, int n, int nnz, double alpha, const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, 
            const double* x, double beta, double* y);
@@ -53,27 +55,38 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
              const int *csr_col_ind_B, const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C,
              double *csr_val_C);
 
+// Compute incomplete LU factorization inplace
+void csrilu0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero);
+
+// Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
+void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero);
+
 // Compute y = A * x
 void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                          double *y, const int n);
 
 // Compute result = x * y
-double dot_product(const double *x, const double *y, const int n);
+double dot_product(const double *x, const double *y, int n);
 
-void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, const int n);
+// Extract diagonal entries
+void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);
 
+// Solve Lx = b where L is a lower triangular sparse matrix
 void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                  const int n);
+                  int n, bool unit_diag = false);
 
+// Solve Ux = b where U is a upper triangular sparse matrix
 void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                   const int n);
+                   int n, bool unit_diag = false);
 
 double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
-             const int n);
+             int n);
 
 double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
-                  const double *b, const int n, const double tol);
+                  const double *b, int n, double tol);
 
-double norm_inf(const double* array, const int n);
+double norm_inf(const double* array, int n);
+
+void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz);
 
 #endif

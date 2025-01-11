@@ -41,6 +41,7 @@
 
 // Krylov Linear solvers
 #include "LinearSolvers/Krylov/gmres.h"
+#include "LinearSolvers/Krylov/cg.h"
 #include "LinearSolvers/Krylov/pcg.h"
 #include "LinearSolvers/Krylov/bicgstab.h"
 
@@ -50,6 +51,9 @@
 #include "LinearSolvers/AMG/rsamg_old.h"
 #include "LinearSolvers/AMG/saamg.h"
 #include "LinearSolvers/AMG/uaamg.h"
+
+// Preconditioners
+#include "LinearSolvers/Preconditioner/preconditioner.h"
 
 // Eigenvalues solvers
 #include "EigenValueSolvers/PowerIteration.h"

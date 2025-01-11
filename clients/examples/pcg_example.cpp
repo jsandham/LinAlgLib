@@ -32,6 +32,8 @@
 int main()
 {
     int m = 5;
+    int n = 5;
+    int nnz = 15;
 
     //  4 -1  0  0 -1
     // -1  4 -1  0  0
@@ -41,6 +43,16 @@ int main()
     std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
+    // int m = 3;
+    // int n = 3;
+    // int nnz = 7;
+
+    // //  2 1 0
+    // //  1 2 1
+    // //  0 1 2
+    // std::vector<int> csr_row_ptr = {0, 2, 5, 7};
+    // std::vector<int> csr_col_ind = {0, 1, 0, 1, 2, 1, 2};
+    // std::vector<double> csr_val = {2.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0};
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -48,7 +60,14 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000, 100);
+    // Jacobi preconditioner
+    jacobi_precond precond;
+    //ic_precond precond;
+    //ilu_precond precond;
+
+    precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+
+    int iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, 0.00001, 1000, 100);
 
     std::cout << "iter: " << iter << std::endl;
 
@@ -56,7 +75,7 @@ int main()
     std::cout << "x" << std::endl;
     for (size_t i = 0; i < x.size(); i++)
     {
-        std::cout << x[i] << " ";
+       std::cout << x[i] << " ";
     }
     std::cout << "" << std::endl;
 

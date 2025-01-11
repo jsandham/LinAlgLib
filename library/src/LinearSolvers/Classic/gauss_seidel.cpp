@@ -34,7 +34,7 @@
 // gauss-seidel method
 //-------------------------------------------------------------------------------
 double gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
-                            const double *b, const int n)
+                            const double *b, int n)
 {
     double err = 0.0;
     for (int j = 0; j < n; j++)
@@ -67,8 +67,8 @@ double gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, co
     return err;
 }
 
-int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-       const double tol, const int max_iter)
+int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+       double tol, int max_iter)
 {
     int iter = 0;
     while (iter < max_iter)

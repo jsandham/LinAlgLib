@@ -29,6 +29,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <assert.h>
 #include "math.h"
 
 //********************************************************************************
@@ -358,11 +359,164 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
     }
 }
 
+static double get_diagonal_value(int col, int diag_index, const double* csr_val, int* structural_zero, int* numeric_zero)
+{
+    double diag_val = 1.0;
+    if(diag_index == -1)
+    {
+        // Structural zero. No diagonal value exist in matrix. Use diagonal value of 1
+        *structural_zero = std::min(*structural_zero, col);
+    }
+    else
+    {
+        diag_val = csr_val[diag_index]; 
+        if(diag_val == 0.0)
+        {
+            // Numerical zero. Use diagonal value of 1 to avoid inf/nan
+            *numeric_zero = std::min(*numeric_zero, col);
+            diag_val = 1.0;
+        }
+    }
+
+    return diag_val;
+}
+
+//-------------------------------------------------------------------------------
+// Compute incomplete LU factorization inplace
+//-------------------------------------------------------------------------------
+void csrilu0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero)
+{
+    std::vector<int> diag_ptr(m, -1);
+
+    for(int row = 0; row < m; row++)
+    {
+        int row_begin = csr_row_ptr[row];
+        int row_end = csr_row_ptr[row + 1];
+
+        std::vector<int> col_offset_map(n);
+        for(int j = 0; j < n; j++)
+        {
+            col_offset_map[j] = -1;
+        }
+
+        for(int j = row_begin; j < row_end; j++)
+        {
+            col_offset_map[csr_col_ind[j]] = j;
+        }
+
+        for(int j = row_begin; j < row_end; j++)
+        {
+            int col_j = csr_col_ind[j];
+
+            if(col_j < row)
+            {
+                int diag_index = diag_ptr[col_j];
+                double diag_val = get_diagonal_value(col_j, diag_index, csr_val, structural_zero, numeric_zero);
+
+                int row_end_col_j = csr_row_ptr[col_j + 1];
+
+                csr_val[j] = csr_val[j] / diag_val;
+
+                for(int k = diag_index + 1; k < row_end_col_j; k++)
+                {
+                    int col_k = csr_col_ind[k];
+
+                    int col_k_index = col_offset_map[col_k];
+                    if(col_k_index != -1)
+                    {
+                        csr_val[col_k_index] = csr_val[col_k_index] - csr_val[j] * csr_val[k];
+                    }
+                }
+            }
+            else if(col_j == row)
+            {
+                diag_ptr[row] = j;
+                break;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------
+// Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
+//----------------------------------------------------------------------------------------
+void csric0(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int* structural_zero, int* numeric_zero)
+{
+    std::vector<int> diag_ptr(m, -1);
+
+    for(int row = 0; row < m; row++)
+    {
+        int row_begin = csr_row_ptr[row];
+        int row_end = csr_row_ptr[row + 1];
+
+        std::vector<int> col_offset_map(n);
+        for(int j = 0; j < n; j++)
+        {
+            col_offset_map[j] = -1;
+        }
+
+        for(int j = row_begin; j < row_end; j++)
+        {
+            col_offset_map[csr_col_ind[j]] = j;
+        }
+
+        double sum = 0.0;
+
+        for(int j = row_begin; j < row_end; j++)
+        {
+            int col_j = csr_col_ind[j];
+
+            if(col_j < row)
+            {
+                int row_begin_col_j = csr_row_ptr[col_j];
+                int diag_index = diag_ptr[col_j];
+
+                double s = 0.0;
+                for(int k = row_begin_col_j; k < diag_index; k++)
+                {
+                    int col_k = csr_col_ind[k];
+
+                    int col_k_index = col_offset_map[col_k];
+                    if(col_k_index != -1)
+                    {
+                        s = s + csr_val[col_k_index] * csr_val[k];
+                    }
+                }
+
+                double diag_val = get_diagonal_value(col_j, diag_index, csr_val, structural_zero, numeric_zero);
+
+                double val = (csr_val[j] - s) / diag_val;
+
+                sum = sum + val * val;
+
+                csr_val[j] = val;
+
+                std::cout << "row: " << row << " col_j: " << col_j << " val: " << val << " sum: " << sum << " s: " << s << " diag_val: " << diag_val << std::endl;
+            }
+            else if(col_j == row)
+            {
+                diag_ptr[row] = j;
+
+                csr_val[j] = std::sqrt(std::abs(csr_val[j] - sum));
+                break;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
 void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
-                         double *y, const int n)
+                         double *y, int n)
 {
     for (int i = 0; i < n; i++)
     {
@@ -382,7 +536,7 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
 //-------------------------------------------------------------------------------
 // dot product z = x*y
 //-------------------------------------------------------------------------------
-double dot_product(const double *x, const double *y, const int n)
+double dot_product(const double *x, const double *y, int n)
 {
     double dot_prod = 0.0;
     for (int i = 0; i < n; i++)
@@ -396,7 +550,7 @@ double dot_product(const double *x, const double *y, const int n)
 //-------------------------------------------------------------------------------
 // diagonal d = diag(A)
 //-------------------------------------------------------------------------------
-void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, const int n)
+void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n)
 {
     for (int i = 0; i < n; i++)
     {
@@ -418,12 +572,14 @@ void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
 // solve Lx = b where L is a lower triangular sparse matrix
 //-------------------------------------------------------------------------------
 void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                  const int n)
+                  int n, bool unit_diag)
 {
     for (int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];
         int row_end = csr_row_ptr[i + 1];
+
+        double diag_val = 1.0;
 
         x[i] = b[i];
         for (int j = row_start; j < row_end; j++)
@@ -433,8 +589,12 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
             {
                 x[i] -= csr_val[j] * x[col];
             }
+            else if(!unit_diag && col == i)
+            {
+                diag_val = csr_val[j];
+            }
         }
-        x[i] /= csr_val[row_end - 1];
+        x[i] /= diag_val;
     }
 }
 
@@ -442,12 +602,14 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
 // solve Ux = b where U is a upper triangular sparse matrix
 //-------------------------------------------------------------------------------
 void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
-                   const int n)
+                   int n, bool unit_diag)
 {
     for (int i = n - 1; i >= 0; i--)
     {
         int row_start = csr_row_ptr[i];
         int row_end = csr_row_ptr[i + 1];
+
+        double diag_val = 1.0;
 
         x[i] = b[i];
         for (int j = row_end - 1; j >= row_start; j--)
@@ -457,9 +619,13 @@ void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double
             {
                 x[i] -= csr_val[j] * x[col];
             }
+            else if(!unit_diag && col == i)
+            {
+                diag_val = csr_val[j];
+            }
         }
 
-        x[i] /= csr_val[row_start];
+        x[i] /= diag_val;
     }
 }
 
@@ -467,7 +633,7 @@ void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double
 // error e = |b-A*x|
 //-------------------------------------------------------------------------------
 double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
-             const int n)
+             int n)
 {
     double e = 0.0;
     for (int j = 0; j < n; j++)
@@ -490,7 +656,7 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 // error e = |b-A*x| stops calculating error if error goes above tolerance
 //-------------------------------------------------------------------------------
 double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
-                  const double *b, const int n, const double tol)
+                  const double *b, int n, double tol)
 {
     int j = 0;
     double e = 0.0;
@@ -515,7 +681,7 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
 //-------------------------------------------------------------------------------
 // infinity norm
 //-------------------------------------------------------------------------------
-double norm_inf(const double* array, const int n)
+double norm_inf(const double* array, int n)
 {
     double norm = 0.0;
     for(int i = 0; i < n; i++)
@@ -524,4 +690,30 @@ double norm_inf(const double* array, const int n)
     }
 
     return norm;
+}
+
+//-------------------------------------------------------------------------------
+// print matrix to console
+//-------------------------------------------------------------------------------
+void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz)
+{
+    std::cout << name << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
+
+        std::vector<double> temp(n, 0.0);
+        for(int j = start; j < end; j++)
+        {
+            temp[csr_col_ind[j]] = csr_val[j];
+        }
+
+        for(int j = 0; j < n; j++)
+        {
+            std::cout << temp[j] << " ";
+        }
+        std::cout << "" << std::endl;
+    }
+    std::cout << "" << std::endl;
 }

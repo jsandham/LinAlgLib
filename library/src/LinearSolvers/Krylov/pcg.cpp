@@ -41,8 +41,8 @@
 //-------------------------------------------------------------------------------
 // preconditioned conjugate gradient
 //-------------------------------------------------------------------------------
-int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-        const double tol, const int max_iter, const int restart_iter)
+int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+        const preconditioner* precond, double tol, int max_iter, int restart_iter)
 {
     // jacobi preconditioner
     std::vector<double> diag(n);
@@ -55,26 +55,28 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
     // res = b - A * x and initial error
     std::vector<double> res(n);
 
-    // res = b - A * x
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-    for (int i = 0; i < n; i++)
-    {
-        res[i] = b[i] - res[i];
-    }
+    double gamma = 0.0;
 
-    // z = (M^-1) * r
-    for (int i = 0; i < n; i++)
+    // start algorithm
     {
-        z[i] = res[i] / diag[i];
-    }
+        // res = b - A * x
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+        for (int i = 0; i < n; i++)
+        {
+            res[i] = b[i] - res[i];
+        }
 
-    // p = z
-    for (int i = 0; i < n; i++)
-    {
-        p[i] = z[i];
-    }
+        // z = (M^-1) * res
+        precond->solve(res.data(), z.data(), n);
 
-    double gamma = dot_product(z.data(), res.data(), n);
+        // p = z
+        for (int i = 0; i < n; i++)
+        {
+            p[i] = z[i];
+        }
+
+        gamma = dot_product(z.data(), res.data(), n);
+    }
 
     int iter = 0;
     while (iter < max_iter)
@@ -89,11 +91,8 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
                 res[i] = b[i] - res[i];
             }
 
-            // z = (M^-1) * r
-            for (int i = 0; i < n; i++)
-            {
-                z[i] = res[i] / diag[i];
-            }
+            // z = (M^-1) * res
+            precond->solve(res.data(), z.data(), n);
 
             // p = z
             for (int i = 0; i < n; i++)
@@ -131,11 +130,8 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
             break;
         }
 
-        // z = (M^-1)*r
-        for (int i = 0; i < n; i++)
-        {
-            z[i] = res[i] / diag[i];
-        }
+        // z = (M^-1) * res
+        precond->solve(res.data(), z.data(), n);
 
         // find beta
         double old_gamma = gamma;
@@ -154,112 +150,112 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
     return iter;
 }
 
-//-------------------------------------------------------------------------------
-// preconditioned conjugate gradient
-//-------------------------------------------------------------------------------
-int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-         const double tol, const int max_iter)
-{
-    double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-    if (err < tol)
-    {
-        return 1;
-    }
+// //-------------------------------------------------------------------------------
+// // preconditioned conjugate gradient
+// //-------------------------------------------------------------------------------
+// int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
+//          const double tol, const int max_iter)
+// {
+//     double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+//     if (err < tol)
+//     {
+//         return 1;
+//     }
 
-    // create w and p vector
-    std::vector<double> w(n);
-    std::vector<double> p(n);
+//     // create w and p vector
+//     std::vector<double> w(n);
+//     std::vector<double> p(n);
 
-    // res = b - A * x and initial error
-    std::vector<double> res(n);
+//     // res = b - A * x and initial error
+//     std::vector<double> res(n);
 
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-    for (int i = 0; i < n; i++)
-    {
-        res[i] = b[i] - res[i];
-    }
+//     matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+//     for (int i = 0; i < n; i++)
+//     {
+//         res[i] = b[i] - res[i];
+//     }
 
-    // AMG preconditioner setup
-    // int level = 10;
-    // int *matrixSizes = new int[level+1];   // size of A matrix at each level
-    // int **ar = new int*[level+1];          //
-    // int **ac = new int*[level+1];          // pointers to A-matrix at each
-    // level double **av = new double*[level+1];    // and diagonal entries of
-    // A-matrix double **ad = new double*[level+1];    // int **wr = new
-    // int*[level];            // int **wc = new int*[level];            //
-    // pointers to W-matrix at each level double **wv = new double*[level]; //
+//     // AMG preconditioner setup
+//     // int level = 10;
+//     // int *matrixSizes = new int[level+1];   // size of A matrix at each level
+//     // int **ar = new int*[level+1];          //
+//     // int **ac = new int*[level+1];          // pointers to A-matrix at each
+//     // level double **av = new double*[level+1];    // and diagonal entries of
+//     // A-matrix double **ad = new double*[level+1];    // int **wr = new
+//     // int*[level];            // int **wc = new int*[level];            //
+//     // pointers to W-matrix at each level double **wv = new double*[level]; //
 
-    // amg_init(r,c,v,ar,ac,av,ad,matrixSizes,n);
-    // level = amg_setup(ar,ac,av,ad,wr,wc,wv,matrixSizes,level,0.25);
+//     // amg_init(r,c,v,ar,ac,av,ad,matrixSizes,n);
+//     // level = amg_setup(ar,ac,av,ad,wr,wc,wv,matrixSizes,level,0.25);
 
-    int iter = 0, inner_iter = 0;
-    double gamma0 = 1.0, gammai = 1.0;
-    double omega = 1.1, omega2 = 2.0 - omega;
-    while (iter < max_iter && err > tol)
-    {
-        // w = (M^-1)*r
-        for (int i = 0; i < n; i++)
-        {
-            // w[i] = md[i]*r[i];
-            w[i] = res[i];
-        }
-        // amg_solve(ar,ac,av,ad,wr,wc,wv,w,res,matrixSizes,2,2,level,0);
+//     int iter = 0, inner_iter = 0;
+//     double gamma0 = 1.0, gammai = 1.0;
+//     double omega = 1.1, omega2 = 2.0 - omega;
+//     while (iter < max_iter && err > tol)
+//     {
+//         // w = (M^-1)*r
+//         for (int i = 0; i < n; i++)
+//         {
+//             // w[i] = md[i]*r[i];
+//             w[i] = res[i];
+//         }
+//         // amg_solve(ar,ac,av,ad,wr,wc,wv,w,res,matrixSizes,2,2,level,0);
 
-        // gam = (r,w)
-        double gammai1 = gammai;
-        gammai = 0;
-        for (int i = 0; i < n; i++)
-        {
-            gammai += res[i] * w[i];
-        }
-        if (iter == 0)
-        {
-            gamma0 = gammai;
-            for (int i = 0; i < n; i++)
-            {
-                p[i] = w[i];
-            }
-        }
-        else
-        {
-            double rg = gammai / gammai1;
-            for (int i = 0; i < n; i++)
-            {
-                p[i] = w[i] + rg * p[i];
-            }
-        }
+//         // gam = (r,w)
+//         double gammai1 = gammai;
+//         gammai = 0;
+//         for (int i = 0; i < n; i++)
+//         {
+//             gammai += res[i] * w[i];
+//         }
+//         if (iter == 0)
+//         {
+//             gamma0 = gammai;
+//             for (int i = 0; i < n; i++)
+//             {
+//                 p[i] = w[i];
+//             }
+//         }
+//         else
+//         {
+//             double rg = gammai / gammai1;
+//             for (int i = 0; i < n; i++)
+//             {
+//                 p[i] = w[i] + rg * p[i];
+//             }
+//         }
 
-        // w = A*p
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), w.data(), n);
-        double beta = 0;
-        for (int i = 0; i < n; i++)
-        {
-            beta += p[i] * w[i];
-        }
-        double alpha = gammai / beta;
+//         // w = A*p
+//         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), w.data(), n);
+//         double beta = 0;
+//         for (int i = 0; i < n; i++)
+//         {
+//             beta += p[i] * w[i];
+//         }
+//         double alpha = gammai / beta;
 
-        // update x and res
-        for (int i = 0; i < n; i++)
-        {
-            x[i] += alpha * p[i];
-            res[i] -= alpha * w[i];
-        }
+//         // update x and res
+//         for (int i = 0; i < n; i++)
+//         {
+//             x[i] += alpha * p[i];
+//             res[i] -= alpha * w[i];
+//         }
 
-        // calculate error
-        if (inner_iter == 1)
-        {
-            err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
-            inner_iter = 0;
-#if (DEBUG)
-            std::cout << "error: " << err << std::endl;
-#endif
-        }
-        iter++;
-        inner_iter++;
-    }
+//         // calculate error
+//         if (inner_iter == 1)
+//         {
+//             err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+//             inner_iter = 0;
+// #if (DEBUG)
+//             std::cout << "error: " << err << std::endl;
+// #endif
+//         }
+//         iter++;
+//         inner_iter++;
+//     }
 
-    return iter;
-}
+//     return iter;
+// }
 
 //-------------------------------------------------------------------------------
 // diagonal preconditioner md = diag(A)^-1

@@ -41,8 +41,8 @@
 //-------------------------------------------------------------------------------
 // Conjugate gradient
 //-------------------------------------------------------------------------------
-int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-        const double tol, const int max_iter, const int restart_iter)
+int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+        double tol, int max_iter, int restart_iter)
 {
     // create z and p vector
     std::vector<double> z(n);
@@ -50,21 +50,26 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
 
     // res = b - A * x and initial error
     std::vector<double> res(n);
+
+    double gamma = 0.0;
     
-    // res = b - A * x
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-    for (int i = 0; i < n; i++)
+    // start algorithm
     {
-        res[i] = b[i] - res[i];
-    }
+        // res = b - A * x
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+        for (int i = 0; i < n; i++)
+        {
+            res[i] = b[i] - res[i];
+        }
 
-    // p = res
-    for (int i = 0; i < n; i++)
-    {
-        p[i] = res[i];
-    }
+        // p = res
+        for (int i = 0; i < n; i++)
+        {
+            p[i] = res[i];
+        }
 
-    double gamma = dot_product(res.data(), res.data(), n);
+        gamma = dot_product(res.data(), res.data(), n);
+    }
 
     int iter = 0;
     while (iter < max_iter)

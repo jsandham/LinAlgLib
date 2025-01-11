@@ -27,6 +27,8 @@
 #ifndef PCG_H
 #define PCG_H
 
+#include "../Preconditioner/preconditioner.h"
+
 /*! \file
  *  \brief pcg.h provides interface for Preconditioned conjugate gradient solvers
  */
@@ -95,10 +97,7 @@
  *  \endcode
  */
 /**@{*/
-int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-        const double tol, const int max_iter, const int restart_iter);
-
-int pcg2(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-         const double tol, const int max_iter);
+int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+        const preconditioner* precond, double tol, int max_iter, int restart_iter);
 
 #endif

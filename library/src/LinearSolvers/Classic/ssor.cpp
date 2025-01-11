@@ -34,7 +34,7 @@
 // symmetric successive over-relaxation method
 //-------------------------------------------------------------------------------
 double ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
-                    const int n, const double omega)
+                    int n, double omega)
 {
     double err = 0.0;
 
@@ -85,8 +85,8 @@ double ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doub
     return err;
 }
 
-int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-         const double omega, const double tol, const int max_iter)
+int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+         double omega, double tol, int max_iter)
 {
     int iter = 0;
     while (iter < max_iter)

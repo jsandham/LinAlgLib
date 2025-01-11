@@ -28,6 +28,7 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
 #include <iostream>
+#include <vector>
 
 //****************************************************************************
 //
@@ -40,28 +41,28 @@
 //-------------------------------------------------------------------------------
 // stabilized bi-conjugate gradient
 //-------------------------------------------------------------------------------
-int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-        const double tol, const int max_iter)
+int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+        double tol, int max_iter)
 {
     // r = b - A * x and initial error
-    double *r = new double[n];
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, r, n);
+    std::vector<double> r(n);
+    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, r.data(), n);
     for (int i = 0; i < n; i++)
     {
         r[i] = b[i] - r[i];
     }
     double err = error(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-    double *r0 = new double[n];
+    std::vector<double> r0(n);
     for (int i = 0; i < n; i++)
     {
         r0[i] = r[i];
     }
 
-    double rho = dot_product(r0, r, n);
+    double rho = dot_product(r0.data(), r.data(), n);
 
     // create p vector
-    double *p = new double[n];
+    std::vector<double> p(n);
 
     // p = r
     for (int i = 0; i < n; i++)
@@ -70,17 +71,17 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     }
 
     // create v, h, s, t vectors
-    double *v = new double[n];
-    double *h = new double[n];
-    double *s = new double[n];
-    double *t = new double[n];    
+    std::vector<double> v(n);
+    std::vector<double> h(n);
+    std::vector<double> s(n);
+    std::vector<double> t(n);
 
     int iter = 0;
     while (iter < max_iter && err > tol)
     {
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p, v, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), v.data(), n);
 
-        double alpha = rho / dot_product(r0, v, n);
+        double alpha = rho / dot_product(r0.data(), v.data(), n);
 
         for(int i = 0; i < n; i++)
         {
@@ -88,9 +89,9 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
             s[i] = r[i] - alpha * v[i];
         }
 
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, s, t, n);
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, s.data(), t.data(), n);
 
-        double omega = dot_product(t, s, n) / dot_product(t, t, n);
+        double omega = dot_product(t.data(), s.data(), n) / dot_product(t.data(), t.data(), n);
 
         for(int i = 0; i < n; i++)
         {
@@ -102,7 +103,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         //     break;
 
         double rho_prev = rho;
-        rho = dot_product(r0, r, n);
+        rho = dot_product(r0.data(), r.data(), n);
         double beta = (rho / rho_prev) / (alpha / omega);
 
         for(int i = 0; i < n; i++)
@@ -117,14 +118,6 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 #endif
         iter++;
     }
-
-    delete[] r;
-    delete[] r0;
-    delete[] p;
-    delete[] v;
-    delete[] h;
-    delete[] s;
-    delete[] t;
 
     return iter;
 }

@@ -68,7 +68,7 @@
  *  \endcode
  */
 /**@{*/
-int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-         const double theta, const double tol, const int max_iter);
+int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+         double theta, double tol, int max_iter);
 
 #endif

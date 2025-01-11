@@ -42,7 +42,7 @@
 // generalised minimum residual
 //-------------------------------------------------------------------------------
 int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
-          const int n, const int restart, const double tol, const int max_iter)
+          int n, int restart, double tol, int max_iter)
 {
     // res = b-A*x and initial error
     std::vector<double> res;

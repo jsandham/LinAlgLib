@@ -35,7 +35,7 @@
 // jacobi method
 //-------------------------------------------------------------------------------
 double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
-                      const double *xold, const double *b, const int n)
+                      const double *xold, const double *b, int n)
 {
     double err = 0.0;
 
@@ -64,8 +64,8 @@ double jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const do
     return err;
 }
 
-int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, const int n,
-        const double tol, const int max_iter)
+int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+        double tol, int max_iter)
 {
     // copy of x
     std::vector<double> xold(n);

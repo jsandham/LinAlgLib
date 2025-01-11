@@ -20,7 +20,12 @@ bool Testing::test_pcg(const std::string &matrix_file)
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int it = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000, 100);
+    // Jacobi preconditioner
+    jacobi_precond precond;
+
+    precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+
+    int it = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, 0.00001, 1000, 100);
 
     std::cout << "it: " << it << std::endl;
 
