@@ -73,9 +73,9 @@ void ilu_precond::build(const int *csr_row_ptr, const int *csr_col_ind, const do
     // In place incomplete LU factorization
     csrilu0(m, n, nnz, csr_row_ptr_LU.data(), csr_col_ind_LU.data(), csr_val_LU.data(), &structural_zero, &numeric_zero);
 
-    std::cout << "structural_zero: " << structural_zero << " numeric_zero: " << numeric_zero << std::endl;
+    //std::cout << "structural_zero: " << structural_zero << " numeric_zero: " << numeric_zero << std::endl;
 
-    print("LU", csr_row_ptr_LU.data(), csr_col_ind_LU.data(), csr_val_LU.data(), m, n, nnz);
+    //print("LU", csr_row_ptr_LU.data(), csr_col_ind_LU.data(), csr_val_LU.data(), m, n, nnz);
 }
 
 void ilu_precond::solve(const double* rhs, double* x, int n) const
@@ -119,7 +119,7 @@ void ic_precond::build(const int *csr_row_ptr, const int *csr_col_ind, const dou
     // In place incomplete Cholesky factorization
     csric0(m, n, nnz, csr_row_ptr_LLT.data(), csr_col_ind_LLT.data(), csr_val_LLT.data(), &structural_zero, &numeric_zero);
 
-    // // Fill inplace the upper triangular part with L^T
+    // Fill inplace the upper triangular part with L^T
     for(int row = 0; row < m; row++)
     {
         int start = csr_row_ptr_LLT[row];
@@ -148,9 +148,9 @@ void ic_precond::build(const int *csr_row_ptr, const int *csr_col_ind, const dou
         }
     }
 
-    std::cout << "structural_zero: " << structural_zero << " numeric_zero: " << numeric_zero << std::endl;
+    //std::cout << "structural_zero: " << structural_zero << " numeric_zero: " << numeric_zero << std::endl;
 
-    print("LLT", csr_row_ptr_LLT.data(), csr_col_ind_LLT.data(), csr_val_LLT.data(), m, n, nnz);
+    //print("LLT", csr_row_ptr_LLT.data(), csr_col_ind_LLT.data(), csr_val_LLT.data(), m, n, nnz);
 }
 
 void ic_precond::solve(const double* rhs, double* x, int n) const

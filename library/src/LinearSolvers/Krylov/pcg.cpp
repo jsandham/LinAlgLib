@@ -44,10 +44,6 @@
 int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
         const preconditioner *precond, double tol, int max_iter, int restart_iter)
 {
-    // jacobi preconditioner
-    std::vector<double> diag(n);
-    diagonal(csr_row_ptr, csr_col_ind, csr_val, diag.data(), n);
-
     // create z and p vector
     std::vector<double> z(n);
     std::vector<double> p(n);

@@ -497,9 +497,6 @@ void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_in
                 sum = sum + val * val;
 
                 csr_val[j] = val;
-
-                std::cout << "row: " << row << " col_j: " << col_j << " val: " << val << " sum: " << sum << " s: " << s
-                          << " diag_val: " << diag_val << std::endl;
             }
             else if (col_j == row)
             {

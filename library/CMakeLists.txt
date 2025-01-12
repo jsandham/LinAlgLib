@@ -81,6 +81,9 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# Find MPI
+find_package(MPI)
+
 # MSVC specific compiler options
 if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
   target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
