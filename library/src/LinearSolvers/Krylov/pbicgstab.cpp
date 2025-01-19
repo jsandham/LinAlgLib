@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 
-#include "../../../include/LinearSolvers/Krylov/bicgstab.h"
+#include "../../../include/LinearSolvers/Krylov/pbicgstab.h"
 #include "../../../include/LinearSolvers/slaf.h"
 #include "math.h"
 #include <iostream>
@@ -32,17 +32,17 @@
 
 //****************************************************************************
 //
-// Stabilized Bi-Conjugate Gradient
+// Preconditioned Stabilized Bi-Conjugate Gradient
 //
 //****************************************************************************
 
 #define DEBUG 1
 
 //-------------------------------------------------------------------------------
-// stabilized bi-conjugate gradient
+// preconditioned stabilized bi-conjugate gradient
 //-------------------------------------------------------------------------------
-int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-             double tol, int max_iter)
+int pbicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+             const preconditioner *precond, double tol, int max_iter)
 {
     // r = b - A * x and initial error
     std::vector<double> r(n);
@@ -74,22 +74,31 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     std::vector<double> v(n);
     std::vector<double> t(n);
 
+    std::vector<double> z(n);
+    std::vector<double> q(n);
+    
+    // M*z = r
+    precond->solve(r.data(), z.data(), n);
+
     int iter = 0;
     while (iter < max_iter)
     {
-        // v = Ap
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), v.data(), n);
+        // q = A*z
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, z.data(), q.data(), n);
 
-        double alpha = rho / dot_product(r0.data(), v.data(), n);
+        double alpha = rho / dot_product(r0.data(), q.data(), n);
 
-        // r = r - alpha * v
+        // r = r - alpha * q
         for (int i = 0; i < n; i++)
         {
-            r[i] = r[i] - alpha * v[i];
+            r[i] = r[i] - alpha * q[i];
         }
 
-        // t = Ar
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, r.data(), t.data(), n);
+        // M*v = r
+        precond->solve(r.data(), v.data(), n);
+
+        // t = A*v
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, v.data(), t.data(), n);
 
         double omega1 = dot_product(t.data(), r.data(), n);
         double omega2 = dot_product(t.data(), t.data(), n);
@@ -104,10 +113,10 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         }
         double omega = omega1 / omega2;
 
-        // x = x + alpha * p + omega * r
+        // x = x + alpha * z + omega * v
         for (int i = 0; i < n; i++)
         {
-            x[i] = x[i] + alpha * p[i] + omega * r[i];
+            x[i] = x[i] + alpha * z[i] + omega * v[i];
         }
 
         // r = r - omega * t
@@ -129,11 +138,14 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         rho = dot_product(r0.data(), r.data(), n);
         double beta = (rho / rho_prev) / (alpha / omega);
 
-        // p = r + beta * (p - omega * v)
+        // p = r + beta * (p - omega * q)
         for (int i = 0; i < n; i++)
         {
-            p[i] = r[i] + beta * (p[i] - omega * v[i]);
+            p[i] = r[i] + beta * (p[i] - omega * q[i]);
         }
+
+        // M*z = p
+        precond->solve(p.data(), z.data(), n);
 
         iter++;
     }

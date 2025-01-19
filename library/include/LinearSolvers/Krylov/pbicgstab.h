@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019-2024 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,21 +24,21 @@
 //
 //********************************************************************************
 
-#ifndef PCG_H
-#define PCG_H
+#ifndef PBICGSTAB_H
+#define PBICGSTAB_H
 
 #include "../Preconditioner/preconditioner.h"
 
 /*! \file
- *  \brief pcg.h provides interface for Preconditioned conjugate gradient solvers
+ *  \brief pbicgstab.h provides interface for preconditioned stabilized bi-conjugate gradient solver
  */
 
 /*! \ingroup linear_solvers
- *  \brief Preconditioned conjugate gradient iterative linear solver
+ *  \brief Preconditioned Stabilized Bi-conjugate gradient iterative linear solver
  *
  *  \details
- *  \p pcg solves the sparse linear system A*x = b using the preconditioned
- *  conjugate gradient iterative solver.
+ *  \p pbicgstab solves the sparse linear system A*x = b using the preconditioned stabilized
+ *  bi-conjugate gradient iterative solver.
  *
  *  \note Requires the sparse matrix A to be symmetric
  *
@@ -56,7 +56,7 @@
  *              \f$A\f$ * \f$x\f$ = \f$b\f$.
  *  @param[in]
  *  b           array of \p n elements containing the righthad side values of
- *              \f$A\f$ * \f$x\f$ = \f$b\f$.
+ *              \f$A\f$ * \f$x\f$ = \f$b\f$..
  *
  *  @param[in]
  *  n           size of the sparse CSR matrix
@@ -66,8 +66,6 @@
  *  tol         stopping tolerance
  *  @param[in]
  *  max_iter    maximum iterations allowed
- *  @param[in]
- *  restart_iter restart iteration
  *
  *  \retval number of iterations actually used in the solver. If -1 is returned,
  * the solver did not converge to a solution with the given input tolerance \p
@@ -92,7 +90,7 @@
  *
  *  precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
  *
- *  int it = pcg(csr_row_ptr.data(),
+ *  int it = pbicgstab(csr_row_ptr.data(),
  *               csr_col_ind.data(),
  *               csr_val.data(),
  *               x.data(),
@@ -100,12 +98,11 @@
  *               m,
  *               &precond,
  *               0.00001,
- *               1000,
- *               100);
+ *               1000);
  *  \endcode
  */
 /**@{*/
-int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        const preconditioner *precond, double tol, int max_iter, int restart_iter);
+int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+             const preconditioner *precond, double tol, int max_iter);
 
 #endif

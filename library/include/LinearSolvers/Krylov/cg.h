@@ -11,7 +11,7 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions :
 //
-// The above copyright noticeand this permission notice shall be included in all
+// The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -59,11 +59,11 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
- *  omega       omega
- *  @param[in]
  *  tol         stopping tolerance
  *  @param[in]
  *  max_iter    maximum iterations allowed
+ *  @param[in]
+ *  restart_iter restart iteration
  *
  *  \retval number of iterations actually used in the solver. If -1 is returned,
  * the solver did not converge to a solution with the given input tolerance \p
