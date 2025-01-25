@@ -44,7 +44,7 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001);
+    amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 1e-8);
 
     // Print solution
     // std::cout << "x" << std::endl;

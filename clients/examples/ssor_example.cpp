@@ -48,7 +48,7 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 0.00001, 1000);
+    int iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 1e-8, 1000);
 
     std::cout << "iter: " << iter << std::endl;
 

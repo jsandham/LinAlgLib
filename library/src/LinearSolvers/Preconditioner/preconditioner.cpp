@@ -25,6 +25,7 @@
 //********************************************************************************
 #include "../../../include/LinearSolvers/Preconditioner/preconditioner.h"
 #include "../../../include/LinearSolvers/slaf.h"
+#include "../../../include/LinearSolvers/AMG/saamg.h"
 #include "math.h"
 #include <iostream>
 #include <vector>
@@ -164,4 +165,21 @@ void ic_precond::solve(const double* rhs, double* x, int n) const
 
     // Solve L^T * x = y
     backward_solve(csr_row_ptr_LLT.data(), csr_col_ind_LLT.data(), csr_val_LLT.data(), y.data(), x, n, false); 
+}
+
+saamg_precond::saamg_precond(int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother) 
+    : presmoothing(presmoothing), 
+      postsmoothing(postsmoothing),
+      cycle(cycle),
+      smoother(smoother) {}
+saamg_precond::~saamg_precond() {}
+
+void saamg_precond::build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz)
+{
+    saamg_setup(csr_row_ptr, csr_col_ind, csr_val, m, m, nnz, 100, hierachy);
+}
+
+void saamg_precond::solve(const double* rhs, double* x, int n) const
+{
+    int cycles = amg_solve(hierachy, x, rhs, presmoothing, postsmoothing, 1e-8, cycle, smoother);
 }

@@ -47,26 +47,29 @@ bool Testing::test_classical(Testing::ClassicalSolver solver, std::string &matri
     std::vector<double> b(m, 1.0);
 
     int iter = 0;
+    int max_iter = 1000;
+    double tol = 1e-8;
+    
     switch(solver)
     {
         case Testing::ClassicalSolver::Jacobi:
-            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
             break;
         case Testing::ClassicalSolver::GaussSeidel:
-            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
             break;
         case Testing::ClassicalSolver::SOR:
-            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, 0.00001, 1000);
+            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, tol, max_iter);
             break;
         case Testing::ClassicalSolver::SymmGaussSeidel:
-            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
             break;
         case Testing::ClassicalSolver::SSOR:
-            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.66667, 0.00001, 1000);
+            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.66667, tol, max_iter);
             break;
     }
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 0.00001);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, tol);
 }

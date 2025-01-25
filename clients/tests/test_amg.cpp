@@ -57,9 +57,9 @@ bool Testing::test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoo
             break;
     }
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), presmoothing, postsmoothing, 0.00001, cycle, smoother);
+    int cycles = amg_solve(hierachy, x.data(), b.data(), presmoothing, postsmoothing, 1e-8, cycle, smoother);
 
     std::cout << "cycles: " << cycles << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 0.00001);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 1e-8);
 }

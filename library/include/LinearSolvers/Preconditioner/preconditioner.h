@@ -29,6 +29,8 @@
 
 #include <vector>
 
+#include "../AMG/amg.h"
+
 class preconditioner
 {
     public:
@@ -77,6 +79,23 @@ class ic_precond : public preconditioner
     public:
         ic_precond();
         ~ic_precond();
+
+        void build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz) override;
+        void solve(const double* rhs, double* x, int n) const override;
+};
+
+class saamg_precond : public preconditioner
+{
+    private:
+        heirarchy hierachy;
+        int presmoothing;
+        int postsmoothing; 
+        Cycle cycle;
+        Smoother smoother;
+
+    public:
+        saamg_precond(int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother);
+        ~saamg_precond();
 
         void build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz) override;
         void solve(const double* rhs, double* x, int n) const override;

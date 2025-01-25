@@ -137,7 +137,7 @@ enum class Smoother
  *	 saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m,
  *   m, nnz, 100, hierachy);
  *
- *	 int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 0.00001,
+ *	 int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 1e-8,
  *   Cycle::Vcycle, Smoother::Gauss_Siedel);
  *  \endcode
  */

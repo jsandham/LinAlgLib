@@ -66,13 +66,16 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     }
 
     int iter = 0;
+    int max_iter = 1000;
+    double tol = 1e-8;
+
     switch(solver)
     {
         case Testing::KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000, 1000);
+            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, max_iter);
             break;
         case Testing::KrylovSolver::BICGSTAB:
-            iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.00001, 1000);
+            iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
             break;
     }
 
@@ -83,5 +86,5 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 0.00001);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, tol);
 }
