@@ -24,26 +24,51 @@
 //
 //********************************************************************************
 
-#ifndef UTILITY_H__
-#define UTILITY_H__
+#ifndef TEST_KRYLOV_H__
+#define TEST_KRYLOV_H__
 
 #include <string>
-#include <vector>
 
-#include "linalg.h"
+namespace Testing
+{
+    enum class KrylovSolver
+    {
+        CG,
+        BICGSTAB
+    };
 
-bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                   std::vector<double> &csr_val, int &m, int &n, int &nnz);
+    enum class Preconditioner
+    {
+        Jacobi,
+        ILU,
+        IC
+    };
 
-bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr,
-                                       std::vector<int> &csr_col_ind, std::vector<double> &csr_val, int &m, int &n,
-                                       int &nnz);
+    inline std::string KrylovSolverToString(KrylovSolver solver)
+    {
+        switch(solver)
+        {
+            case KrylovSolver::CG:
+                return "CG";
+            case KrylovSolver::BICGSTAB:
+                return "BICGSTAB";
+        }
+    }
 
-bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                       std::vector<double> &csr_val, int &m, int &n, int &nnz);
+    inline std::string PreconditionerToString(Preconditioner precond)
+    {
+        switch(precond)
+        {
+            case Preconditioner::Jacobi:
+                return "Jacobi";
+            case Preconditioner::ILU:
+                return "ILU";
+            case Preconditioner::IC:
+                return "IC";
+        }
+    }
 
-bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> &csr_col_ind,
-                    const std::vector<double> &csr_val, int m, int n, int nnz, const std::vector<double> &b,
-                    const std::vector<double> &x, double tol);
+    bool test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner precond, const std::string &matrix_file);
+}
 
 #endif

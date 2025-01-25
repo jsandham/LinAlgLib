@@ -24,26 +24,62 @@
 //
 //********************************************************************************
 
-#ifndef UTILITY_H__
-#define UTILITY_H__
+#ifndef TEST_AMG_H__
+#define TEST_AMG_H__
 
 #include <string>
-#include <vector>
-
 #include "linalg.h"
 
-bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                   std::vector<double> &csr_val, int &m, int &n, int &nnz);
+namespace Testing
+{
+    enum class AMGSolver
+    {
+        SAAMG,
+        RSAMG
+    };
 
-bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr,
-                                       std::vector<int> &csr_col_ind, std::vector<double> &csr_val, int &m, int &n,
-                                       int &nnz);
+    inline std::string AMGSolverToString(AMGSolver solver)
+    {
+        switch(solver)
+        {
+            case AMGSolver::SAAMG:
+                return "SAAMG";
+            case AMGSolver::RSAMG:
+                return "RSAMG";
+        }
+    }
 
-bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                       std::vector<double> &csr_val, int &m, int &n, int &nnz);
+    inline std::string CycleToString(Cycle cycle)
+    {
+        switch(cycle)
+        {
+            case Cycle::Vcycle:
+                return "Vcycle";
+            case Cycle::Wcycle:
+                return "Wcycle";
+            case Cycle::Fcycle:
+                return "Fcycle";
+        }
+    }
 
-bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> &csr_col_ind,
-                    const std::vector<double> &csr_val, int m, int n, int nnz, const std::vector<double> &b,
-                    const std::vector<double> &x, double tol);
+    inline std::string SmootherToString(Smoother smoother)
+    {
+        switch(smoother)
+        {
+            case Smoother::Jacobi:
+                return "Jacobi";
+            case Smoother::Gauss_Siedel:
+                return "Gauss_Siedel";
+            case Smoother::Symm_Gauss_Siedel:
+                return "Symm_Gauss_Siedel";
+            case Smoother::SOR:
+                return "SOR";
+            case Smoother::SSOR:
+                return "SSOR";
+        }
+    }
+
+    bool test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother, const std::string &matrix_file);
+}
 
 #endif

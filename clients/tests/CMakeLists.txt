@@ -31,10 +31,9 @@ FetchContent_Declare(googletest
 FetchContent_MakeAvailable(googletest)
 
 set(LINALGLIB_CLIENTS_TEST_SOURCE
-  test_iterative.cpp
-  test_pcg.cpp
-  test_rsamg.cpp
-  test_saamg.cpp
+  test_classical.cpp
+  test_krylov.cpp
+  test_amg.cpp
 )
 
 set(LINALGLIB_CLIENTS_COMMON_SOURCE
