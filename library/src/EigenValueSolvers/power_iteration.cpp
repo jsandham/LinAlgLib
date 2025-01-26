@@ -24,15 +24,15 @@
 //
 //********************************************************************************
 
-#include "../../include/EigenValueSolvers/PowerIteration.h"
+#include "../../include/EigenValueSolvers/power_iteration.h"
 #include "../../include/LinearSolvers/SLAF.h"
 
 #include <iostream>
 #include <random>
 #include <vector>
 
-double powerIteration(const int rowptr[], const int col[], const double val[], double eigenVec[], const double tol,
-                      const int n, const int maxIter)
+double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* eigenVec, const double tol,
+                      const int n, const int max_iter)
 {
     std::vector<double> b;
     std::vector<double> temp;
@@ -54,9 +54,9 @@ double powerIteration(const int rowptr[], const int col[], const double val[], d
     for (int i = 0; i < n; i++)
     {
         double s = 0.0;
-        for (int j = rowptr[i]; j < rowptr[i + 1]; j++)
+        for (int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
         {
-            s += val[j] * b[col[j]];
+            s += csr_val[j] * b[csr_col_ind[j]];
         }
 
         temp[i] = s;
@@ -70,16 +70,16 @@ double powerIteration(const int rowptr[], const int col[], const double val[], d
     }
 
     int iter = 0;
-    while (iter < maxIter && resSqr > tol)
+    while (iter < max_iter && resSqr > tol)
     {
 
         // calculate A*b
         for (int i = 0; i < n; i++)
         {
             double s = 0.0;
-            for (int j = rowptr[i]; j < rowptr[i + 1]; j++)
+            for (int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
             {
-                s += val[j] * b[col[j]];
+                s += csr_val[j] * b[csr_col_ind[j]];
             }
 
             temp[i] = s;

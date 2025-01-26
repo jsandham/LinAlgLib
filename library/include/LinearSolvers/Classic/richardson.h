@@ -27,6 +27,8 @@
 #ifndef RICHARDSON_H
 #define RICHARDSON_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief richardson.h provides interface for richardson solver
  */
@@ -68,7 +70,8 @@
  *  \endcode
  */
 /**@{*/
-int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double theta, double tol, int max_iter);
+/**@}*/
 
 #endif

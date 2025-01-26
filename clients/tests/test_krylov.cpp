@@ -66,13 +66,14 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     }
 
     int iter = 0;
-    int max_iter = 1000;
+    int max_iter = 5000;
+    int restart_iter = 1000;
     double tol = 1e-8;
 
     switch(solver)
     {
         case Testing::KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, max_iter);
+            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, restart_iter);
             break;
         case Testing::KrylovSolver::BICGSTAB:
             iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);

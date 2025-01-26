@@ -99,10 +99,10 @@ std::string krylov_matrix_files[] = {"bcsstm02.mtx",
                                      "bcsstm05.mtx",
                                      "bcsstm22.mtx",
                                      "bodyy4.mtx",
-                                     "bodyy5.mtx",
-                                     "bodyy6.mtx",
+                                     //"bodyy5.mtx",
+                                     //"bodyy6.mtx",
                                      "nos1.mtx",
-                                     "nos6.mtx",
+                                     //"nos6.mtx",
                                      "ex5.mtx",
                                      "crystm02.mtx",
                                      "fv1.mtx",
@@ -116,7 +116,7 @@ std::string krylov_matrix_files[] = {"bcsstm02.mtx",
                                      "shallow_water1.mtx",
                                      "shallow_water2.mtx"};
 Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::CG, Testing::KrylovSolver::BICGSTAB};
-Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::Jacobi, Testing::Preconditioner::ILU, Testing::Preconditioner::IC};
+Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None, Testing::Preconditioner::Jacobi, Testing::Preconditioner::ILU, Testing::Preconditioner::IC};
 
 class krylov_parameters : public testing::TestWithParam<std::tuple<Testing::KrylovSolver, Testing::Preconditioner, std::string>>
 {

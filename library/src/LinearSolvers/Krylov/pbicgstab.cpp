@@ -136,7 +136,7 @@ int pbicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
 
         double rho_prev = rho;
         rho = dot_product(r0.data(), r.data(), n);
-        double beta = (rho / rho_prev) / (alpha / omega);
+        double beta = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * q)
         for (int i = 0; i < n; i++)

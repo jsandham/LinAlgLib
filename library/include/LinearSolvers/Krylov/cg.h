@@ -27,6 +27,8 @@
 #ifndef CG_H
 #define CG_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
@@ -95,7 +97,8 @@
  *  \endcode
  */
 /**@{*/
-int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        double tol, int max_iter, int restart_iter);
+/**@}*/
 
 #endif

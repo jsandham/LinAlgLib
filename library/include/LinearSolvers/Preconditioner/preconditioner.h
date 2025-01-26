@@ -29,6 +29,8 @@
 
 #include <vector>
 
+#include "../../linalglib_export.h"
+
 #include "../AMG/amg.h"
 
 class preconditioner

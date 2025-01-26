@@ -27,6 +27,8 @@
 #ifndef GMRES_H
 #define GMRES_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief gmres.h provides interface for generalized minimum residual solver
  */
@@ -70,7 +72,8 @@
  *  \endcode
  */
 /**@{*/
-int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
           int restart, double tol, int max_iter);
+/**@}*/
 
 #endif

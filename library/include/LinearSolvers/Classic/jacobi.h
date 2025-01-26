@@ -27,6 +27,8 @@
 #ifndef JACOBI_H
 #define JACOBI_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief jacobi.h provides interface for jacobi solver
  */
@@ -92,7 +94,8 @@
  *  \endcode
  */
 /**@{*/
-int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
            double tol, int max_iter);
+/**@}*/
 
 #endif

@@ -27,6 +27,8 @@
 #ifndef PBICGSTAB_H
 #define PBICGSTAB_H
 
+#include "../../linalglib_export.h"
+
 #include "../Preconditioner/preconditioner.h"
 
 /*! \file
@@ -102,7 +104,8 @@
  *  \endcode
  */
 /**@{*/
-int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
              const preconditioner *precond, double tol, int max_iter);
+/**@}*/
 
 #endif

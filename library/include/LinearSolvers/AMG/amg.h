@@ -29,6 +29,8 @@
 
 #include <vector>
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief amg.h provides interface for algebraic multigrid solver
  */
@@ -142,7 +144,8 @@ enum class Smoother
  *  \endcode
  */
 /**@{*/
-int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, double tol, Cycle cycle,
+LINALGLIB_API int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, double tol, Cycle cycle,
               Smoother smoother);
+/**@}*/
 
 #endif

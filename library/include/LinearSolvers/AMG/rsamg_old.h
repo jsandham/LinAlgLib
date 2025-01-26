@@ -27,51 +27,53 @@
 #ifndef RSAMG_OLD_H
 #define RSAMG_OLD_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief raamg_old.h provides interface for classical algebraic multigrid
  * solver
  */
 
-void amg(const int r[], const int c[], const double v[], double x[], const double b[], const int n, const double theta,
+LINALGLIB_API void amg(const int r[], const int c[], const double v[], double x[], const double b[], const int n, const double theta,
          const double tol);
 
-void amg_solve(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], double x[],
+LINALGLIB_API void amg_solve(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], double x[],
                const double b[], int ASizes[], int n1, int n2, int level, int count);
 
-void amg_init(const int r[], const int c[], const double v[], int *ar[], int *ac[], double *av[], double *ad[],
+LINALGLIB_API void amg_init(const int r[], const int c[], const double v[], int *ar[], int *ac[], double *av[], double *ad[],
               int ASizes[], const int n);
 
-int amg_setup(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], int ASizes[],
+LINALGLIB_API int amg_setup(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], int ASizes[],
               int level, const double theta);
 
-int strength_matrix_size(const int r[], const int c[], const double v[], int rptr_size, const double theta);
+LINALGLIB_API int strength_matrix_size(const int r[], const int c[], const double v[], int rptr_size, const double theta);
 
-void strength_matrix(const int r[], const int c[], const double v[], int sr[], int sc[], double sv[], int lambda[],
+LINALGLIB_API void strength_matrix(const int r[], const int c[], const double v[], int sr[], int sc[], double sv[], int lambda[],
                      int rptr_size, const double theta);
 
-void strength_transpose_matrix(int sr[], int sc[], double sv[], int str[], int stc[], double stv[], int lambda[],
+LINALGLIB_API void strength_transpose_matrix(int sr[], int sc[], double sv[], int str[], int stc[], double stv[], int lambda[],
                                int rptr_size, const double theta);
 
-void pre_cpoint(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size);
+LINALGLIB_API void pre_cpoint(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size);
 
-void pre_cpoint3(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size);
+LINALGLIB_API void pre_cpoint3(int sr[], int sc[], int str[], int stc[], int lambda[], unsigned cfpoints[], int rptr_size);
 
-void post_cpoint(int sr[], int sc[], unsigned cfpoints[], int rptr_size);
+LINALGLIB_API void post_cpoint(int sr[], int sc[], unsigned cfpoints[], int rptr_size);
 
-int weight_matrix(const int r[], const int c[], const double v[], double d[], int sr[], int sc[], double sv[],
+LINALGLIB_API int weight_matrix(const int r[], const int c[], const double v[], double d[], int sr[], int sc[], double sv[],
                   int *wr[], int *wc[], double *wv[], unsigned cfpoints[], int rptr_size, int level);
 
-void galerkin_prod(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], int rptr_size, int m,
+LINALGLIB_API void galerkin_prod(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], int rptr_size, int m,
                    int level);
 
-void galerkin_prod2(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], int rptr_size,
+LINALGLIB_API void galerkin_prod2(int *ar[], int *ac[], double *av[], double *ad[], int *wr[], int *wc[], double *wv[], int rptr_size,
                     int m, int level);
 
-void galerkin_prod3(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], int rptr_size, int m,
+LINALGLIB_API void galerkin_prod3(int *ar[], int *ac[], double *av[], int *wr[], int *wc[], double *wv[], int rptr_size, int m,
                     int level);
 
-void sort(int array1[], double array2[], int start, int end);
+LINALGLIB_API void sort(int array1[], double array2[], int start, int end);
 
-int compare_structs(const void *a, const void *b);
+LINALGLIB_API int compare_structs(const void *a, const void *b);
 
 #endif

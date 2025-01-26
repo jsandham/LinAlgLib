@@ -29,12 +29,15 @@
 
 #include <vector>
 
+#include "../../linalglib_export.h"
+
 #include "amg.h"
 
 /*! \file
  *  \brief amg_strength.h provides interface for computing strong connections in
  * a matrix. Used algebraic multigrid solvers
  */
-void compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections);
+LINALGLIB_API void compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections);
+/**@}*/
 
 #endif

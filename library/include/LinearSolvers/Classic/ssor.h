@@ -27,6 +27,8 @@
 #ifndef SSOR_H
 #define SSOR_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief ssor.h provides interface for ssor solver
  */
@@ -74,7 +76,8 @@
  *  \endcode
  */
 /**@{*/
-int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double omega, double tol, int max_iter);
+/**@}*/
 
 #endif

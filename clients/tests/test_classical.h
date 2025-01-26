@@ -55,6 +55,8 @@ namespace Testing
             case ClassicalSolver::SSOR:
                 return "SSOR";
         }
+
+        return "Invalid";
     }
 
     bool test_classical(ClassicalSolver solver, std::string &matrix_file);

@@ -44,6 +44,7 @@
 #include "LinearSolvers/Krylov/cg.h"
 #include "LinearSolvers/Krylov/pcg.h"
 #include "LinearSolvers/Krylov/bicgstab.h"
+#include "LinearSolvers/Krylov/pbicgstab.h"
 
 // Algrbraic multi-grid solvers
 #include "LinearSolvers/AMG/amg.h"
@@ -56,6 +57,6 @@
 #include "LinearSolvers/Preconditioner/preconditioner.h"
 
 // Eigenvalues solvers
-#include "EigenValueSolvers/PowerIteration.h"
+#include "EigenValueSolvers/power_iteration.h"
 
 #endif

@@ -27,6 +27,8 @@
 #ifndef GAUSS_SEIDEL_H
 #define GAUSS_SEIDEL_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
  */
@@ -73,6 +75,8 @@
  *  \endcode
  */
 /**@{*/
-int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        double tol, int max_iter);
+/**@}*/
+
 #endif

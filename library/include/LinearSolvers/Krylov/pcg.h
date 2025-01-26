@@ -27,6 +27,8 @@
 #ifndef PCG_H
 #define PCG_H
 
+#include "../../linalglib_export.h"
+
 #include "../Preconditioner/preconditioner.h"
 
 /*! \file
@@ -105,7 +107,8 @@
  *  \endcode
  */
 /**@{*/
-int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
         const preconditioner *precond, double tol, int max_iter, int restart_iter);
+/**@}*/
 
 #endif

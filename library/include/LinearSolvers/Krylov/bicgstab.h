@@ -27,6 +27,8 @@
 #ifndef BICGSTAB_H
 #define BICGSTAB_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
  */
@@ -92,7 +94,8 @@
  *  \endcode
  */
 /**@{*/
-int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
              double tol, int max_iter);
+/**@}*/
 
 #endif

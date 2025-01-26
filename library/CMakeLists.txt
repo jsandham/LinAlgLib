@@ -26,6 +26,7 @@
 
 set(LINALGLIB_HEADERS_PUBLIC
   include/LinearSolvers/slaf.h
+  include/EigenValueSolvers/power_iteration.h
   include/LinearSolvers/AMG/amg_aggregation.h
   include/LinearSolvers/AMG/amg_strength.h
   include/LinearSolvers/AMG/amg.h
@@ -39,6 +40,7 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/LinearSolvers/Classic/sor.h
   include/LinearSolvers/Classic/ssor.h
   include/LinearSolvers/Classic/symmetric_gauss_seidel.h
+  include/LinearSolvers/Krylov/pbicgstab.h
   include/LinearSolvers/Krylov/bicgstab.h
   include/LinearSolvers/Krylov/gmres.h
   include/LinearSolvers/Krylov/pcg.h
@@ -49,6 +51,7 @@ set(LINALGLIB_HEADERS_PUBLIC
 
 set(LINALGLIB_SOURCE
   src/LinearSolvers/slaf.cpp
+  src/EigenValueSolvers/power_iteration.cpp
   src/LinearSolvers/AMG/amg_aggregation.cpp
   src/LinearSolvers/AMG/amg_strength.cpp
   src/LinearSolvers/AMG/amg.cpp
@@ -62,6 +65,7 @@ set(LINALGLIB_SOURCE
   src/LinearSolvers/Classic/sor.cpp
   src/LinearSolvers/Classic/ssor.cpp
   src/LinearSolvers/Classic/symmetric_gauss_seidel.cpp
+  src/LinearSolvers/Krylov/pbicgstab.cpp
   src/LinearSolvers/Krylov/bicgstab.cpp
   src/LinearSolvers/Krylov/gmres.cpp
   src/LinearSolvers/Krylov/pcg.cpp
@@ -84,9 +88,11 @@ endif()
 # Find MPI
 find_package(MPI)
 
-# MSVC specific compiler options
-if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+# Compiler options
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+else()
+  target_compile_options(linalglib PRIVATE -Wall -Wpedantic)
 endif()
 
 target_include_directories(linalglib

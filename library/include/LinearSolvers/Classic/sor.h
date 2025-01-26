@@ -27,6 +27,8 @@
 #ifndef SOR_H
 #define SOR_H
 
+#include "../../linalglib_export.h"
+
 /*! \file
  *  \brief sor.h provides interface for sor solver
  */
@@ -72,7 +74,8 @@
  *  \endcode
  */
 /**@{*/
-int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+LINALGLIB_API int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
         double omega, double tol, int max_iter);
+/**@}*/
 
 #endif

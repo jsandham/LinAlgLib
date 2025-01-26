@@ -47,6 +47,8 @@ namespace Testing
             case AMGSolver::RSAMG:
                 return "RSAMG";
         }
+
+        return "Invalid";
     }
 
     inline std::string CycleToString(Cycle cycle)
@@ -60,6 +62,8 @@ namespace Testing
             case Cycle::Fcycle:
                 return "Fcycle";
         }
+
+        return "Invalid";
     }
 
     inline std::string SmootherToString(Smoother smoother)
@@ -77,6 +81,8 @@ namespace Testing
             case Smoother::SSOR:
                 return "SSOR";
         }
+
+        return "Invalid";
     }
 
     bool test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother, const std::string &matrix_file);

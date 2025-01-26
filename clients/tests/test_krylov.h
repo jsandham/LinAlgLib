@@ -41,7 +41,8 @@ namespace Testing
     {
         Jacobi,
         ILU,
-        IC
+        IC,
+        None
     };
 
     inline std::string KrylovSolverToString(KrylovSolver solver)
@@ -53,6 +54,8 @@ namespace Testing
             case KrylovSolver::BICGSTAB:
                 return "BICGSTAB";
         }
+
+        return "Invalid";
     }
 
     inline std::string PreconditionerToString(Preconditioner precond)
@@ -65,7 +68,11 @@ namespace Testing
                 return "ILU";
             case Preconditioner::IC:
                 return "IC";
+            case Preconditioner::None:
+                return "None";
         }
+
+        return "Invalid";
     }
 
     bool test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner precond, const std::string &matrix_file);
