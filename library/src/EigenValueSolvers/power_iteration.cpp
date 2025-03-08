@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../include/EigenValueSolvers/power_iteration.h"
-#include "../../include/LinearSolvers/SLAF.h"
+#include "../../include/LinearSolvers/slaf.h"
 
 #include <iostream>
 #include <random>

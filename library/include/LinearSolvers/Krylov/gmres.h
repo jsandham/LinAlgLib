@@ -55,15 +55,14 @@
  *  @param[in]
  *  b           array of \p n elements containing the righthad side values of
  *              \f$A\f$ * \f$x\f$ = \f$b\f$.
- *
  *  @param[in]
  *  n           size of the sparse CSR matrix
- *  @param[in]
- *  omega       omega
  *  @param[in]
  *  tol         stopping tolerance
  *  @param[in]
  *  max_iter    maximum iterations allowed
+ *  @param[in]
+ *  restart_iter restart iteration
  *
  *  \retval number of iterations actually used in the solver
  *
@@ -73,7 +72,7 @@
  */
 /**@{*/
 LINALGLIB_API int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-          int restart, double tol, int max_iter);
+    double tol, int max_iter, int restart);
 /**@}*/
 
 #endif

@@ -34,7 +34,8 @@ namespace Testing
     enum class KrylovSolver
     {
         CG,
-        BICGSTAB
+        BICGSTAB,
+        GMRES
     };
 
     enum class Preconditioner
@@ -53,6 +54,8 @@ namespace Testing
                 return "CG";
             case KrylovSolver::BICGSTAB:
                 return "BICGSTAB";
+            case KrylovSolver::GMRES:
+                return "GMRES";
         }
 
         return "Invalid";

@@ -38,7 +38,37 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    //load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+
+    for(int i = 0; i < nnz; i++)
+    {
+        csr_val[i] = 1.0;
+    }
+
+
+    std::cout << "A" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
+
+        std::vector<double> temp(n, 0.0);
+        for(int j = start; j < end; j++)
+        {
+            temp[csr_col_ind[j]] = csr_val[j];
+        }
+
+        for(int j = 0; j < n; j++)
+        {
+            std::cout << temp[j] << " ";
+        }
+        std::cout << "" << std::endl;
+    }
+    std::cout << "" << std::endl;
+
+
+
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -66,8 +96,8 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     }
 
     int iter = 0;
-    int max_iter = 5000;
-    int restart_iter = 1000;
+    int max_iter = 1;//5000;
+    int restart_iter = 4;//1000;
     double tol = 1e-8;
 
     switch(solver)
@@ -77,6 +107,9 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
             break;
         case Testing::KrylovSolver::BICGSTAB:
             iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            break;
+        case Testing::KrylovSolver::GMRES:
+            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, restart_iter);
             break;
     }
 

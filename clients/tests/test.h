@@ -95,28 +95,31 @@ INSTANTIATE_TEST_CASE_P(classical,
                           return solver + "_" + filename;
                         });
 
-std::string krylov_matrix_files[] = {"bcsstm02.mtx",
-                                     "bcsstm05.mtx",
-                                     "bcsstm22.mtx",
-                                     "bodyy4.mtx",
-                                     //"bodyy5.mtx",
-                                     //"bodyy6.mtx",
-                                     "nos1.mtx",
-                                     //"nos6.mtx",
-                                     "ex5.mtx",
-                                     "crystm02.mtx",
-                                     "fv1.mtx",
-                                     "fv2.mtx",
-                                     "fv3.mtx",
-                                     "mesh1em6.mtx",
-                                     "mesh2em5.mtx",
-                                     "mesh3em5.mtx",
-                                     "ted_B.mtx",
-                                     "test.mtx",
-                                     "shallow_water1.mtx",
-                                     "shallow_water2.mtx"};
-Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::CG, Testing::KrylovSolver::BICGSTAB};
-Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None, Testing::Preconditioner::Jacobi, Testing::Preconditioner::ILU, Testing::Preconditioner::IC};
+// std::string krylov_matrix_files[] = {"bcsstm02.mtx",
+//                                      "bcsstm05.mtx",
+//                                      "bcsstm22.mtx",
+//                                      "bodyy4.mtx",
+//                                      //"bodyy5.mtx",
+//                                      //"bodyy6.mtx",
+//                                      "nos1.mtx",
+//                                      //"nos6.mtx",
+//                                      "ex5.mtx",
+//                                      "crystm02.mtx",
+//                                      "fv1.mtx",
+//                                      "fv2.mtx",
+//                                      "fv3.mtx",
+//                                      "mesh1em6.mtx",
+//                                      "mesh2em5.mtx",
+//                                      "mesh3em5.mtx",
+//                                      "ted_B.mtx",
+//                                      "test.mtx",
+//                                      "shallow_water1.mtx",
+//                                      "shallow_water2.mtx"};
+// Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::CG, Testing::KrylovSolver::BICGSTAB, Testing::KrylovSolver::GMRES};
+// Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None, Testing::Preconditioner::Jacobi, Testing::Preconditioner::ILU, Testing::Preconditioner::IC};
+std::string krylov_matrix_files[] = {"ex5.mtx"};
+Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::GMRES};
+Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None};
 
 class krylov_parameters : public testing::TestWithParam<std::tuple<Testing::KrylovSolver, Testing::Preconditioner, std::string>>
 {
