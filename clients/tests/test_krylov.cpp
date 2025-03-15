@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <chrono>
 
 #include "linalg.h"
 
@@ -46,35 +47,15 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
         csr_val[i] = 1.0;
     }
 
-
-    std::cout << "A" << std::endl;
-    for(int i = 0; i < m; i++)
-    {
-        int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
-
-        std::vector<double> temp(n, 0.0);
-        for(int j = start; j < end; j++)
-        {
-            temp[csr_col_ind[j]] = csr_val[j];
-        }
-
-        for(int j = 0; j < n; j++)
-        {
-            std::cout << temp[j] << " ";
-        }
-        std::cout << "" << std::endl;
-    }
-    std::cout << "" << std::endl;
-
-
-
-
     // Solution vector
     std::vector<double> x(m, 0.0);
+    std::vector<double> init_x(x);
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
+
+    std::vector<double> e(n, 1.0);
+    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
 
     preconditioner* p = nullptr;
     switch(precond)
@@ -96,22 +77,30 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     }
 
     int iter = 0;
-    int max_iter = 1;//5000;
-    int restart_iter = 4;//1000;
-    double tol = 1e-8;
+    int restart_iter = 30;
+
+    iter_control control;
+    control.max_iter = 5000;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     switch(solver)
     {
         case Testing::KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, restart_iter);
+            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, restart_iter);
             break;
         case Testing::KrylovSolver::BICGSTAB:
-            iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
         case Testing::KrylovSolver::GMRES:
-            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter, restart_iter);
+            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, restart_iter);
             break;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << ms_double.count() << "ms" << std::endl;
 
     if(p != nullptr)
     {
@@ -120,5 +109,5 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, tol);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol));
 }

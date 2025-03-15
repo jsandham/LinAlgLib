@@ -29,6 +29,9 @@
 
 #include "../../linalglib_export.h"
 
+#include "../iter_control.h"
+#include "../Preconditioner/preconditioner.h"
+
 /*! \file
  *  \brief gmres.h provides interface for generalized minimum residual solver
  */
@@ -58,7 +61,8 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
- *  tol         stopping tolerance
+ *  control     iteration control struct specifying relative and absolut tolerence 
+ *              as well as maximum iterations
  *  @param[in]
  *  max_iter    maximum iterations allowed
  *  @param[in]
@@ -72,7 +76,7 @@
  */
 /**@{*/
 LINALGLIB_API int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-    double tol, int max_iter, int restart);
+    iter_control control,  int restart);
 /**@}*/
 
 #endif

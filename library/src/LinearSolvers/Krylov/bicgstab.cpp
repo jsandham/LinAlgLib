@@ -29,6 +29,7 @@
 #include "math.h"
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 //****************************************************************************
 //
@@ -36,13 +37,11 @@
 //
 //****************************************************************************
 
-#define DEBUG 1
-
 //-------------------------------------------------------------------------------
 // stabilized bi-conjugate gradient
 //-------------------------------------------------------------------------------
 int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-             double tol, int max_iter)
+             iter_control control)
 {
     // r = b - A * x and initial error
     std::vector<double> r(n);
@@ -51,6 +50,8 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     {
         r[i] = b[i] - r[i];
     }
+
+    double initial_res_norm = norm_inf(r.data(), n);
    
     // r0 = r
     std::vector<double> r0(n);
@@ -74,8 +75,10 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     std::vector<double> v(n);
     std::vector<double> t(n);
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
         // v = Ap
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), v.data(), n);
@@ -116,11 +119,9 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
             r[i] = r[i] - omega * t[i];
         }
 
-        double err = norm_inf(r.data(), n);
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
-        if (err < tol)
+        double res_norm = norm_inf(r.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
@@ -137,6 +138,11 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 
         iter++;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "BICGSTAB time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
 }

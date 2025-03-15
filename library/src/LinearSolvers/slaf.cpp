@@ -700,6 +700,14 @@ double norm_inf(const double *array, int n)
 }
 
 //-------------------------------------------------------------------------------
+// euclidean norm
+//-------------------------------------------------------------------------------
+double norm_euclid(const double *array, int n)
+{
+    return std::sqrt(dot_product(array, array, n));
+}
+
+//-------------------------------------------------------------------------------
 // print matrix to console
 //-------------------------------------------------------------------------------
 void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,

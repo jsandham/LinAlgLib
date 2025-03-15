@@ -579,9 +579,34 @@ bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_pt
 
 bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> &csr_col_ind,
                     const std::vector<double> &csr_val, int m, int n, int nnz, const std::vector<double> &b,
-                    const std::vector<double> &x, double tol)
+                    const std::vector<double> &x, const std::vector<double> &initial_x, double tol)
 {
-    std::vector<double> residual(m, 0.0);
+    for (size_t i = 0; i < x.size(); i++)
+    {
+        if (std::isnan(x[i]) || std::isinf(x[i]))
+        {
+            return false;
+        }
+    }
+
+    std::vector<double> initial_residual(m);
+    for (int i = 0; i < m; i++)
+    {
+        int row_begin = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
+
+        double sum = 0;
+        for (int j = row_begin; j < row_end; j++)
+        {
+            sum += csr_val[j] * initial_x[csr_col_ind[j]];
+        }
+
+        initial_residual[i] = b[i] - sum;
+    }
+
+    double initial_residual_norm = norm_euclid(initial_residual.data(), m);
+
+    std::vector<double> residual(m);
     for (int i = 0; i < m; i++)
     {
         int row_begin = csr_row_ptr[i];
@@ -593,26 +618,27 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
             sum += csr_val[j] * x[csr_col_ind[j]];
         }
 
-        residual[i] = sum - b[i];
+        residual[i] = b[i] - sum;
     }
 
-    bool solution_valid = true;
-    for (size_t i = 0; i < x.size(); i++)
+    double residual_norm = norm_euclid(residual.data(), m);
+
+    std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
+
+    if(residual_norm <= tol || residual_norm / initial_residual_norm <= tol)
     {
-        if (std::isnan(x[i]) || std::isinf(x[i]))
-        {
-            solution_valid = false;
-            break;
-        }
+        return true;
     }
 
-    double max_error = 0.0;
-    for (size_t i = 0; i < residual.size(); i++)
-    {
-        max_error = std::max(max_error, std::abs(residual[i]));
-    }
+    return false;
 
-    std::cout << "max_error: " << max_error << std::endl;
+    // double max_error = 0.0;
+    // for (size_t i = 0; i < residual.size(); i++)
+    // {
+    //     max_error = std::max(max_error, std::abs(residual[i]));
+    // }
 
-    return (max_error < tol && solution_valid);
+    // std::cout << "max_error: " << max_error << std::endl;
+
+    // return (max_error < tol && solution_valid);
 }

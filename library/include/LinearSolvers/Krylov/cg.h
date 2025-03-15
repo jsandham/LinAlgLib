@@ -28,6 +28,7 @@
 #define CG_H
 
 #include "../../linalglib_export.h"
+#include "../iter_control.h"
 
 /*! \file
  *  \brief cg.h provides interface for conjugate gradient solvers
@@ -61,9 +62,8 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
- *  tol         stopping tolerance
- *  @param[in]
- *  max_iter    maximum iterations allowed
+ *  control     iteration control struct specifying relative and absolute tolerence 
+ *              as well as maximum iterations
  *  @param[in]
  *  restart_iter restart iteration
  *
@@ -98,7 +98,7 @@
  */
 /**@{*/
 LINALGLIB_API int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-       double tol, int max_iter, int restart_iter);
+       iter_control control, int restart_iter);
 /**@}*/
 
 #endif

@@ -29,6 +29,7 @@
 
 #include "../../linalglib_export.h"
 
+#include "../iter_control.h"
 #include "../Preconditioner/preconditioner.h"
 
 /*! \file
@@ -65,9 +66,8 @@
  *  @param[in]
  *  precond     preconditioner
  *  @param[in]
- *  tol         stopping tolerance
- *  @param[in]
- *  max_iter    maximum iterations allowed
+ *  control     iteration control struct specifying relative and absolut tolerence 
+ *              as well as maximum iterations
  *  @param[in]
  *  restart_iter restart iteration
  *
@@ -108,7 +108,7 @@
  */
 /**@{*/
 LINALGLIB_API int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        const preconditioner *precond, double tol, int max_iter, int restart_iter);
+        const preconditioner *precond, iter_control control, int restart_iter);
 /**@}*/
 
 #endif

@@ -83,6 +83,7 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                   const double *b, int n, double tol);
 
+double norm_euclid(const double *array, int n);
 double norm_inf(const double *array, int n);
 
 void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,

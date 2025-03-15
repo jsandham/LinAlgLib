@@ -28,6 +28,7 @@
 #define BICGSTAB_H
 
 #include "../../linalglib_export.h"
+#include "../iter_control.h"
 
 /*! \file
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
@@ -61,9 +62,8 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
- *  tol         stopping tolerance
- *  @param[in]
- *  max_iter    maximum iterations allowed
+ *  control     iteration control struct specifying relative and absolut tolerence 
+ *              as well as maximum iterations
  *
  *  \retval number of iterations actually used in the solver. If -1 is returned,
  * the solver did not converge to a solution with the given input tolerance \p
@@ -95,7 +95,7 @@
  */
 /**@{*/
 LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-             double tol, int max_iter);
+             iter_control control);
 /**@}*/
 
 #endif

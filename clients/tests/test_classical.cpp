@@ -42,6 +42,7 @@ bool Testing::test_classical(Testing::ClassicalSolver solver, std::string &matri
 
     // Solution vector
     std::vector<double> x(m, 0.0);
+    std::vector<double> init_x = x;
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
@@ -71,5 +72,5 @@ bool Testing::test_classical(Testing::ClassicalSolver solver, std::string &matri
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, tol);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, tol);
 }

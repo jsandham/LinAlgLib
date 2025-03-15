@@ -71,6 +71,7 @@ set(LINALGLIB_SOURCE
   src/LinearSolvers/Krylov/pcg.cpp
   src/LinearSolvers/Krylov/cg.cpp
   src/LinearSolvers/Preconditioner/preconditioner.cpp
+  src/LinearSolvers/iter_control.cpp
 )
 
 add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})

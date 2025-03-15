@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,42 +24,17 @@
 //
 //********************************************************************************
 
-#ifndef LINALG_H__
-#define LINALG_H__
+#ifndef ITER_CONTROL_H
+#define ITER_CONTROL_H
 
-/*! \file
-*  \brief linalg.h includes other *.h files and provides sparse iterative linear solvers and eigenvalue solvers
-*/
+struct iter_control 
+{
+    double rel_tol = 1e-06;
+    double abs_tol = 1e-06;
+    int max_iter = 1000;
 
-// Classic Linear solvers
-#include "LinearSolvers/Classic/jacobi.h"
-#include "LinearSolvers/Classic/gauss_seidel.h"
-#include "LinearSolvers/Classic/sor.h"
-#include "LinearSolvers/Classic/symmetric_gauss_seidel.h"
-#include "LinearSolvers/Classic/ssor.h"
-#include "LinearSolvers/Classic/richardson.h"
-
-// Krylov Linear solvers
-#include "LinearSolvers/Krylov/gmres.h"
-#include "LinearSolvers/Krylov/cg.h"
-#include "LinearSolvers/Krylov/pcg.h"
-#include "LinearSolvers/Krylov/bicgstab.h"
-#include "LinearSolvers/Krylov/pbicgstab.h"
-
-// Algrbraic multi-grid solvers
-#include "LinearSolvers/AMG/amg.h"
-#include "LinearSolvers/AMG/rsamg.h"
-#include "LinearSolvers/AMG/rsamg_old.h"
-#include "LinearSolvers/AMG/saamg.h"
-#include "LinearSolvers/AMG/uaamg.h"
-
-// Preconditioners
-#include "LinearSolvers/Preconditioner/preconditioner.h"
-
-// Eigenvalues solvers
-#include "EigenValueSolvers/power_iteration.h"
-
-#include "LinearSolvers/slaf.h"
-#include "LinearSolvers/iter_control.h"
+    bool residual_converges(double residual_norm, double initial_residual_norm) const;
+    bool exceed_max_iter(int iter) const;
+};
 
 #endif

@@ -29,6 +29,7 @@
 #include "math.h"
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 //****************************************************************************
 //
@@ -36,13 +37,11 @@
 //
 //****************************************************************************
 
-#define DEBUG 1
-
 //-------------------------------------------------------------------------------
 // Conjugate gradient
 //-------------------------------------------------------------------------------
 int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-       double tol, int max_iter, int restart_iter)
+       iter_control control, int restart_iter)
 {
     // create z and p vector
     std::vector<double> z(n);
@@ -52,6 +51,7 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
     std::vector<double> res(n);
 
     double gamma = 0.0;
+    double initial_res_norm = 0.0;
 
     // start algorithm
     {
@@ -62,6 +62,8 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
             res[i] = b[i] - res[i];
         }
 
+        initial_res_norm = norm_inf(res.data(), n);
+
         // p = res
         for (int i = 0; i < n; i++)
         {
@@ -71,8 +73,10 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         gamma = dot_product(res.data(), res.data(), n);
     }
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
         if (iter > 0 && iter % restart_iter == 0)
@@ -109,13 +113,9 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
             res[i] -= alpha * z[i];
         }
 
-        double err = norm_inf(res.data(), n);
+        double res_norm = norm_inf(res.data(), n);
 
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
-
-        if (err <= tol)
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
@@ -133,6 +133,11 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
 
         iter++;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Conjugate Gradient time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
 }

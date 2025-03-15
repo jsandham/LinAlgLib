@@ -42,6 +42,7 @@ bool Testing::test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoo
 
     // Solution vector
     std::vector<double> x(m, 0.0);
+    std::vector<double> init_x = x;
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
@@ -61,5 +62,5 @@ bool Testing::test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoo
 
     std::cout << "cycles: " << cycles << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, 1e-8);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, 1e-8);
 }
