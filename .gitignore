@@ -8,6 +8,8 @@
 *.exe
 *.lib
 
+*.mtx
+
 build
 
 build/*.log
