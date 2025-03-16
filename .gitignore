@@ -9,6 +9,8 @@
 *.lib
 
 *.mtx
+*.gz
+*.tar.gz
 
 build
 
