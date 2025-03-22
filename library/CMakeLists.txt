@@ -87,7 +87,11 @@ find_package(MPI)
 
 # Compiler options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+  if (OPENMP_FOUND)
+    target_compile_options(linalglib PRIVATE -openmp:llvm -W4 -wd4201 -wd4100 -wd4996)
+  else()
+    target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+  endif()
 else()
   target_compile_options(linalglib PRIVATE -Wall -Wpedantic)
 endif()

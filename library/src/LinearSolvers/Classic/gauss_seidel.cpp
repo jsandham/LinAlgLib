@@ -27,6 +27,7 @@
 #include "../../../include/LinearSolvers/Classic/gauss_seidel.h"
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
+#include <chrono>
 
 #define DEBUG 1
 
@@ -70,6 +71,8 @@ double gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, co
 int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        double tol, int max_iter)
 {
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     int iter = 0;
     while (iter < max_iter)
     {
@@ -87,6 +90,11 @@ int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
 
         iter++;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Gauss Seidel time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
 }

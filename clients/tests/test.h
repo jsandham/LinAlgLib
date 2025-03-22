@@ -35,26 +35,31 @@
 #include "test_krylov.h"
 #include "test_amg.h"
 
-std::string classical_matrix_files[] = {"bcsstm02.mtx",
-                                     "bcsstm05.mtx",
-                                     "bcsstm22.mtx",
-                                     "bodyy4.mtx",
-                                     "bodyy5.mtx",
-                                     "bodyy6.mtx",
-                                     "nos1.mtx",
-                                     "nos6.mtx",
-                                     "ex5.mtx",
-                                     "crystm02.mtx",
-                                     "fv1.mtx",
-                                     "fv2.mtx",
-                                     "fv3.mtx",
-                                     "mesh1em6.mtx",
-                                     "mesh2em5.mtx",
-                                     "mesh3em5.mtx",
-                                     "ted_B.mtx",
-                                     "test.mtx",
-                                     "shallow_water1.mtx",
-                                     "shallow_water2.mtx"};
+std::string classical_matrix_files[] = {"SPD/1138_bus/1138_bus.mtx",
+                                        "SPD/bcsstk01/bcsstk01.mtx",
+                                        "SPD/bcsstm02/bcsstm02.mtx",
+                                        "SPD/bodyy4/bodyy4.mtx",
+                                        "SPD/bodyy6/bodyy6.mtx",
+                                        "SPD/cfd2/cfd2.mtx",
+                                        "SPD/crystm02/crystm02.mtx",
+                                        "SPD/ex5/ex5.mtx",
+                                        "SPD/fv1/fv1.mtx",
+                                        "SPD/fv2/fv2.mtx",
+                                        "SPD/fv3/fv3.mtx",
+                                        "SPD/mesh1em6/mesh1em6.mtx",
+                                        "SPD/mesh2em5/mesh2em5.mtx",
+                                        "SPD/mesh3em5/mesh3em5.mtx",
+                                        "SPD/nos1/nos1.mtx",
+                                        "SPD/nos2/nos2.mtx",
+                                        "SPD/nos6/nos6.mtx",
+                                        "SPD/nasa1824/nasa1824.mtx",
+                                        "SPD/Pres_Poisson/Pres_Poisson.mtx",
+                                        "SPD/shallow_water1/shallow_water1.mtx",
+                                        "SPD/shallow_water2/shallow_water2.mtx",
+                                        "SPD/thermal1/thermal1.mtx",
+                                        "SPD/thermomech_dM/thermomech_dM.mtx",
+                                        "SPD/thermomech_TC/thermomech_TC.mtx",
+                                        "SPD/thermomech_TK/thermomech_TK.mtx"};
 Testing::ClassicalSolver classical_solvers[] = {Testing::ClassicalSolver::Jacobi, 
                                                 Testing::ClassicalSolver::GaussSeidel, 
                                                 Testing::ClassicalSolver::SOR,
@@ -87,7 +92,7 @@ INSTANTIATE_TEST_CASE_P(classical,
                           std::string filename = std::get<1>(info.param);
                           for(size_t i = 0; i < filename.length(); i++)
                           {
-                            if(filename[i] == '.')
+                            if(filename[i] == '.' || filename[i] == '/')
                             {
                               filename[i] = '_';
                             }
@@ -95,31 +100,36 @@ INSTANTIATE_TEST_CASE_P(classical,
                           return solver + "_" + filename;
                         });
 
-std::string krylov_matrix_files[] = {"bcsstm02.mtx",
-                                     "bcsstm05.mtx",
-                                     "bcsstm22.mtx",
-                                     "bodyy4.mtx",
-                                     "bodyy5.mtx",
-                                     "bodyy6.mtx",
-                                     "nos1.mtx",
-                                     "nos6.mtx",
-                                     "ex5.mtx",
-                                     "crystm02.mtx",
-                                     "fv1.mtx",
-                                     "fv2.mtx",
-                                     "fv3.mtx",
-                                     "mesh1em6.mtx",
-                                     "mesh2em5.mtx",
-                                     "mesh3em5.mtx",
-                                     "ted_B.mtx",
-                                     "test.mtx",
-                                     "shallow_water1.mtx",
-                                     "shallow_water2.mtx"};
+std::string krylov_matrix_files[] = {"SPD/1138_bus/1138_bus.mtx",
+                                     "SPD/bcsstk01/bcsstk01.mtx",
+                                     "SPD/bcsstm02/bcsstm02.mtx",
+                                     "SPD/bodyy4/bodyy4.mtx",
+                                     "SPD/bodyy6/bodyy6.mtx",
+                                     "SPD/cfd2/cfd2.mtx",
+                                     "SPD/crystm02/crystm02.mtx",
+                                     "SPD/ex5/ex5.mtx",
+                                     "SPD/fv1/fv1.mtx",
+                                     "SPD/fv2/fv2.mtx",
+                                     "SPD/fv3/fv3.mtx",
+                                     "SPD/mesh1em6/mesh1em6.mtx",
+                                     "SPD/mesh2em5/mesh2em5.mtx",
+                                     "SPD/mesh3em5/mesh3em5.mtx",
+                                     "SPD/nos1/nos1.mtx",
+                                     "SPD/nos2/nos2.mtx",
+                                     "SPD/nos6/nos6.mtx",
+                                     "SPD/nasa1824/nasa1824.mtx",
+                                     "SPD/Pres_Poisson/Pres_Poisson.mtx",
+                                     "SPD/shallow_water1/shallow_water1.mtx",
+                                     "SPD/shallow_water2/shallow_water2.mtx",
+                                     "SPD/thermal1/thermal1.mtx",
+                                     "SPD/thermomech_dM/thermomech_dM.mtx",
+                                     "SPD/thermomech_TC/thermomech_TC.mtx",
+                                     "SPD/thermomech_TK/thermomech_TK.mtx"};
 // Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::CG, Testing::KrylovSolver::BICGSTAB, Testing::KrylovSolver::GMRES};
 // Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None, Testing::Preconditioner::Jacobi, Testing::Preconditioner::ILU, Testing::Preconditioner::IC};
 // std::string krylov_matrix_files[] = {"shallow_water1.mtx"};
-Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::GMRES};
-Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None};
+Testing::KrylovSolver krylov_solvers[] = {Testing::KrylovSolver::CG, Testing::KrylovSolver::BICGSTAB, Testing::KrylovSolver::GMRES};
+Testing::Preconditioner krylov_precondioners[] = {Testing::Preconditioner::None, Testing::Preconditioner::Jacobi};
 
 class krylov_parameters : public testing::TestWithParam<std::tuple<Testing::KrylovSolver, Testing::Preconditioner, std::string>>
 {
@@ -150,7 +160,7 @@ INSTANTIATE_TEST_CASE_P(krylov,
                           std::string filename = std::get<2>(info.param);
                           for(size_t i = 0; i < filename.length(); i++)
                           {
-                            if(filename[i] == '.')
+                            if(filename[i] == '.' || filename[i] == '/')
                             {
                               filename[i] = '_';
                             }
@@ -159,26 +169,31 @@ INSTANTIATE_TEST_CASE_P(krylov,
                         }
                         );
 
-std::string amg_matrix_files[] = {"bcsstm02.mtx",
-                                     "bcsstm05.mtx",
-                                     "bcsstm22.mtx",
-                                     "bodyy4.mtx",
-                                     "bodyy5.mtx",
-                                     "bodyy6.mtx",
-                                     "nos1.mtx",
-                                     "nos6.mtx",
-                                     "ex5.mtx",
-                                     "crystm02.mtx",
-                                     "fv1.mtx",
-                                     "fv2.mtx",
-                                     "fv3.mtx",
-                                     "mesh1em6.mtx",
-                                     "mesh2em5.mtx",
-                                     "mesh3em5.mtx",
-                                     "ted_B.mtx",
-                                     "test.mtx",
-                                     "shallow_water1.mtx",
-                                     "shallow_water2.mtx"};
+std::string amg_matrix_files[] = {"SPD/1138_bus/1138_bus.mtx",
+                                  "SPD/bcsstk01/bcsstk01.mtx",
+                                  "SPD/bcsstm02/bcsstm02.mtx",
+                                  "SPD/bodyy4/bodyy4.mtx",
+                                  "SPD/bodyy6/bodyy6.mtx",
+                                  "SPD/cfd2/cfd2.mtx",
+                                  "SPD/crystm02/crystm02.mtx",
+                                  "SPD/ex5/ex5.mtx",
+                                  "SPD/fv1/fv1.mtx",
+                                  "SPD/fv2/fv2.mtx",
+                                  "SPD/fv3/fv3.mtx",
+                                  "SPD/mesh1em6/mesh1em6.mtx",
+                                  "SPD/mesh2em5/mesh2em5.mtx",
+                                  "SPD/mesh3em5/mesh3em5.mtx",
+                                  "SPD/nos1/nos1.mtx",
+                                  "SPD/nos2/nos2.mtx",
+                                  "SPD/nos6/nos6.mtx",
+                                  "SPD/nasa1824/nasa1824.mtx",
+                                  "SPD/Pres_Poisson/Pres_Poisson.mtx",
+                                  "SPD/shallow_water1/shallow_water1.mtx",
+                                  "SPD/shallow_water2/shallow_water2.mtx",
+                                  "SPD/thermal1/thermal1.mtx",
+                                  "SPD/thermomech_dM/thermomech_dM.mtx",
+                                  "SPD/thermomech_TC/thermomech_TC.mtx",
+                                  "SPD/thermomech_TK/thermomech_TK.mtx"};
 Testing::AMGSolver amg_solvers[] = {Testing::AMGSolver::SAAMG};
 int amg_presmoothing_iterations[] = {2};
 int amg_postsmoothing_iterations[] = {4};
@@ -231,7 +246,7 @@ INSTANTIATE_TEST_CASE_P(amg,
                           std::string filename = std::get<5>(info.param);
                           for(size_t i = 0; i < filename.length(); i++)
                           {
-                            if(filename[i] == '.')
+                            if(filename[i] == '.' || filename[i] == '/')
                             {
                               filename[i] = '_';
                             }

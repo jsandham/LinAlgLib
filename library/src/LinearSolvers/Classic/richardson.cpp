@@ -29,6 +29,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <chrono>
 
 //********************************************************************************
 //
@@ -72,6 +73,8 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
         res[i] = b[i] - res[i];
     }
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     int iter = 0;
     while (iter < max_iter)
     {
@@ -88,6 +91,11 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
 
         iter++;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Richardson time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
 }

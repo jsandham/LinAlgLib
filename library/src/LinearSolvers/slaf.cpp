@@ -543,9 +543,12 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
 double dot_product(const double *x, const double *y, int n)
 {
     double dot_prod = 0.0;
+#if defined(_OPENMP)
+#pragma omp parallel for reduction(+: dot_prod)
+#endif
     for (int i = 0; i < n; i++)
     {
-        dot_prod = dot_prod + x[i] * y[i];
+        dot_prod += x[i] * y[i];
     }
 
     return dot_prod;
@@ -656,7 +659,7 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         e = e + (b[j] - s) * (b[j] - s);
     }
 
-    return sqrt(e);
+    return std::sqrt(e);
 }
 
 //-------------------------------------------------------------------------------
@@ -682,7 +685,7 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
         j++;
     }
 
-    return sqrt(e);
+    return std::sqrt(e);
 }
 
 //-------------------------------------------------------------------------------
@@ -691,6 +694,9 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
 double norm_inf(const double *array, int n)
 {
     double norm = 0.0;
+#if defined(_OPENMP)
+#pragma omp parallel for reduction(max: norm)
+#endif
     for (int i = 0; i < n; i++)
     {
         norm = std::max(std::abs(array[i]), norm);

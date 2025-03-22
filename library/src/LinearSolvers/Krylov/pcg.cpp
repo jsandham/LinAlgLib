@@ -57,6 +57,9 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
     {
         // res = b - A * x
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             res[i] = b[i] - res[i];
@@ -65,9 +68,25 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         initial_res_norm = norm_inf(res.data(), n);
 
         // z = (M^-1) * res
-        precond->solve(res.data(), z.data(), n);
+        if(precond != nullptr)
+        {
+            precond->solve(res.data(), z.data(), n);
+        }
+        else
+        {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for (int i = 0; i < n; i++)
+            {
+                z[i] = res[i];
+            }
+        }
 
         // p = z
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             p[i] = z[i];
@@ -86,15 +105,34 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         {
             // res = b - A * x
             matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
             for (int i = 0; i < n; i++)
             {
                 res[i] = b[i] - res[i];
             }
 
             // z = (M^-1) * res
-            precond->solve(res.data(), z.data(), n);
+            if(precond != nullptr)
+            {
+                precond->solve(res.data(), z.data(), n);
+            }
+            else
+            {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+                for (int i = 0; i < n; i++)
+                {
+                    z[i] = res[i];
+                }
+            }
 
             // p = z
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
             for (int i = 0; i < n; i++)
             {
                 p[i] = z[i];
@@ -108,12 +146,18 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         double alpha = gamma / dot_product(z.data(), p.data(), n);
 
         // update x = x + alpha * p
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             x[i] += alpha * p[i];
         }
 
         // update res = res - alpha * z
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             res[i] -= alpha * z[i];
@@ -127,7 +171,20 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         }
 
         // z = (M^-1) * res
-        precond->solve(res.data(), z.data(), n);
+        if(precond != nullptr)
+        {
+            precond->solve(res.data(), z.data(), n);
+        }
+        else
+        {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+            for (int i = 0; i < n; i++)
+            {
+                z[i] = res[i];
+            }
+        }
 
         // find beta
         double old_gamma = gamma;
@@ -135,6 +192,9 @@ int pcg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
         double beta = gamma / old_gamma;
 
         // update p = z + beta * p
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             p[i] = z[i] + beta * p[i];

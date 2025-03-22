@@ -57,6 +57,9 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
     {
         // res = b - A * x
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             res[i] = b[i] - res[i];
@@ -65,6 +68,9 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         initial_res_norm = norm_inf(res.data(), n);
 
         // p = res
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             p[i] = res[i];
@@ -83,12 +89,18 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         {
             // res = b - A * x
             matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
             for (int i = 0; i < n; i++)
             {
                 res[i] = b[i] - res[i];
             }
 
             // p = res
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
             for (int i = 0; i < n; i++)
             {
                 p[i] = res[i];
@@ -102,12 +114,18 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         double alpha = gamma / dot_product(z.data(), p.data(), n);
 
         // update x = x + alpha * p
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             x[i] += alpha * p[i];
         }
 
         // update res = res - alpha * z
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             res[i] -= alpha * z[i];
@@ -126,6 +144,9 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
         double beta = gamma / old_gamma;
 
         // update p = res + beta * p
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
         for (int i = 0; i < n; i++)
         {
             p[i] = res[i] + beta * p[i];

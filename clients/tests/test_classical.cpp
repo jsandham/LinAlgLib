@@ -72,5 +72,5 @@ bool Testing::test_classical(Testing::ClassicalSolver solver, std::string &matri
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, tol);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, tol, 0);
 }

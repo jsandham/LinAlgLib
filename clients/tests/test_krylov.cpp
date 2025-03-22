@@ -42,11 +42,6 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     //load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
     load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
-    for(int i = 0; i < nnz; i++)
-    {
-        csr_val[i] = 1.0;
-    }
-
     // Solution vector
     std::vector<double> x(m, 0.0);
     std::vector<double> init_x(x);
@@ -77,7 +72,6 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     }
 
     int iter = 0;
-    int restart_iter = 30;
 
     iter_control control;
     control.max_iter = 5000;
@@ -87,13 +81,14 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     switch(solver)
     {
         case Testing::KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, restart_iter);
+            iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, m);
+            //iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, m);
             break;
         case Testing::KrylovSolver::BICGSTAB:
             iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
         case Testing::KrylovSolver::GMRES:
-            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, restart_iter);
+            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, 50);
             break;
     }
 
@@ -109,5 +104,7 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol));
+    int norm_type = (solver == Testing::KrylovSolver::GMRES) ? 1 : 0;
+
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

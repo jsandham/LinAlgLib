@@ -15,6 +15,18 @@ bool iter_control::residual_converges(double residual_norm, double initial_resid
     assert(rel_tol > 0.0);
     assert(abs_tol > 0.0);
 
+    if(std::isnan(residual_norm))
+    {
+        return false;
+    }
+    if(std::isnan(initial_residual_norm))
+    {
+        return false;
+    }
+
+    assert(!std::isnan(residual_norm));
+    assert(!std::isnan(initial_residual_norm));
+
     assert(residual_norm >= 0.0);
     assert(initial_residual_norm >= 0.0);
 

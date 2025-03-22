@@ -28,6 +28,7 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 #define DEBUG 1
 
@@ -74,6 +75,8 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
         xold[i] = x[i];
     }
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     int iter = 0;
     while (iter < max_iter)
     {
@@ -96,6 +99,11 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
 
         iter++;
     }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Jacobi time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
 }

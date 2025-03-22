@@ -579,7 +579,7 @@ bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_pt
 
 bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> &csr_col_ind,
                     const std::vector<double> &csr_val, int m, int n, int nnz, const std::vector<double> &b,
-                    const std::vector<double> &x, const std::vector<double> &initial_x, double tol)
+                    const std::vector<double> &x, const std::vector<double> &initial_x, double tol, int norm_type)
 {
     for (size_t i = 0; i < x.size(); i++)
     {
@@ -604,7 +604,15 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
         initial_residual[i] = b[i] - sum;
     }
 
-    double initial_residual_norm = norm_euclid(initial_residual.data(), m);
+    double initial_residual_norm = 0.0;
+    if(norm_type == 0)
+    {
+        initial_residual_norm = norm_inf(initial_residual.data(), m);
+    }
+    else
+    {
+        initial_residual_norm = norm_euclid(initial_residual.data(), m);
+    }
 
     std::vector<double> residual(m);
     for (int i = 0; i < m; i++)
@@ -621,7 +629,15 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
         residual[i] = b[i] - sum;
     }
 
-    double residual_norm = norm_euclid(residual.data(), m);
+    double residual_norm = 0.0;
+    if(norm_type == 0)
+    {
+        residual_norm = norm_inf(residual.data(), m);
+    }
+    else
+    {
+        residual_norm = norm_euclid(residual.data(), m);
+    }
 
     std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
 
@@ -631,14 +647,4 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
     }
 
     return false;
-
-    // double max_error = 0.0;
-    // for (size_t i = 0; i < residual.size(); i++)
-    // {
-    //     max_error = std::max(max_error, std::abs(residual[i]));
-    // }
-
-    // std::cout << "max_error: " << max_error << std::endl;
-
-    // return (max_error < tol && solution_valid);
 }
