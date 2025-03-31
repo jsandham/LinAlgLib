@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,61 +24,6 @@
 //
 //********************************************************************************
 
-#ifndef TEST_KRYLOV_H__
-#define TEST_KRYLOV_H__
+#include "../test.h"
 
-#include <string>
-
-namespace Testing
-{
-    enum class KrylovSolver
-    {
-        CG,
-        BICGSTAB,
-        GMRES
-    };
-
-    enum class Preconditioner
-    {
-        Jacobi,
-        ILU,
-        IC,
-        None
-    };
-
-    inline std::string KrylovSolverToString(KrylovSolver solver)
-    {
-        switch(solver)
-        {
-            case KrylovSolver::CG:
-                return "CG";
-            case KrylovSolver::BICGSTAB:
-                return "BICGSTAB";
-            case KrylovSolver::GMRES:
-                return "GMRES";
-        }
-
-        return "Invalid";
-    }
-
-    inline std::string PreconditionerToString(Preconditioner precond)
-    {
-        switch(precond)
-        {
-            case Preconditioner::Jacobi:
-                return "Jacobi";
-            case Preconditioner::ILU:
-                return "ILU";
-            case Preconditioner::IC:
-                return "IC";
-            case Preconditioner::None:
-                return "None";
-        }
-
-        return "Invalid";
-    }
-
-    bool test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner precond, const std::string &matrix_file);
-}
-
-#endif
+INSTANTIATE_TEST(CG, quick, "../tests/test_CG.yaml");

@@ -24,42 +24,15 @@
 //
 //********************************************************************************
 
-#ifndef TEST_CLASSICAL_H__
-#define TEST_CLASSICAL_H__
+#include <iostream>
 
-#include <string>
+#include <gtest/gtest.h>
 
-namespace Testing
+int main(int argc, char **argv)
 {
-    enum class ClassicalSolver
-    {
-        Jacobi,
-        GaussSeidel,
-        SOR,
-        SymmGaussSeidel,
-        SSOR
-    };
+    testing::InitGoogleTest(&argc, argv);
 
-    inline std::string ClassicalSolverToString(ClassicalSolver solver)
-    {
-        switch(solver)
-        {
-            case ClassicalSolver::Jacobi:
-                return "Jacobi";
-            case ClassicalSolver::GaussSeidel:
-                return "GaussSeidel";
-            case ClassicalSolver::SOR:
-                return "SOR";
-            case ClassicalSolver::SymmGaussSeidel:
-                return "SymmGaussSeidel";
-            case ClassicalSolver::SSOR:
-                return "SSOR";
-        }
+    RUN_ALL_TESTS();
 
-        return "Invalid";
-    }
-
-    bool test_classical(ClassicalSolver solver, std::string &matrix_file);
-} // namespace Testing
-
-#endif
+    return 0;
+}

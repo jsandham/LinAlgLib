@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 
-#include "test_amg.h"
+#include "test_functions.h"
 #include "utility.h"
 
 #include <cmath>
@@ -32,13 +32,14 @@
 
 #include "linalg.h"
 
-bool Testing::test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother, const std::string &matrix_file)
+bool Testing::test_classical(ClassicalSolver solver, Arguments arg)
 {
+    std::cout << "Testing::test_classical(Arguments arg)" << std::endl;
     int m, n, nnz;
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    load_diagonally_dominant_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -47,20 +48,30 @@ bool Testing::test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoo
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    heirarchy hierachy;
+    int iter = 0;
+    int max_iter = 1000;
+    double tol = 1e-8;
+    
     switch(solver)
     {
-        case Testing::AMGSolver::SAAMG:
-            saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 100, hierachy);
+        case ClassicalSolver::Jacobi:
+            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
             break;
-        case Testing::AMGSolver::RSAMG:
-            rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
+        case ClassicalSolver::GaussSeidel:
+            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            break;
+        case ClassicalSolver::SOR:
+            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, tol, max_iter);
+            break;
+        case ClassicalSolver::SymmGaussSeidel:
+            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            break;
+        case ClassicalSolver::SSOR:
+            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, tol, max_iter);
             break;
     }
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), presmoothing, postsmoothing, 1e-8, cycle, smoother);
+    std::cout << "iter: " << iter << std::endl;
 
-    std::cout << "cycles: " << cycles << std::endl;
-
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, 1e-8, 0);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, tol, 0);
 }

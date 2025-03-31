@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 
-#include "test_krylov.h"
+#include "test_functions.h"
 #include "utility.h"
 
 #include <cmath>
@@ -33,14 +33,14 @@
 
 #include "linalg.h"
 
-bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner precond, const std::string &matrix_file)
+bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
 {
     int m, n, nnz;
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
     //load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-    load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -53,7 +53,7 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
     matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
 
     preconditioner* p = nullptr;
-    switch(precond)
+    switch(arg.precond)
     {
         case Testing::Preconditioner::Jacobi:
             p = new jacobi_precond;
@@ -80,14 +80,14 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
 
     switch(solver)
     {
-        case Testing::KrylovSolver::CG:
+        case KrylovSolver::CG:
             iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, m);
             //iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, m);
             break;
-        case Testing::KrylovSolver::BICGSTAB:
+        case KrylovSolver::BICGSTAB:
             iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
-        case Testing::KrylovSolver::GMRES:
+        case KrylovSolver::GMRES:
             iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, 50);
             break;
     }
@@ -104,7 +104,7 @@ bool Testing::test_krylov(Testing::KrylovSolver solver, Testing::Preconditioner 
 
     std::cout << "iter: " << iter << std::endl;
 
-    int norm_type = (solver == Testing::KrylovSolver::GMRES) ? 1 : 0;
+    int norm_type = (solver == KrylovSolver::GMRES) ? 1 : 0;
 
     return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

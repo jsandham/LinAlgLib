@@ -121,11 +121,7 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
     std::vector<double> res(n);
 
     // res = b - A * x
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-    for (int i = 0; i < n; i++)
-    {
-        res[i] = b[i] - res[i];
-    }
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
     double res_norm = norm_euclid(res.data(), n);
     double initial_res_norm = res_norm;
@@ -227,11 +223,7 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
         }
 
         // res = b - A * x
-        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-        for (int i = 0; i < n; i++)
-        {
-            res[i] = b[i] - res[i];
-        }
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
         res_norm = norm_euclid(res.data(), n);
 

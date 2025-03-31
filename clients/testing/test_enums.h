@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,19 +24,108 @@
 //
 //********************************************************************************
 
-#ifndef TEST_AMG_H__
-#define TEST_AMG_H__
+#ifndef TEST_ENUMS_H__
+#define TEST_ENUMS_H__
 
 #include <string>
-#include "linalg.h"
+#include <linalg.h>
 
 namespace Testing
 {
+    enum class Solver
+    {
+        Jacobi,
+        GaussSeidel,
+        SOR,
+        SymmGaussSeidel,
+        SSOR,
+        CG,
+        BICGSTAB,
+        GMRES,
+        SAAMG,
+        RSAMG
+    };
+
+    enum class ClassicalSolver
+    {
+        Jacobi,
+        GaussSeidel,
+        SOR,
+        SymmGaussSeidel,
+        SSOR
+    };
+
+    enum class KrylovSolver
+    {
+        CG,
+        BICGSTAB,
+        GMRES
+    };
+
     enum class AMGSolver
     {
         SAAMG,
         RSAMG
     };
+
+    enum class Preconditioner
+    {
+        Jacobi,
+        ILU,
+        IC,
+        None
+    };
+    
+    inline std::string ClassicalSolverToString(ClassicalSolver solver)
+    {
+        switch(solver)
+        {
+            case ClassicalSolver::Jacobi:
+                return "Jacobi";
+            case ClassicalSolver::GaussSeidel:
+                return "GaussSeidel";
+            case ClassicalSolver::SOR:
+                return "SOR";
+            case ClassicalSolver::SymmGaussSeidel:
+                return "SymmGaussSeidel";
+            case ClassicalSolver::SSOR:
+                return "SSOR";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string KrylovSolverToString(KrylovSolver solver)
+    {
+        switch(solver)
+        {
+            case KrylovSolver::CG:
+                return "CG";
+            case KrylovSolver::BICGSTAB:
+                return "BICGSTAB";
+            case KrylovSolver::GMRES:
+                return "GMRES";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string PreconditionerToString(Preconditioner precond)
+    {
+        switch(precond)
+        {
+            case Preconditioner::Jacobi:
+                return "Jacobi";
+            case Preconditioner::ILU:
+                return "ILU";
+            case Preconditioner::IC:
+                return "IC";
+            case Preconditioner::None:
+                return "None";
+        }
+
+        return "Invalid";
+    }
 
     inline std::string AMGSolverToString(AMGSolver solver)
     {
@@ -84,8 +173,6 @@ namespace Testing
 
         return "Invalid";
     }
-
-    bool test_amg(Testing::AMGSolver solver, int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother, const std::string &matrix_file);
 }
 
 #endif

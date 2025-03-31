@@ -66,12 +66,7 @@ int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, 
 {
     // res = b - A * x and initial error
     std::vector<double> res(n);
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), n);
-
-    for (int i = 0; i < n; i++)
-    {
-        res[i] = b[i] - res[i];
-    }
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 

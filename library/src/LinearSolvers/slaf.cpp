@@ -39,6 +39,90 @@
 //********************************************************************************
 
 //-------------------------------------------------------------------------------
+// Compute y = alpha * x + y
+//-------------------------------------------------------------------------------
+void axpy(int n, double alpha, const double* x, double* y)
+{
+    if(alpha == 1.0)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = x[i] + y[i];
+        }
+    }
+    else
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = alpha * x[i] + y[i];
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------
+// Compute y = alpha * x + beta * y
+//-------------------------------------------------------------------------------
+void axpby(int n, double alpha, const double* x, double beta, double* y)
+{
+    if(alpha == 1.0)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = x[i] + beta * y[i];
+        }
+    }
+    else if (alpha == 0.0)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = beta * y[i];
+        }
+    }
+    else if (beta == 1.0)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = alpha * x[i] + y[i];
+        }
+    }
+    else if (beta == 0.0)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = alpha * x[i];
+        }
+    }
+    else
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for (int i = 0; i < n; i++)
+        {
+            y[i] = alpha * x[i] + beta * y[i];
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------
 // Compute y = alpha * A * x + beta * y
 //-------------------------------------------------------------------------------
 void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
@@ -552,6 +636,44 @@ double dot_product(const double *x, const double *y, int n)
     }
 
     return dot_prod;
+}
+
+//-------------------------------------------------------------------------------
+// Compute residual res = b - A * x
+//-------------------------------------------------------------------------------
+void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+    const double* b, double* res, int n)
+{
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
+
+        double s = 0.0;
+        for (int j = row_start; j < row_end; j++)
+        {
+            s += csr_val[j] * x[csr_col_ind[j]];
+        }
+
+        res[i] = b[i] - s;
+    }
+}
+
+//-------------------------------------------------------------------------------
+// copy array
+//-------------------------------------------------------------------------------
+void copy(double* dest, const double* src, int n)
+{
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        dest[i] = src[i];
+    }
 }
 
 //-------------------------------------------------------------------------------

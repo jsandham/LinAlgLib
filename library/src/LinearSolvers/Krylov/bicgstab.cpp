@@ -45,20 +45,13 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 {
     // r = b - A * x and initial error
     std::vector<double> r(n);
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, r.data(), n);
-    for (int i = 0; i < n; i++)
-    {
-        r[i] = b[i] - r[i];
-    }
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, r.data(), n);
 
     double initial_res_norm = norm_inf(r.data(), n);
    
     // r0 = r
     std::vector<double> r0(n);
-    for (int i = 0; i < n; i++)
-    {
-        r0[i] = r[i];
-    }
+    copy(r0.data(), r.data(), n);
 
     double rho = dot_product(r0.data(), r.data(), n);
 
@@ -66,10 +59,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
     std::vector<double> p(n);
 
     // p = r
-    for (int i = 0; i < n; i++)
-    {
-        p[i] = r[i];
-    }
+    copy(p.data(), r.data(), n);
 
     // create v, t vectors
     std::vector<double> v(n);
@@ -86,12 +76,9 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         double alpha = rho / dot_product(r0.data(), v.data(), n);
 
         // r = r - alpha * v
-        for (int i = 0; i < n; i++)
-        {
-            r[i] = r[i] - alpha * v[i];
-        }
+        axpy(n, -alpha, v.data(), r.data());
 
-        // t = Ar
+        // t = A * r
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, r.data(), t.data(), n);
 
         double omega1 = dot_product(t.data(), r.data(), n);
@@ -99,10 +86,8 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 
         if(omega1 == 0.0 || omega2 == 0.0)
         {
-            for (int i = 0; i < n; i++)
-            {
-                x[i] =  x[i] + alpha * p[i];
-            }
+            // x = x + alpha * p
+            axpy(n, alpha, p.data(), x);
             break;
         }
         double omega = omega1 / omega2;
@@ -114,10 +99,7 @@ int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
         }
 
         // r = r - omega * t
-        for (int i = 0; i < n; i++)
-        {
-            r[i] = r[i] - omega * t[i];
-        }
+        axpy(n, -omega, t.data(), r.data());
 
         double res_norm = norm_inf(r.data(), n);
 

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,15 +24,17 @@
 //
 //********************************************************************************
 
-#include <iostream>
+#ifndef TEST_FUNCTIONS_H__
+#define TEST_FUNCTIONS_H__
 
-#include "test.h"
+#include "test_arguments.h"
 
-int main(int argc, char **argv)
+namespace Testing
 {
-    testing::InitGoogleTest(&argc, argv);
+    bool test_dispatch(Arguments arg);
+    bool test_classical(ClassicalSolver solver, Arguments arg);
+    bool test_krylov(KrylovSolver solver, Arguments arg);
+    bool test_amg(AMGSolver solver, Arguments arg);
+} // namespace Testing
 
-    RUN_ALL_TESTS();
-
-    return 0;
-}
+#endif

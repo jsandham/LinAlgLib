@@ -30,10 +30,32 @@ FetchContent_Declare(googletest
         GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(googletest)
 
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG yaml-cpp-0.7.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
 set(LINALGLIB_CLIENTS_TEST_SOURCE
-  test_classical.cpp
-  test_krylov.cpp
-  test_amg.cpp
+  test_functions_classical.cpp
+  test_functions_krylov.cpp
+  test_functions_amg.cpp
+  test_functions_dispatch.cpp
+
+  tests/test_jacobi.cpp
+  tests/test_gauss_seidel.cpp
+  tests/test_symmetric_gauss_seidel.cpp
+  tests/test_SOR.cpp
+  tests/test_SSOR.cpp
+
+  tests/test_CG.cpp
+  tests/test_GMRES.cpp
+  tests/test_BICGSTAB.cpp
+
+  #tests/test_SAAMG.cpp
+  #tests/test_RSAMG.cpp
 )
 
 set(LINALGLIB_CLIENTS_COMMON_SOURCE
@@ -50,5 +72,7 @@ target_include_directories(test_main PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_S
 
 target_link_libraries(test_main PRIVATE linalglib)
 target_link_libraries(test_main PRIVATE gtest_main gmock_main)
+target_link_libraries(test_main PRIVATE yaml-cpp::yaml-cpp)
 
-file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/tests )
+file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/testing )
+file(COPY tests DESTINATION ${PROJECT_BINARY_DIR}/testing )

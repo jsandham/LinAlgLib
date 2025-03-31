@@ -29,6 +29,12 @@
 
 #include <string>
 
+// Compute y = alpha * x + y
+void axpy(int n, double alpha, const double* x, double* y);
+
+// Compute y = alpha * x + beta * y
+void axpby(int n, double alpha, const double* x, double beta, double* y);
+
 // Compute y = alpha * A * x + beta * y
 void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
            const double *x, double beta, double *y);
@@ -65,6 +71,13 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
 
 // Compute result = x * y
 double dot_product(const double *x, const double *y, int n);
+
+// Compute residual res = b - A * x
+void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+                      const double* b, double* res, int n);
+
+// Copy array
+void copy(double* dest, const double* src, int n);
 
 // Extract diagonal entries
 void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);

@@ -70,10 +70,7 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
 {
     // copy of x
     std::vector<double> xold(n);
-    for (int i = 0; i < n; i++)
-    {
-        xold[i] = x[i];
-    }
+    copy(xold.data(), x, n);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -92,10 +89,7 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
             break;
         }
 
-        for (int i = 0; i < n; i++)
-        {
-            xold[i] = x[i];
-        }
+        copy(xold.data(), x, n);
 
         iter++;
     }
