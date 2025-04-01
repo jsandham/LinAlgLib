@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <iostream>
+#include <cmath>
 
 #define DEBUG 1
 
