@@ -51,3 +51,8 @@ bool iter_control::exceed_max_iter(int iter) const
 
     return iter > max_iter;
 }
+
+bool iter_control::exceed_max_cycle(int cycle) const
+{
+    return cycle > max_cycle;
+}

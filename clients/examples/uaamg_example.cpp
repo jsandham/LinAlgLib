@@ -67,7 +67,9 @@ int main()
     heirarchy hierachy;
     uaamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 2, hierachy);
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, 1e-8, Cycle::Wcycle, Smoother::Gauss_Siedel);
+    iter_control control;
+
+    int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
 
     // Print solution
     std::cout << "x" << std::endl;

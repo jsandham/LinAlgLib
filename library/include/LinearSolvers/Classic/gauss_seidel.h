@@ -34,11 +34,11 @@
  */
 
 /*! \ingroup linear_solvers
- *  \brief Gauss-Siedel iterative linear solver
+ *  \brief Gauss-Seidel iterative linear solver
  *
  *  \details
  *  \p gs solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the
- *  Gauss-Siedel iterative solver.
+ *  Gauss-Seidel iterative solver.
  *
  *  \note Convergence is only guaranteed if \f$A\f$ is either strictly
  *  diagonally dominant or symmetric and positive definite

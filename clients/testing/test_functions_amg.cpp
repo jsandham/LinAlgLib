@@ -47,20 +47,29 @@ bool Testing::test_amg(AMGSolver solver, Arguments arg)
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
+    int max_levels = 100;
+
     heirarchy hierachy;
     switch(solver)
     {
+        case AMGSolver::UAAMG:
+            uaamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
+            break;
         case AMGSolver::SAAMG:
-            saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 100, hierachy);
+            saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
             break;
         case AMGSolver::RSAMG:
-            rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
+            rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
             break;
     }
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, 1e-8, arg.cycle, arg.smoother);
+    iter_control control;
+
+    int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
 
     std::cout << "cycles: " << cycles << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, 1e-8, 0);
+    int norm_type = 0;
+
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

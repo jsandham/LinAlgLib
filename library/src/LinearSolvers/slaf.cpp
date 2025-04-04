@@ -131,7 +131,7 @@ void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const in
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < m; i++)
     {
         int row_start = csr_row_ptr[i];
         int row_end = csr_row_ptr[i + 1];

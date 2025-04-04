@@ -31,6 +31,8 @@
 
 #include "../../linalglib_export.h"
 
+#include "../iter_control.h"
+
 /*! \file
  *  \brief amg.h provides interface for algebraic multigrid solver
  */
@@ -81,8 +83,8 @@ enum class Cycle
 enum class Smoother
 {
     Jacobi,
-    Gauss_Siedel,
-    Symm_Gauss_Siedel,
+    Gauss_Seidel,
+    Symm_Gauss_Seidel,
     SOR,
     SSOR
 };
@@ -114,8 +116,11 @@ enum class Smoother
  *  cycle       Algebaric multigrid cycle type. Can be \ref Vcycle, \ref Wcycle,
  *              \ref Fcycle.
  *  @param[in]
- *  smoother    Smoother type used. Can be \ref Jacobi, Gauss_Siedel, \ref
- *              Symm_Gauss_Siedel, \ref SOR, or \ref SSOR.
+ *  smoother    Smoother type used. Can be \ref Jacobi, Gauss_Seidel, \ref
+ *              Symm_Gauss_Seidel, \ref SOR, or \ref SSOR.
+ *  @param[in]
+ *  control     iteration control struct specifying relative and absolute tolerence 
+ *              as well as maximum iterations
  *
  *  \retval number of cycles actually used in the solver. If -1 is returned, the
  *  solver did not converge to a solution with the given input tolerance \p tol.
@@ -140,12 +145,12 @@ enum class Smoother
  *   m, nnz, 100, hierachy);
  *
  *	 int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 1e-8,
- *   Cycle::Vcycle, Smoother::Gauss_Siedel);
+ *   Cycle::Vcycle, Smoother::Gauss_Seidel);
  *  \endcode
  */
 /**@{*/
-LINALGLIB_API int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, double tol, Cycle cycle,
-              Smoother smoother);
+LINALGLIB_API int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, Cycle cycle,
+              Smoother smoother, iter_control control);
 /**@}*/
 
 #endif

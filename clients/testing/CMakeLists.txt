@@ -54,7 +54,8 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   tests/test_GMRES.cpp
   tests/test_BICGSTAB.cpp
 
-  #tests/test_SAAMG.cpp
+  tests/test_UAAMG.cpp
+  tests/test_SAAMG.cpp
   #tests/test_RSAMG.cpp
 )
 

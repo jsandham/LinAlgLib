@@ -35,11 +35,11 @@
  */
 
 /*! \ingroup linear_solvers
- *  \brief Symmetric Gauss-Siedel iterative linear solver
+ *  \brief Symmetric Gauss-Seidel iterative linear solver
  *
  *  \details
  *  \p sgs solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the
- *  symmetric Gauss-Siedel iterative solver.
+ *  symmetric Gauss-Seidel iterative solver.
  *
  *  \note Requires the sparse matrix \f$A\f$ to be symmetric
  *

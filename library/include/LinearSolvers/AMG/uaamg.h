@@ -84,7 +84,7 @@
  *m, nnz, 100, hierachy);
  *
  *	int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, 1e-8,
- *Cycle::Vcycle, Smoother::Gauss_Siedel);
+ *Cycle::Vcycle, Smoother::Gauss_Seidel);
  *  \endcode
  */
 /**@{*/

@@ -29,77 +29,79 @@
 
 #include <string>
 
+#include "../linalglib_export.h"
+
 // Compute y = alpha * x + y
-void axpy(int n, double alpha, const double* x, double* y);
+LINALGLIB_API void axpy(int n, double alpha, const double* x, double* y);
 
 // Compute y = alpha * x + beta * y
-void axpby(int n, double alpha, const double* x, double beta, double* y);
+LINALGLIB_API void axpby(int n, double alpha, const double* x, double beta, double* y);
 
 // Compute y = alpha * A * x + beta * y
-void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
+LINALGLIB_API void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
            const double *x, double beta, double *y);
 
 // Compute C = alpha * A * B + beta * D
-void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+LINALGLIB_API void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
                  const int *csr_col_ind_A, const int *csr_row_ptr_B, const int *csr_col_ind_B, double beta,
                  const int *csr_row_ptr_D, const int *csr_col_ind_D, int *csr_row_ptr_C, int *nnz_C);
 
-void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+LINALGLIB_API void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
              const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B, const int *csr_col_ind_B,
              const double *csr_val_B, double beta, const int *csr_row_ptr_D, const int *csr_col_ind_D,
              const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C);
 
 // Compute C = alpha * A + beta * B
-void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+LINALGLIB_API void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
                  double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B, int *csr_row_ptr_C, int *nnz_C);
 
-void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+LINALGLIB_API void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
              const double *csr_val_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
              const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C);
 
 // Compute incomplete LU factorization inplace
-void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+LINALGLIB_API void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
              int *structural_zero, int *numeric_zero);
 
 // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
-void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+LINALGLIB_API void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
             int *structural_zero, int *numeric_zero);
 
 // Compute y = A * x
-void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+LINALGLIB_API void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                            double *y, const int n);
 
 // Compute result = x * y
-double dot_product(const double *x, const double *y, int n);
+LINALGLIB_API double dot_product(const double *x, const double *y, int n);
 
 // Compute residual res = b - A * x
-void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                       const double* b, double* res, int n);
 
 // Copy array
-void copy(double* dest, const double* src, int n);
+LINALGLIB_API void copy(double* dest, const double* src, int n);
 
 // Extract diagonal entries
-void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);
+LINALGLIB_API void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);
 
 // Solve Lx = b where L is a lower triangular sparse matrix
-void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+LINALGLIB_API void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                    int n, bool unit_diag = false);
 
 // Solve Ux = b where U is a upper triangular sparse matrix
-void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+LINALGLIB_API void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                     int n, bool unit_diag = false);
 
-double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
+LINALGLIB_API double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
              int n);
 
-double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+LINALGLIB_API double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                   const double *b, int n, double tol);
 
-double norm_euclid(const double *array, int n);
-double norm_inf(const double *array, int n);
+LINALGLIB_API double norm_euclid(const double *array, int n);
+LINALGLIB_API double norm_inf(const double *array, int n);
 
-void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
+LINALGLIB_API void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
            int nnz);
 
 #endif

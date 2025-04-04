@@ -46,6 +46,8 @@ bool Testing::test_dispatch(Arguments arg)
             return test_krylov(KrylovSolver::BICGSTAB, arg);
         case Solver::GMRES:
             return test_krylov(KrylovSolver::GMRES, arg);
+        case Solver::UAAMG:
+            return test_amg(AMGSolver::UAAMG, arg);
         case Solver::SAAMG:
             return test_amg(AMGSolver::SAAMG, arg);
         case Solver::RSAMG:

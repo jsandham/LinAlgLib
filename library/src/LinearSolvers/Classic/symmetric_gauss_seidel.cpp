@@ -34,7 +34,7 @@
 //-------------------------------------------------------------------------------
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
-double symm_gauss_siedel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+double symm_gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                                    const double *b, int n)
 {
     double err = 0.0;
@@ -94,7 +94,7 @@ int sgs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, d
     int iter = 0;
     while (iter < max_iter)
     {
-        double err = symm_gauss_siedel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        double err = symm_gauss_seidel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
 #if (DEBUG)
         std::cout << "error: " << err << std::endl;

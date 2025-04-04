@@ -35,6 +35,7 @@
 #include <map>
 #include <unordered_set>
 #include <vector>
+#include <chrono>
 
 //********************************************************************************
 //
@@ -352,6 +353,8 @@ static void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, co
 void saamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
                  int max_level, heirarchy &hierarchy)
 {
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     hierarchy.prolongations.resize(max_level);
     hierarchy.restrictions.resize(max_level);
     hierarchy.A_cs.resize(max_level + 1);
@@ -424,4 +427,9 @@ void saamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *c
     std::cout << "Total number of levels in operator hierarchy at the end of the "
                  "setup phase: "
               << level << std::endl;
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Smoothed Aggregation AMG setup time: " << ms_double.count() << "ms" << std::endl;
 }

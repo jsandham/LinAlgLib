@@ -70,6 +70,9 @@ namespace YAML
             case Testing::Solver::BICGSTAB:
                 node = "BICGSTAB";
                 break;
+            case Testing::Solver::UAAMG:
+                node = "UAAMG";
+                break;
             case Testing::Solver::SAAMG:
                 node = "SAAMG";
                 break;
@@ -115,6 +118,10 @@ namespace YAML
             else if (type == "BICGSTAB")
             {
                 rhs = Testing::Solver::BICGSTAB;
+            }
+            else if (type == "UAAMG")
+            {
+                rhs = Testing::Solver::UAAMG;
             }
             else if (type == "SAAMG")
             {
@@ -277,11 +284,11 @@ template <> struct convert<Smoother>
         case Smoother::Jacobi:
             node = "Jacobi";
             break;
-        case Smoother::Gauss_Siedel:
-            node = "Gauss_Siedel";
+        case Smoother::Gauss_Seidel:
+            node = "Gauss_Seidel";
             break;
-        case Smoother::Symm_Gauss_Siedel:
-            node = "Symm_Gauss_Siedel";
+        case Smoother::Symm_Gauss_Seidel:
+            node = "Symm_Gauss_Seidel";
             break;
         case Smoother::SOR:
             node = "SOR";
@@ -301,13 +308,13 @@ template <> struct convert<Smoother>
         {
             rhs = Smoother::Jacobi;
         }
-        else if (type == "Gauss_Siedel")
+        else if (type == "Gauss_Seidel")
         {
-            rhs = Smoother::Gauss_Siedel;
+            rhs = Smoother::Gauss_Seidel;
         }
-        else if (type == "Symm_Gauss_Siedel")
+        else if (type == "Symm_Gauss_Seidel")
         {
-            rhs = Smoother::Symm_Gauss_Siedel;
+            rhs = Smoother::Symm_Gauss_Seidel;
         }
         else if (type == "SOR")
         {

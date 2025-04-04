@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,44 +24,6 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
+#include "../test.h"
 
-#include "linalg.h"
-#include "utility.h"
-
-int main()
-{
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    load_mtx_file("../matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-
-    // Solution vector
-    std::vector<double> x(m, 0.0);
-
-    // Righthand side vector
-    std::vector<double> b(m, 1.0);
-
-    heirarchy hierachy;
-    rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
-
-    iter_control control;
-
-    int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
-    // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
-    // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::SOR, control);
-
-    // amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 1e-8);
-
-    // Print solution
-    // std::cout << "x" << std::endl;
-    // for (size_t i = 0; i < x.size(); i++)
-    //{
-    //	std::cout << x[i] << " ";
-    //}
-    // std::cout << "" << std::endl;
-
-    return 0;
-}
+INSTANTIATE_TEST(UAAMG, quick, "../tests/test_UAAMG.yaml");

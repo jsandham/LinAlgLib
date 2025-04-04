@@ -181,5 +181,6 @@ void saamg_precond::build(const int *csr_row_ptr, const int *csr_col_ind, const 
 
 void saamg_precond::solve(const double* rhs, double* x, int n) const
 {
-    amg_solve(hierachy, x, rhs, presmoothing, postsmoothing, 1e-8, cycle, smoother);
+    iter_control control;
+    amg_solve(hierachy, x, rhs, presmoothing, postsmoothing, cycle, smoother, control);
 }

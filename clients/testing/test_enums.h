@@ -42,6 +42,7 @@ namespace Testing
         CG,
         BICGSTAB,
         GMRES,
+        UAAMG,
         SAAMG,
         RSAMG
     };
@@ -64,6 +65,7 @@ namespace Testing
 
     enum class AMGSolver
     {
+        UAAMG,
         SAAMG,
         RSAMG
     };
@@ -131,6 +133,8 @@ namespace Testing
     {
         switch(solver)
         {
+            case AMGSolver::UAAMG:
+                return "UAAMG";
             case AMGSolver::SAAMG:
                 return "SAAMG";
             case AMGSolver::RSAMG:
@@ -161,10 +165,10 @@ namespace Testing
         {
             case Smoother::Jacobi:
                 return "Jacobi";
-            case Smoother::Gauss_Siedel:
-                return "Gauss_Siedel";
-            case Smoother::Symm_Gauss_Siedel:
-                return "Symm_Gauss_Siedel";
+            case Smoother::Gauss_Seidel:
+                return "Gauss_Seidel";
+            case Smoother::Symm_Gauss_Seidel:
+                return "Symm_Gauss_Seidel";
             case Smoother::SOR:
                 return "SOR";
             case Smoother::SSOR:

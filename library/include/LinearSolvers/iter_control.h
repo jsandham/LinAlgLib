@@ -32,9 +32,11 @@ struct iter_control
     double rel_tol = 1e-06;
     double abs_tol = 1e-06;
     int max_iter = 1000;
+    int max_cycle = 100;
 
     bool residual_converges(double residual_norm, double initial_residual_norm) const;
     bool exceed_max_iter(int iter) const;
+    bool exceed_max_cycle(int cycle) const;
 };
 
 #endif
