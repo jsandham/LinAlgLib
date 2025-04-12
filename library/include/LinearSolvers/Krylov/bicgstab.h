@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -28,17 +28,19 @@
 #define BICGSTAB_H
 
 #include "../../linalglib_export.h"
+
 #include "../iter_control.h"
+#include "../Preconditioner/preconditioner.h"
 
 /*! \file
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
  */
 
 /*! \ingroup linear_solvers
- *  \brief Stabilized Bi-conjugate gradient iterative linear solver
+ *  \brief Preconditioned Stabilized Bi-conjugate gradient iterative linear solver
  *
  *  \details
- *  \p bicgstab solves the sparse linear system A*x = b using the stabilized
+ *  \p bicgstab solves the sparse linear system A*x = b using the preconditioned stabilized
  *  bi-conjugate gradient iterative solver.
  *
  *  \note Requires the sparse matrix A to be symmetric
@@ -62,6 +64,8 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
+ *  precond     preconditioner
+ *  @param[in]
  *  control     iteration control struct specifying relative and absolut tolerence 
  *              as well as maximum iterations
  *
@@ -82,6 +86,11 @@
  *
  *  // Righthand side vector
  *  std::vector<double> b(m, 1.0);
+ * 
+ *  // ILU preconditioner
+ *  ilu_precond precond;
+ *
+ *  precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
  *
  *  int it = bicgstab(csr_row_ptr.data(),
  *               csr_col_ind.data(),
@@ -89,13 +98,14 @@
  *               x.data(),
  *               b.data(),
  *               m,
+ *               &precond,
  *               1e-8,
  *               1000);
  *  \endcode
  */
 /**@{*/
 LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-             iter_control control);
+    const preconditioner *precond, iter_control control);
 /**@}*/
 
 #endif

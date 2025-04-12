@@ -56,7 +56,10 @@ TEST_P(FUNCTION, linear_solvers)                              \
 INSTANTIATE_TEST_SUITE_P(                                                    \
     quick,                                                                   \
     FUNCTION,                                                                \
-    testing::ValuesIn(generate_tests(YAML_TEST_FILE)));
+    testing::ValuesIn(generate_tests(YAML_TEST_FILE)),                       \
+    [](const testing::TestParamInfo<FUNCTION::ParamType>& info) {            \
+        return info.param.generate_test_name();                              \
+    });
 
 #define INSTANTIATE_TEST(FUNCTION, CATEGORY, YAML_TEST_FILE)             \
 namespace Testing                                                        \

@@ -69,7 +69,7 @@ int main()
 
     precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
 
-    int iter = pcg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, control, 100);
+    int iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, control, 100);
 
     std::cout << "iter: " << iter << std::endl;
 

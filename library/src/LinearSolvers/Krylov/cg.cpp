@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <assert.h>
 
 //****************************************************************************
 //
@@ -37,10 +38,7 @@
 //
 //****************************************************************************
 
-//-------------------------------------------------------------------------------
-// Conjugate gradient
-//-------------------------------------------------------------------------------
-int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+static int nonpreconditioned_conjugate_gradient(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        iter_control control, int restart_iter)
 {
     // create z and p vector
@@ -117,4 +115,110 @@ int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, do
     std::cout << "Conjugate Gradient time: " << ms_double.count() << "ms" << std::endl;
 
     return iter;
+}
+
+static int preconditioned_conjugate_gradient(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+    const preconditioner *precond, iter_control control, int restart_iter)
+{
+    assert(precond != nullptr);
+
+    // create z and p vector
+    std::vector<double> z(n);
+    std::vector<double> p(n);
+
+    // res = b - A * x and initial error
+    std::vector<double> res(n);
+
+    double gamma = 0.0;
+    double initial_res_norm = 0.0;
+
+    // start algorithm
+    {
+        // res = b - A * x
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+        
+        initial_res_norm = norm_inf(res.data(), n);
+
+        // z = (M^-1) * res
+        precond->solve(res.data(), z.data(), n);
+
+        // p = z
+        copy(p.data(), z.data(), n);
+
+        gamma = dot_product(z.data(), res.data(), n);
+    }
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    int iter = 0;
+    while (!control.exceed_max_iter(iter))
+    {
+        // restart algorithm to better handle round off error
+        if (iter > 0 && iter % restart_iter == 0)
+        {
+            // res = b - A * x
+            compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+
+            // z = (M^-1) * res
+            precond->solve(res.data(), z.data(), n);
+
+            // p = z
+            copy(p.data(), z.data(), n);
+
+            gamma = dot_product(z.data(), res.data(), n);
+        }
+
+        // z = A * p and alpha = (z, r) / (Ap, p)
+        matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, p.data(), z.data(), n);
+        double alpha = gamma / dot_product(z.data(), p.data(), n);
+
+        // update x = x + alpha * p
+        axpy(n, alpha, p.data(), x);
+
+        // update res = res - alpha * z
+        axpy(n, -alpha, z.data(), res.data());
+
+        double res_norm = norm_inf(res.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
+        {
+            break;
+        }
+
+        // z = (M^-1) * res
+        precond->solve(res.data(), z.data(), n);
+
+        // find beta
+        double old_gamma = gamma;
+        gamma = dot_product(z.data(), res.data(), n);
+        double beta = gamma / old_gamma;
+
+        // update p = z + beta * p
+        axpby(n, 1.0, z.data(), beta, p.data());
+
+        iter++;
+    }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Preconditioned Conjugate Gradient time: " << ms_double.count() << "ms" << std::endl;
+
+    return iter;
+}
+
+//-------------------------------------------------------------------------------
+// conjugate gradient
+//-------------------------------------------------------------------------------
+int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
+    const preconditioner *precond, iter_control control, int restart_iter)
+{
+    if(precond == nullptr)
+    {
+        return nonpreconditioned_conjugate_gradient(csr_row_ptr, csr_col_ind, csr_val, x, b, n, control, restart_iter);
+    }
+    else
+    {
+        return preconditioned_conjugate_gradient(csr_row_ptr, csr_col_ind, csr_val, x, b, n, precond, control, restart_iter);
+    }
 }

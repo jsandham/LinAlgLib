@@ -78,6 +78,37 @@ namespace Testing
         None
     };
     
+    inline std::string SolverToString(Solver solver)
+    {
+        switch(solver)
+        {
+            case Solver::Jacobi:
+                return "Jacobi";
+            case Solver::GaussSeidel:
+                return "GaussSeidel";
+            case Solver::SOR:
+                return "SOR";
+            case Solver::SymmGaussSeidel:
+                return "SymmGaussSeidel";
+            case Solver::SSOR:
+                return "SSOR";
+            case Solver::CG:
+                return "CG";
+            case Solver::BICGSTAB:
+                return "BICGSTAB";
+            case Solver::GMRES:
+                return "GMRES";
+            case Solver::UAAMG:
+                return "UAAMG";
+            case Solver::SAAMG:
+                return "SAAMG";
+            case Solver::RSAMG:
+                return "RSAMG";
+        }
+
+        return "Invalid";
+    }
+
     inline std::string ClassicalSolverToString(ClassicalSolver solver)
     {
         switch(solver)

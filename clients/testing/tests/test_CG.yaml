@@ -1,5 +1,6 @@
 quick:
   solver: CG
+  precond: [None, Jacobi]
   matrix_file: ["../matrices/SPD/1138_bus/1138_bus.mtx",
                 "../matrices/SPD/bcsstk01/bcsstk01.mtx",
                 "../matrices/SPD/bcsstm02/bcsstm02.mtx",

@@ -50,7 +50,7 @@ int main()
 
     iter_control control;
 
-    int iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control, 1000);
+    int iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, nullptr, control, 1000);
 
     std::cout << "iter: " << iter << std::endl;
 

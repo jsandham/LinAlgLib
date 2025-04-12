@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -61,12 +61,12 @@
  *  @param[in]
  *  n           size of the sparse CSR matrix
  *  @param[in]
+ *  precond     preconditioner
+ *  @param[in]
  *  control     iteration control struct specifying relative and absolut tolerence 
  *              as well as maximum iterations
  *  @param[in]
- *  max_iter    maximum iterations allowed
- *  @param[in]
- *  restart_iter restart iteration
+ *  restart     restart iteration
  *
  *  \retval number of iterations actually used in the solver
  *
@@ -76,7 +76,7 @@
  */
 /**@{*/
 LINALGLIB_API int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-    iter_control control,  int restart);
+    const preconditioner *precond, iter_control control,  int restart);
 /**@}*/
 
 #endif

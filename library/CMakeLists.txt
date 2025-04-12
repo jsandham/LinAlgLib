@@ -40,10 +40,8 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/LinearSolvers/Classic/sor.h
   include/LinearSolvers/Classic/ssor.h
   include/LinearSolvers/Classic/symmetric_gauss_seidel.h
-  include/LinearSolvers/Krylov/pbicgstab.h
   include/LinearSolvers/Krylov/bicgstab.h
   include/LinearSolvers/Krylov/gmres.h
-  include/LinearSolvers/Krylov/pcg.h
   include/LinearSolvers/Krylov/cg.h
   include/LinearSolvers/Preconditioner/preconditioner.h
   include/linalg.h
@@ -65,10 +63,8 @@ set(LINALGLIB_SOURCE
   src/LinearSolvers/Classic/sor.cpp
   src/LinearSolvers/Classic/ssor.cpp
   src/LinearSolvers/Classic/symmetric_gauss_seidel.cpp
-  src/LinearSolvers/Krylov/pbicgstab.cpp
   src/LinearSolvers/Krylov/bicgstab.cpp
   src/LinearSolvers/Krylov/gmres.cpp
-  src/LinearSolvers/Krylov/pcg.cpp
   src/LinearSolvers/Krylov/cg.cpp
   src/LinearSolvers/Preconditioner/preconditioner.cpp
   src/LinearSolvers/iter_control.cpp

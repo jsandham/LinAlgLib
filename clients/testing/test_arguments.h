@@ -28,6 +28,7 @@
 #define TEST_ARGUMENTS_H__
 
 #include <string>
+#include <iostream>
 #include <linalg.h>
 
 #include "test_enums.h"
@@ -46,6 +47,62 @@ namespace Testing
         int max_iters;
         double tol;
         double omega;
+
+        std::string generate_test_name() const
+        {
+            size_t index = 0;
+            for(size_t i = 0; i < filename.length(); i++)
+            {
+                if(filename[i] == '/')
+                {
+                    index = i;
+                }
+            }
+
+            std::string matrix(filename.length() - index - 1, '0');
+            for(size_t i = index + 1; i < filename.length(); i++)
+            {
+                if(filename[i] == '.')
+                {
+                    matrix[i - index - 1] = '_';
+                }
+                else
+                {
+                    matrix[i - index - 1] = filename[i];
+                }
+            }
+
+            std::string tol_str = std::to_string(this->tol);
+            for(size_t i = 0; i < tol_str.length(); i++)
+            {
+                if(tol_str[i] == '.')
+                {
+                    tol_str[i] = '_';
+                }
+            }
+
+            std::string omega_str = std::to_string(this->omega);
+            for(size_t i = 0; i < omega_str.length(); i++)
+            {
+                if(omega_str[i] == '.')
+                {
+                    omega_str[i] = '_';
+                }
+            }
+            
+            std::string name = SolverToString(this->solver) + "_" 
+                             + PreconditionerToString(this->precond) + "_"
+                             + CycleToString(this->cycle) + "_"
+                             + SmootherToString(this->smoother) + "_"
+                             + std::to_string(this->presmoothing) + "_"
+                             + std::to_string(this->postsmoothing) + "_"
+                             + std::to_string(this->max_iters) + "_"
+                             + tol_str + "_"
+                             + omega_str + "_"
+                             + matrix;
+
+            return name;
+        }
     };
 }
 

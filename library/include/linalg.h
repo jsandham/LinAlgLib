@@ -42,9 +42,7 @@
 // Krylov Linear solvers
 #include "LinearSolvers/Krylov/gmres.h"
 #include "LinearSolvers/Krylov/cg.h"
-#include "LinearSolvers/Krylov/pcg.h"
 #include "LinearSolvers/Krylov/bicgstab.h"
-#include "LinearSolvers/Krylov/pbicgstab.h"
 
 // Algrbraic multi-grid solvers
 #include "LinearSolvers/AMG/amg.h"
