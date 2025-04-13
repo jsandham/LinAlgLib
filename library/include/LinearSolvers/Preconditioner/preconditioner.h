@@ -46,7 +46,7 @@ class preconditioner
 class jacobi_precond : public preconditioner
 {
     private:
-        std::vector<double> diag;
+        std::vector<double> m_diag;
 
     public:
         jacobi_precond();
@@ -56,12 +56,60 @@ class jacobi_precond : public preconditioner
         void solve(const double* rhs, double* x, int n) const override;
 };
 
+class gauss_seidel_precond : public preconditioner
+{
+    private:
+        const int* m_csr_row_ptr;
+        const int* m_csr_col_ind;
+        const double* m_csr_val;
+
+    public:
+        gauss_seidel_precond();
+        ~gauss_seidel_precond();
+
+        void build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz) override;
+        void solve(const double* rhs, double* x, int n) const override;
+};
+
+class SOR_precond : public preconditioner
+{
+    private:
+        const int* m_csr_row_ptr;
+        const int* m_csr_col_ind;
+        const double* m_csr_val;
+        double m_omega;
+        std::vector<double> m_diag;
+
+    public:
+        SOR_precond(double omega);
+        ~SOR_precond();
+
+        void build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz) override;
+        void solve(const double* rhs, double* x, int n) const override;
+};
+
+class symmetric_gauss_seidel_precond : public preconditioner
+{
+    private:
+        const int* m_csr_row_ptr;
+        const int* m_csr_col_ind;
+        const double* m_csr_val;
+        std::vector<double> m_diag;
+
+    public:
+        symmetric_gauss_seidel_precond();
+        ~symmetric_gauss_seidel_precond();
+
+        void build(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz) override;
+        void solve(const double* rhs, double* x, int n) const override;
+};
+
 class ilu_precond : public preconditioner
 {
     private:
-        std::vector<int> csr_row_ptr_LU;
-        std::vector<int> csr_col_ind_LU;
-        std::vector<double> csr_val_LU;
+        std::vector<int> m_csr_row_ptr_LU;
+        std::vector<int> m_csr_col_ind_LU;
+        std::vector<double> m_csr_val_LU;
 
     public:
         ilu_precond();
@@ -74,9 +122,9 @@ class ilu_precond : public preconditioner
 class ic_precond : public preconditioner
 {
     private:
-        std::vector<int> csr_row_ptr_LLT;
-        std::vector<int> csr_col_ind_LLT;
-        std::vector<double> csr_val_LLT;
+        std::vector<int> m_csr_row_ptr_LLT;
+        std::vector<int> m_csr_col_ind_LLT;
+        std::vector<double> m_csr_val_LLT;
 
     public:
         ic_precond();
@@ -89,11 +137,11 @@ class ic_precond : public preconditioner
 class saamg_precond : public preconditioner
 {
     private:
-        heirarchy hierachy;
-        int presmoothing;
-        int postsmoothing; 
-        Cycle cycle;
-        Smoother smoother;
+        heirarchy m_hierachy;
+        int m_presmoothing;
+        int m_postsmoothing; 
+        Cycle m_cycle;
+        Smoother m_smoother;
 
     public:
         saamg_precond(int presmoothing, int postsmoothing, Cycle cycle, Smoother smoother);

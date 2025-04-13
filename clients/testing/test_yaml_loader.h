@@ -202,11 +202,23 @@ template <> struct convert<Testing::Preconditioner>
         case Testing::Preconditioner::Jacobi:
             node = "Jacobi";
             break;
+        case Testing::Preconditioner::GaussSeidel:
+            node = "GaussSeidel";
+            break;
+        case Testing::Preconditioner::SOR:
+            node = "SOR";
+            break;
+        case Testing::Preconditioner::SymmGaussSeidel:
+            node = "SymmGaussSeidel";
+            break;
         case Testing::Preconditioner::IC:
             node = "IC";
             break;
         case Testing::Preconditioner::ILU:
             node = "ILU";
+            break;
+        case Testing::Preconditioner::None:
+            node = "None";
             break;
         }
 
@@ -220,6 +232,18 @@ template <> struct convert<Testing::Preconditioner>
         {
             rhs = Testing::Preconditioner::Jacobi;
         }
+        if (type == "GaussSeidel")
+        {
+            rhs = Testing::Preconditioner::GaussSeidel;
+        }
+        if (type == "SOR")
+        {
+            rhs = Testing::Preconditioner::SOR;
+        }
+        if (type == "SymmGaussSeidel")
+        {
+            rhs = Testing::Preconditioner::SymmGaussSeidel;
+        }
         else if (type == "IC")
         {
             rhs = Testing::Preconditioner::IC;
@@ -227,6 +251,10 @@ template <> struct convert<Testing::Preconditioner>
         else if (type == "ILU")
         {
             rhs = Testing::Preconditioner::ILU;
+        }
+        else if(type == "None")
+        {
+            rhs = Testing::Preconditioner::None;
         }
 
         return true;
@@ -382,6 +410,13 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string filepath
                             postsmoothings.size() * max_iters.size() * tols.size() * omegas.size();
 
     std::cout << "total_tests: " << total_tests << std::endl;
+
+    std::cout << "Preconditioners" << std::endl;
+    for(size_t i = 0; i < preconds.size(); i++)
+    {
+        std::cout << PreconditionerToString(preconds[i]) << " ";
+    }
+    std::cout << "" << std::endl;
 
     std::vector<Testing::Arguments> tests(total_tests);
 

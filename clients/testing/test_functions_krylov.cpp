@@ -41,6 +41,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     std::vector<double> csr_val;
     //load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
     load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    //load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -57,6 +58,15 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     {
         case Testing::Preconditioner::Jacobi:
             p = new jacobi_precond;
+            break;
+        case Testing::Preconditioner::GaussSeidel:
+            p = new gauss_seidel_precond;
+            break;
+        case Testing::Preconditioner::SOR:
+            p = new SOR_precond(0.3);
+            break;
+        case Testing::Preconditioner::SymmGaussSeidel:
+            p = new symmetric_gauss_seidel_precond;
             break;
         case Testing::Preconditioner::ILU:
             p = new ilu_precond;

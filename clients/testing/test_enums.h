@@ -73,6 +73,9 @@ namespace Testing
     enum class Preconditioner
     {
         Jacobi,
+        GaussSeidel,
+        SOR,
+        SymmGaussSeidel,
         ILU,
         IC,
         None
@@ -149,6 +152,12 @@ namespace Testing
         {
             case Preconditioner::Jacobi:
                 return "Jacobi";
+            case Preconditioner::GaussSeidel:
+                return "GaussSeidel";
+            case Preconditioner::SOR:
+                return "SOR";
+            case Preconditioner::SymmGaussSeidel:
+                return "SymmGaussSeidel";
             case Preconditioner::ILU:
                 return "ILU";
             case Preconditioner::IC:

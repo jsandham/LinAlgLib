@@ -711,12 +711,21 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
         int row_start = csr_row_ptr[i];
         int row_end = csr_row_ptr[i + 1];
 
+        assert(row_start >= 0);
+        //assert(row_start < nnz);
+        assert(row_end >= 0);
+        //assert(row_end <= nnz);
+
         double diag_val = 1.0;
 
         x[i] = b[i];
         for (int j = row_start; j < row_end; j++)
         {
             int col = csr_col_ind[j];
+
+            assert(col >= 0);
+            assert(col < n);
+
             if (col < i)
             {
                 x[i] -= csr_val[j] * x[col];
@@ -724,6 +733,10 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
             else if (!unit_diag && col == i)
             {
                 diag_val = csr_val[j];
+            }
+            else
+            {
+                break;
             }
         }
         x[i] /= diag_val;
