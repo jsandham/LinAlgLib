@@ -52,9 +52,9 @@ TEST_P(FUNCTION, linear_solvers)                              \
     EXPECT_TRUE(test_dispatch(GetParam()));                   \
 }
 
-#define DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATRGORY, YAML_TEST_FILE)  \
+#define DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATEGORY, YAML_TEST_FILE)  \
 INSTANTIATE_TEST_SUITE_P(                                                    \
-    quick,                                                                   \
+    CATEGORY,                                                                   \
     FUNCTION,                                                                \
     testing::ValuesIn(generate_tests(YAML_TEST_FILE)),                       \
     [](const testing::TestParamInfo<FUNCTION::ParamType>& info) {            \
@@ -66,7 +66,7 @@ namespace Testing                                                        \
 {                                                                        \
     DEFINE_FUNCTION_CLASS(FUNCTION);                                     \
     DEFINE_TEST_P(FUNCTION);                                             \
-    DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATRGORY, YAML_TEST_FILE); \
+    DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATEGORY, YAML_TEST_FILE); \
 }
 
 #endif

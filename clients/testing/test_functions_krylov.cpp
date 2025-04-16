@@ -84,7 +84,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     int iter = 0;
 
     iter_control control;
-    control.max_iter = 5000;
+    control.max_iter = arg.max_iters;
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -97,7 +97,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
             iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control);
             break;
         case KrylovSolver::GMRES:
-            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, 50);
+            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, 100);
             break;
     }
 

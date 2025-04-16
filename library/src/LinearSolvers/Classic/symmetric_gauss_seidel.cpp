@@ -28,17 +28,14 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
 #include <chrono>
-
-#define DEBUG 1
+#include <vector>
 
 //-------------------------------------------------------------------------------
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
-double symm_gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+void symm_gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                                    const double *b, int n)
 {
-    double err = 0.0;
-
     double sigma;
     double ajj;
 
@@ -77,30 +74,32 @@ double symm_gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_in
                 ajj = csr_val[k];
             }
         }
-        double xold = x[j];
+        
         x[j] = (b[j] - sigma) / ajj;
-
-        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
     }
-
-    return err;
 }
 
 int sgs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double tol, int max_iter)
+        iter_control control)
 {
+    // res = b - A * x
+    std::vector<double> res(n);
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+
+    double initial_res_norm = norm_inf(res.data(), n);
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
-        double err = symm_gauss_seidel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        symm_gauss_seidel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
-        if (err <= tol)
+        double res_norm = norm_inf(res.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

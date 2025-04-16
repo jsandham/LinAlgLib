@@ -28,16 +28,14 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
 #include <chrono>
-
-#define DEBUG 1
+#include <vector>
 
 //-------------------------------------------------------------------------------
 // gauss-seidel method
 //-------------------------------------------------------------------------------
-double gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+void gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                               const double *b, int n)
 {
-    double err = 0.0;
     for (int j = 0; j < n; j++)
     {
         double sigma = 0.0;
@@ -59,31 +57,33 @@ double gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, co
                 ajj = val;
             }
         }
-        double xold = x[j];
+    
         x[j] = (b[j] - sigma) / ajj;
-
-        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
     }
-
-    return err;
 }
 
 int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-       double tol, int max_iter)
+       iter_control control)
 {
+    // res = b - A * x
+    std::vector<double> res(n);
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+
+    double initial_res_norm = norm_inf(res.data(), n);
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
         // Gauss-Seidel iteration
-        double err = gauss_seidel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
+        gauss_seidel_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n);
 
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
-        if (err <= tol)
+        double res_norm = norm_inf(res.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

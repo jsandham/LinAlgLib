@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(gauss_seidel, quick, "../tests/test_gauss_seidel.yaml");
+INSTANTIATE_TEST(gauss_seidel, LinearSolvers, "../tests/test_gauss_seidel.yaml");

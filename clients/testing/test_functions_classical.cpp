@@ -34,44 +34,47 @@
 
 bool Testing::test_classical(ClassicalSolver solver, Arguments arg)
 {
-    std::cout << "Testing::test_classical(Arguments arg)" << std::endl;
     int m, n, nnz;
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
+    //load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
     load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
-    std::vector<double> init_x = x;
+    std::vector<double> init_x(x);
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
+    std::vector<double> e(n, 1.0);
+    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
+
     int iter = 0;
-    int max_iter = 1000;
-    double tol = 1e-8;
-    
+    iter_control control;
+    control.max_iter = arg.max_iters;
+
     switch(solver)
     {
         case ClassicalSolver::Jacobi:
-            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
         case ClassicalSolver::GaussSeidel:
-            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
         case ClassicalSolver::SOR:
-            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, tol, max_iter);
+            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, control);
             break;
         case ClassicalSolver::SymmGaussSeidel:
-            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, tol, max_iter);
+            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
             break;
         case ClassicalSolver::SSOR:
-            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, tol, max_iter);
+            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, control);
             break;
     }
 
     std::cout << "iter: " << iter << std::endl;
 
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, tol, 0);
+    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), 0);
 }

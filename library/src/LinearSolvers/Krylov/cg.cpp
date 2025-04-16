@@ -126,7 +126,7 @@ static int preconditioned_conjugate_gradient(const int *csr_row_ptr, const int *
     std::vector<double> z(n);
     std::vector<double> p(n);
 
-    // res = b - A * x and initial error
+    // res = b - A * x
     std::vector<double> res(n);
 
     double gamma = 0.0;

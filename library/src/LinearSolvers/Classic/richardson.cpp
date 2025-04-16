@@ -31,55 +31,43 @@
 #include <vector>
 #include <chrono>
 
-//********************************************************************************
-//
-// Richardson Iteration
-//
-//********************************************************************************
-
-#define DEBUG 1
-
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
-double richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
+void richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                             double *res, const double *b, int n, double theta)
 {
-    double err = 0.0;
-
-    // find res = A*x
-    matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, x, res, n);
-
     // update approximation
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(static, 1024)
+#endif
     for (int j = 0; j < n; j++)
     {
-        double xold = x[j];
-        x[j] = x[j] + theta * (b[j] - res[j]);
-        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
+        x[j] = x[j] + theta * res[j];
     }
-
-    return err;
 }
 
 int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-         double theta, double tol, int max_iter)
+         double theta, iter_control control)
 {
-    // res = b - A * x and initial error
+    // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+
+    double initial_res_norm = norm_inf(res.data(), n);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
-        double err = richardson_iteration(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), b, n, theta);
+        richardson_iteration(csr_row_ptr, csr_col_ind, csr_val, x, res.data(), b, n, theta);
 
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
-        if (err <= tol)
+        double res_norm = norm_inf(res.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

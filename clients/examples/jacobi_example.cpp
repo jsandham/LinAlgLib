@@ -48,7 +48,12 @@ int main()
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
-    int iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 1e-8, 10000);
+    iter_control control;
+    control.max_iter = 1000;
+    control.rel_tol = 1e-08;
+    control.abs_tol = 1e-08;
+
+    int iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
 
     std::cout << "iter: " << iter << std::endl;
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 
-#define DEBUG 1
+#define DEBUG 0
 
 bool iter_control::residual_converges(double residual_norm, double initial_residual_norm) const
 {

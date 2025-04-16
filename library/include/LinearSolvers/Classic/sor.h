@@ -29,6 +29,8 @@
 
 #include "../../linalglib_export.h"
 
+#include "../iter_control.h"
+
 /*! \file
  *  \brief sor.h provides interface for sor solver
  */
@@ -61,9 +63,8 @@
  *  @param[in]
  *  omega       relaxation factor between 0 and 2
  *  @param[in]
- *  tol         stopping tolerance
- *  @param[in]
- *  max_iter    maximum iterations allowed
+ *  control     iteration control struct specifying relative and absolut tolerence 
+ *              as well as maximum iterations
  *
  *  \retval number of iterations actually used in the solver. If -1 is returned,
  * the solver did not converge to a solution with the given input tolerance \p
@@ -75,7 +76,7 @@
  */
 /**@{*/
 LINALGLIB_API int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double omega, double tol, int max_iter);
+        double omega, iter_control control);
 /**@}*/
 
 #endif

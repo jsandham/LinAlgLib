@@ -28,17 +28,14 @@
 #include "../../../include/LinearSolvers/slaf.h"
 #include <iostream>
 #include <chrono>
-
-#define DEBUG 1
+#include <vector>
 
 //-------------------------------------------------------------------------------
 // successive over-relaxation method
 //-------------------------------------------------------------------------------
-double sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
+void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                      int n, double omega)
 {
-    double err = 0.0;
-
     double sigma;
     double ajj;
     for (int j = 0; j < n; j++)
@@ -56,31 +53,33 @@ double sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doubl
                 ajj = csr_val[k];
             }
         }
-        double xold = x[j];
+    
         x[j] = x[j] + omega * ((b[j] - sigma) / ajj - x[j]);
-
-        err = std::max(err, std::abs((x[j] - xold) / x[j]) * 100);
     }
-
-    return err;
 }
 
 int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double omega, double tol, int max_iter)
+        double omega, iter_control control)
 {
+    // res = b - A * x
+    std::vector<double> res(n);
+    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
+
+    double initial_res_norm = norm_inf(res.data(), n);
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (iter < max_iter)
+    while (!control.exceed_max_iter(iter))
     {
         // SOR iteration
-        double err = sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, omega);
+        sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, omega);
 
-#if (DEBUG)
-        std::cout << "error: " << err << std::endl;
-#endif
+        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
 
-        if (err <= tol)
+        double res_norm = norm_inf(res.data(), n);
+
+        if (control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

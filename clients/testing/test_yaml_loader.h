@@ -382,76 +382,70 @@ std::vector<T> read_values(const std::string& category, const std::string& label
     return values;
 }
 
-struct Node
-{
-    Node* parent;
-    std::vector<Node*> children;
-
-    size_t index;
-};
-
 inline std::vector<Testing::Arguments> generate_tests(const std::string filepath)
 {
     std::cout << "filepath: " << filepath << std::endl;
     YAML::Node root_node = YAML::LoadFile(filepath);
 
-    std::vector<Testing::Solver> solvers = read_values<Testing::Solver>("quick", "solver", root_node, Testing::Solver::Jacobi);
-    std::vector<std::string> matrices = read_values<std::string>("quick", "matrix_file", root_node, "");
-    std::vector<Testing::Preconditioner> preconds = read_values<Testing::Preconditioner>("quick", "precond", root_node, Testing::Preconditioner::None);
-    std::vector<Cycle> cycles = read_values<Cycle>("quick", "cycle", root_node, Cycle::Vcycle);
-    std::vector<Smoother> smoothers = read_values<Smoother>("quick", "smoother", root_node, Smoother::Jacobi);
-    std::vector<int> presmoothings = read_values<int>("quick", "presmoothing", root_node, 1);
-    std::vector<int> postsmoothings = read_values<int>("quick", "postsmoothing", root_node, 1);
-    std::vector<int> max_iters = read_values<int>("quick", "max_iters", root_node, 1000);
-    std::vector<double> tols = read_values<double>("quick", "tol", root_node, 1e-06);
-    std::vector<double> omegas = read_values<double>("quick", "omega", root_node, 0.66667);
+    size_t index = 0;
+    std::vector<Testing::Arguments> tests;
 
-    size_t total_tests = solvers.size() * matrices.size() * preconds.size() * cycles.size() * smoothers.size() * presmoothings.size() *
+    for (YAML::const_iterator it = root_node["Tests"].begin(); it != root_node["Tests"].end(); ++it)
+    {
+        std::string category = it->first.as<std::string>();
+
+        std::cout << "category: " << category << std::endl;
+
+        std::vector<Testing::Solver> solvers = read_values<Testing::Solver>(category, "solver", root_node["Tests"], Testing::Solver::Jacobi);
+        std::vector<std::string> matrices = read_values<std::string>(category, "matrix_file", root_node["Tests"], "");
+        std::vector<Testing::Preconditioner> preconds = read_values<Testing::Preconditioner>(category, "precond", root_node["Tests"], Testing::Preconditioner::None);
+        std::vector<Cycle> cycles = read_values<Cycle>(category, "cycle", root_node["Tests"], Cycle::Vcycle);
+        std::vector<Smoother> smoothers = read_values<Smoother>(category, "smoother", root_node["Tests"], Smoother::Jacobi);
+        std::vector<int> presmoothings = read_values<int>(category, "presmoothing", root_node["Tests"], 1);
+        std::vector<int> postsmoothings = read_values<int>(category, "postsmoothing", root_node["Tests"], 1);
+        std::vector<int> max_iters = read_values<int>(category, "max_iters", root_node["Tests"], 1000);
+        std::vector<double> tols = read_values<double>(category, "tol", root_node["Tests"], 1e-06);
+        std::vector<double> omegas = read_values<double>(category, "omega", root_node["Tests"], 0.66667);
+
+        size_t total_tests = solvers.size() * matrices.size() * preconds.size() * cycles.size() * smoothers.size() * presmoothings.size() *
                             postsmoothings.size() * max_iters.size() * tols.size() * omegas.size();
 
-    std::cout << "total_tests: " << total_tests << std::endl;
+        std::cout << "total_tests: " << total_tests << std::endl;
 
-    std::cout << "Preconditioners" << std::endl;
-    for(size_t i = 0; i < preconds.size(); i++)
-    {
-        std::cout << PreconditionerToString(preconds[i]) << " ";
-    }
-    std::cout << "" << std::endl;
+        tests.resize(tests.size() + total_tests);
 
-    std::vector<Testing::Arguments> tests(total_tests);
-
-    size_t index = 0;
-    for(size_t i = 0; i < solvers.size(); i++)
-    {
-        for(size_t j = 0; j < matrices.size(); j++)
+        for(size_t i = 0; i < solvers.size(); i++)
         {
-            for(size_t k = 0; k < preconds.size(); k++)
+            for(size_t j = 0; j < matrices.size(); j++)
             {
-                for(size_t l = 0; l < cycles.size(); l++)
+                for(size_t k = 0; k < preconds.size(); k++)
                 {
-                    for(size_t m = 0; m < smoothers.size(); m++)
+                    for(size_t l = 0; l < cycles.size(); l++)
                     {
-                        for(size_t n = 0; n < presmoothings.size(); n++)
+                        for(size_t m = 0; m < smoothers.size(); m++)
                         {
-                            for(size_t o = 0; o < postsmoothings.size(); o++)
+                            for(size_t n = 0; n < presmoothings.size(); n++)
                             {
-                                for(size_t p = 0; p < max_iters.size(); p++)
+                                for(size_t o = 0; o < postsmoothings.size(); o++)
                                 {
-                                    for(size_t q = 0; q < tols.size(); q++)
+                                    for(size_t p = 0; p < max_iters.size(); p++)
                                     {
-                                        for(size_t r = 0; r < omegas.size(); r++)
+                                        for(size_t q = 0; q < tols.size(); q++)
                                         {
-                                            tests[index].solver = solvers[i]; 
-                                            tests[index].filename = matrices[j]; 
-                                            tests[index].precond = preconds[k]; 
-                                            tests[index].cycle = cycles[l]; 
-                                            tests[index].smoother = smoothers[m]; 
-                                            tests[index].presmoothing = presmoothings[n]; 
-                                            tests[index].postsmoothing = postsmoothings[o]; 
-                                            tests[index].max_iters = max_iters[p]; 
-                                            tests[index].tol = tols[q]; 
-                                            tests[index].omega = omegas[r];
-                                            index++;                    
+                                            for(size_t r = 0; r < omegas.size(); r++)
+                                            {
+                                                tests[index].solver = solvers[i]; 
+                                                tests[index].filename = matrices[j]; 
+                                                tests[index].precond = preconds[k]; 
+                                                tests[index].cycle = cycles[l]; 
+                                                tests[index].smoother = smoothers[m]; 
+                                                tests[index].presmoothing = presmoothings[n]; 
+                                                tests[index].postsmoothing = postsmoothings[o]; 
+                                                tests[index].max_iters = max_iters[p]; 
+                                                tests[index].tol = tols[q]; 
+                                                tests[index].omega = omegas[r];
+                                                index++;                    
+                                            }
                                         }
                                     }
                                 }

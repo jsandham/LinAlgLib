@@ -146,15 +146,23 @@ void symmetric_gauss_seidel_precond::solve(const double* rhs, double* x, int n) 
         int row_start = m_csr_row_ptr[i];
         int row_end = m_csr_row_ptr[i + 1];
 
-        y[i] = 1.0;
+        double diag_val = 0.0;
+
+        y[i] = rhs[i];
         for (int j = row_start; j < row_end; j++)
         {
             int col = m_csr_col_ind[j];
             if (col < i)
             {
-                y[i] -= (m_csr_val[j] / m_diag[col]) * x[col];
+                y[i] -= (m_csr_val[j] / m_diag[col]) * y[col];
+            }
+            else if(col == i)
+            {
+                diag_val = (1.0 + m_csr_val[j] / m_diag[col]);
             }
         }
+
+        y[i] /= diag_val;
     }
 
     // Solve (D - F) * x = y

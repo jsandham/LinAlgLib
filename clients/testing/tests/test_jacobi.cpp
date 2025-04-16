@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(jacobi, quick, "../tests/test_jacobi.yaml");
+INSTANTIATE_TEST(jacobi, LinearSolvers, "../tests/test_jacobi.yaml");
