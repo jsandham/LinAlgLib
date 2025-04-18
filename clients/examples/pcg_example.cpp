@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "linalg.h"
+#include "utility.h"
 
 int main()
 {
@@ -43,33 +44,26 @@ int main()
     std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
-    // int m = 3;
-    // int n = 3;
-    // int nnz = 7;
-
-    // //  2 1 0
-    // //  1 2 1
-    // //  0 1 2
-    // std::vector<int> csr_row_ptr = {0, 2, 5, 7};
-    // std::vector<int> csr_col_ind = {0, 1, 0, 1, 2, 1, 2};
-    // std::vector<double> csr_val = {2.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0};
-
+    
     // Solution vector
     std::vector<double> x(m, 0.0);
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
 
+    std::vector<double> e(n, 1.0);
+    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
+
     iter_control control;
 
     // Jacobi preconditioner
-    //jacobi_precond precond;
+    jacobi_precond precond;
     //ic_precond precond;
-    ilu_precond precond;
+    //ilu_precond precond;
 
     precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
 
-    int iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, control, 100);
+    int iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, &precond, control, 10000);
 
     std::cout << "iter: " << iter << std::endl;
 

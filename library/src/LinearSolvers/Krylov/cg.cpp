@@ -154,7 +154,7 @@ static int preconditioned_conjugate_gradient(const int *csr_row_ptr, const int *
     while (!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
-        if (iter > 0 && iter % restart_iter == 0)
+        if (restart_iter != -1 && iter > 0 && iter % restart_iter == 0)
         {
             // res = b - A * x
             compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);

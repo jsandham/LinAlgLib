@@ -39,9 +39,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    //load_spd_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
     load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-    //load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -78,6 +76,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
 
     if(p != nullptr)
     {
+        std::cout << "Build preconditioner" << std::endl;
         p->build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
     }
 
@@ -91,14 +90,14 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     switch(solver)
     {
         case KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, m);
+            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, -1);
             break;
         case KrylovSolver::BICGSTAB:
-            iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control);
-            break;
+           iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control);
+           break;
         case KrylovSolver::GMRES:
-            iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, 100);
-            break;
+           iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, 100);
+           break;
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();
