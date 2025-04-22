@@ -29,8 +29,12 @@
 #include <cmath>
 #include <iostream>
 
+#include "../../trace.h"
+
 static void extract_diagonal(const csr_matrix &A, std::vector<double> &diag)
 {
+    ROUTINE_TRACE("extract_diagonal");
+
     assert(A.m == diag.size());
 
     for (int i = 0; i < A.m; i++)
@@ -51,6 +55,8 @@ static void extract_diagonal(const csr_matrix &A, std::vector<double> &diag)
 
 void compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections)
 {
+    ROUTINE_TRACE("compute_strong_connections");
+
     // Extract diagaonl
     std::vector<double> diag(A.m);
     extract_diagonal(A, diag);

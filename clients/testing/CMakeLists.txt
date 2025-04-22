@@ -25,12 +25,14 @@
 ##################################################################################
 
 include(FetchContent)
+
+# Get googletest
 FetchContent_Declare(googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.1)
 FetchContent_MakeAvailable(googletest)
 
-
+# Get yaml-cpp
 FetchContent_Declare(
   yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git

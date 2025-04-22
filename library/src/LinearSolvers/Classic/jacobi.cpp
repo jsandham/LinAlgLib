@@ -30,12 +30,16 @@
 #include <vector>
 #include <chrono>
 
+#include "../../trace.h"
+
 //-------------------------------------------------------------------------------
 // jacobi method
 //-------------------------------------------------------------------------------
 void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                         const double *xold, const double *b, int n)
 {
+    ROUTINE_TRACE("jacobi_iteration");
+
     double sigma;
     double ajj;
     for (int j = 0; j < n; j++)
@@ -60,6 +64,8 @@ void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doub
 int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
            iter_control control)
 {
+    ROUTINE_TRACE("jacobi");
+
     // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);

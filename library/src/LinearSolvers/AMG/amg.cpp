@@ -34,6 +34,8 @@
 #include <vector>
 #include <chrono>
 
+#include "../../trace.h"
+
 void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                         const double *xold, const double *b, const int n);
 void gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
@@ -48,6 +50,8 @@ void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double
 static void apply_smoother(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                            const double *b, const int n, Smoother smoother)
 {
+    ROUTINE_TRACE("apply_smoother");
+
     switch (smoother)
     {
     case Smoother::Jacobi: {
@@ -79,6 +83,8 @@ static void apply_smoother(const int *csr_row_ptr, const int *csr_col_ind, const
 static void vcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int currentLevel,
                    Smoother smoother)
 {
+    ROUTINE_TRACE("vcycle");
+
     // A_coarse = R*A*P
     const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
@@ -167,6 +173,8 @@ static void vcycle(const heirarchy &hierarchy, double *x, const double *b, int n
 static void wcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
+    ROUTINE_TRACE("wcycle");
+
     // A_coarse = R*A*P
     const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
@@ -286,6 +294,8 @@ static void wcycle(const heirarchy &hierarchy, double *x, const double *b, int n
 static void fcycle(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
+    ROUTINE_TRACE("fcycle");
+
     // A_coarse = R*A*P
     const csr_matrix &A = hierarchy.A_cs[currentLevel];
 
@@ -405,6 +415,8 @@ static void fcycle(const heirarchy &hierarchy, double *x, const double *b, int n
 int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control)
 {
+    ROUTINE_TRACE("amg_solve");
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     const csr_matrix &A = hierarchy.A_cs[0];

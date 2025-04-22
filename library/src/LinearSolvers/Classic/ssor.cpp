@@ -30,12 +30,16 @@
 #include <chrono>
 #include <vector>
 
+#include "../../trace.h"
+
 //-------------------------------------------------------------------------------
 // symmetric successive over-relaxation method
 //-------------------------------------------------------------------------------
 void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                       int n, double omega)
 {
+    ROUTINE_TRACE("ssor_iteration");
+
     double sigma;
     double ajj;
 
@@ -82,6 +86,8 @@ void ssor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double
 int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double omega, iter_control control)
 {
+    ROUTINE_TRACE("ssor");
+
     // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);

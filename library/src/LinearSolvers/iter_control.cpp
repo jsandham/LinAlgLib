@@ -5,10 +5,13 @@
 #include <iostream>
 #include <cmath>
 
-#define DEBUG 0
+#include "../trace.h"
+#include "../defines.h"
 
 bool iter_control::residual_converges(double residual_norm, double initial_residual_norm) const
 {
+    ROUTINE_TRACE("residual_converges");
+
 #if (DEBUG)
     std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
 #endif

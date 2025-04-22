@@ -30,6 +30,8 @@
 #include <assert.h>
 #include <iostream>
 
+#include "../../trace.h"
+
 //********************************************************************************
 //
 // AMG: Smoothed Aggregation Algebraic Multigrid
@@ -47,6 +49,8 @@ static unsigned int hash1(unsigned int x)
 static void initialize_pmis_state(const csr_matrix &A, const std::vector<int> &connections, std::vector<int> &state,
                                   std::vector<int> &hash)
 {
+    ROUTINE_TRACE("initialize_pmis_state");
+
     for (int i = 0; i < A.m; ++i)
     {
         int s = -2;
@@ -98,6 +102,8 @@ static void find_maximum_distance_two_node(const csr_matrix &A, const std::vecto
                                            std::vector<int64_t> &aggregates, std::vector<int> &max_state,
                                            bool &complete)
 {
+    ROUTINE_TRACE("find_maximum_distance_two_node");
+
     // Find distance 1 maximum neighbour node
     for (int i = 0; i < A.m; i++)
     {
@@ -177,6 +183,8 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, con
                                                         std::vector<int64_t> &aggregate_root_nodes,
                                                         std::vector<int> &max_state)
 {
+    ROUTINE_TRACE("add_unassigned_nodes_to_closest_aggregation");
+
     for (int i = 0; i < A.m; i++)
     {
         if (state[i] == -1)
@@ -209,6 +217,8 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, con
 bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
                                    std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes)
 {
+    ROUTINE_TRACE("compute_aggregates_using_pmis");
+
     // std::cout << "connections" << std::endl;
     // for (size_t i= 0; i < connections.size(); i++)
     // {

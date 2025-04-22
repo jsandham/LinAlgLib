@@ -32,6 +32,8 @@
 #include <iostream>
 #include <vector>
 
+#include "../trace.h"
+
 //********************************************************************************
 //
 // Sparse linear algebra functions
@@ -43,6 +45,8 @@
 //-------------------------------------------------------------------------------
 void axpy(int n, double alpha, const double* x, double* y)
 {
+    ROUTINE_TRACE("axpy");
+
     if(alpha == 1.0)
     {
 #if defined(_OPENMP)
@@ -70,6 +74,8 @@ void axpy(int n, double alpha, const double* x, double* y)
 //-------------------------------------------------------------------------------
 void axpby(int n, double alpha, const double* x, double beta, double* y)
 {
+    ROUTINE_TRACE("axpby");
+
     if(alpha == 1.0)
     {
 #if defined(_OPENMP)
@@ -128,6 +134,8 @@ void axpby(int n, double alpha, const double* x, double beta, double* y)
 void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
            const double *x, double beta, double *y)
 {
+    ROUTINE_TRACE("csrmv");
+    
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -160,6 +168,8 @@ void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double al
                  const int *csr_col_ind_A, const int *csr_row_ptr_B, const int *csr_col_ind_B, double beta,
                  const int *csr_row_ptr_D, const int *csr_col_ind_D, int *csr_row_ptr_C, int *nnz_C)
 {
+    ROUTINE_TRACE("csrgemm_nnz");
+    
     std::vector<int> nnz(n, -1);
 
     // A is mxk, B is kxn, and C is mxn
@@ -223,6 +233,8 @@ void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
              const double *csr_val_B, double beta, const int *csr_row_ptr_D, const int *csr_col_ind_D,
              const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
 {
+    ROUTINE_TRACE("csrgemm");
+
     std::vector<int> nnzs(n, -1);
 
     for (int i = 0; i < m; i++)
@@ -326,6 +338,8 @@ void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
 void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
                  double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B, int *csr_row_ptr_C, int *nnz_C)
 {
+    ROUTINE_TRACE("csrgeam_nnz");
+
     csr_row_ptr_C[0] = 0;
 
     for (int i = 0; i < m; i++)
@@ -371,6 +385,8 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
              const double *csr_val_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
              const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
 {
+    ROUTINE_TRACE("csrgeam");
+
     for (int i = 0; i < m; i++)
     {
         std::vector<int> nnz(n, -1);
@@ -446,6 +462,8 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
 static double get_diagonal_value(int col, int diag_index, const double *csr_val, int *structural_zero,
                                  int *numeric_zero)
 {
+    ROUTINE_TRACE("get_diagonal_value");
+
     double diag_val = 1.0;
     if (diag_index == -1)
     {
@@ -472,6 +490,8 @@ static double get_diagonal_value(int col, int diag_index, const double *csr_val,
 void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
              int *structural_zero, int *numeric_zero)
 {
+    ROUTINE_TRACE("csrilu0");
+
     std::vector<int> diag_ptr(m, -1);
 
     for (int row = 0; row < m; row++)
@@ -533,6 +553,8 @@ void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_i
 void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
             int *structural_zero, int *numeric_zero)
 {
+    ROUTINE_TRACE("csric0");
+
     std::vector<int> diag_ptr(m, -1);
 
     for (int row = 0; row < m; row++)
@@ -603,6 +625,8 @@ void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_in
 void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                            double *y, int n)
 {
+    ROUTINE_TRACE("matrix_vector_product");
+
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -626,6 +650,8 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
 //-------------------------------------------------------------------------------
 double dot_product(const double *x, const double *y, int n)
 {
+    ROUTINE_TRACE("dot_product");
+
     double dot_prod = 0.0;
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+: dot_prod)
@@ -644,6 +670,8 @@ double dot_product(const double *x, const double *y, int n)
 void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
     const double* b, double* res, int n)
 {
+    ROUTINE_TRACE("compute_residual");
+
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -667,6 +695,8 @@ void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const doub
 //-------------------------------------------------------------------------------
 void copy(double* dest, const double* src, int n)
 {
+    ROUTINE_TRACE("copy");
+
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -681,6 +711,8 @@ void copy(double* dest, const double* src, int n)
 //-------------------------------------------------------------------------------
 void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n)
 {
+    ROUTINE_TRACE("diagonal");
+
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -706,6 +738,8 @@ void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
 void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                    int n, bool unit_diag)
 {
+    ROUTINE_TRACE("forward_solve");
+
     for (int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];
@@ -749,6 +783,8 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
 void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                     int n, bool unit_diag)
 {
+    ROUTINE_TRACE("backward_solve");
+
     for (int i = n - 1; i >= 0; i--)
     {
         int row_start = csr_row_ptr[i];
@@ -780,6 +816,8 @@ void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double
 double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
              int n)
 {
+    ROUTINE_TRACE("error");
+
     double e = 0.0;
     for (int j = 0; j < n; j++)
     {
@@ -803,6 +841,7 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                   const double *b, int n, double tol)
 {
+    ROUTINE_TRACE("fast_error");
     int j = 0;
     double e = 0.0;
     while (e < tol && j < n)
@@ -828,6 +867,8 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
 //-------------------------------------------------------------------------------
 double norm_inf(const double *array, int n)
 {
+    ROUTINE_TRACE("norm_inf");
+
     double norm = 0.0;
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(max: norm)
@@ -845,6 +886,7 @@ double norm_inf(const double *array, int n)
 //-------------------------------------------------------------------------------
 double norm_euclid(const double *array, int n)
 {
+    ROUTINE_TRACE("norm_euclid");
     return std::sqrt(dot_product(array, array, n));
 }
 
@@ -854,6 +896,8 @@ double norm_euclid(const double *array, int n)
 void print(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
            int nnz)
 {
+    ROUTINE_TRACE("print");
+
     std::cout << name << std::endl;
     for (int i = 0; i < m; i++)
     {

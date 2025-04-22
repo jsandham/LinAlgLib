@@ -32,6 +32,8 @@
 #include <chrono>
 #include <assert.h>
 
+#include "../../trace.h"
+
 //****************************************************************************
 //
 // Generalised Minimum Residual
@@ -44,6 +46,8 @@
 // where k = 1....restart
 static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const preconditioner* precond, double* z, double* Q, double* H, int n, int k, int restart)
 {
+    ROUTINE_TRACE("arnoldi");
+
     // Column k-1 of Q matrix
     const double* qkm1 = &Q[(k - 1) * n];
 
@@ -94,6 +98,8 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
 
 static void apply_givens_rotation(double c, double s, double* H, int i, int k, int restart)
 {
+    ROUTINE_TRACE("apply_givens_rotation");
+
     double temp1 = H[i + (k - 1) * (restart + 1)];
     double temp2 = H[i + 1 + (k - 1) * (restart + 1)];
 
@@ -103,6 +109,8 @@ static void apply_givens_rotation(double c, double s, double* H, int i, int k, i
 
 static void compute_givens_rotation(double* c, double* s, const double* H, int k, int restart)
 {
+    ROUTINE_TRACE("compute_givens_rotation");
+
     double xi = H[k - 1 + (k - 1) * (restart + 1)], xj = H[k + (k - 1) * (restart + 1)];
 
     if (xi == 0.0)
@@ -132,6 +140,8 @@ static void compute_givens_rotation(double* c, double* s, const double* H, int k
 static int nonpreconditioned_gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     iter_control control, int restart)
 {
+    ROUTINE_TRACE("nonpreconditioned_gmres");
+
     restart = std::min(restart, n - 1);
 
     // create H and Q matrices (which are dense and stored as vectors columnwise)
@@ -287,6 +297,8 @@ static int nonpreconditioned_gmres(const int *csr_row_ptr, const int *csr_col_in
 static int preconditioned_gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner* precond, iter_control control, int restart)
 {
+    ROUTINE_TRACE("preconditioned_gmres");
+
     assert(precond != nullptr);
 
     restart = std::min(restart, n - 1);
@@ -454,6 +466,8 @@ static int preconditioned_gmres(const int *csr_row_ptr, const int *csr_col_ind, 
 int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control,  int restart)
 {
+    ROUTINE_TRACE("gmres");
+
     if(precond == nullptr)
     {
         return nonpreconditioned_gmres(csr_row_ptr, csr_col_ind, csr_val, x, b, n, control, restart);

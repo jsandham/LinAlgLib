@@ -35,6 +35,8 @@
 #include <vector>
 #include <chrono>
 
+#include "../../trace.h"
+
 //********************************************************************************
 //
 // AMG: Unsmoothed Aggregation Algebraic Multigrid
@@ -47,6 +49,8 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
                                                                 const std::vector<int64_t> &aggregate_root_nodes,
                                                                 csr_matrix &prolongation)
 {
+    ROUTINE_TRACE("construct_prolongation_using_unsmoothed_aggregation");
+
     prolongation.m = A.m;
     prolongation.nnz = 0;
     prolongation.csr_row_ptr.resize(A.m + 1, 0);
@@ -119,6 +123,8 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 
 static void transpose(const csr_matrix &prolongation, csr_matrix &restriction)
 {
+    ROUTINE_TRACE("transpose");
+
     restriction.m = prolongation.n;
     restriction.n = prolongation.m;
     restriction.nnz = prolongation.nnz;
@@ -211,6 +217,8 @@ static void transpose(const csr_matrix &prolongation, csr_matrix &restriction)
 
 static void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
 {
+    ROUTINE_TRACE("galarkin_triple_product");
+
     // Compute A_c = R * A * P
     double alpha = 1.0;
     double beta = 0.0;
@@ -275,6 +283,8 @@ static void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, co
 void uaamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
                  int max_level, heirarchy &hierarchy)
 {
+    ROUTINE_TRACE("uaamg_setup");
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     hierarchy.prolongations.resize(max_level);

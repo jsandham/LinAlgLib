@@ -31,12 +31,16 @@
 #include <vector>
 #include <chrono>
 
+#include "../../trace.h"
+
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
 void richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                             double *res, const double *b, int n, double theta)
 {
+    ROUTINE_TRACE("richardson_iteration");
+
     // update approximation
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(static, 1024)
@@ -50,6 +54,8 @@ void richardson_iteration(const int *csr_row_ptr, const int *csr_col_ind, const 
 int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double theta, iter_control control)
 {
+    ROUTINE_TRACE("rich");
+
     // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);

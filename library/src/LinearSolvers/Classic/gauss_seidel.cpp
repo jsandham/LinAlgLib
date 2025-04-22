@@ -30,12 +30,16 @@
 #include <chrono>
 #include <vector>
 
+#include "../../trace.h"
+
 //-------------------------------------------------------------------------------
 // gauss-seidel method
 //-------------------------------------------------------------------------------
 void gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
                               const double *b, int n)
 {
+    ROUTINE_TRACE("gauss_seidel_iteration");
+
     for (int j = 0; j < n; j++)
     {
         double sigma = 0.0;
@@ -65,6 +69,8 @@ void gauss_seidel_iteration(const int *csr_row_ptr, const int *csr_col_ind, cons
 int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        iter_control control)
 {
+    ROUTINE_TRACE("gs");
+
     // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);

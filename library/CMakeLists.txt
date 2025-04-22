@@ -68,9 +68,16 @@ set(LINALGLIB_SOURCE
   src/LinearSolvers/Krylov/cg.cpp
   src/LinearSolvers/Preconditioner/preconditioner.cpp
   src/LinearSolvers/iter_control.cpp
+  src/perfetto_trace.cpp
 )
 
 add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
+
+if (WIN32)
+  target_link_libraries(linalglib PUBLIC perfetto ws2_32)
+else()
+  target_link_libraries(linalglib PUBLIC perfetto)
+endif()
 
 # Find OpenMP
 find_package(OpenMP)

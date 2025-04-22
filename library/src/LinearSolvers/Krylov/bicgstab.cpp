@@ -32,6 +32,8 @@
 #include <chrono>
 #include <assert.h>
 
+#include "../../trace.h"
+
 //****************************************************************************
 //
 // Stabilized Bi-Conjugate Gradient
@@ -41,6 +43,8 @@
 static int nonpreconditioned_bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
              iter_control control)
 {
+    ROUTINE_TRACE("nonpreconditioned_bicgstab");
+
     // r = b - A * x and initial error
     std::vector<double> r(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, r.data(), n);
@@ -130,6 +134,8 @@ static int nonpreconditioned_bicgstab(const int *csr_row_ptr, const int *csr_col
 static int preconditioned_bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control)
 {
+    ROUTINE_TRACE("preconditioned_bicgstab");
+
     assert(precond != nullptr);
 
     // r = b - A * x and initial error
@@ -236,6 +242,8 @@ static int preconditioned_bicgstab(const int *csr_row_ptr, const int *csr_col_in
 int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control)
 {
+    ROUTINE_TRACE("bicgstab");
+
     if(precond == nullptr)
     {
         return nonpreconditioned_bicgstab(csr_row_ptr, csr_col_ind, csr_val, x, b, n, control);

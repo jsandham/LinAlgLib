@@ -32,6 +32,8 @@
 #include <chrono>
 #include <assert.h>
 
+#include "../../trace.h"
+
 //****************************************************************************
 //
 // Conjugate Gradient
@@ -41,6 +43,8 @@
 static int nonpreconditioned_conjugate_gradient(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        iter_control control, int restart_iter)
 {
+    ROUTINE_TRACE("nonpreconditioned_conjugate_gradient");
+
     // create z and p vector
     std::vector<double> z(n);
     std::vector<double> p(n);
@@ -120,6 +124,8 @@ static int nonpreconditioned_conjugate_gradient(const int *csr_row_ptr, const in
 static int preconditioned_conjugate_gradient(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control, int restart_iter)
 {
+    ROUTINE_TRACE("preconditioned_conjugate_gradient");
+
     assert(precond != nullptr);
 
     // create z and p vector
@@ -213,6 +219,8 @@ static int preconditioned_conjugate_gradient(const int *csr_row_ptr, const int *
 int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control, int restart_iter)
 {
+    ROUTINE_TRACE("cg");
+
     if(precond == nullptr)
     {
         return nonpreconditioned_conjugate_gradient(csr_row_ptr, csr_col_ind, csr_val, x, b, n, control, restart_iter);

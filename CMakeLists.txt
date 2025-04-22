@@ -30,5 +30,6 @@ project(linalglib LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(deps/perfetto)
 add_subdirectory(library)
 add_subdirectory(clients)

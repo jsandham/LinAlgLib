@@ -30,12 +30,16 @@
 #include <chrono>
 #include <vector>
 
+#include "../../trace.h"
+
 //-------------------------------------------------------------------------------
 // successive over-relaxation method
 //-------------------------------------------------------------------------------
 void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
                      int n, double omega)
 {
+    ROUTINE_TRACE("sor_iteration");
+
     double sigma;
     double ajj;
     for (int j = 0; j < n; j++)
@@ -61,6 +65,8 @@ void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double 
 int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
         double omega, iter_control control)
 {
+    ROUTINE_TRACE("sor");
+
     // res = b - A * x
     std::vector<double> res(n);
     compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
