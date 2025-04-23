@@ -58,4 +58,4 @@ add_example(ssor_example.cpp)
 add_example(symm_gauss_seidel_example.cpp)
 add_example(uaamg_example.cpp)
 
-file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/examples )
+file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/clients/examples )

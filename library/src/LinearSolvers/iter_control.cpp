@@ -6,13 +6,12 @@
 #include <cmath>
 
 #include "../trace.h"
-#include "../defines.h"
 
 bool iter_control::residual_converges(double residual_norm, double initial_residual_norm) const
 {
     ROUTINE_TRACE("residual_converges");
 
-#if (DEBUG)
+#ifdef CONVERGENCE_LOGGING
     std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
 #endif
 

@@ -42,5 +42,5 @@ if (WIN32)
   # The perfetto library contains many symbols, so it needs the big object format.
   target_compile_options(perfetto PRIVATE "/bigobj")
   # Disable legacy features in windows.h.
-  add_definitions(-DWIN32_LEAN_AND_MEAN -DNOMINMAX)
+  target_compile_definitions(perfetto PRIVATE -DWIN32_LEAN_AND_MEAN -DNOMINMAX)
 endif (WIN32)

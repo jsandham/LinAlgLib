@@ -77,12 +77,16 @@ target_link_libraries(test_main PRIVATE linalglib)
 target_link_libraries(test_main PRIVATE gtest_main gmock_main)
 target_link_libraries(test_main PRIVATE yaml-cpp::yaml-cpp)
 
+message("CMAKE_CURRENT_SOURCE_DIR : ${CMAKE_CURRENT_SOURCE_DIR}")
+message("PROJECT_BINARY_DIR : ${PROJECT_BINARY_DIR}")
+
+
 # Create a list of all files with the extension ".yaml"
 file(GLOB YAML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.yaml")
 
 foreach( FILE ${YAML_FILES})
   get_filename_component(FILENAME ${FILE} NAME)
-  configure_file("${FILE}" "${PROJECT_BINARY_DIR}/testing/tests/${FILENAME}" COPYONLY)
+  configure_file("${FILE}" "${PROJECT_BINARY_DIR}/clients/testing/tests/${FILENAME}" COPYONLY)
 endforeach()
 
-file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/testing )
+file(COPY ../matrices DESTINATION ${PROJECT_BINARY_DIR}/clients/testing )

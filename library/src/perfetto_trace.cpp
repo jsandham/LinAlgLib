@@ -33,6 +33,8 @@
 
 #include "trace.h"
 
+#ifdef TRACING_ENABLED
+
 // The set of track event categories that the example is using.
 PERFETTO_DEFINE_CATEGORIES(
     perfetto::Category("linalg")
@@ -137,3 +139,4 @@ trace::~trace()
 {
     perfetto_trace::get_instance().pop();
 }
+#endif

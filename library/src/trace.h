@@ -27,8 +27,6 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include "defines.h"
-
 #ifdef TRACING_ENABLED
 
 class trace
@@ -39,7 +37,7 @@ class trace
 };
 
 #define ROUTINE_TRACE(name) trace tracing_object(name);
-#elif
+#else
 #define ROUTINE_TRACE(name)
 #endif
 
