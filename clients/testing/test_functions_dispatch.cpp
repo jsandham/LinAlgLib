@@ -26,8 +26,19 @@
 
 #include "test_functions.h"
 
+static std::string correct_filename(const std::string& filename)
+{
+#if defined(_WIN32) || defined(WIN32)
+    return "../" + filename;
+#else
+    return filename;
+#endif
+}
+
 bool Testing::test_dispatch(Arguments arg)
 {
+    arg.filename = correct_filename(arg.filename);
+
     switch(arg.solver)
     {
         case Solver::Jacobi:
