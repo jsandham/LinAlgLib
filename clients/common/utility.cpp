@@ -424,19 +424,7 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
     }
 
     std::vector<double> initial_residual(m);
-    for (int i = 0; i < m; i++)
-    {
-        int row_begin = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
-
-        double sum = 0;
-        for (int j = row_begin; j < row_end; j++)
-        {
-            sum += csr_val[j] * initial_x[csr_col_ind[j]];
-        }
-
-        initial_residual[i] = b[i] - sum;
-    }
+    compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), initial_x.data(), b.data(), initial_residual.data(), m);
 
     double initial_residual_norm = 0.0;
     if(norm_type == 0)
@@ -449,19 +437,7 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
     }
 
     std::vector<double> residual(m);
-    for (int i = 0; i < m; i++)
-    {
-        int row_begin = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
-
-        double sum = 0;
-        for (int j = row_begin; j < row_end; j++)
-        {
-            sum += csr_val[j] * x[csr_col_ind[j]];
-        }
-
-        residual[i] = b[i] - sum;
-    }
+    compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), residual.data(), m);
 
     double residual_norm = 0.0;
     if(norm_type == 0)

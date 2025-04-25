@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(GMRES, LinearSolvers, "../tests/test_GMRES.yaml");
+INSTANTIATE_TEST(GMRES, LinearSolvers, "tests/test_GMRES.yaml");

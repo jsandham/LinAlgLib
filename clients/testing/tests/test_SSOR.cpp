@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(SSOR, LinearSolvers, "../tests/test_SSOR.yaml");
+INSTANTIATE_TEST(SSOR, LinearSolvers, "tests/test_SSOR.yaml");

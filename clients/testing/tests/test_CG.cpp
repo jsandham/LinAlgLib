@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(CG, LinearSolvers, "../tests/test_CG.yaml");
+INSTANTIATE_TEST(CG, LinearSolvers, "tests/test_CG.yaml");

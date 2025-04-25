@@ -99,7 +99,7 @@ else()
   target_compile_options(linalglib PRIVATE -Wall -Wpedantic)
 endif()
 
-target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
+# target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
 
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>

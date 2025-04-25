@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(BICGSTAB, LinearSolvers, "../tests/test_BICGSTAB.yaml");
+INSTANTIATE_TEST(BICGSTAB, LinearSolvers, "tests/test_BICGSTAB.yaml");

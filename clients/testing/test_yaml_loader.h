@@ -382,10 +382,19 @@ std::vector<T> read_values(const std::string& category, const std::string& label
     return values;
 }
 
+inline std::string correct_test_filepath(const std::string& filepath)
+{
+#if defined(_WIN32) || defined(WIN32)
+    return "../" + filepath;
+#else
+    return filepath;
+#endif
+}
+
 inline std::vector<Testing::Arguments> generate_tests(const std::string filepath)
 {
-    std::cout << "filepath: " << filepath << std::endl;
-    YAML::Node root_node = YAML::LoadFile(filepath);
+    std::cout << "filepath: " << correct_test_filepath(filepath) << std::endl;
+    YAML::Node root_node = YAML::LoadFile(correct_test_filepath(filepath));
 
     size_t index = 0;
     std::vector<Testing::Arguments> tests;

@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(RSAMG, LinearSolvers, "../tests/test_RSAMG.yaml");
+INSTANTIATE_TEST(RSAMG, LinearSolvers, "tests/test_RSAMG.yaml");
