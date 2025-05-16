@@ -29,7 +29,7 @@
 
 #include "../linalglib_export.h"
 
-/*! \ingroup linear_solvers
+/*! \ingroup iterative_solvers
  *  \brief Power iteration to find largest eigenvalue/eigenvector pair
  *
  *  \details

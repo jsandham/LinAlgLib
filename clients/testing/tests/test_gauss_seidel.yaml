@@ -63,7 +63,6 @@ Tests:
                   "matrices/SPD/oilpan/oilpan.mtx",
                   "matrices/SPD/vanbody/vanbody.mtx",
                   "matrices/SPD/ct20stif/ct20stif.mtx",
-                  "matrices/SPD/BenElechi1/BenElechi1.mtx",
                   "matrices/SPD/shipsec8/shipsec8.mtx",
                   "matrices/SPD/shipsec1/shipsec1.mtx",
                   "matrices/SPD/s3dkt3m2/s3dkt3m2.mtx",

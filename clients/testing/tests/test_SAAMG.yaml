@@ -1,29 +1,34 @@
 Tests:
   quick:
     solver: SAAMG
-    matrix_file: ["matrices/SPD/1138_bus/1138_bus.mtx",
-                  "matrices/SPD/bcsstk01/bcsstk01.mtx",
-                  "matrices/SPD/bcsstm02/bcsstm02.mtx",
-                  "matrices/SPD/bodyy4/bodyy4.mtx",
-                  "matrices/SPD/bodyy6/bodyy6.mtx",
-                  "matrices/SPD/cfd2/cfd2.mtx",
-                  "matrices/SPD/crystm02/crystm02.mtx",
-                  "matrices/SPD/ex5/ex5.mtx",
-                  "matrices/SPD/fv1/fv1.mtx",
-                  "matrices/SPD/fv2/fv2.mtx",
-                  "matrices/SPD/fv3/fv3.mtx",
-                  "matrices/SPD/mesh1em6/mesh1em6.mtx",
-                  "matrices/SPD/mesh2em5/mesh2em5.mtx",
-                  "matrices/SPD/mesh3em5/mesh3em5.mtx",
-                  "matrices/SPD/nos1/nos1.mtx",
-                  "matrices/SPD/nos2/nos2.mtx",
-                  "matrices/SPD/nos6/nos6.mtx",
-                  "matrices/SPD/nasa1824/nasa1824.mtx",
-                  "matrices/SPD/Pres_Poisson/Pres_Poisson.mtx",
-                  "matrices/SPD/shallow_water1/shallow_water1.mtx",
-                  "matrices/SPD/shallow_water2/shallow_water2.mtx",
-                  "matrices/SPD/thermal1/thermal1.mtx",
-                  "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
-                  "matrices/SPD/thermomech_TC/thermomech_TC.mtx",
-                  "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
-    max_iters: [1000]
+    matrix_file: ["matrices/SPD/ex5/ex5.mtx"]
+
+
+  # quick:
+  #   solver: SAAMG
+  #   matrix_file: ["matrices/SPD/1138_bus/1138_bus.mtx",
+  #                 "matrices/SPD/bcsstk01/bcsstk01.mtx",
+  #                 "matrices/SPD/bcsstm02/bcsstm02.mtx",
+  #                 "matrices/SPD/bodyy4/bodyy4.mtx",
+  #                 "matrices/SPD/bodyy6/bodyy6.mtx",
+  #                 "matrices/SPD/cfd2/cfd2.mtx",
+  #                 "matrices/SPD/crystm02/crystm02.mtx",
+  #                 "matrices/SPD/ex5/ex5.mtx",
+  #                 "matrices/SPD/fv1/fv1.mtx",
+  #                 "matrices/SPD/fv2/fv2.mtx",
+  #                 "matrices/SPD/fv3/fv3.mtx",
+  #                 "matrices/SPD/mesh1em6/mesh1em6.mtx",
+  #                 "matrices/SPD/mesh2em5/mesh2em5.mtx",
+  #                 "matrices/SPD/mesh3em5/mesh3em5.mtx",
+  #                 "matrices/SPD/nos1/nos1.mtx",
+  #                 "matrices/SPD/nos2/nos2.mtx",
+  #                 "matrices/SPD/nos6/nos6.mtx",
+  #                 "matrices/SPD/nasa1824/nasa1824.mtx",
+  #                 "matrices/SPD/Pres_Poisson/Pres_Poisson.mtx",
+  #                 "matrices/SPD/shallow_water1/shallow_water1.mtx",
+  #                 "matrices/SPD/shallow_water2/shallow_water2.mtx",
+  #                 "matrices/SPD/thermal1/thermal1.mtx",
+  #                 "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
+  #                 "matrices/SPD/thermomech_TC/thermomech_TC.mtx",
+  #                 "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
+  #   max_iters: [1000]

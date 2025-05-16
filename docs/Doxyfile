@@ -950,10 +950,10 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../library/include \
-                         ../library/include/LinearSolvers \
-                         ../library/include/LinearSolvers/AMG \
-                         ../library/include/LinearSolvers/Classic \
-                         ../library/include/LinearSolvers/Krylov \
+                         ../library/include/IterativeSolvers \
+                         ../library/include/IterativeSolvers/AMG \
+                         ../library/include/IterativeSolvers/Classic \
+                         ../library/include/IterativeSolvers/Krylov \
                          ../library/include/EigenValueSolvers
 
 # This tag can be used to specify the character encoding of the source files

@@ -32,32 +32,34 @@
 */
 
 // Classic Linear solvers
-#include "LinearSolvers/Classic/jacobi.h"
-#include "LinearSolvers/Classic/gauss_seidel.h"
-#include "LinearSolvers/Classic/sor.h"
-#include "LinearSolvers/Classic/symmetric_gauss_seidel.h"
-#include "LinearSolvers/Classic/ssor.h"
-#include "LinearSolvers/Classic/richardson.h"
+#include "IterativeSolvers/Classic/jacobi.h"
+#include "IterativeSolvers/Classic/gauss_seidel.h"
+#include "IterativeSolvers/Classic/sor.h"
+#include "IterativeSolvers/Classic/symmetric_gauss_seidel.h"
+#include "IterativeSolvers/Classic/ssor.h"
+#include "IterativeSolvers/Classic/richardson.h"
 
 // Krylov Linear solvers
-#include "LinearSolvers/Krylov/gmres.h"
-#include "LinearSolvers/Krylov/cg.h"
-#include "LinearSolvers/Krylov/bicgstab.h"
+#include "IterativeSolvers/Krylov/gmres.h"
+#include "IterativeSolvers/Krylov/cg.h"
+#include "IterativeSolvers/Krylov/bicgstab.h"
 
 // Algrbraic multi-grid solvers
-#include "LinearSolvers/AMG/amg.h"
-#include "LinearSolvers/AMG/rsamg.h"
-#include "LinearSolvers/AMG/rsamg_old.h"
-#include "LinearSolvers/AMG/saamg.h"
-#include "LinearSolvers/AMG/uaamg.h"
+#include "IterativeSolvers/AMG/amg_aggregation.h"
+#include "IterativeSolvers/AMG/amg_strength.h"
+#include "IterativeSolvers/AMG/amg.h"
+#include "IterativeSolvers/AMG/rsamg.h"
+#include "IterativeSolvers/AMG/rsamg_old.h"
+#include "IterativeSolvers/AMG/saamg.h"
+#include "IterativeSolvers/AMG/uaamg.h"
 
 // Preconditioners
-#include "LinearSolvers/Preconditioner/preconditioner.h"
+#include "IterativeSolvers/Preconditioner/preconditioner.h"
 
 // Eigenvalues solvers
 #include "EigenValueSolvers/power_iteration.h"
 
-#include "LinearSolvers/slaf.h"
-#include "LinearSolvers/iter_control.h"
+#include "IterativeSolvers/slaf.h"
+#include "IterativeSolvers/iter_control.h"
 
 #endif

@@ -18,5 +18,5 @@ doxygen docs/Doxyfile
 
 # Clang formatting
 ```
-clang-format.exe -i --style microsoft library/src/LinearSolvers/AMG/*.cpp
+clang-format.exe -i --style microsoft library/src/IterativeSolvers/AMG/*.cpp
 ```

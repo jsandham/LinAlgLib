@@ -25,49 +25,51 @@
 ##################################################################################
 
 set(LINALGLIB_HEADERS_PUBLIC
-  include/LinearSolvers/slaf.h
+  include/IterativeSolvers/slaf.h
   include/EigenValueSolvers/power_iteration.h
-  include/LinearSolvers/AMG/amg_aggregation.h
-  include/LinearSolvers/AMG/amg_strength.h
-  include/LinearSolvers/AMG/amg.h
-  include/LinearSolvers/AMG/rsamg_old.h
-  include/LinearSolvers/AMG/rsamg.h
-  include/LinearSolvers/AMG/saamg.h
-  include/LinearSolvers/AMG/uaamg.h
-  include/LinearSolvers/Classic/gauss_seidel.h
-  include/LinearSolvers/Classic/jacobi.h
-  include/LinearSolvers/Classic/richardson.h
-  include/LinearSolvers/Classic/sor.h
-  include/LinearSolvers/Classic/ssor.h
-  include/LinearSolvers/Classic/symmetric_gauss_seidel.h
-  include/LinearSolvers/Krylov/bicgstab.h
-  include/LinearSolvers/Krylov/gmres.h
-  include/LinearSolvers/Krylov/cg.h
-  include/LinearSolvers/Preconditioner/preconditioner.h
+  include/IterativeSolvers/AMG/amg_aggregation.h
+  include/IterativeSolvers/AMG/amg_strength.h
+  include/IterativeSolvers/AMG/amg_util.h
+  include/IterativeSolvers/AMG/amg.h
+  include/IterativeSolvers/AMG/rsamg_old.h
+  include/IterativeSolvers/AMG/rsamg.h
+  include/IterativeSolvers/AMG/saamg.h
+  include/IterativeSolvers/AMG/uaamg.h
+  include/IterativeSolvers/Classic/gauss_seidel.h
+  include/IterativeSolvers/Classic/jacobi.h
+  include/IterativeSolvers/Classic/richardson.h
+  include/IterativeSolvers/Classic/sor.h
+  include/IterativeSolvers/Classic/ssor.h
+  include/IterativeSolvers/Classic/symmetric_gauss_seidel.h
+  include/IterativeSolvers/Krylov/bicgstab.h
+  include/IterativeSolvers/Krylov/gmres.h
+  include/IterativeSolvers/Krylov/cg.h
+  include/IterativeSolvers/Preconditioner/preconditioner.h
   include/linalg.h
 )
 
 set(LINALGLIB_SOURCE
-  src/LinearSolvers/slaf.cpp
+  src/IterativeSolvers/slaf.cpp
   src/EigenValueSolvers/power_iteration.cpp
-  src/LinearSolvers/AMG/amg_aggregation.cpp
-  src/LinearSolvers/AMG/amg_strength.cpp
-  src/LinearSolvers/AMG/amg.cpp
-  src/LinearSolvers/AMG/rsamg_old.cpp
-  src/LinearSolvers/AMG/rsamg.cpp
-  src/LinearSolvers/AMG/saamg.cpp
-  src/LinearSolvers/AMG/uaamg.cpp
-  src/LinearSolvers/Classic/gauss_seidel.cpp
-  src/LinearSolvers/Classic/jacobi.cpp
-  src/LinearSolvers/Classic/richardson.cpp
-  src/LinearSolvers/Classic/sor.cpp
-  src/LinearSolvers/Classic/ssor.cpp
-  src/LinearSolvers/Classic/symmetric_gauss_seidel.cpp
-  src/LinearSolvers/Krylov/bicgstab.cpp
-  src/LinearSolvers/Krylov/gmres.cpp
-  src/LinearSolvers/Krylov/cg.cpp
-  src/LinearSolvers/Preconditioner/preconditioner.cpp
-  src/LinearSolvers/iter_control.cpp
+  src/IterativeSolvers/AMG/amg_aggregation.cpp
+  src/IterativeSolvers/AMG/amg_strength.cpp
+  src/IterativeSolvers/AMG/amg_util.cpp
+  src/IterativeSolvers/AMG/amg.cpp
+  src/IterativeSolvers/AMG/rsamg_old.cpp
+  src/IterativeSolvers/AMG/rsamg.cpp
+  src/IterativeSolvers/AMG/saamg.cpp
+  src/IterativeSolvers/AMG/uaamg.cpp
+  src/IterativeSolvers/Classic/gauss_seidel.cpp
+  src/IterativeSolvers/Classic/jacobi.cpp
+  src/IterativeSolvers/Classic/richardson.cpp
+  src/IterativeSolvers/Classic/sor.cpp
+  src/IterativeSolvers/Classic/ssor.cpp
+  src/IterativeSolvers/Classic/symmetric_gauss_seidel.cpp
+  src/IterativeSolvers/Krylov/bicgstab.cpp
+  src/IterativeSolvers/Krylov/gmres.cpp
+  src/IterativeSolvers/Krylov/cg.cpp
+  src/IterativeSolvers/Preconditioner/preconditioner.cpp
+  src/IterativeSolvers/iter_control.cpp
   src/perfetto_trace.cpp
 )
 
@@ -100,6 +102,7 @@ else()
 endif()
 
 # target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
+target_compile_definitions(linalglib PRIVATE -DCONVERGENCE_LOGGING)
 
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>

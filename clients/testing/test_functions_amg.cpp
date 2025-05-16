@@ -38,14 +38,18 @@ bool Testing::test_amg(AMGSolver solver, Arguments arg)
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    //load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
-    std::vector<double> init_x = x;
+    std::vector<double> init_x(x);
 
     // Righthand side vector
     std::vector<double> b(m, 1.0);
+
+    std::vector<double> e(n, 1.0);
+    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
 
     int max_levels = 100;
 
@@ -62,6 +66,11 @@ bool Testing::test_amg(AMGSolver solver, Arguments arg)
             rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
             break;
     }
+
+    std::cout << "arg.presmoothing: " << arg.presmoothing 
+              << " arg.postsmoothing: " << arg.postsmoothing 
+              << " arg.cycle: " << CycleToString(arg.cycle)
+              << " arg.smoother: " << SmootherToString(arg.smoother) << std::endl;
 
     iter_control control;
 

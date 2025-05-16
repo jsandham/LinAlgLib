@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(UAAMG, LinearSolvers, "tests/test_UAAMG.yaml");
+INSTANTIATE_TEST(UAAMG, IterativeSolvers, "tests/test_UAAMG.yaml");

@@ -36,7 +36,7 @@ int main()
     std::vector<int> csr_row_ptr;
     std::vector<int> csr_col_ind;
     std::vector<double> csr_val;
-    load_mtx_file("../matrices/mesh1em6.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    load_mtx_file("../matrices/SPD/ex5/ex5.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     std::vector<double> x(m, 0.0);
@@ -49,19 +49,17 @@ int main()
 
     iter_control control;
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
+    // int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
     // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
     // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::SOR, control);
 
-    // amg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, 1e-8);
-
     // Print solution
-    // std::cout << "x" << std::endl;
-    // for (size_t i = 0; i < x.size(); i++)
-    //{
-    //	std::cout << x[i] << " ";
-    //}
-    // std::cout << "" << std::endl;
+    std::cout << "x" << std::endl;
+    for (size_t i = 0; i < x.size(); i++)
+    {
+    	std::cout << x[i] << " ";
+    }
+    std::cout << "" << std::endl;
 
     return 0;
 }
