@@ -27,6 +27,11 @@
 #ifndef ITER_CONTROL_H
 #define ITER_CONTROL_H
 
+/*! \file
+ *  \brief iter_control.h provides a structure used for controling the number of iterations 
+ *  in Classical, Krylov, and AMG solvers
+ */
+
 /**
  * @brief Structure to control the iterative solution process.
  *
