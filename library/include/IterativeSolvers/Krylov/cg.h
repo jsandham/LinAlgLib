@@ -37,78 +37,144 @@
  */
 
 /*! \ingroup iterative_solvers
- *  \brief Preconditioned conjugate gradient iterative linear solver
+ * \brief Preconditioned conjugate gradient iterative linear solver.
  *
- *  \details
- *  \p cg solves the sparse linear system A*x = b using the preconditioned
- *  conjugate gradient iterative solver.
+ * \details
+ * \p cg solves the sparse linear system \f$A x = b\f$ using the preconditioned
+ * conjugate gradient (PCG) iterative solver. The conjugate gradient method
+ * is an efficient algorithm for solving symmetric positive-definite linear
+ * systems. Preconditioning is often used to accelerate the convergence of
+ * the CG method by transforming the original system into one with more
+ * favorable spectral properties.
  *
- *  \note Requires the sparse matrix A to be symmetric
+ * **Algorithm Overview:**
  *
- *  @param[in]
- *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
- *              the sparse CSR matrix.
- *  @param[in]
- *  csr_col_ind array of \p nnz elements containing the column indices of the
- *              sparse CSR matrix.
- *  @param[in]
- *  csr_val     array of \p nnz elements containing the values of the sparse
- *              CSR matrix.
- *  @param[inout]
- *  x           array of \p n elements containing the solution values of
- *              \f$A\f$ * \f$x\f$ = \f$b\f$.
- *  @param[in]
- *  b           array of \p n elements containing the righthad side values of
- *              \f$A\f$ * \f$x\f$ = \f$b\f$.
+ * The Preconditioned Conjugate Gradient method iteratively refines an initial
+ * guess for the solution vector \f$x\f$. At each iteration, it computes a
+ * search direction (\f$p\f$) that is conjugate to the previous search
+ * directions with respect to the preconditioned system. The step length
+ * (\f$\alpha\f$) along this direction is chosen to minimize the preconditioned
+ * residual. The solution and the residual are then updated. The preconditioning
+ * is applied by solving a related system involving the preconditioner matrix
+ * (\f$M\f$) to obtain a preconditioned residual (\f$z\f$).
  *
- *  @param[in]
- *  n           size of the sparse CSR matrix
- *  @param[in]
- *  precond     preconditioner
- *  @param[in]
- *  control     iteration control struct specifying relative and absolut tolerence 
- *              as well as maximum iterations
- *  @param[in]
- *  restart_iter restart iteration
+ * The algorithm typically proceeds as follows:
  *
- *  \retval number of iterations actually used in the solver. If -1 is returned,
- * the solver did not converge to a solution with the given input tolerance \p
- * tol.
+ * 1. Initialize: Set the initial guess \f$x_0\f$, compute the initial residual
+ * \f$r_0 = b - A x_0\f$. If the initial residual is sufficiently small,
+ * return \f$x_0\f$.
+ * 2. Precondition: Solve \f$M z_0 = r_0\f$ for \f$z_0\f$.
+ * 3. Initialize the search direction: \f$p_0 = z_0\f$.
+ * 4. For \f$k = 0, 1, 2, ...\f$ until convergence:
+ * a. Compute the matrix-vector product: \f$w_k = A p_k\f$.
+ * b. Compute the step length: \f$\alpha_k = (z_k^T r_k) / (p_k^T w_k)\f$.
+ * c. Update the solution: \f$x_{k+1} = x_k + \alpha_k p_k\f$.
+ * d. Update the residual: \f$r_{k+1} = r_k - \alpha_k w_k\f$.
+ * e. Check for convergence: If \f$||r_{k+1}||<\f$ tolerance, return \f$x_{k+1}\f$.
+ * f. Precondition: Solve \f$M z_{k+1} = r_{k+1}\f$ for \f$z_{k+1}\f$.
+ * g. Compute the scalar \f$\beta_k = (z_{k+1}^T r_{k+1}) / (z_k^T r_k)\f$.
+ * h. Update the search direction: \f$p_{k+1} = z_{k+1} + \beta_k p_k\f$.
  *
- *  \par Example
- *  \code{.c}
- *  int m, n, nnz;
- *  std::vector<int> csr_row_ptr;
- *  std::vector<int> csr_col_ind;
- *  std::vector<double> csr_val;
- *  load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ * The \p restart_iter parameter allows for restarting the CG algorithm periodically
+ * to potentially improve convergence, especially when the eigenvalue distribution
+ * of the preconditioned matrix is unfavorable. After \p restart_iter iterations,
+ * the search direction is reset to the preconditioned residual.
  *
- *  // Solution vector
- *  std::vector<double> x(m, 0.0);
+ * \note Requires the sparse matrix \f$A\f$ to be symmetric. While the standard
+ * Conjugate Gradient method requires the matrix to be symmetric positive-definite,
+ * the preconditioned version can sometimes be applied to symmetric indefinite
+ * systems, although convergence is not guaranteed. The preconditioner \f$M\f$
+ * should ideally be symmetric and positive-definite as well to preserve the
+ * properties of the CG method.
  *
- *  // Righthand side vector
- *  std::vector<double> b(m, 1.0);
- * 
- *  // ILU preconditioner
- *  ilu_precond precond;
+ * @param[in] csr_row_ptr
+ * Array of \p n+1 elements that point to the start of every row of
+ * the sparse CSR matrix \f$A\f$.
+ * @param[in] csr_col_ind
+ * Array of \p nnz elements containing the column indices of the
+ * non-zero entries in the sparse CSR matrix \f$A\f$.
+ * @param[in] csr_val
+ * Array of \p nnz elements containing the numerical values of the
+ * non-zero entries in the sparse CSR matrix \f$A\f$.
+ * @param[inout] x
+ * Array of \p n elements containing the initial guess for the solution
+ * vector \f$x\f$ of the system \f$A x = b\f$. On output, if the solver
+ * converges, this array will contain the computed solution.
+ * @param[in] b
+ * Array of \p n elements containing the right-hand side vector \f$b\f$ of
+ * the linear system \f$A x = b\f$.
+ * @param[in] n
+ * The dimension of the square sparse CSR matrix \f$A\f$ (number of rows or columns)
+ * and the size of the vectors \f$x\f$ and \f$b\f$.
+ * @param[in] precond
+ * Pointer to a preconditioner object. This object must provide a method to
+ * solve a linear system of the form \f$M z = r\f$, where \f$M\f$ is the
+ * preconditioner matrix and \f$r\f$ is the residual vector. The specific
+ * type of the preconditioner (e.g., Jacobi, ILU, ICC) is determined by the
+ * actual object pointed to by \p precond. If no preconditioning is desired,
+ * a null pointer or an identity preconditioner can be used.
+ * @param[in] control
+ * Structure of type \ref iter_control specifying the convergence criteria
+ * (relative tolerance, absolute tolerance) and the maximum number of iterations
+ * for the CG solver. The solver will stop if either the relative or absolute
+ * tolerance is met, or if the maximum number of iterations is reached.
+ * @param[in] restart_iter
+ * The number of iterations after which the conjugate gradient algorithm is
+ * restarted. A restart involves resetting the search direction to the
+ * preconditioned residual. Setting \p restart_iter to a large value (greater
+ * than the expected number of iterations) effectively disables restarting.
  *
- *  precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+ * @retval int
+ * The number of iterations performed by the CG solver. If the solver converges
+ * within the specified tolerance and maximum iterations, the return value is
+ * the number of iterations taken. If the solver does not converge, -1 is
+ * returned.
  *
- *  int it = cg(csr_row_ptr.data(),
- *               csr_col_ind.data(),
- *               csr_val.data(),
- *               x.data(),
- *               b.data(),
- *               m,
- *               &precond,
- *               1e-8,
- *               1000,
- *               100);
- *  \endcode
+ * \par Example
+ * \code{.cpp}
+ * #include <vector>
+ * #include <iostream>
+ * #include "linalg.h"
+ *
+ * int main() {
+ * int m, n, nnz;
+ * std::vector<int> csr_row_ptr;
+ * std::vector<int> csr_col_ind;
+ * std::vector<double> csr_val;
+ * const char* matrix_file = "my_matrix.mtx";
+ * load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ *
+ * // Solution vector
+ * std::vector<double> x(m, 0.0);
+ *
+ * // Righthand side vector
+ * std::vector<double> b(m, 1.0);
+ *
+ * // ILU preconditioner
+ * ilu_precond precond;
+ * precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+ *
+ * iter_control control;
+ * control.rel_tol = 1e-8;
+ * control.max_iter = 1000;
+ *
+ * int it = cg(csr_row_ptr.data(),
+ * csr_col_ind.data(),
+ * csr_val.data(),
+ * x.data(),
+ * b.data(),
+ * m,
+ * &precond,
+ * control,
+ * 100);
+ *
+ * std::cout << "Number of iterations: " << it << std::endl;
+ *
+ * return 0;
+ * }
+ * \endcode
  */
-/**@{*/
 LINALGLIB_API int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        const preconditioner *precond, iter_control control, int restart_iter);
-/**@}*/
 
 #endif

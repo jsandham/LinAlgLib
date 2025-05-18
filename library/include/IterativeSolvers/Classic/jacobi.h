@@ -35,68 +35,110 @@
  *  \brief jacobi.h provides interface for jacobi solver
  */
 
-/*! \ingroup iterative_solvers
- *  \brief Jacobi iterative linear solver
+/**
+ * @brief Performs the Jacobi iterative method for solving a linear system of equations.
  *
- *  \details
- *  \p jac solves the sparse linear system \f$A\f$ * \f$x\f$ = \f$b\f$ using the
- * Jacobi iterative solver. Consider decomposing the sparse matrix \f$A\f$ as:
+ * Solves the linear system Ax = b, where A is a sparse matrix represented in Compressed Sparse Row (CSR) format.
  *
- *  \f[
- *    A := L + U + D,
- *  \f]
- *  where
- *  \f[
- *    \begin{array}{ll}
- *        L, & \text{Is the strictly lower part of A} \\
- *        U, & \text{Is the strictly upper part of A} \\
- *        D, & \text{Is the diagaonal part of A}
- *    \end{array}
- *  \f]
- *  Inserting into \f$A\f$ * \f$x\f$ = \f$b\f$ we get:
- *  \f[
- *    \begin{array}{ll}
- *        D * x^{k+1} + (L + U) * x^{k} = b, \\
- *        x^{k+1} = D^{-1} * (b - (L + U) * x^{k}), &
- *    \end{array}
- *  \f]
+ * @param[in] csr_row_ptr Array of size (n+1) containing row pointers for the CSR matrix.
+ * csr_row_ptr[i] stores the index of the first non-zero element in row i.
+ * csr_row_ptr[n] stores the number of non-zero elements in the matrix.
+ * @param[in] csr_col_ind Array of size (number of non-zero elements) containing the column indices
+ * for the non-zero elements of the CSR matrix.
+ * @param[in] csr_val Array of size (number of non-zero elements) containing the values
+ * of the non-zero elements of the CSR matrix.
+ * @param[in,out] x Array of size n. On input, it contains the initial guess for the solution.
+ * On output, it contains the computed solution.
+ * @param[in] b Array of size n containing the right-hand side vector.
+ * @param[in] n The order of the square matrix A.
+ * @param[in] control Structure containing iteration control parameters.
  *
- *  \note Convergence is only guaranteed if \f$A\f$ is strictly diagonally
- *  dominant
+ * @return Returns 0 if the iteration converges, and 1 otherwise.
  *
- *  @param[in]
- *  csr_row_ptr array of \p n+1 elements that point to the start of every row of
- *              the sparse CSR matrix.
- *  @param[in]
- *  csr_col_ind array of \p nnz elements containing the column indices of the
- *              sparse CSR matrix.
- *  @param[in]
- *  csr_val     array of \p nnz elements containing the values of the sparse
- *              CSR matrix.
- *  @param[inout]
- *  x           array of \p n elements containing the solution values of
- *              \f$A\f$ * \f$x\f$ = \f$b\f$
- *  @param[in]
- *  b           array of \p n elements containing the righthad side values of
- *              \f$A\f$ * \f$x\f$ = \f$b\f$.
+ * @details
+ * The Jacobi method is an iterative technique for solving a system of linear equations.
+ * For a matrix equation
  *
- *  @param[in]
- *  n           size of the sparse CSR matrix
- *  @param[in]
- *  control     iteration control struct specifying relative and absolut tolerence 
- *              as well as maximum iterations
+ * \f$ A\mathbf{x} = \mathbf{b}, \f$
  *
- *  \retval number of iterations actually used in the solver. If -1 is returned,
- *  the solver did not converge to a solution with the given input tolerance \p
- *  tol.
+ * where \f$ A \f$ is a known square matrix of size \f$n \times n\f$, \f$\mathbf{b}\f$ is a known vector of length \f$n\f$,
+ * and \f$\mathbf{x}\f$ is an unknown vector of length \f$n\f$ that we want to solve for, the Jacobi method
+ * iteratively refines an initial guess for \f$\mathbf{x}\f$ until convergence.
+ *
+ * **Derivation of the Jacobi Iteration**
+ *
+ * We can decompose the matrix \f$A\f$ into its diagonal, lower triangular, and upper triangular parts:
+ *
+ * \f$ A = D + L + U, \f$
+ *
+ * where
+ *
+ * \f$
+ * D = \begin{pmatrix}
+ * a_{11} & 0      & \cdots & 0      \\
+ * 0      & a_{22} & \cdots & 0      \\
+ * \vdots & \vdots & \ddots & \vdots \\
+ * 0      & 0      & \cdots & a_{nn}
+ * \end{pmatrix},
+ * \f$
+ *
+ * \f$
+ * L = \begin{pmatrix}
+ * 0      & 0      & \cdots & 0      \\
+ * a_{21} & 0      & \cdots & 0      \\
+ * \vdots & \vdots & \ddots & \vdots \\
+ * a_{n1} & a_{n2} & \cdots & 0
+ * \end{pmatrix},
+ * \f$
+ *
+ * \f$
+ * U = \begin{pmatrix}
+ * 0      & a_{12} & \cdots & a_{1n} \\
+ * 0      & 0      & \cdots & a_{2n} \\
+ * \vdots & \vdots & \ddots & \vdots \\
+ * 0      & 0      & \cdots & 0
+ * \end{pmatrix}.
+ * \f$
+ *
+ * Substituting this decomposition into the equation \f$ A\mathbf{x} = \mathbf{b} \f$, we get
+ *
+ * \f$ (D + L + U)\mathbf{x} = \mathbf{b}. \f$
+ *
+ * Rearranging to isolate \f$D\mathbf{x}\f$, we have
+ *
+ * \f$ D\mathbf{x} = \mathbf{b} - (L + U)\mathbf{x}. \f$
+ *
+ * Assuming that \f$D\f$ is invertible (i.e., all diagonal elements are non-zero), we can solve for \f$\mathbf{x}\f$:
+ *
+ * \f$ \mathbf{x} = D^{-1}(\mathbf{b} - (L + U)\mathbf{x}). \f$
+ *
+ * This equation suggests an iterative scheme:
+ *
+ * \f$ \mathbf{x}^{(k+1)} = D^{-1}(\mathbf{b} - (L + U)\mathbf{x}^{(k)}), \f$
+ *
+ * where \f$\mathbf{x}^{(k)}\f$ is the \f$k\f$-th approximation of the solution \f$\mathbf{x}\f$.  In component form, the Jacobi update is:
+ *
+ * \f$ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \ne i} a_{ij} x_j^{(k)} \right), \quad i = 1, 2, \dots, n. \f$
+ *
+ * The iteration continues until a stopping criterion is met, such as the residual norm being sufficiently small
+ * or the maximum number of iterations being reached.
+ *
+ * **CSR Implementation Details**
+ *
+ * The function operates on a matrix stored in CSR format, which is an efficient storage scheme for sparse matrices.
+ * The CSR format uses three arrays to represent the matrix:
+ *
+ * - `csr_row_ptr`: Stores the starting index of each row in the `csr_col_ind` and `csr_val` arrays.
+ * - `csr_col_ind`: Stores the column indices of the non-zero elements.
+ * - `csr_val`: Stores the values of the non-zero elements.
+ *
+ * This implementation efficiently calculates the matrix-vector product \f$(L+U)\mathbf{x}^{(k)}\f$ using the CSR format.
  *
  *  \par Example
  *  \code{.c}
  *  \endcode
  */
-/**@{*/
 LINALGLIB_API int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     iter_control control);
-/**@}*/
 
 #endif
