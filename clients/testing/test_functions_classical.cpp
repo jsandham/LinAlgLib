@@ -32,49 +32,91 @@
 
 #include "linalg.h"
 
-bool Testing::test_classical(ClassicalSolver solver, Arguments arg)
+bool Testing::test_classical(ClassicalSolver solver_type, Arguments arg)
 {
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    //load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-    load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    csr_matrix2 mat_A;
+    mat_A.read_mtx(arg.filename);
+    mat_A.make_diagonally_dominant();
 
     // Solution vector
-    std::vector<double> x(m, 0.0);
-    std::vector<double> init_x(x);
+    vector2 vec_x(mat_A.get_m());
+    vec_x.zeros();
+
+    vector2 vec_init_x(mat_A.get_m());
+    vec_init_x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector2 vec_b(mat_A.get_m());
+    vec_b.ones();
 
-    std::vector<double> e(n, 1.0);
-    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
+    vector2 vec_e(mat_A.get_n());
+    vec_e.ones();
+
+    mat_A.multiply_vector(vec_b, vec_e);
+
+    std::cout << "mat_A.get_m(): " << mat_A.get_m()
+              << " mat_A.get_n(): " << mat_A.get_n()
+              << " mat_A.get_nnz(): " << mat_A.get_nnz() << std::endl; 
+
+    jacobi_solver jac;
+    gs_solver gs;
+    sgs_solver sgs;
+    sor_solver sor;
+    ssor_solver ssor;   
+
+    switch(solver_type)
+    {
+        case ClassicalSolver::Jacobi:
+            jac.build(mat_A);
+            break;
+        case ClassicalSolver::GaussSeidel:
+            gs.build(mat_A);
+            break;
+        case ClassicalSolver::SOR:
+            sor.build(mat_A);
+            break;
+        case ClassicalSolver::SymmGaussSeidel:
+            sgs.build(mat_A);
+            break;
+        case ClassicalSolver::SSOR:
+            ssor.build(mat_A);
+            break;
+    }
 
     int iter = 0;
     iter_control control;
     control.max_iter = arg.max_iters;
 
-    switch(solver)
+    switch(solver_type)
     {
         case ClassicalSolver::Jacobi:
-            iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
+            iter = jac.solve(mat_A, vec_x, vec_b, control);
             break;
         case ClassicalSolver::GaussSeidel:
-            iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
+            iter = gs.solve(mat_A, vec_x, vec_b, control);
             break;
         case ClassicalSolver::SOR:
-            iter = sor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, control);
+            iter = sor.solve(mat_A, vec_x, vec_b, control, 0.666667);
             break;
         case ClassicalSolver::SymmGaussSeidel:
-            iter = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
+            iter = sgs.solve(mat_A, vec_x, vec_b, control);
             break;
         case ClassicalSolver::SSOR:
-            iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.666667, control);
+            iter = ssor.solve(mat_A, vec_x, vec_b, control, 0.666667);
             break;
     }
 
     std::cout << "iter: " << iter << std::endl;
 
+    int m = mat_A.get_m();
+    int n = mat_A.get_n();
+    int nnz = mat_A.get_nnz();
+    std::vector<int> csr_row_ptr(mat_A.get_row_ptr(), mat_A.get_row_ptr() + (m + 1));
+    std::vector<int> csr_col_ind(mat_A.get_col_ind(), mat_A.get_col_ind() + nnz);
+    std::vector<double> csr_val(mat_A.get_val(), mat_A.get_val() + nnz);
+    std::vector<double> b(vec_b.get_vec(), vec_b.get_vec() + m);
+    std::vector<double> x(vec_x.get_vec(), vec_x.get_vec() + n);
+    std::vector<double> init_x(vec_init_x.get_vec(), vec_init_x.get_vec() + n);
+    
     return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), 0);
 }

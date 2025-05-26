@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg_strength.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include <assert.h>
 #include <cmath>
 #include <algorithm>

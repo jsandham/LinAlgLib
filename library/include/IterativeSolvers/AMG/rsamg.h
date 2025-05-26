@@ -28,6 +28,7 @@
 #define RSAMG_H
 
 #include "../../linalglib_export.h"
+#include "../../csr_matrix.h"
 
 #include "amg.h"
 
@@ -134,5 +135,8 @@ LINALGLIB_API void rsamg_setup_legacy(const int *csr_row_ptr, const int *csr_col
  */
 LINALGLIB_API void rsamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
     int max_level, heirarchy &hierarchy);
+
+LINALGLIB_API void rsamg_setup(const csr_matrix2& A, int max_level, heirarchy &hierarchy);
+
 
 #endif

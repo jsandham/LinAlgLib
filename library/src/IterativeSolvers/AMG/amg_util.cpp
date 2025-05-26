@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg_util.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 
 #include "../../trace.h"
 

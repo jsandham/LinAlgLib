@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 #include "../../../include/IterativeSolvers/Preconditioner/preconditioner.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include "../../../include/IterativeSolvers/AMG/saamg.h"
 #include "math.h"
 #include <iostream>

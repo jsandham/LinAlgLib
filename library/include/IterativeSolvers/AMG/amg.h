@@ -32,6 +32,7 @@
 #include "amg_util.h"
 
 #include "../../linalglib_export.h"
+#include "../../vector.h"
 
 #include "../iter_control.h"
 
@@ -308,5 +309,8 @@ enum class Smoother
 /**@}*/
 LINALGLIB_API int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, Cycle cycle,
     Smoother smoother, iter_control control);
+
+LINALGLIB_API int amg_solve(const heirarchy &hierarchy, vector2& x, const vector2& b, int n1, int n2, Cycle cycle,
+              Smoother smoother, iter_control control);
 
 #endif

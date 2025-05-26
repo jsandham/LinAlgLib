@@ -178,6 +178,12 @@
  * - **Smoothing:** Smoothing operations (often a few iterations of a basic iterative method like Gauss-Seidel or Jacobi) are applied on each grid level to reduce high-frequency errors.
  */
 
+// Vector
+#include "vector.h"
+
+// CSR matrix
+#include "csr_matrix.h"
+
 // Classic Linear solvers
 #include "IterativeSolvers/Classic/jacobi.h"
 #include "IterativeSolvers/Classic/gauss_seidel.h"
@@ -206,7 +212,7 @@
 // Eigenvalues solvers
 #include "EigenValueSolvers/power_iteration.h"
 
-#include "IterativeSolvers/slaf.h"
+#include "slaf.h"
 #include "IterativeSolvers/iter_control.h"
 
 #endif

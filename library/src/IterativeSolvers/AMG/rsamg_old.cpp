@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/rsamg_old.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include "math.h"
 #include <iostream>
 #include <stdlib.h>

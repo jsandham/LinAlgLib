@@ -33,23 +33,45 @@
 
 #include "linalg.h"
 
-bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
+bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    csr_matrix2 mat_A;
+    mat_A.read_mtx(arg.filename);
 
     // Solution vector
-    std::vector<double> x(m, 0.0);
-    std::vector<double> init_x(x);
+    vector2 vec_x(mat_A.get_m());
+    vec_x.zeros();
+
+    vector2 vec_init_x(mat_A.get_m());
+    vec_init_x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector2 vec_b(mat_A.get_m());
+    vec_b.ones();
 
-    std::vector<double> e(n, 1.0);
-    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
+    vector2 vec_e(mat_A.get_n());
+    vec_e.ones();
+
+    mat_A.multiply_vector(vec_b, vec_e);
+
+
+
+    cg_solver cg;
+    bicgstab_solver bicgstab;
+    gmres_solver gmres;
+
+    switch(solver_type)
+    {
+        case KrylovSolver::CG:
+            cg.build(mat_A);
+            break;
+        case KrylovSolver::BICGSTAB:
+            bicgstab.build(mat_A);
+            break;
+        case KrylovSolver::GMRES:
+            gmres.build(mat_A, 100);
+            break;
+    }
 
     preconditioner* p = nullptr;
     switch(arg.precond)
@@ -77,7 +99,7 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
     if(p != nullptr)
     {
         std::cout << "Build preconditioner" << std::endl;
-        p->build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+        p->build(mat_A.get_row_ptr(), mat_A.get_col_ind(), mat_A.get_val(), mat_A.get_m(), mat_A.get_n(), mat_A.get_nnz());
     }
 
     int iter = 0;
@@ -87,17 +109,17 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    switch(solver)
+    switch(solver_type)
     {
         case KrylovSolver::CG:
-            iter = cg(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, -1);
+            iter = cg.solve(mat_A, vec_x, vec_b, p, control);
             break;
         case KrylovSolver::BICGSTAB:
-           iter = bicgstab(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control);
-           break;
+            iter = bicgstab.solve(mat_A, vec_x, vec_b, p, control);
+            break;
         case KrylovSolver::GMRES:
-           iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, p, control, 100);
-           break;
+            iter = gmres.solve(mat_A, vec_x, vec_b, p, control);
+            break;
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -112,7 +134,17 @@ bool Testing::test_krylov(KrylovSolver solver, Arguments arg)
 
     std::cout << "iter: " << iter << std::endl;
 
-    int norm_type = (solver == KrylovSolver::GMRES) ? 1 : 0;
+    int norm_type = (solver_type == KrylovSolver::GMRES) ? 1 : 0;
+
+    int m = mat_A.get_m();
+    int n = mat_A.get_n();
+    int nnz = mat_A.get_nnz();
+    std::vector<int> csr_row_ptr(mat_A.get_row_ptr(), mat_A.get_row_ptr() + (m + 1));
+    std::vector<int> csr_col_ind(mat_A.get_col_ind(), mat_A.get_col_ind() + nnz);
+    std::vector<double> csr_val(mat_A.get_val(), mat_A.get_val() + nnz);
+    std::vector<double> b(vec_b.get_vec(), vec_b.get_vec() + m);
+    std::vector<double> x(vec_x.get_vec(), vec_x.get_vec() + n);
+    std::vector<double> init_x(vec_init_x.get_vec(), vec_init_x.get_vec() + n);
 
     return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

@@ -31,6 +31,9 @@
 
 #include "../iter_control.h"
 
+#include "../../vector.h"
+#include "../../csr_matrix.h"
+
 /*! \file
  *  \brief richardson.h provides interface for richardson solver
  */
@@ -142,5 +145,28 @@
  */
 LINALGLIB_API int rich(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double theta, iter_control control);
+
+LINALGLIB_API int rich(const csr_matrix2& A, vector2& x, const vector2& b, double theta, iter_control control);
+
+
+
+
+class rich_solver
+{
+private:
+    vector2 res;
+
+public:
+    rich_solver();
+    ~rich_solver();
+
+    rich_solver (const rich_solver&) = delete;
+    rich_solver& operator= (const rich_solver&) = delete;
+
+    void build(const csr_matrix2& A);
+    int solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control, double theta);
+};
+
+
 
 #endif

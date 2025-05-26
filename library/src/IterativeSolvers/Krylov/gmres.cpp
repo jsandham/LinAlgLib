@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/Krylov/gmres.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include "math.h"
 #include <iostream>
 #include <vector>
@@ -475,5 +475,353 @@ int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
     else
     {
         return preconditioned_gmres(csr_row_ptr, csr_col_ind, csr_val, x, b, n, precond, control, restart);
+    }
+}
+
+int gmres(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control, int restart)
+{
+    if(!A.is_on_host() || !x.is_on_host() || !b.is_on_host())
+    {
+        std::cout << "Error: A matrix, x vector, and b vector must on host for jacobi iteration" << std::endl;
+        return -1;
+    }
+
+    return gmres(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), A.get_m(), precond, control, restart);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gmres_solver::gmres_solver() : restart(-1){}
+
+gmres_solver::~gmres_solver(){}
+
+void gmres_solver::build(const csr_matrix2& A, int restart)
+{
+    this->restart = std::min(restart, A.get_m() - 1);
+
+    // create H and Q matrices (which are dense and stored as vectors columnwise)
+    // H has size (restart + 1) x restart
+    // Q has size n x (restart + 1)
+    H.resize((restart + 1) * restart);
+    Q.resize(A.get_m() * (restart + 1));
+    c.resize(restart);
+    s.resize(restart);
+}
+
+int gmres_solver::solve_nonprecond(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control)
+{
+    ROUTINE_TRACE("gmres_solver::solve_nonprecond");
+
+    // res = b - A * x
+    compute_residual(A, x, b, res);
+
+    double res_norm = res.norm_euclid2();
+    double initial_res_norm = res_norm;
+
+    // Check norm of residual against tolerance
+    if(control.residual_converges(res_norm, initial_res_norm))
+    {
+        return 0;
+    }
+
+    for (int i = 0; i < A.get_m(); i++)
+    {
+        Q[i] = res[i] / res_norm;
+    }
+
+    // Re-set residual vector to zero
+    for (int i = 0; i < A.get_m(); i++)
+    {
+        res[i] = 0.0;
+    }
+    res[0] = res_norm;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    // gmres
+    int iter = 0;
+    while (!control.exceed_max_iter(iter))
+    {
+        int k = 1;
+        for(k = 1; k < restart + 1; k++)
+        {
+            // Arnoldi iteration
+            arnoldi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), nullptr, nullptr, Q.get_vec(), H.get_vec(), A.get_m(), k, restart);
+
+            // Solve least squares problem H(1:k+1,1:k) * y = sqrt(r'*r) * eye(k+1,1)
+            // since H is hessenberg, use givens rotations
+            
+            // Apply previous cached givens rotations
+            // Givens 2 by 2 rotation matrix:
+            //  G =  [c s
+            //       -s c]
+            for (int i = 0; i < k - 1; i++)
+            {
+                apply_givens_rotation(c[i], s[i], H.get_vec(), i, k, restart);
+            }
+
+            // calculate new givens rotation
+            compute_givens_rotation(c.get_vec(), s.get_vec(), H.get_vec(), k, restart);
+
+            // apply newest givens rotation to eliminate off diagonal entry
+            apply_givens_rotation(c[k - 1], s[k - 1], H.get_vec(), k - 1, k, restart);
+
+            // update residual vector
+            res[k] = -s[k - 1] * res[k - 1];
+            res[k - 1] = c[k - 1] * res[k - 1];
+
+            if(control.residual_converges(std::abs(res[k]), initial_res_norm) || k == restart)
+            {
+                break;
+            }
+        }
+
+        // std::cout << "H" << std::endl;
+        // for(int i = 0; i < k + 1; i++)
+        // {
+        //     for(int j = 0; j < k; j++)
+        //     {
+        //         std::cout << H[(restart + 1) * j + i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
+        // }
+        // std::cout << "" << std::endl;
+
+        // std::cout << "res" << std::endl;
+        // for(size_t i = 0; i < res.size(); i++)
+        // {
+        //     std::cout << res[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+
+        // backward solve
+        for (int i = k - 1; i >= 0; i--)
+        {
+            for(int j = i + 1; j < k; j++)
+            {
+                res[i] = res[i] - H[i + (restart + 1) * j] * res[j];
+            }
+
+            res[i] = res[i] / H[i + (restart + 1) * i];
+        }
+
+        // update solution vector
+        for (int j = 0; j < k; j++)
+        {
+            for (int i = 0; i < A.get_m(); i++)
+            {
+                x[i] = x[i] + Q[j * A.get_m() + i] * res[j];
+            }
+        }
+
+        // res = b - A * x
+        compute_residual(A, x, b, res);
+
+        res_norm = res.norm_euclid2();
+
+        // Check norm of residual against tolerance
+        if(control.residual_converges(res_norm, initial_res_norm))
+        {
+            break;
+        }
+        
+        for (int i = 0; i < A.get_m(); i++)
+        {
+            Q[i] = res[i] / res_norm;
+        }
+
+        // Re-set residual vector to zero
+        for (int i = 0; i < A.get_m(); i++)
+        {
+            res[i] = 0.0;
+        }
+        res[0] = res_norm;
+
+        iter++;
+    }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "GMRES time: " << ms_double.count() << "ms" << std::endl;
+
+    return iter;
+}
+
+int gmres_solver::solve_precond(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner* precond, iter_control control)
+{
+    ROUTINE_TRACE("gmres_solver::solve_precond");
+
+    assert(precond != nullptr);
+
+    // res = b - A * x
+    compute_residual(A, x, b, res);
+
+    // z = (M^-1) * res
+    precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+
+    double res_norm = z.norm_euclid2();
+    double initial_res_norm = res_norm;
+
+    // Check norm of residual against tolerance
+    if(control.residual_converges(res_norm, initial_res_norm))
+    {
+        return 0;
+    }
+
+    for (int i = 0; i < A.get_m(); i++)
+    {
+        Q[i] = z[i] / res_norm;
+    }
+
+    // Re-set res vector to zero
+    for (int i = 0; i < A.get_m(); i++)
+    {
+        res[i] = 0.0;
+    }
+    res[0] = res_norm;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    // gmres
+    int iter = 0;
+    while (!control.exceed_max_iter(iter))
+    {
+        int k = 1;
+        for(k = 1; k < restart + 1; k++)
+        {
+            // Arnoldi iteration
+            arnoldi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), precond, z.get_vec(), Q.get_vec(), H.get_vec(), A.get_m(), k, restart);
+
+            // Solve least squares problem H(1:k+1,1:k) * y = sqrt(r'*r) * eye(k+1,1)
+            // since H is hessenberg, use givens rotations
+            
+            // Apply previous cached givens rotations
+            // Givens 2 by 2 rotation matrix:
+            //  G =  [c s
+            //       -s c]
+            for (int i = 0; i < k - 1; i++)
+            {
+                apply_givens_rotation(c[i], s[i], H.get_vec(), i, k, restart);
+            }
+
+            // calculate new givens rotation
+            compute_givens_rotation(c.get_vec(), s.get_vec(), H.get_vec(), k, restart);
+
+            // apply newest givens rotation to eliminate off diagonal entry
+            apply_givens_rotation(c[k - 1], s[k - 1], H.get_vec(), k - 1, k, restart);
+
+            // update residual vector
+            res[k] = -s[k - 1] * res[k - 1];
+            res[k - 1] = c[k - 1] * res[k - 1];
+
+            if(control.residual_converges(std::abs(res[k]), initial_res_norm) || k == restart)
+            {
+                break;
+            }
+        }
+
+        // std::cout << "H" << std::endl;
+        // for(int i = 0; i < k + 1; i++)
+        // {
+        //     for(int j = 0; j < k; j++)
+        //     {
+        //         std::cout << H[(restart + 1) * j + i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
+        // }
+        // std::cout << "" << std::endl;
+
+        // std::cout << "res" << std::endl;
+        // for(size_t i = 0; i < res.size(); i++)
+        // {
+        //     std::cout << res[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+
+        // backward solve
+        for (int i = k - 1; i >= 0; i--)
+        {
+            for(int j = i + 1; j < k; j++)
+            {
+                res[i] = res[i] - H[i + (restart + 1) * j] * res[j];
+            }
+
+            res[i] = res[i] / H[i + (restart + 1) * i];
+        }
+
+        // update solution vector
+        for (int j = 0; j < k; j++)
+        {
+            for (int i = 0; i < A.get_m(); i++)
+            {
+                x[i] = x[i] + Q[j * A.get_m() + i] * res[j];
+            }
+        }
+
+        // res = b - A * x
+        compute_residual(A, x, b, res);
+
+        // z = (M^-1) * res
+        precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+
+        res_norm = z.norm_euclid2();
+
+        // Check norm of residual against tolerance
+        if(control.residual_converges(res_norm, initial_res_norm))
+        {
+            break;
+        }
+        
+        for (int i = 0; i < A.get_m(); i++)
+        {
+            Q[i] = z[i] / res_norm;
+        }
+
+        // Re-set residual vector to zero
+        for (int i = 0; i < A.get_m(); i++)
+        {
+            res[i] = 0.0;
+        }
+        res[0] = res_norm;
+
+        iter++;
+    }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "GMRES time: " << ms_double.count() << "ms" << std::endl;
+
+    return iter;
+}
+
+int gmres_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner* precond, iter_control control)
+{
+    ROUTINE_TRACE("gmres_solver::solve");
+
+    if(precond == nullptr)
+    {
+        return solve_nonprecond(A, x, b, control);
+    }
+    else
+    {
+        return solve_precond(A, x, b, precond, control);
     }
 }

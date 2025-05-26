@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/Classic/jacobi.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -92,6 +92,96 @@ int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val
         }
 
         copy(xold.data(), x, n);
+
+        iter++;
+    }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Jacobi time: " << ms_double.count() << "ms" << std::endl;
+
+    return iter;
+}
+
+int jacobi(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control)
+{
+    if(!A.is_on_host() || !x.is_on_host() || !b.is_on_host())
+    {
+        std::cout << "Error: A matrix, x vector, and b vector must on host for jacobi iteration" << std::endl;
+        return -1;
+    }
+
+    return jacobi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), A.get_m(), control);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+jacobi_solver::jacobi_solver(){}
+
+jacobi_solver::~jacobi_solver(){}
+
+void jacobi_solver::build(const csr_matrix2& A)
+{
+    xold.resize(A.get_m());
+    res.resize(A.get_m());
+}
+
+int jacobi_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control)
+{
+    ROUTINE_TRACE("jacobi_solver::solve");
+
+    // res = b - A * x
+    compute_residual(A, x, b, res);
+
+    double initial_res_norm = res.norm_inf2();
+
+    // copy of x
+    xold.copy_from(x);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    int iter = 0;
+    while (!control.exceed_max_iter(iter))
+    {
+        // Jacobi iteration
+        jacobi_iteration(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), xold.get_vec(), b.get_vec(), A.get_m());
+
+        compute_residual(A, x, b, res);
+
+        double res_norm = res.norm_inf2();
+
+        if (control.residual_converges(res_norm, initial_res_norm))
+        {
+            break;
+        }
+
+        xold.copy_from(x);
 
         iter++;
     }

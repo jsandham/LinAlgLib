@@ -24,17 +24,61 @@
 //
 //********************************************************************************
 
-#ifndef TEST_FUNCTIONS_H__
-#define TEST_FUNCTIONS_H__
+#ifndef VECTOR_H
+#define VECTOR_H
 
-#include "test_arguments.h"
+#include <vector>
 
-namespace Testing
+/*! \file
+ *  \brief vector.h provides vector class
+ */
+
+class vector2
 {
-    bool test_dispatch(Arguments arg);
-    bool test_classical(ClassicalSolver solver_type, Arguments arg);
-    bool test_krylov(KrylovSolver solver_type, Arguments arg);
-    bool test_amg(AMGSolver solver_type, Arguments arg);
-} // namespace Testing
+private:
+    std::vector<double> hvec;
+
+    bool on_host;
+
+public:
+    vector2();
+    vector2(size_t size);
+    vector2(const std::vector<double>& vec);
+    ~vector2();
+
+    vector2 (const vector2&) = delete;
+    vector2& operator= (const vector2&) = delete;
+
+    double& operator[](size_t index) 
+    {
+        return hvec[index];
+    }
+
+    const double& operator[](size_t index) const 
+    {
+        return hvec[index];
+    }
+
+    bool is_on_host() const;
+
+    int get_size() const;
+
+    double* get_vec();
+    const double* get_vec() const;
+
+    void copy_from(const vector2& x);
+    void zeros();
+    void ones();
+    void exclusize_scan();
+
+    double dot(const vector2& x) const;
+    double norm_euclid2() const;
+    double norm_inf2() const;
+
+    void resize(size_t size);
+    void move_to_device();
+    void move_to_host();
+};
+
 
 #endif

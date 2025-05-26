@@ -32,6 +32,9 @@
 #include "../iter_control.h"
 #include "../Preconditioner/preconditioner.h"
 
+#include "../../vector.h"
+#include "../../csr_matrix.h"
+
 /*! \file
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
  */
@@ -162,5 +165,40 @@
  */
 LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     const preconditioner *precond, iter_control control);
+
+LINALGLIB_API int bicgstab(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+
+
+
+
+
+
+
+
+class bicgstab_solver
+{
+private:
+    vector2 r;
+    vector2 r0;
+    vector2 p;
+    vector2 v;
+    vector2 t;
+    vector2 z;
+    vector2 q;
+
+    int restart_iter;
+
+public:
+    bicgstab_solver();
+    ~bicgstab_solver();
+
+    bicgstab_solver (const bicgstab_solver&) = delete;
+    bicgstab_solver& operator= (const bicgstab_solver&) = delete;
+
+    void build(const csr_matrix2& A);
+    int solve_nonprecond(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+    int solve_precond(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+};
 
 #endif

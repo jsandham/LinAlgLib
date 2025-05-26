@@ -32,38 +32,40 @@
 
 #include "linalg.h"
 
-bool Testing::test_amg(AMGSolver solver, Arguments arg)
+bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 {
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    //load_diagonally_dominant_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
-    load_mtx_file(arg.filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    csr_matrix2 mat_A;
+    mat_A.read_mtx(arg.filename);
 
     // Solution vector
-    std::vector<double> x(m, 0.0);
-    std::vector<double> init_x(x);
+    vector2 vec_x(mat_A.get_m());
+    vec_x.zeros();
+
+    vector2 vec_init_x(mat_A.get_m());
+    vec_init_x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector2 vec_b(mat_A.get_m());
+    vec_b.ones();
 
-    std::vector<double> e(n, 1.0);
-    matrix_vector_product(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), e.data(), b.data(), n);
+    vector2 vec_e(mat_A.get_n());
+    vec_e.ones();
+
+    mat_A.multiply_vector(vec_b, vec_e);
 
     int max_levels = 100;
 
     heirarchy hierachy;
-    switch(solver)
+    switch(solver_type)
     {
         case AMGSolver::UAAMG:
-            uaamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
+            uaamg_setup(mat_A, max_levels, hierachy);
             break;
         case AMGSolver::SAAMG:
-            saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
+            saamg_setup(mat_A, max_levels, hierachy);
             break;
         case AMGSolver::RSAMG:
-            rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, max_levels, hierachy);
+            rsamg_setup(mat_A, max_levels, hierachy);
             break;
     }
 
@@ -74,11 +76,22 @@ bool Testing::test_amg(AMGSolver solver, Arguments arg)
 
     iter_control control;
 
-    int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
+    // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
+    int cycles = amg_solve(hierachy, vec_x, vec_b, arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
 
     std::cout << "cycles: " << cycles << std::endl;
 
     int norm_type = 0;
+
+    int m = mat_A.get_m();
+    int n = mat_A.get_n();
+    int nnz = mat_A.get_nnz();
+    std::vector<int> csr_row_ptr(mat_A.get_row_ptr(), mat_A.get_row_ptr() + (m + 1));
+    std::vector<int> csr_col_ind(mat_A.get_col_ind(), mat_A.get_col_ind() + nnz);
+    std::vector<double> csr_val(mat_A.get_val(), mat_A.get_val() + nnz);
+    std::vector<double> b(vec_b.get_vec(), vec_b.get_vec() + m);
+    std::vector<double> x(vec_x.get_vec(), vec_x.get_vec() + n);
+    std::vector<double> init_x(vec_init_x.get_vec(), vec_init_x.get_vec() + n);
 
     return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

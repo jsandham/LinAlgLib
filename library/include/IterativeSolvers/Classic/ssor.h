@@ -31,6 +31,9 @@
 
 #include "../iter_control.h"
 
+#include "../../vector.h"
+#include "../../csr_matrix.h"
+
 /*! \file
  *  \brief ssor.h provides interface for ssor solver
  */
@@ -173,5 +176,38 @@
  */
 LINALGLIB_API int ssor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
          double omega, iter_control control);
+
+LINALGLIB_API int ssor(const csr_matrix2& A, vector2& x, const vector2& b, double omega, iter_control control);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class ssor_solver
+{
+private:
+    vector2 res;
+
+public:
+    ssor_solver();
+    ~ssor_solver();
+
+    ssor_solver (const ssor_solver&) = delete;
+    ssor_solver& operator= (const ssor_solver&) = delete;
+
+    void build(const csr_matrix2& A);
+    int solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control, double omega);
+};
+
+
 
 #endif

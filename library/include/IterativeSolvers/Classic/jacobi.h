@@ -31,6 +31,9 @@
 
 #include "../iter_control.h"
 
+#include "../../vector.h"
+#include "../../csr_matrix.h"
+
 /*! \file
  *  \brief jacobi.h provides interface for jacobi solver
  */
@@ -140,5 +143,29 @@
  */
 LINALGLIB_API int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
     iter_control control);
+
+
+LINALGLIB_API int jacobi(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+
+
+
+
+class jacobi_solver
+{
+private:
+    vector2 res;
+    vector2 xold;
+
+public:
+    jacobi_solver();
+    ~jacobi_solver();
+
+    jacobi_solver (const jacobi_solver&) = delete;
+    jacobi_solver& operator= (const jacobi_solver&) = delete;
+
+    void build(const csr_matrix2& A);
+    int solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+};
+
 
 #endif

@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include "math.h"
 #include <algorithm>
 #include <assert.h>
@@ -490,4 +490,10 @@ int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, in
     std::cout << "AMG solve time: " << ms_double.count() << "ms" << std::endl;
 
     return cycle_count;
+}
+
+int amg_solve(const heirarchy &hierarchy, vector2& x, const vector2& b, int n1, int n2, Cycle cycle,
+              Smoother smoother, iter_control control)
+{
+    return amg_solve(hierarchy, x.get_vec(), b.get_vec(), n1, n2, cycle, smoother, control);            
 }

@@ -31,6 +31,9 @@
 
 #include "../iter_control.h"
 
+#include "../../vector.h"
+#include "../../csr_matrix.h"
+
 /*! \file
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
  */
@@ -184,5 +187,30 @@
  */
 LINALGLIB_API int gs(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
        iter_control control);
+
+LINALGLIB_API int gs(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+
+
+
+
+
+
+
+class gs_solver
+{
+private:
+    vector2 res;
+
+public:
+    gs_solver();
+    ~gs_solver();
+
+    gs_solver (const gs_solver&) = delete;
+    gs_solver& operator= (const gs_solver&) = delete;
+
+    void build(const csr_matrix2& A);
+    int solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+};
+
 
 #endif

@@ -28,7 +28,7 @@
 #include "../../../include/IterativeSolvers/AMG/amg_aggregation.h"
 #include "../../../include/IterativeSolvers/AMG/amg_strength.h"
 #include "../../../include/IterativeSolvers/AMG/amg_util.h"
-#include "../../../include/IterativeSolvers/slaf.h"
+#include "../../../include/slaf.h"
 #include <algorithm>
 #include <assert.h>
 #include <cstring>
@@ -273,4 +273,10 @@ void saamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *c
 
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << "Smoothed Aggregation AMG setup time: " << ms_double.count() << "ms" << std::endl;
+}
+
+void saamg_setup(const csr_matrix2& A, int max_level, heirarchy &hierarchy)
+{
+    saamg_setup(A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), A.get_n(), A.get_nnz(),
+                 max_level, hierarchy);
 }

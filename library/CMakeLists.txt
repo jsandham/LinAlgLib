@@ -25,7 +25,7 @@
 ##################################################################################
 
 set(LINALGLIB_HEADERS_PUBLIC
-  include/IterativeSolvers/slaf.h
+  include/slaf.h
   include/EigenValueSolvers/power_iteration.h
   include/IterativeSolvers/AMG/amg_aggregation.h
   include/IterativeSolvers/AMG/amg_strength.h
@@ -45,11 +45,13 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/IterativeSolvers/Krylov/gmres.h
   include/IterativeSolvers/Krylov/cg.h
   include/IterativeSolvers/Preconditioner/preconditioner.h
+  include/vector.h
+  include/csr_matrix.h
   include/linalg.h
 )
 
 set(LINALGLIB_SOURCE
-  src/IterativeSolvers/slaf.cpp
+  src/slaf.cpp
   src/EigenValueSolvers/power_iteration.cpp
   src/IterativeSolvers/AMG/amg_aggregation.cpp
   src/IterativeSolvers/AMG/amg_strength.cpp
@@ -70,6 +72,8 @@ set(LINALGLIB_SOURCE
   src/IterativeSolvers/Krylov/cg.cpp
   src/IterativeSolvers/Preconditioner/preconditioner.cpp
   src/IterativeSolvers/iter_control.cpp
+  src/vector.cpp
+  src/csr_matrix.cpp
   src/perfetto_trace.cpp
 )
 

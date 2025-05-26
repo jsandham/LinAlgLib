@@ -29,13 +29,17 @@
 
 #include <string>
 
-#include "../linalglib_export.h"
+#include "linalglib_export.h"
+#include "vector.h"
+#include "csr_matrix.h"
 
 // Compute y = alpha * x + y
 LINALGLIB_API void axpy(int n, double alpha, const double* x, double* y);
+LINALGLIB_API void axpy(double alpha, const vector2& x, vector2& y);
 
 // Compute y = alpha * x + beta * y
 LINALGLIB_API void axpby(int n, double alpha, const double* x, double beta, double* y);
+LINALGLIB_API void axpby(double alpha, const vector2& x, double beta, vector2& y);
 
 // Compute y = alpha * A * x + beta * y
 LINALGLIB_API void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
@@ -71,6 +75,11 @@ LINALGLIB_API void csric0(int m, int n, int nnz, const int *csr_row_ptr, const i
 LINALGLIB_API void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                            double *y, const int n);
 
+// // Compute C = A * B
+// LINALGLIB_API void matrix_matrix_product(int m, int k, int n, int nnz_A, const int *csr_row_ptr_A, const int *csr_col_ind_A, const double *csr_val_A, 
+//                                          int nnz_B, const int *csr_row_ptr_B, const int *csr_col_ind_B, const double *csr_val_B,
+//                                          int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C);
+
 // Compute result = x * y
 LINALGLIB_API double dot_product(const double *x, const double *y, int n);
 
@@ -78,7 +87,19 @@ LINALGLIB_API double dot_product(const double *x, const double *y, int n);
 LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                       const double* b, double* res, int n);
 
+LINALGLIB_API void compute_residual(const csr_matrix2& A, const vector2& x, const vector2& b, vector2& res);
+
+// Fill array with zeros
+LINALGLIB_API void fill_with_zeros(double *x, int n);
+
+// Fill array with ones
+LINALGLIB_API void fill_with_ones(double *x, int n);
+
+// Exclusive scan
+LINALGLIB_API void compute_exclusize_scan(double *x, int n);
+
 // Copy array
+LINALGLIB_API void copy(int* dest, const int* src, int n);
 LINALGLIB_API void copy(double* dest, const double* src, int n);
 
 // Extract diagonal entries

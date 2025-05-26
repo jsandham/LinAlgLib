@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 
-#include "../../include/IterativeSolvers/slaf.h"
+#include "../include/slaf.h"
 #include "math.h"
 #include <algorithm>
 #include <assert.h>
@@ -32,7 +32,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../trace.h"
+#include "trace.h"
 
 //********************************************************************************
 //
@@ -67,6 +67,11 @@ void axpy(int n, double alpha, const double* x, double* y)
             y[i] = alpha * x[i] + y[i];
         }
     }
+}
+
+void axpy(double alpha, const vector2& x, vector2& y)
+{
+    axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 //-------------------------------------------------------------------------------
@@ -126,6 +131,11 @@ void axpby(int n, double alpha, const double* x, double beta, double* y)
             y[i] = alpha * x[i] + beta * y[i];
         }
     }
+}
+
+void axpby(double alpha, const vector2& x, double beta, vector2& y)
+{
+    axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 //-------------------------------------------------------------------------------
@@ -645,6 +655,34 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
     }
 }
 
+// Compute C = A * B
+// void matrix_matrix_product(int m, int k, int n, int nnz_A, const int *csr_row_ptr_A, const int *csr_col_ind_A, const double *csr_val_A, 
+//                                          int nnz_B, const int *csr_row_ptr_B, const int *csr_col_ind_B, const double *csr_val_B,
+//                                          int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
+// {
+//     ROUTINE_TRACE("matrix_matrix_product");
+
+//     // Compute C = A * B
+//     double alpha = 1.0;
+//     double beta = 0.0;
+
+//     // Determine number of non-zeros in C = A * B product
+//     C.m = A.m;
+//     C.n = B.n;
+//     C.nnz = 0;
+//     C.hcsr_row_ptr.resize(C.m + 1, 0);
+
+//     csrgemm_nnz(A.m, B.n, A.n, A.nnz, B.nnz, 0, alpha, A.hcsr_row_ptr.data(), A.hcsr_col_ind.data(), B.hcsr_row_ptr.data(),
+//                 B.hcsr_col_ind.data(), beta, nullptr, nullptr, C.hcsr_row_ptr.data(), &C.nnz);
+
+//     C.hcsr_col_ind.resize(C.nnz);
+//     C.hcsr_val.resize(C.nnz);
+
+//     csrgemm(A.m, B.n, A.n, A.nnz, B.nnz, 0, alpha, A.hcsr_row_ptr.data(), A.hcsr_col_ind.data(), A.hcsr_val.data(),
+//             B.hcsr_row_ptr.data(), B.hcsr_col_ind.data(), B.hcsr_val.data(), beta, nullptr, nullptr, nullptr,
+//             C.hcsr_row_ptr.data(), C.hcsr_col_ind.data(), C.hcsr_val.data());
+// }
+
 //-------------------------------------------------------------------------------
 // dot product z = x*y
 //-------------------------------------------------------------------------------
@@ -662,6 +700,54 @@ double dot_product(const double *x, const double *y, int n)
     }
 
     return dot_prod;
+}
+
+//-------------------------------------------------------------------------------
+// fill array with zeros
+//-------------------------------------------------------------------------------
+void fill_with_zeros(double *x, int n)
+{
+    ROUTINE_TRACE("fill_with_zeros");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        x[i] = 0.0;
+    }
+}
+
+//-------------------------------------------------------------------------------
+// fill array with ones
+//-------------------------------------------------------------------------------
+void fill_with_ones(double *x, int n)
+{
+    ROUTINE_TRACE("fill_with_ones");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        x[i] = 1.0;
+    }
+}
+
+//-------------------------------------------------------------------------------
+// exclusive scan
+//-------------------------------------------------------------------------------
+void compute_exclusize_scan(double *x, int n)
+{
+    if(n > 0)
+    {
+        x[0] = 0;
+
+        for(int i = 0; i < n - 1; i++)
+        {
+            x[i + 1] += x[i];
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------
@@ -690,9 +776,27 @@ void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const doub
     }
 }
 
+void compute_residual(const csr_matrix2& A, const vector2& x, const vector2& b, vector2& res)
+{
+    compute_residual(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), res.get_vec(), A.get_m());
+}
+
 //-------------------------------------------------------------------------------
 // copy array
 //-------------------------------------------------------------------------------
+void copy(int* dest, const int* src, int n)
+{
+    ROUTINE_TRACE("copy");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        dest[i] = src[i];
+    }
+}
+
 void copy(double* dest, const double* src, int n)
 {
     ROUTINE_TRACE("copy");
