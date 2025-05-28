@@ -878,6 +878,203 @@ static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_m
     }
 }
 
+static void direct_interpolation(const csr_matrix2 &A, const csr_matrix2 &S, csr_matrix2 &P, std::vector<uint32_t> cfpoints)
+{
+    // Determine number of C points. The prolongation operator will have number 
+    // of columns equal to the number of C points
+    int c_point_count = 0;
+    for(int i = 0; i < A.get_m(); i++)
+    {
+        if(cfpoints[i] == C_POINT)
+        {
+            c_point_count++;
+        }
+    }
+
+    P.resize(A.get_m(), c_point_count, 0);
+
+    //P.m = A.m;
+    //P.n = c_point_count;
+    //P.csr_row_ptr.resize(P.m + 1);
+
+    const int* csr_row_ptr_A = A.get_row_ptr();
+    const int* csr_col_ind_A = A.get_col_ind();
+    const double* csr_val_A = A.get_val();
+
+    const int* csr_row_ptr_S = S.get_row_ptr();
+    const int* csr_col_ind_S = S.get_col_ind();
+    const double* csr_val_S = S.get_val();
+
+    int* csr_row_ptr_P = P.get_row_ptr();
+
+    // Fill prolongation row pointer array
+    csr_row_ptr_P[0] = 0;
+    for(int i = 0; i < P.get_m(); i++)
+    {
+        if(cfpoints[i] == C_POINT)
+        {
+            csr_row_ptr_P[i + 1] = 1;
+        }
+        else
+        {
+            assert(cfpoints[i] == F_POINT);
+
+            int S_row_start = csr_row_ptr_S[i];
+            int S_row_end = csr_row_ptr_S[i + 1];
+
+            for(int j = S_row_start; j < S_row_end; j++)
+            {
+                int S_col_j = csr_col_ind_S[j];
+
+                if(cfpoints[S_col_j] == C_POINT)
+                {
+                    csr_row_ptr_P[i + 1]++;
+                }
+            }
+        }
+    }
+
+    // Exclusive scan on row pointer array
+    for(int i = 0; i < P.get_m(); i++)
+    {
+        csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
+    }
+
+    std::cout << "P.csr_row_ptr" << std::endl;
+    for(int i = 0; i < P.get_m() + 1; i++)
+    {
+        std::cout << csr_row_ptr_P[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    // Allocate prolongation column indices and values arrays
+    P.resize(P.get_m(), P.get_n(), csr_row_ptr_P[P.get_m()]);
+    //P.nnz = P.csr_row_ptr[P.m];
+    //P.csr_col_ind.resize(P.nnz);
+    //P.csr_val.resize(P.nnz);
+
+    int* csr_col_ind_P = P.get_col_ind();
+    double* csr_val_P = P.get_val();
+
+    std::cout << "P.nnz: " << P.get_nnz() << std::endl;
+
+    std::vector<uint32_t> cfpoints_ind(A.get_m() + 1);
+
+    cfpoints_ind[0] = 0;
+    for(int i = 0; i < P.get_m(); i++)
+    {
+        cfpoints_ind[i + 1] = cfpoints[i];
+    }
+
+    // Exclusive scan on copy of cfpoints array
+    for(int i = 0; i < P.get_m(); i++)
+    {
+        cfpoints_ind[i + 1] += cfpoints_ind[i];
+    }
+
+    for(int i = 0; i < P.get_m(); i++)
+    {
+        int P_row_start = csr_row_ptr_P[i];
+        int P_row_end = csr_row_ptr_P[i + 1];
+
+        std::cout << "P_row_start: " << P_row_start << std::endl;
+
+        if(cfpoints[i] == C_POINT)
+        {
+            assert((P_row_end - P_row_start) == 1);
+
+            csr_col_ind_P[P_row_start] = cfpoints_ind[i];
+            csr_val_P[P_row_start] = 1.0;
+        }
+        else
+        {
+            double diag = 0.0;
+            double offdiag_pos_sum = 0.0;
+            double offdiag_neg_sum = 0.0;
+            
+            int A_row_start = csr_row_ptr_A[i];
+            int A_row_end = csr_row_ptr_A[i + 1];
+
+            for(int j = A_row_start; j < A_row_end; j++)
+            {
+                int A_col_j = csr_col_ind_A[j];
+
+                if(i == A_col_j)
+                {
+                    diag == csr_val_A[j];
+                }
+                else
+                {
+                    if(csr_val_A[j] < 0.0)
+                    {
+                        offdiag_neg_sum += csr_val_A[j];
+                    }
+                    else
+                    {
+                        offdiag_pos_sum += csr_val_A[j];
+                    }
+                }
+            }
+
+            double strong_offdiag_pos_sum = 0.0;
+            double strong_offdiag_neg_sum = 0.0;
+
+            int S_row_start = csr_row_ptr_S[i];
+            int S_row_end = csr_row_ptr_S[i + 1];
+
+            // S does not contain diagonal
+            for(int j = S_row_start; j < S_row_end; j++)
+            {
+                int A_col_j = csr_col_ind_A[j];
+
+                if(cfpoints[A_col_j] == C_POINT)
+                {
+                    if(csr_val_S[j] < 0.0)
+                    {
+                        strong_offdiag_neg_sum += csr_val_S[j];
+                    }
+                    else
+                    {
+                        strong_offdiag_pos_sum += csr_val_S[j];
+                    }
+                }
+            }
+
+            std::cout << "offdiag_pos_sum: " << offdiag_pos_sum 
+                      << " offdiag_neg_sum: " << offdiag_neg_sum 
+                      << " strong_offdiag_pos_sum: " << strong_offdiag_pos_sum 
+                      << " strong_offdiag_neg_sum: " << strong_offdiag_neg_sum << std::endl;
+
+            double alpha = offdiag_neg_sum / strong_offdiag_neg_sum;
+            double beta  = offdiag_pos_sum / strong_offdiag_pos_sum;
+
+            for(int j = S_row_start; j < S_row_end; j++)
+            {
+                int S_col_j = csr_col_ind_S[j];
+
+                if(cfpoints[S_col_j] == C_POINT)
+                {
+                    assert(P_row_start < P_row_end);
+
+                    csr_col_ind_P[P_row_start] = cfpoints_ind[S_col_j];
+                    if(csr_val_S[j] < 0.0)
+                    {
+                        csr_val_P[P_row_start] = -alpha * csr_val_S[j] / diag; 
+                    }
+                    else
+                    {
+                        csr_val_P[P_row_start] = -beta * csr_val_S[j] / diag; 
+                    }
+
+                    P_row_start++;
+                }
+            }
+
+            assert(P_row_start == P_row_end);
+        }
+    }
+}
+
 void rsamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
     int max_level, heirarchy &hierarchy)
 {
@@ -974,8 +1171,102 @@ void rsamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *c
     std::cout << "Ruge Steuben AMG setup time: " << ms_double.count() << "ms" << std::endl;
 }
 
-void rsamg_setup(const csr_matrix2& A, int max_level, heirarchy &hierarchy)
+void rsamg_setup(const csr_matrix2& A, int max_level, heirarchy2 &hierarchy)
 {
-    rsamg_setup(A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), A.get_n(), A.get_nnz(),
-                 max_level, hierarchy);
+    ROUTINE_TRACE("rsamg_setup");
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    hierarchy.prolongations.resize(max_level);
+    hierarchy.restrictions.resize(max_level);
+    hierarchy.A_cs.resize(max_level + 1);
+
+    // Set original matrix at level 0 in the hierarchy
+    hierarchy.A_cs[0].copy_from(A);
+    //hierarchy.A_cs[0].m = m;
+    //hierarchy.A_cs[0].n = m;
+    //hierarchy.A_cs[0].nnz = nnz;
+    //hierarchy.A_cs[0].csr_row_ptr.resize(m + 1);
+    //hierarchy.A_cs[0].csr_col_ind.resize(nnz);
+    //hierarchy.A_cs[0].csr_val.resize(nnz);
+    //
+    //for (int i = 0; i < m + 1; i++)
+    //{
+    //    hierarchy.A_cs[0].csr_row_ptr[i] = csr_row_ptr[i];
+    //}
+    //
+    //for (int i = 0; i < nnz; i++)
+    //{
+    //    hierarchy.A_cs[0].csr_col_ind[i] = csr_col_ind[i];
+    //    hierarchy.A_cs[0].csr_val[i] = csr_val[i];
+    //}
+
+    double theta = 0.2;
+
+    int level = 0;
+    while (level < max_level)
+    {
+        std::cout << "Compute operators at coarse level: " << level << std::endl;
+
+        csr_matrix2 &A_fine = hierarchy.A_cs[level];
+        csr_matrix2 &A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix2 &P = hierarchy.prolongations[level];
+        csr_matrix2 &R = hierarchy.restrictions[level];
+
+        csr_matrix2 S;
+        csr_matrix2 ST;
+
+        std::vector<int> connections(A_fine.get_nnz(), 0);
+        std::vector<uint32_t> cfpoints(A_fine.get_m(), 0);
+
+        compute_classical_strong_connections(A_fine, theta, S, connections);
+
+        //transpose(S, ST);
+        S.transpose(ST);
+
+        //compute_cfpoint_first_pass(S, ST, cfpoints);
+
+        //compute_cfpoint_second_pass(S, cfpoints);
+
+        std::cout << "cfpoints (second pass)" << std::endl;
+        for(size_t i = 0; i < cfpoints.size(); i++)
+        {
+            std::cout << cfpoints[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        //print_matrix("S", S.csr_row_ptr.data(), S.csr_col_ind.data(), S.csr_val.data(), S.m, S.n, S.nnz);
+        S.print_matrix("S");
+
+        // compute interpolation matrix P
+        direct_interpolation(A_fine, S, P, cfpoints);
+
+        //print_matrix("Weight", P.csr_row_ptr.data(), P.csr_col_ind.data(), P.csr_val.data(), P.m, P.n, P.nnz);
+        P.print_matrix("Weight");
+
+        if (P.get_n() == 0)
+        {
+            break;
+        }
+
+        // Compute restriction matrix by transpose of prolongation matrix
+        //transpose(P, R);
+        P.transpose(R);
+
+        // Compute coarse grid matrix using Galarkin triple product A_c = R * A * P
+        galarkin_triple_product(R, A_fine, P, A_coarse);
+
+        level++;
+    }
+
+    hierarchy.total_levels = level;
+
+    std::cout << "Total number of levels in operator hierarchy at the end of the "
+                 "setup phase: "
+              << level << std::endl;
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Ruge Steuben AMG setup time: " << ms_double.count() << "ms" << std::endl;
 }

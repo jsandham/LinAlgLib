@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "../../linalglib_export.h"
+#include "../../csr_matrix.h"
 
 #include "amg_util.h"
 
@@ -42,10 +43,12 @@
  *  \brief Compute smoothed aggregation strong connections
  */
 LINALGLIB_API void compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections);
+LINALGLIB_API void compute_strong_connections(const csr_matrix2 &A, double eps, std::vector<int> &connections);
 
 /*! \ingroup iterative_solvers
  *  \brief Compute classical strength matrix
  */
 LINALGLIB_API void compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, std::vector<int> &connections);
+LINALGLIB_API void compute_classical_strong_connections(const csr_matrix2 &A, double theta, csr_matrix2 &S, std::vector<int> &connections);
 
 #endif

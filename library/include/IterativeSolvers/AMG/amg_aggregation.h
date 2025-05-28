@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "../../linalglib_export.h"
+#include "../../csr_matrix.h"
 
 #include "amg_util.h"
 
@@ -44,16 +45,20 @@
  */
 LINALGLIB_API bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
                                    std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes);
+LINALGLIB_API bool compute_aggregates_using_pmis(const csr_matrix2 &A, const std::vector<int> &connections,
+                                   std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes);
 
 /*! \ingroup iterative_solvers
  *  \brief Compute classical C/F points (first pass)
  */
 LINALGLIB_API void compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, std::vector<uint32_t> &cfpoints);
+LINALGLIB_API void compute_cfpoint_first_pass(const csr_matrix2 &S, const csr_matrix2 &ST, std::vector<uint32_t> &cfpoints);
 
  /*! \ingroup iterative_solvers
   *  \brief Compute classical C/F points (second pass)
   */
 LINALGLIB_API void compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32_t> &cfpoints);
+LINALGLIB_API void compute_cfpoint_second_pass(const csr_matrix2 &S, std::vector<uint32_t> &cfpoints);
  
 
 #endif

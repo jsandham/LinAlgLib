@@ -122,12 +122,16 @@ void csr_matrix2::resize(int m, int n, int nnz)
 
 void csr_matrix2::copy_from(const csr_matrix2& A)
 {
-    copy(hcsr_row_ptr.data(), A.get_row_ptr(), hcsr_row_ptr.size());
-    copy(hcsr_col_ind.data(), A.get_col_ind(), hcsr_col_ind.size());
-    copy(hcsr_val.data(), A.get_val(), hcsr_val.size());
     this->m = A.get_m();
     this->n = A.get_n();
     this->nnz = A.get_nnz();
+    this->hcsr_row_ptr.resize(A.get_m() + 1);
+    this->hcsr_col_ind.resize(A.get_nnz());
+    this->hcsr_val.resize(A.get_nnz());
+
+    copy(this->hcsr_row_ptr.data(), A.get_row_ptr(), this->hcsr_row_ptr.size());
+    copy(this->hcsr_col_ind.data(), A.get_col_ind(), this->hcsr_col_ind.size());
+    copy(this->hcsr_val.data(), A.get_val(), this->hcsr_val.size());
 }
 
 void csr_matrix2::extract_diagonal(vector2& diag) const

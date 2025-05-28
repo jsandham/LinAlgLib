@@ -55,7 +55,7 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 
     int max_levels = 100;
 
-    heirarchy hierachy;
+    heirarchy2 hierachy;
     switch(solver_type)
     {
         case AMGSolver::UAAMG:

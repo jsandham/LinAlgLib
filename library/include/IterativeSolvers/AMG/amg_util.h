@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "../../linalglib_export.h"
+#include "../../csr_matrix.h"
 
 /*! \file
  *  \brief amg_util.h provides interface for algebraic multigrid solver
@@ -126,5 +127,8 @@ LINALGLIB_API void transpose(const csr_matrix &prolongation, csr_matrix &restric
 * number of degrees of freedom on the coarse level.
 */
 LINALGLIB_API void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse);
+
+
+LINALGLIB_API void galarkin_triple_product(const csr_matrix2 &R, const csr_matrix2 &A, const csr_matrix2 &P, csr_matrix2 &A_coarse);
 
 #endif

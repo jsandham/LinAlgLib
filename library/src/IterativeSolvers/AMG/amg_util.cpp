@@ -199,3 +199,17 @@ void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr
     // std::cout << "" << std::endl;
 }
 
+void galarkin_triple_product(const csr_matrix2 &R, const csr_matrix2 &A, const csr_matrix2 &P, csr_matrix2 &A_coarse)
+{
+    ROUTINE_TRACE("galarkin_triple_product");
+
+    // Compute AP = A * P;
+    csr_matrix2 AP;
+    A.multiply_matrix(AP, P);
+
+    // Compute A_coarse = R * A * P
+    R.multiply_matrix(A_coarse, AP);
+
+    //A_coarse.print_matrix("A coarse");
+}
+

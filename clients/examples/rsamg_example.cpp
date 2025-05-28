@@ -49,7 +49,7 @@ int main()
 
     iter_control control;
 
-    // int cycles = amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
+    // int cycles = (hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
     // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
     // int cycles = amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::SOR, control);
 

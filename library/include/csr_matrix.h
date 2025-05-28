@@ -97,7 +97,7 @@ public:
     csr_matrix2(const std::vector<int>& csr_row_ptr, const std::vector<int>& csr_col_ind, const std::vector<double>& csr_val, int m, int n, int nnz);
     ~csr_matrix2();
 
-    csr_matrix2 (const csr_matrix2&) = delete;
+    //csr_matrix2 (const csr_matrix2&) = delete;
     csr_matrix2& operator= (const csr_matrix2&) = delete;
 
     bool is_on_host() const;
