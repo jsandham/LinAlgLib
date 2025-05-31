@@ -177,25 +177,12 @@
  * }
  * \endcode
  */
-LINALGLIB_API int cg(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-       const preconditioner *precond, iter_control control, int restart_iter);
-
-LINALGLIB_API int cg(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control, 
-       int restart_iter);
-
-
-
-
-
-
-
-
 class cg_solver
 {
 private:
-    vector2 z;
-    vector2 p;
-    vector2 res;
+    vector z;
+    vector p;
+    vector res;
 
     int restart_iter;
 
@@ -206,10 +193,10 @@ public:
     cg_solver (const cg_solver&) = delete;
     cg_solver& operator= (const cg_solver&) = delete;
 
-    void build(const csr_matrix2& A);
-    int solve_nonprecond(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
-    int solve_precond(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
-    int solve(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+    void build(const csr_matrix& A);
+    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
 
 #endif

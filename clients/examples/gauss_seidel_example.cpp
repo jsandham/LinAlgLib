@@ -43,30 +43,32 @@ int main()
     // std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
     // std::vector<double> csr_val = { 4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0,
     // -1.0, 4.0 };
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    load_mtx_file("../matrices/mesh2em5.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    csr_matrix A;
+    A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
 
     // Solution vector
-    std::vector<double> x(m, 0.0);
+    vector x(A.get_m());
+    x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector b(A.get_m());
+    b.ones();
+
+    gs_solver gs;
+    gs.build(A);
 
     iter_control control;
     control.max_iter = 1000;
     control.rel_tol = 1e-08;
     control.abs_tol = 1e-08;
 
-    int iter = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
+    int iter = gs.solve(A, x, b, control);
 
     std::cout << "iter: " << iter << std::endl;
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (size_t i = 0; i < x.size(); i++)
+    for (int i = 0; i < x.get_size(); i++)
     {
         std::cout << x[i] << " ";
     }

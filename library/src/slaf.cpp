@@ -69,7 +69,7 @@ void axpy(int n, double alpha, const double* x, double* y)
     }
 }
 
-void axpy(double alpha, const vector2& x, vector2& y)
+void axpy(double alpha, const vector& x, vector& y)
 {
     axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
@@ -133,7 +133,7 @@ void axpby(int n, double alpha, const double* x, double beta, double* y)
     }
 }
 
-void axpby(double alpha, const vector2& x, double beta, vector2& y)
+void axpby(double alpha, const vector& x, double beta, vector& y)
 {
     axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
@@ -776,7 +776,7 @@ void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const doub
     }
 }
 
-void compute_residual(const csr_matrix2& A, const vector2& x, const vector2& b, vector2& res)
+void compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res)
 {
     compute_residual(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), res.get_vec(), A.get_m());
 }
@@ -834,6 +834,11 @@ void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
             }
         }
     }
+}
+
+void diagonal(const csr_matrix& A, vector& d)
+{
+    diagonal(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }
 
 //-------------------------------------------------------------------------------

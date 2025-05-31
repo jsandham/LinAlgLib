@@ -183,33 +183,15 @@
  * }
  * \endcode
  */
-LINALGLIB_API int gmres(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-    const preconditioner *precond, iter_control control, int restart);
-
-LINALGLIB_API int gmres(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control, 
-       int restart);
-
-
-
-
-
-
-
-
-
-
-
-
-
 class gmres_solver
 {
 private:
-    vector2 H;
-    vector2 Q;
-    vector2 c;
-    vector2 s;
-    vector2 res;
-    vector2 z;
+    vector H;
+    vector Q;
+    vector c;
+    vector s;
+    vector res;
+    vector z;
 
     int restart;
 
@@ -220,10 +202,10 @@ public:
     gmres_solver (const gmres_solver&) = delete;
     gmres_solver& operator= (const gmres_solver&) = delete;
 
-    void build(const csr_matrix2& A, int restart);
-    int solve_nonprecond(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
-    int solve_precond(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
-    int solve(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+    void build(const csr_matrix& A, int restart);
+    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
 
 

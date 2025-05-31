@@ -32,6 +32,8 @@
 int main()
 {
     int m = 5;
+    int n = 5;
+    int nnz = 15;
 
     // 4 3 0 0 2
     // 1 2 3 0 0
@@ -42,21 +44,28 @@ int main()
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0};
 
+    csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+
     // Solution vector
-    std::vector<double> x(m, 0.0);
+    vector x(A.get_m());
+    x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector b(A.get_m());
+    b.ones();
+
+    gmres_solver gmres;
+    gmres.build(A, 5);
 
     iter_control control;
 
-    int iter = gmres(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, nullptr, control, 1000);
+    int iter = gmres.solve(A, x, b, nullptr, control);
 
     std::cout << "iter: " << iter << std::endl;
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (size_t i = 0; i < x.size(); i++)
+    for (int i = 0; i < x.get_size(); i++)
     {
         std::cout << x[i] << " ";
     }

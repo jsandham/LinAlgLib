@@ -33,7 +33,7 @@
  *  \brief vector.h provides vector class
  */
 
-class vector2
+class vector
 {
 private:
     std::vector<double> hvec;
@@ -41,13 +41,13 @@ private:
     bool on_host;
 
 public:
-    vector2();
-    vector2(size_t size);
-    vector2(const std::vector<double>& vec);
-    ~vector2();
+    vector();
+    vector(size_t size);
+    vector(const std::vector<double>& vec);
+    ~vector();
 
-    vector2 (const vector2&) = delete;
-    vector2& operator= (const vector2&) = delete;
+    vector (const vector&) = delete;
+    vector& operator= (const vector&) = delete;
 
     double& operator[](size_t index) 
     {
@@ -66,12 +66,12 @@ public:
     double* get_vec();
     const double* get_vec() const;
 
-    void copy_from(const vector2& x);
+    void copy_from(const vector& x);
     void zeros();
     void ones();
     void exclusize_scan();
 
-    double dot(const vector2& x) const;
+    double dot(const vector& x) const;
     double norm_euclid2() const;
     double norm_inf2() const;
 

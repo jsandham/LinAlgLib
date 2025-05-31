@@ -33,6 +33,7 @@
 
 #include "../../linalglib_export.h"
 #include "../../vector.h"
+#include "../../csr_matrix.h"
 
 #include "../iter_control.h"
 
@@ -93,64 +94,6 @@ struct heirarchy
     */
     int total_levels;
 };
-
-
-
-
-
-
-
-struct heirarchy2
-{
-    /**
-    * @brief Prolongation matrices.
-    *
-    * These matrices are used to interpolate the correction computed on a coarser
-    * level back to the next finer level. The vector stores the prolongation
-    * operators between consecutive levels, where `prolongations[i]` maps from
-    * level `i+1` to level `i`.
-    */
-    std::vector<csr_matrix2> prolongations;
-
-    /**
-    * @brief Restriction matrices.
-    *
-    * These matrices are used to transfer the residual from a finer level to the
-    * next coarser level. The vector stores the restriction operators between
-    * consecutive levels, where `restrictions[i]` maps from level `i` to level `i+1`.
-    * Typically, the restriction operator is related to the transpose of the
-    * prolongation operator.
-    */
-    std::vector<csr_matrix2> restrictions;
-
-    /**
-    * @brief Coarse level matrices.
-    *
-    * These matrices represent the discretized problem on the coarser levels of
-    * the multigrid hierarchy. `A_cs[i]` is the system matrix at level `i` of the
-    * hierarchy, with `A_cs[0]` being the original system matrix on the finest level.
-    * The size of these matrices decreases as the level number increases.
-    */
-    std::vector<csr_matrix2> A_cs;
-
-    /**
-    * @brief Number of levels in the hierarchy.
-    *
-    * This integer indicates the total number of levels in the multigrid hierarchy,
-    * including the finest level and all the coarser levels. A hierarchy with
-    * `total_levels = 1` would represent a direct solver without any multigrid
-    * coarsening.
-    */
-    int total_levels;
-};
-
-
-
-
-
-
-
-
 
 /*! \ingroup iterative_solvers
  * \brief Cycle type used in algebraic multigrid solver
@@ -365,10 +308,7 @@ enum class Smoother
  * \endcode
  */
 /**@}*/
-LINALGLIB_API int amg_solve(const heirarchy &hierarchy, double *x, const double *b, int n1, int n2, Cycle cycle,
-    Smoother smoother, iter_control control);
-
-LINALGLIB_API int amg_solve(const heirarchy2 &hierarchy, vector2& x, const vector2& b, int n1, int n2, Cycle cycle,
+LINALGLIB_API int amg_solve(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control);
 
 #endif

@@ -37,60 +37,6 @@
  */
 
 /*! \ingroup iterative_solvers
- * \brief Data structure for storing sparse CSR matrices
- *
- * \details
- * This struct represents a sparse matrix stored in the Compressed Sparse Row (CSR) format.
- * The CSR format is efficient for storing and operating on sparse matrices, as it only
- * stores the non-zero elements along with information about their row and column indices.
- */
-struct csr_matrix
-{
-    /**
-    * @brief Number of rows in the CSR matrix.
-    */
-    int m;
-
-    /**
-    * @brief Number of columns in the CSR matrix.
-    */
-    int n;
-
-    /**
-    * @brief Number of non-zeros in the CSR matrix.
-    */
-    int nnz;
-
-    /**
-    * @brief Row pointer array of CSR format.
-    *
-    * `csr_row_ptr` is an array of length `m + 1`. `csr_row_ptr[i]` stores the index
-    * in the `csr_col_ind` and `csr_val` arrays where the non-zero elements of the
-    * `i`-th row start. The last element, `csr_row_ptr[m]`, stores the total number
-    * of non-zero elements (`nnz`).
-    */
-    std::vector<int> csr_row_ptr;
-
-    /**
-    * @brief Column indices array of CSR format.
-    *
-    * `csr_col_ind` is an array of length `nnz` that stores the column index of each
-    * non-zero element. The column indices for the non-zero elements in row `i` are
-    * stored in `csr_col_ind[csr_row_ptr[i] : csr_row_ptr[i+1] - 1]`.
-    */
-    std::vector<int> csr_col_ind;
-
-    /**
-    * @brief Values array of CSR format.
-    *
-    * `csr_val` is an array of length `nnz` that stores the numerical value of each
-    * non-zero element. The values for the non-zero elements in row `i` are stored
-    * in `csr_val[csr_row_ptr[i] : csr_row_ptr[i+1] - 1]`.
-    */
-    std::vector<double> csr_val;
-};
-
-/*! \ingroup iterative_solvers
 * \brief Transpose a CSR matrix.
 *
 * \param prolongation The input CSR matrix to be transposed. Typically represents a prolongation operator.
@@ -127,8 +73,5 @@ LINALGLIB_API void transpose(const csr_matrix &prolongation, csr_matrix &restric
 * number of degrees of freedom on the coarse level.
 */
 LINALGLIB_API void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse);
-
-
-LINALGLIB_API void galarkin_triple_product(const csr_matrix2 &R, const csr_matrix2 &A, const csr_matrix2 &P, csr_matrix2 &A_coarse);
 
 #endif

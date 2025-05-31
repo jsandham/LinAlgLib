@@ -35,12 +35,18 @@
 //-------------------------------------------------------------------------------
 // successive over-relaxation method
 //-------------------------------------------------------------------------------
-void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b,
-                     int n, double omega)
+void sor_iteration(const csr_matrix& A, vector& x, const vector& b, double omega)
 {
     ROUTINE_TRACE("sor_iteration");
 
-    for (int j = 0; j < n; j++)
+    const int* csr_row_ptr = A.get_row_ptr();
+    const int* csr_col_ind = A.get_col_ind();
+    const double* csr_val = A.get_val();
+
+    double* x_ptr = x.get_vec();
+    const double* b_ptr = b.get_vec();
+
+    for (int j = 0; j < A.get_m(); j++)
     {
         double sigma = 0.0;
         double ajj = 0.0; // diagonal entry a_jj
@@ -55,7 +61,7 @@ void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double 
 
             if (col != j)
             {
-                sigma = sigma + val * x[col];
+                sigma = sigma + val * x_ptr[col];
             }
             else
             {
@@ -63,87 +69,20 @@ void sor_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double 
             }
         }
     
-        x[j] = x[j] + omega * ((b[j] - sigma) / ajj - x[j]);
+        x_ptr[j] = x_ptr[j] + omega * ((b_ptr[j] - sigma) / ajj - x_ptr[j]);
     }
 }
-
-int sor(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-        double omega, iter_control control)
-{
-    ROUTINE_TRACE("sor");
-
-    // res = b - A * x
-    std::vector<double> res(n);
-    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
-
-    double initial_res_norm = norm_inf(res.data(), n);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    int iter = 0;
-    while (!control.exceed_max_iter(iter))
-    {
-        // SOR iteration
-        sor_iteration(csr_row_ptr, csr_col_ind, csr_val, x, b, n, omega);
-
-        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
-
-        double res_norm = norm_inf(res.data(), n);
-
-        if (control.residual_converges(res_norm, initial_res_norm))
-        {
-            break;
-        }
-
-        iter++;
-    }
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "SOR time: " << ms_double.count() << "ms" << std::endl;
-
-    return iter;
-}
-
-int sor(const csr_matrix2& A, vector2& x, const vector2& b, double omega, iter_control control)
-{
-    if(!A.is_on_host() || !x.is_on_host() || !b.is_on_host())
-    {
-        std::cout << "Error: A matrix, x vector, and b vector must on host for jacobi iteration" << std::endl;
-        return -1;
-    }
-
-    return sor(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), A.get_m(), omega, control);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 sor_solver::sor_solver(){}
 
 sor_solver::~sor_solver(){}
 
-void sor_solver::build(const csr_matrix2& A)
+void sor_solver::build(const csr_matrix& A)
 {
     res.resize(A.get_m());
 }
 
-int sor_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control, double omega)
+int sor_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double omega)
 {
     ROUTINE_TRACE("sor_solver::solve");
 
@@ -158,7 +97,7 @@ int sor_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_c
     while (!control.exceed_max_iter(iter))
     {
         // SOR iteration
-        sor_iteration(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), A.get_m(), omega);
+        sor_iteration(A, x, b, omega);
 
         compute_residual(A, x, b, res);
 

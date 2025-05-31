@@ -44,7 +44,7 @@
  * The CSR format is efficient for storing and operating on sparse matrices, as it only
  * stores the non-zero elements along with information about their row and column indices.
  */
-class csr_matrix2
+class csr_matrix
 {
 private:
     /**
@@ -93,12 +93,12 @@ private:
     bool on_host;
 
 public:
-    csr_matrix2();
-    csr_matrix2(const std::vector<int>& csr_row_ptr, const std::vector<int>& csr_col_ind, const std::vector<double>& csr_val, int m, int n, int nnz);
-    ~csr_matrix2();
+    csr_matrix();
+    csr_matrix(const std::vector<int>& csr_row_ptr, const std::vector<int>& csr_col_ind, const std::vector<double>& csr_val, int m, int n, int nnz);
+    ~csr_matrix();
 
-    //csr_matrix2 (const csr_matrix2&) = delete;
-    csr_matrix2& operator= (const csr_matrix2&) = delete;
+    //csr_matrix (const csr_matrix&) = delete;
+    csr_matrix& operator= (const csr_matrix&) = delete;
 
     bool is_on_host() const;
 
@@ -115,13 +115,13 @@ public:
     double* get_val();
 
     void resize(int m, int n, int nnz);
-    void copy_from(const csr_matrix2& A);
+    void copy_from(const csr_matrix& A);
 
-    void extract_diagonal(vector2& diag) const;
-    void multiply_vector(vector2& y, const vector2& x) const;
-    void multiply_vector_and_add(vector2& y, const vector2& x) const;
-    void multiply_matrix(csr_matrix2& C, const csr_matrix2& B) const;
-    void transpose(csr_matrix2& T) const;
+    void extract_diagonal(vector& diag) const;
+    void multiply_vector(vector& y, const vector& x) const;
+    void multiply_vector_and_add(vector& y, const vector& x) const;
+    void multiply_matrix(csr_matrix& C, const csr_matrix& B) const;
+    void transpose(csr_matrix& T) const;
 
     void move_to_device();
     void move_to_host();

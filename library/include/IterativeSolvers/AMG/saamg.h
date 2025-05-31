@@ -161,10 +161,7 @@
  * }
  * \endcode
  */
-LINALGLIB_API void saamg_setup(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
-    int max_level, heirarchy &hierarchy);
-
-LINALGLIB_API void saamg_setup(const csr_matrix2& mat_A, int max_level, heirarchy2 &hierarchy);
+LINALGLIB_API void saamg_setup(const csr_matrix& mat_A, int max_level, heirarchy &hierarchy);
 
 
 #endif

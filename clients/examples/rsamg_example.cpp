@@ -32,20 +32,19 @@
 
 int main()
 {
-    int m, n, nnz;
-    std::vector<int> csr_row_ptr;
-    std::vector<int> csr_col_ind;
-    std::vector<double> csr_val;
-    load_mtx_file("../matrices/SPD/ex5/ex5.mtx", csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    csr_matrix A;
+    A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
 
     // Solution vector
-    std::vector<double> x(m, 0.0);
+    vector x(A.get_m());
+    x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector b(A.get_m());
+    b.ones();
 
     heirarchy hierachy;
-    rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierachy);
+    rsamg_setup(A, 10, hierachy);
 
     iter_control control;
 
@@ -55,7 +54,7 @@ int main()
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (size_t i = 0; i < x.size(); i++)
+    for (int i = 0; i < x.get_size(); i++)
     {
     	std::cout << x[i] << " ";
     }

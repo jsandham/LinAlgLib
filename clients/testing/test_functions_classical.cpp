@@ -34,22 +34,22 @@
 
 bool Testing::test_classical(ClassicalSolver solver_type, Arguments arg)
 {
-    csr_matrix2 mat_A;
+    csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
     mat_A.make_diagonally_dominant();
 
     // Solution vector
-    vector2 vec_x(mat_A.get_m());
+    vector vec_x(mat_A.get_m());
     vec_x.zeros();
 
-    vector2 vec_init_x(mat_A.get_m());
+    vector vec_init_x(mat_A.get_m());
     vec_init_x.zeros();
 
     // Righthand side vector
-    vector2 vec_b(mat_A.get_m());
+    vector vec_b(mat_A.get_m());
     vec_b.ones();
 
-    vector2 vec_e(mat_A.get_n());
+    vector vec_e(mat_A.get_n());
     vec_e.ones();
 
     mat_A.multiply_vector(vec_b, vec_e);

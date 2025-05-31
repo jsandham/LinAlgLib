@@ -32,6 +32,8 @@
 int main()
 {
     int m = 5;
+    int n = 5;
+    int nnz = 15;
 
     //  4 -1  0  0 -1
     // -1  4 -1  0  0
@@ -42,24 +44,31 @@ int main()
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
 
+    csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+
     // Solution vector
-    std::vector<double> x(m, 0.0);
+    vector x(A.get_m());
+    x.zeros();
 
     // Righthand side vector
-    std::vector<double> b(m, 1.0);
+    vector b(A.get_m());
+    b.ones();
+
+    ssor_solver ssor;
+    ssor.build(A);
 
     iter_control control;
     control.max_iter = 1000;
     control.rel_tol = 1e-08;
     control.abs_tol = 1e-08;
 
-    int iter = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, 0.5, control);
+    int iter = ssor.solve(A, x, b, control, 0.666667);
 
     std::cout << "iter: " << iter << std::endl;
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (size_t i = 0; i < x.size(); i++)
+    for (int i = 0; i < x.get_size(); i++)
     {
         std::cout << x[i] << " ";
     }

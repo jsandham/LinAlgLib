@@ -292,124 +292,124 @@ bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<
     return true;
 }
 
-static void transpose(const csr_matrix &nontransposed, csr_matrix &transposed)
-{
-    transposed.m = nontransposed.n;
-    transposed.n = nontransposed.m;
-    transposed.nnz = nontransposed.nnz;
-    transposed.csr_row_ptr.resize(transposed.m + 1);
-    transposed.csr_col_ind.resize(transposed.nnz);
-    transposed.csr_val.resize(transposed.nnz);
+// static void transpose(const csr_matrix &nontransposed, csr_matrix &transposed)
+// {
+//     transposed.m = nontransposed.n;
+//     transposed.n = nontransposed.m;
+//     transposed.nnz = nontransposed.nnz;
+//     transposed.csr_row_ptr.resize(transposed.m + 1);
+//     transposed.csr_col_ind.resize(transposed.nnz);
+//     transposed.csr_val.resize(transposed.nnz);
 
-    // Fill arrays
-    for (size_t i = 0; i < transposed.csr_row_ptr.size(); i++)
-    {
-        transposed.csr_row_ptr[i] = 0;
-    }
+//     // Fill arrays
+//     for (size_t i = 0; i < transposed.csr_row_ptr.size(); i++)
+//     {
+//         transposed.csr_row_ptr[i] = 0;
+//     }
 
-    for (size_t i = 0; i < transposed.csr_col_ind.size(); i++)
-    {
-        transposed.csr_col_ind[i] = -1;
-    }
+//     for (size_t i = 0; i < transposed.csr_col_ind.size(); i++)
+//     {
+//         transposed.csr_col_ind[i] = -1;
+//     }
 
-    for (int i = 0; i < nontransposed.m; i++)
-    {
-        int row_start = nontransposed.csr_row_ptr[i];
-        int row_end = nontransposed.csr_row_ptr[i + 1];
+//     for (int i = 0; i < nontransposed.m; i++)
+//     {
+//         int row_start = nontransposed.csr_row_ptr[i];
+//         int row_end = nontransposed.csr_row_ptr[i + 1];
 
-        for (int j = row_start; j < row_end; j++)
-        {
-            transposed.csr_row_ptr[nontransposed.csr_col_ind[j] + 1]++;
-        }
-    }
+//         for (int j = row_start; j < row_end; j++)
+//         {
+//             transposed.csr_row_ptr[nontransposed.csr_col_ind[j] + 1]++;
+//         }
+//     }
 
-    // Exclusive scan on row pointer array
-    for (int i = 0; i < transposed.m; i++)
-    {
-        transposed.csr_row_ptr[i + 1] += transposed.csr_row_ptr[i];
-    }
+//     // Exclusive scan on row pointer array
+//     for (int i = 0; i < transposed.m; i++)
+//     {
+//         transposed.csr_row_ptr[i + 1] += transposed.csr_row_ptr[i];
+//     }
 
-    for (int i = 0; i < nontransposed.m; i++)
-    {
-        int row_start = nontransposed.csr_row_ptr[i];
-        int row_end = nontransposed.csr_row_ptr[i + 1];
+//     for (int i = 0; i < nontransposed.m; i++)
+//     {
+//         int row_start = nontransposed.csr_row_ptr[i];
+//         int row_end = nontransposed.csr_row_ptr[i + 1];
 
-        for (int j = row_start; j < row_end; j++)
-        {
-            int col = nontransposed.csr_col_ind[j];
-            double val = nontransposed.csr_val[j];
+//         for (int j = row_start; j < row_end; j++)
+//         {
+//             int col = nontransposed.csr_col_ind[j];
+//             double val = nontransposed.csr_val[j];
 
-            int start = transposed.csr_row_ptr[col];
-            int end = transposed.csr_row_ptr[col + 1];
+//             int start = transposed.csr_row_ptr[col];
+//             int end = transposed.csr_row_ptr[col + 1];
 
-            for (int k = start; k < end; k++)
-            {
-                if (transposed.csr_col_ind[k] == -1)
-                {
-                    transposed.csr_col_ind[k] = i;
-                    transposed.csr_val[k] = val;
-                    break;
-                }
-            }
-        }
-    }
-}
+//             for (int k = start; k < end; k++)
+//             {
+//                 if (transposed.csr_col_ind[k] == -1)
+//                 {
+//                     transposed.csr_col_ind[k] = i;
+//                     transposed.csr_val[k] = val;
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+// }
 
-bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                       std::vector<double> &csr_val, int &m, int &n, int &nnz)
-{
-    csr_matrix nontransposed;
-    load_mtx_file(filename, nontransposed.csr_row_ptr, nontransposed.csr_col_ind, nontransposed.csr_val,
-                  nontransposed.m, nontransposed.n, nontransposed.nnz);
+// bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
+//                        std::vector<double> &csr_val, int &m, int &n, int &nnz)
+// {
+//     csr_matrix nontransposed;
+//     load_mtx_file(filename, nontransposed.csr_row_ptr, nontransposed.csr_col_ind, nontransposed.csr_val,
+//                   nontransposed.m, nontransposed.n, nontransposed.nnz);
 
-    csr_matrix transposed;
-    transpose(nontransposed, transposed);
+//     csr_matrix transposed;
+//     transpose(nontransposed, transposed);
 
-    // A = nontransposed * transposed
-    m = nontransposed.m;
-    n = transposed.n;
-    nnz = 0;
-    csr_row_ptr.resize(m + 1, 0);
+//     // A = nontransposed * transposed
+//     m = nontransposed.m;
+//     n = transposed.n;
+//     nnz = 0;
+//     csr_row_ptr.resize(m + 1, 0);
 
-    csrgemm_nnz(nontransposed.m, transposed.n, nontransposed.n, nontransposed.nnz, transposed.nnz, 0, 1.0,
-                nontransposed.csr_row_ptr.data(), nontransposed.csr_col_ind.data(), transposed.csr_row_ptr.data(),
-                transposed.csr_col_ind.data(), 0, nullptr, nullptr, csr_row_ptr.data(), &nnz);
+//     csrgemm_nnz(nontransposed.m, transposed.n, nontransposed.n, nontransposed.nnz, transposed.nnz, 0, 1.0,
+//                 nontransposed.csr_row_ptr.data(), nontransposed.csr_col_ind.data(), transposed.csr_row_ptr.data(),
+//                 transposed.csr_col_ind.data(), 0, nullptr, nullptr, csr_row_ptr.data(), &nnz);
 
-    csr_col_ind.resize(nnz);
-    csr_val.resize(nnz);
+//     csr_col_ind.resize(nnz);
+//     csr_val.resize(nnz);
 
-    csrgemm(nontransposed.m, transposed.n, nontransposed.n, nontransposed.nnz, transposed.nnz, 0, 1.0,
-            nontransposed.csr_row_ptr.data(), nontransposed.csr_col_ind.data(), nontransposed.csr_val.data(),
-            transposed.csr_row_ptr.data(), transposed.csr_col_ind.data(), transposed.csr_val.data(), 0, nullptr,
-            nullptr, nullptr, csr_row_ptr.data(), csr_col_ind.data(), csr_val.data());
+//     csrgemm(nontransposed.m, transposed.n, nontransposed.n, nontransposed.nnz, transposed.nnz, 0, 1.0,
+//             nontransposed.csr_row_ptr.data(), nontransposed.csr_col_ind.data(), nontransposed.csr_val.data(),
+//             transposed.csr_row_ptr.data(), transposed.csr_col_ind.data(), transposed.csr_val.data(), 0, nullptr,
+//             nullptr, nullptr, csr_row_ptr.data(), csr_col_ind.data(), csr_val.data());
 
-    // Make matrix diagonally dominant
-    for (int i = 0; i < m; i++)
-    {
-        int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+//     // Make matrix diagonally dominant
+//     for (int i = 0; i < m; i++)
+//     {
+//         int start = csr_row_ptr[i];
+//         int end = csr_row_ptr[i + 1];
 
-        double row_sum = 0;
-        for (int j = start; j < end; j++)
-        {
-            if (csr_col_ind[j] != i)
-            {
-                row_sum += std::abs(csr_val[j]);
-            }
-        }
+//         double row_sum = 0;
+//         for (int j = start; j < end; j++)
+//         {
+//             if (csr_col_ind[j] != i)
+//             {
+//                 row_sum += std::abs(csr_val[j]);
+//             }
+//         }
 
-        for (int j = start; j < end; j++)
-        {
-            if (csr_col_ind[j] == i)
-            {
-                csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
-                break;
-            }
-        }
-    }
+//         for (int j = start; j < end; j++)
+//         {
+//             if (csr_col_ind[j] == i)
+//             {
+//                 csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
+//                 break;
+//             }
+//         }
+//     }
 
-    return true;
-}
+//     return true;
+// }
 
 bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> &csr_col_ind,
                     const std::vector<double> &csr_val, int m, int n, int nnz, const std::vector<double> &b,

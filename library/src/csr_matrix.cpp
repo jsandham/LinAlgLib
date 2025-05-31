@@ -34,12 +34,12 @@
 #include <iomanip>
 #include <assert.h>
 
-csr_matrix2::csr_matrix2()
+csr_matrix::csr_matrix()
 {
 
 }
 
-csr_matrix2::csr_matrix2(const std::vector<int>& csr_row_ptr, 
+csr_matrix::csr_matrix(const std::vector<int>& csr_row_ptr, 
                          const std::vector<int>& csr_col_ind, 
                          const std::vector<double>& csr_val, 
                          int m, 
@@ -56,61 +56,61 @@ csr_matrix2::csr_matrix2(const std::vector<int>& csr_row_ptr,
     this->on_host = true;
 
 }
-csr_matrix2::~csr_matrix2()
+csr_matrix::~csr_matrix()
 {
 }
 
-bool csr_matrix2::is_on_host() const
+bool csr_matrix::is_on_host() const
 {
     return on_host;
 }
 
-int csr_matrix2::get_m() const
+int csr_matrix::get_m() const
 {
     return this->m;
 }
 
-int csr_matrix2::get_n() const
+int csr_matrix::get_n() const
 {
     return this->n;
 }
 
-int csr_matrix2::get_nnz() const
+int csr_matrix::get_nnz() const
 {
     return this->nnz;
 }
 
-const int* csr_matrix2::get_row_ptr() const
+const int* csr_matrix::get_row_ptr() const
 {
     return hcsr_row_ptr.data();
 }
 
-const int* csr_matrix2::get_col_ind() const
+const int* csr_matrix::get_col_ind() const
 {
     return hcsr_col_ind.data();
 }
 
-const double* csr_matrix2::get_val() const
+const double* csr_matrix::get_val() const
 {
     return hcsr_val.data();
 }
 
-int* csr_matrix2::get_row_ptr()
+int* csr_matrix::get_row_ptr()
 {
     return hcsr_row_ptr.data();
 }
 
-int* csr_matrix2::get_col_ind()
+int* csr_matrix::get_col_ind()
 {
     return hcsr_col_ind.data();
 }
 
-double* csr_matrix2::get_val()
+double* csr_matrix::get_val()
 {
     return hcsr_val.data();
 }
 
-void csr_matrix2::resize(int m, int n, int nnz)
+void csr_matrix::resize(int m, int n, int nnz)
 {
     this->hcsr_row_ptr.resize(m + 1);
     this->hcsr_col_ind.resize(nnz);
@@ -120,7 +120,7 @@ void csr_matrix2::resize(int m, int n, int nnz)
     this->nnz = nnz;
 }
 
-void csr_matrix2::copy_from(const csr_matrix2& A)
+void csr_matrix::copy_from(const csr_matrix& A)
 {
     this->m = A.get_m();
     this->n = A.get_n();
@@ -134,22 +134,22 @@ void csr_matrix2::copy_from(const csr_matrix2& A)
     copy(this->hcsr_val.data(), A.get_val(), this->hcsr_val.size());
 }
 
-void csr_matrix2::extract_diagonal(vector2& diag) const
+void csr_matrix::extract_diagonal(vector& diag) const
 {
     diagonal(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), diag.get_vec(), m);
 }
 
-void csr_matrix2::multiply_vector(vector2& y, const vector2& x) const
+void csr_matrix::multiply_vector(vector& y, const vector& x) const
 {
     matrix_vector_product(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), y.get_vec(), m);
 }
 
-void csr_matrix2::multiply_vector_and_add(vector2& y, const vector2& x) const
+void csr_matrix::multiply_vector_and_add(vector& y, const vector& x) const
 {
     csrmv(m, n, nnz, 1.0, hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), 1.0, y.get_vec());
 }
 
-void csr_matrix2::multiply_matrix(csr_matrix2& C, const csr_matrix2& B) const
+void csr_matrix::multiply_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     // Compute C = A * B
     double alpha = 1.0;
@@ -172,7 +172,7 @@ void csr_matrix2::multiply_matrix(csr_matrix2& C, const csr_matrix2& B) const
             C.hcsr_row_ptr.data(), C.hcsr_col_ind.data(), C.hcsr_val.data());
 }
 
-void csr_matrix2::transpose(csr_matrix2& T) const
+void csr_matrix::transpose(csr_matrix& T) const
 {
     T.resize(n, m, nnz);
 
@@ -234,12 +234,12 @@ void csr_matrix2::transpose(csr_matrix2& T) const
     // T.print_matrix("T");
 }
 
-void csr_matrix2::move_to_device()
+void csr_matrix::move_to_device()
 {
 
 }
 
-void csr_matrix2::move_to_host()
+void csr_matrix::move_to_host()
 {
 
 }
@@ -260,7 +260,7 @@ struct triplet
     }
 };
 
-bool csr_matrix2::read_mtx(const std::string& filename)
+bool csr_matrix::read_mtx(const std::string& filename)
 {
     std::ifstream file(filename);
     if (!file.is_open()) 
@@ -459,7 +459,7 @@ bool csr_matrix2::read_mtx(const std::string& filename)
     return true;
 }
 
-bool csr_matrix2::write_mtx(const std::string& filename)
+bool csr_matrix::write_mtx(const std::string& filename)
 {
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -513,7 +513,7 @@ bool csr_matrix2::write_mtx(const std::string& filename)
     return true;
 }
 
-void csr_matrix2::make_diagonally_dominant()
+void csr_matrix::make_diagonally_dominant()
 {
     assert(((int)hcsr_row_ptr.size() - 1) == m);
     assert(((int)hcsr_val.size()) == nnz);
@@ -566,7 +566,7 @@ void csr_matrix2::make_diagonally_dominant()
     }
 }
 
-void csr_matrix2::print_matrix(const std::string name) const
+void csr_matrix::print_matrix(const std::string name) const
 {
     std::cout << name << std::endl;
     for (int i = 0; i < m; i++)

@@ -28,94 +28,94 @@
 #include "../include/slaf.h"
 
 #include <assert.h>
-vector2::vector2()
+vector::vector()
 {
 }
 
-vector2::vector2(size_t size)
+vector::vector(size_t size)
 {
     hvec.resize(size);
 }
 
-vector2::vector2(const std::vector<double>& vec)
+vector::vector(const std::vector<double>& vec)
 {
     hvec = vec;
     on_host = true;
 }
 
-vector2::~vector2()
+vector::~vector()
 {
 
 }
 
-bool vector2::is_on_host() const
+bool vector::is_on_host() const
 {
     return on_host;
 }
 
-int vector2::get_size() const
+int vector::get_size() const
 {
     return hvec.size();
 }
 
-double* vector2::get_vec()
+double* vector::get_vec()
 {
     return hvec.data();
 }
 
-const double* vector2::get_vec() const
+const double* vector::get_vec() const
 {
     return hvec.data();
 }
 
-void vector2::copy_from(const vector2& x)
+void vector::copy_from(const vector& x)
 {
     copy(hvec.data(), x.get_vec(), hvec.size());
 }
 
-void vector2::zeros()
+void vector::zeros()
 {
     fill_with_zeros(hvec.data(), hvec.size());
 }
     
-void vector2::ones()
+void vector::ones()
 {
     fill_with_ones(hvec.data(), hvec.size());
 }
 
-void vector2::exclusize_scan()
+void vector::exclusize_scan()
 {
     compute_exclusize_scan(hvec.data(), hvec.size());
 }
 
-double vector2::dot(const vector2& x) const
+double vector::dot(const vector& x) const
 {
     assert(this->get_size() == x.get_size());
 
     return dot_product(this->get_vec(), x.get_vec(), this->get_size());
 }
 
-double vector2::norm_euclid2() const
+double vector::norm_euclid2() const
 {
     return norm_euclid(hvec.data(), hvec.size());
 }
     
-double vector2::norm_inf2() const
+double vector::norm_inf2() const
 {
     return norm_inf(hvec.data(), hvec.size());
 }
 
-void vector2::resize(size_t size)
+void vector::resize(size_t size)
 {
     hvec.resize(size);
 }
 
-void vector2::move_to_device()
+void vector::move_to_device()
 {
 
 }
 
-void vector2::move_to_host()
+void vector::move_to_host()
 {
 
 }

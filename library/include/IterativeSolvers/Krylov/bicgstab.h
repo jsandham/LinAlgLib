@@ -163,28 +163,16 @@
  * }
  * \endcode
  */
-LINALGLIB_API int bicgstab(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-    const preconditioner *precond, iter_control control);
-
-LINALGLIB_API int bicgstab(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
-
-
-
-
-
-
-
-
 class bicgstab_solver
 {
 private:
-    vector2 r;
-    vector2 r0;
-    vector2 p;
-    vector2 v;
-    vector2 t;
-    vector2 z;
-    vector2 q;
+    vector r;
+    vector r0;
+    vector p;
+    vector v;
+    vector t;
+    vector z;
+    vector q;
 
     int restart_iter;
 
@@ -195,10 +183,10 @@ public:
     bicgstab_solver (const bicgstab_solver&) = delete;
     bicgstab_solver& operator= (const bicgstab_solver&) = delete;
 
-    void build(const csr_matrix2& A);
-    int solve_nonprecond(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
-    int solve_precond(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
-    int solve(const csr_matrix2& A, vector2& x, const vector2& b, const preconditioner *precond, iter_control control);
+    void build(const csr_matrix& A);
+    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
 
 #endif

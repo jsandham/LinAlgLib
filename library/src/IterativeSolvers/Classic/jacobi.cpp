@@ -35,12 +35,19 @@
 //-------------------------------------------------------------------------------
 // jacobi method
 //-------------------------------------------------------------------------------
-void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x,
-                        const double *xold, const double *b, int n)
+void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const vector& b)
 {
     ROUTINE_TRACE("jacobi_iteration");
 
-    for (int j = 0; j < n; j++)
+    const int* csr_row_ptr = A.get_row_ptr();
+    const int* csr_col_ind = A.get_col_ind();
+    const double* csr_val = A.get_val();
+
+    double* x_ptr = x.get_vec();
+    const double* x_old_ptr = xold.get_vec();
+    const double* b_ptr = b.get_vec();
+
+    for (int j = 0; j < A.get_m(); j++)
     {
         double sigma = 0.0;
         double ajj = 0.0; // diagonal entry a_jj
@@ -48,111 +55,28 @@ void jacobi_iteration(const int *csr_row_ptr, const int *csr_col_ind, const doub
         {
             if (csr_col_ind[k] != j)
             {
-                sigma = sigma + csr_val[k] * xold[csr_col_ind[k]];
+                sigma = sigma + csr_val[k] * x_old_ptr[csr_col_ind[k]];
             }
             else
             {
                 ajj = csr_val[k];
             }
         }
-        x[j] = (b[j] - sigma) / ajj;
+        x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
 }
-
-int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-           iter_control control)
-{
-    ROUTINE_TRACE("jacobi");
-
-    // res = b - A * x
-    std::vector<double> res(n);
-    compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
-
-    double initial_res_norm = norm_inf(res.data(), n);
-
-    // copy of x
-    std::vector<double> xold(n);
-    copy(xold.data(), x, n);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    int iter = 0;
-    while (!control.exceed_max_iter(iter))
-    {
-        // Jacobi iteration
-        jacobi_iteration(csr_row_ptr, csr_col_ind, csr_val, x, xold.data(), b, n);
-
-        compute_residual(csr_row_ptr, csr_col_ind, csr_val, x, b, res.data(), n);
-
-        double res_norm = norm_inf(res.data(), n);
-
-        if (control.residual_converges(res_norm, initial_res_norm))
-        {
-            break;
-        }
-
-        copy(xold.data(), x, n);
-
-        iter++;
-    }
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "Jacobi time: " << ms_double.count() << "ms" << std::endl;
-
-    return iter;
-}
-
-int jacobi(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control)
-{
-    if(!A.is_on_host() || !x.is_on_host() || !b.is_on_host())
-    {
-        std::cout << "Error: A matrix, x vector, and b vector must on host for jacobi iteration" << std::endl;
-        return -1;
-    }
-
-    return jacobi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), A.get_m(), control);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 jacobi_solver::jacobi_solver(){}
 
 jacobi_solver::~jacobi_solver(){}
 
-void jacobi_solver::build(const csr_matrix2& A)
+void jacobi_solver::build(const csr_matrix& A)
 {
     xold.resize(A.get_m());
     res.resize(A.get_m());
 }
 
-int jacobi_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control)
+int jacobi_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control)
 {
     ROUTINE_TRACE("jacobi_solver::solve");
 
@@ -170,7 +94,7 @@ int jacobi_solver::solve(const csr_matrix2& A, vector2& x, const vector2& b, ite
     while (!control.exceed_max_iter(iter))
     {
         // Jacobi iteration
-        jacobi_iteration(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), xold.get_vec(), b.get_vec(), A.get_m());
+        jacobi_iteration(A, x, xold, b);
 
         compute_residual(A, x, b, res);
 

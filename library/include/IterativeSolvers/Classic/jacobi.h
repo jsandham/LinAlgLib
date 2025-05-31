@@ -141,20 +141,11 @@
  *  \code{.c}
  *  \endcode
  */
-LINALGLIB_API int jacobi(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *x, const double *b, int n,
-    iter_control control);
-
-
-LINALGLIB_API int jacobi(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
-
-
-
-
 class jacobi_solver
 {
 private:
-    vector2 res;
-    vector2 xold;
+    vector res;
+    vector xold;
 
 public:
     jacobi_solver();
@@ -163,8 +154,8 @@ public:
     jacobi_solver (const jacobi_solver&) = delete;
     jacobi_solver& operator= (const jacobi_solver&) = delete;
 
-    void build(const csr_matrix2& A);
-    int solve(const csr_matrix2& A, vector2& x, const vector2& b, iter_control control);
+    void build(const csr_matrix& A);
+    int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
 
 

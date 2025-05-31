@@ -35,11 +35,11 @@
 
 // Compute y = alpha * x + y
 LINALGLIB_API void axpy(int n, double alpha, const double* x, double* y);
-LINALGLIB_API void axpy(double alpha, const vector2& x, vector2& y);
+LINALGLIB_API void axpy(double alpha, const vector& x, vector& y);
 
 // Compute y = alpha * x + beta * y
 LINALGLIB_API void axpby(int n, double alpha, const double* x, double beta, double* y);
-LINALGLIB_API void axpby(double alpha, const vector2& x, double beta, vector2& y);
+LINALGLIB_API void axpby(double alpha, const vector& x, double beta, vector& y);
 
 // Compute y = alpha * A * x + beta * y
 LINALGLIB_API void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
@@ -87,7 +87,7 @@ LINALGLIB_API double dot_product(const double *x, const double *y, int n);
 LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                       const double* b, double* res, int n);
 
-LINALGLIB_API void compute_residual(const csr_matrix2& A, const vector2& x, const vector2& b, vector2& res);
+LINALGLIB_API void compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res);
 
 // Fill array with zeros
 LINALGLIB_API void fill_with_zeros(double *x, int n);
@@ -104,6 +104,7 @@ LINALGLIB_API void copy(double* dest, const double* src, int n);
 
 // Extract diagonal entries
 LINALGLIB_API void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);
+LINALGLIB_API void diagonal(const csr_matrix& A, vector& d);
 
 // Solve Lx = b where L is a lower triangular sparse matrix
 LINALGLIB_API void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
