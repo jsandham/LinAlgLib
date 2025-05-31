@@ -128,7 +128,7 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
     return true;
 }
 
-void uaamg_setup(const csr_matrix& A, int max_level, heirarchy &hierarchy)
+void uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("uaamg_setup");
 

@@ -43,7 +43,7 @@ int main()
     vector b(A.get_m());
     b.ones();
 
-    heirarchy hierachy;
+    hierarchy hierachy;
     saamg_setup(A, 10, hierachy);
 
     iter_control control;

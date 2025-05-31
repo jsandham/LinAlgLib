@@ -565,7 +565,7 @@
 // }
 
 // void rsamg_setup_legacy(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
-//                  int max_level, heirarchy &hierarchy)
+//                  int max_level, hierarchy &hierarchy)
 // {
 //     hierarchy.prolongations.resize(max_level);
 //     hierarchy.restrictions.resize(max_level);
@@ -890,7 +890,7 @@ static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_m
     }
 }
 
-void rsamg_setup(const csr_matrix& A, int max_level, heirarchy &hierarchy)
+void rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("rsamg_setup");
 

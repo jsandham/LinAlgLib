@@ -73,7 +73,7 @@ static void apply_smoother(const csr_matrix& A, vector& x, const vector& b, Smoo
     }
 }
 
-static void vcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int currentLevel,
+static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("vcycle");
@@ -193,7 +193,7 @@ static void vcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n
     }
 }
 
-static void wcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
+static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("wcycle");
@@ -310,7 +310,7 @@ static void wcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n
     }
 }
 
-static void fcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
+static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("fcycle");
@@ -427,7 +427,7 @@ static void fcycle(const heirarchy &hierarchy, vector& x, const vector& b, int n
     }
 }
 
-int amg_solve(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
+int amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control)
 {           
     ROUTINE_TRACE("amg_solve");

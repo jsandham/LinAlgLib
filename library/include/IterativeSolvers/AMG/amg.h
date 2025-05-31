@@ -51,7 +51,7 @@
  * restriction operators (for projecting residuals from finer to coarser levels),
  * the sequence of coarse-level matrices, and the total number of levels in the hierarchy.
  */
-struct heirarchy
+struct hierarchy
 {
     /**
     * @brief Prolongation matrices.
@@ -360,7 +360,7 @@ enum class Smoother
  * }
  * \endcode
  */
-LINALGLIB_API int amg_solve(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
+LINALGLIB_API int amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control);
 
 #endif

@@ -195,7 +195,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
     return true;
 }
 
-void saamg_setup(const csr_matrix& mat_A, int max_level, heirarchy &hierarchy)
+void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("saamg_setup");
     std::cout << "saamg_setup" << std::endl;
