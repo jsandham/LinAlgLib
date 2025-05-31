@@ -62,7 +62,7 @@ int main()
     //ic_precond precond;
     //ilu_precond precond;
 
-    precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+    precond.build(A);
 
     cg_solver cg;
     cg.build(A);

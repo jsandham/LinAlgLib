@@ -38,158 +38,176 @@
  *  \brief ssor.h provides interface for ssor solver
  */
 
-/**
- * @brief Performs the Symmetric Successive Over-Relaxation (SSOR) iterative method for solving a linear system of equations.
+/*! \brief A solver class implementing the Symmetric Successive Over-Relaxation (SSOR) iterative method.
  *
- * Solves the linear system Ax = b, where A is a sparse matrix represented in Compressed Sparse Row (CSR) format.
+ * \details
+ * This class provides functionality to solve linear systems of equations of the form
+ * \f$A \cdot x = b\f$ using the Symmetric Successive Over-Relaxation (SSOR) iterative method.
+ * SSOR is a preconditioning technique or a standalone iterative method that applies
+ * a forward SOR sweep followed by a backward SOR sweep. It aims to improve the
+ * symmetry of the iteration matrix, which can be beneficial for convergence, especially
+ * when used as a preconditioner for methods like Conjugate Gradient.
  *
- * @param[in] csr_row_ptr Array of size (n+1) containing row pointers for the CSR matrix.
- * csr_row_ptr[i] stores the index of the first non-zero element in row i.
- * csr_row_ptr[n] stores the number of non-zero elements in the matrix.
- * @param[in] csr_col_ind Array of size (number of non-zero elements) containing the column indices
- * for the non-zero elements of the CSR matrix.
- * @param[in] csr_val Array of size (number of non-zero elements) containing the values
- * of the non-zero elements of the CSR matrix.
- * @param[in,out] x Array of size n. On input, it contains the initial guess for the solution.
- * On output, it contains the computed solution.
- * @param[in] b Array of size n containing the right-hand side vector.
- * @param[in] n The order of the square matrix A.
- * @param[in] omega The relaxation parameter.
- * @param[in] control Structure containing iteration control parameters.
+ * \section ssor_derivation Derivation of the SSOR Method
  *
- * @return Returns 0 if the iteration converges, and 1 otherwise.
+ * The SSOR method combines two sweeps of the SOR iteration: a forward sweep and a backward sweep.
+ * It's often viewed as applying the SOR preconditioner \f$M_{SOR}\f$ and then its transpose
+ * \f$M_{SOR}^T\f$.
  *
- * @details
- * The Symmetric Successive Over-Relaxation (SSOR) method is an iterative technique for solving a system of linear equations.
- * It combines a forward and a backward Gauss-Seidel sweep, both using the same relaxation parameter \f$\omega\f$.
- * For a matrix equation
+ * Recall the SOR iteration matrix for a given \f$\omega\f$:
+ * The SOR update for \f$\mathbf{x}^{(k+1)}\f$ from \f$\mathbf{x}^{(k)}\f$ can be written as:
+ * \f$ \mathbf{x}^{(k+1)} = (D + \omega L)^{-1} [(\omega - 1)D - \omega U] \mathbf{x}^{(k)} + \omega (D + \omega L)^{-1} \mathbf{b} \f$
  *
- * \f$ A\mathbf{x} = \mathbf{b}, \f$
+ * For the SSOR method, one full iteration consists of two half-steps:
  *
- * where \f$ A \f$ is a known square matrix of size \f$n \times n\f$, \f$\mathbf{b}\f$ is a known vector of length \f$n\f$,
- * and \f$\mathbf{x}\f$ is an unknown vector of length \f$n\f$ that we want to solve for, the SSOR method
- * iteratively refines an initial guess for \f$\mathbf{x}\f$ until convergence.
+ * \subsection ssor_forward_sweep Forward Sweep
+ * The first half-step is a standard forward SOR iteration, where we compute an intermediate vector \f$\mathbf{x}^{(k+1/2)}\f$:
+ * \f$ (D + \omega L) \mathbf{x}^{(k+1/2)} = \omega \mathbf{b} - \omega U \mathbf{x}^{(k)} - (\omega - 1) D \mathbf{x}^{(k)} \f$
+ * Or equivalently, in terms of the residual:
+ * \f$ \mathbf{x}^{(k+1/2)} = \mathbf{x}^{(k)} + \omega D^{-1} (\mathbf{b} - L \mathbf{x}^{(k+1/2)} - D \mathbf{x}^{(k)} - U \mathbf{x}^{(k)}) \f$
  *
- * **Derivation of the SSOR Iteration**
+ * \subsection ssor_backward_sweep Backward Sweep
+ * The second half-step is a backward SOR iteration, using the intermediate \f$\mathbf{x}^{(k+1/2)}\f$ to compute \f$\mathbf{x}^{(k+1)}\f$:
+ * \f$ (D + \omega U) \mathbf{x}^{(k+1)} = \omega \mathbf{b} - \omega L \mathbf{x}^{(k+1/2)} - (\omega - 1) D \mathbf{x}^{(k+1/2)} \f$
+ * Or equivalently:
+ * \f$ \mathbf{x}^{(k+1)} = \mathbf{x}^{(k+1/2)} + \omega D^{-1} (\mathbf{b} - U \mathbf{x}^{(k+1)} - D \mathbf{x}^{(k+1/2)} - L \mathbf{x}^{(k+1/2)}) \f$
  *
- * We decompose the matrix \f$A\f$ into its diagonal, lower triangular, and upper triangular parts:
+ * Combining these two steps gives the SSOR iteration. The matrix representation of the SSOR preconditioning matrix \f$M_{SSOR}\f$ is:
+ * \f$ M_{SSOR} = \frac{1}{\omega(2-\omega)}(D + \omega L)D^{-1}(D + \omega U) \f$
  *
- * \f$ A = D + L + U, \f$
+ * \section ssor_convergence Convergence Criteria
  *
- * where
+ * If the matrix \f$A\f$ is symmetric and positive definite, then the SSOR method is guaranteed to converge for any \f$\omega \in (0, 2)\f$.
+ * Similar to SOR, the optimal choice of \f$\omega\f$ is crucial for the convergence rate and often determined through numerical experimentation.
  *
- * \f$
- * D = \begin{pmatrix}
- * a_{11} & 0      & \cdots & 0      \\
- * 0      & a_{22} & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & a_{nn}
- * \end{pmatrix},
- * \f$
+ * \section ssor_example Example Usage
+ * Below is a simplified example demonstrating how to use the `ssor_solver` class.
+ * This assumes the `csr_matrix`, `vector`, and `iter_control` classes are properly defined
+ * and functional.
  *
- * \f$
- * L = \begin{pmatrix}
- * 0      & 0      & \cdots & 0      \\
- * a_{21} & 0      & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * a_{n1} & a_{n2} & \cdots & 0
- * \end{pmatrix},
- * \f$
- *
- * \f$
- * U = \begin{pmatrix}
- * 0      & a_{12} & \cdots & a_{1n} \\
- * 0      & 0      & \cdots & a_{2n} \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & 0
- * \end{pmatrix}.
- * \f$
- *
- * The SSOR method consists of two steps: a forward sweep and a backward sweep.
- *
- * **Forward Sweep:**
- *
- * \f$ \mathbf{x}^{(k+1/2)} = (D + \omega L)^{-1} \left( (1 - \omega) D - \omega U \right) \mathbf{x}^{(k)} + \omega (D + \omega L)^{-1} \mathbf{b} \f$
- *
- * **Backward Sweep:**
- *
- * \f$ \mathbf{x}^{(k+1)} = (D + \omega U)^{-1} \left( (1 - \omega) D - \omega L \right) \mathbf{x}^{(k+1/2)} + \omega (D + \omega U)^{-1} \mathbf{b} \f$
- *
- * Combining the forward and backward sweeps, we get the SSOR iteration.  The choice of the relaxation parameter \f$\omega\f$ is crucial for convergence, and the optimal value is problem-dependent.
- *
- * The iteration continues until a stopping criterion is met, such as the residual norm being sufficiently small
- * or the maximum number of iterations being reached.
- *
-  * **CSR Implementation Details**
- *
- * The function operates on a matrix stored in CSR format, which is an efficient storage scheme for sparse matrices.
- * The CSR format uses three arrays to represent the matrix:
- *
- * - `csr_row_ptr`: Stores the starting index of each row in the `csr_col_ind` and `csr_val` arrays.
- * - `csr_col_ind`: Stores the column indices of the non-zero elements.
- * - `csr_val`: Stores the values of the non-zero elements.
- *
- * This implementation efficiently calculates the matrix-vector products using the CSR format.
- *
- * **Code Example**
- *
- * @code
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
  * #include <vector>
- * #include <cmath>
  *
  * int main() {
- * // Example usage:
- * // Define the CSR matrix A
- * int n = 4;
- * std::vector<int> csr_row_ptr = {0, 2, 5, 7, 9};
- * std::vector<int> csr_col_ind = {0, 1, 0, 1, 2, 1, 3, 2, 3};
- * std::vector<double> csr_val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0};
+ * // Define a sample sparse matrix A (e.g., a tridiagonal matrix)
+ * // For simplicity, let's create a 3x3 matrix:
+ * // [ 4 -1  0 ]
+ * // [-1  4 -1 ]
+ * // [ 0 -1  4 ]
+ *
+ * std::vector<int> row_ptr = {0, 2, 5, 7}; // For 3 rows
+ * std::vector<int> col_ind = {0, 1, 0, 1, 2, 1, 2};
+ * std::vector<double> val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0};
+ *
+ * int m = 3; // Number of rows
+ * int n = 3; // Number of columns
+ * int nnz = 7; // Number of non-zeros
+ *
+ * csr_matrix A(row_ptr, col_ind, val, m, n, nnz);
  *
  * // Define the right-hand side vector b
- * std::vector<double> b = {3.0, 3.0, 3.0, 3.0};
+ * std::vector<double> b_data = {5.0, 3.0, 10.0};
+ * vector b(b_data);
  *
- * // Define the initial guess for x
- * std::vector<double> x(n, 0.0);
+ * // Define an initial guess for the solution vector x (e.g., all zeros)
+ * vector x(m);
+ * x.zeros();
  *
- * // Define the iteration control parameters
+ * // Set up iteration control
  * iter_control control;
- * double omega = 1.2; // Example value for omega
+ * control.max_iterations = 100;
+ * control.tolerance = 1e-6;
  *
- * // Solve the system using SSOR iteration
- * int result = ssor(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), n, omega, control);
+ * // Choose a relaxation parameter omega. A common starting point is between 1.0 and 1.5.
+ * // Optimal omega depends on the matrix properties.
+ * double omega = 1.2;
  *
- * if (result == 0) {
- * std::cout << "SSOR iteration converged. Solution x = ";
- * for (double val : x) {
- * std::cout << val << " ";
- * }
- * std::cout << std::endl;
+ * // Create an SSOR solver instance
+ * ssor_solver solver;
+ *
+ * // Build the solver (e.g., pre-process the matrix)
+ * solver.build(A);
+ *
+ * // Solve the system
+ * std::cout << "Starting SSOR solver with omega = " << omega << "..." << std::endl;
+ * int status = solver.solve(A, x, b, control, omega);
+ *
+ * if (status == 0) {
+ * std::cout << "SSOR converged successfully!" << std::endl;
  * } else {
- * std::cout << "SSOR iteration did not converge." << std::endl;
+ * std::cout << "SSOR did NOT converge. Status code: " << status << std::endl;
+ * }
+ *
+ * std::cout << "Approximate solution x:" << std::endl;
+ * for (int i = 0; i < x.get_size(); ++i) {
+ * std::cout << "x[" << i << "] = " << x[i] << std::endl;
  * }
  *
  * return 0;
  * }
- * @endcode
- *
+ * \endcode
  */
 class ssor_solver
 {
 private:
+    /*! \brief Internal vector to store the residual during the solve process. */
     vector res;
 
 public:
+    /*! \brief Default constructor.
+     * Initializes a new `ssor_solver` object.
+     */
     ssor_solver();
+
+    /*! \brief Destructor.
+     * Cleans up any resources allocated by the `ssor_solver` object.
+     */
     ~ssor_solver();
 
+    /*! \brief Deleted copy constructor.
+     * Prevents direct copying of `ssor_solver` objects to avoid shallow copies and
+     * ensure proper memory management.
+     */
     ssor_solver (const ssor_solver&) = delete;
+
+    /*! \brief Deleted copy assignment operator.
+     * Prevents direct assignment of one `ssor_solver` object to another to avoid shallow copies
+     * and ensure proper memory management.
+     */
     ssor_solver& operator= (const ssor_solver&) = delete;
 
+    /*! \brief Builds necessary data structures for the SSOR solver.
+     * \details
+     * This method typically involves pre-processing the input matrix `A` to
+     * prepare for both forward and backward SOR sweeps. This may include
+     * extracting diagonal elements or other matrix properties needed for the
+     * SSOR iteration.
+     * \param A The sparse matrix in CSR format for which the solver is being built.
+     */
     void build(const csr_matrix& A);
+
+    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Successive Over-Relaxation (SSOR) method.
+     *
+     * This method iteratively updates the solution vector `x` by performing a
+     * forward SOR sweep followed by a backward SOR sweep, until the convergence
+     * criteria specified by `control` are met or the maximum number of iterations
+     * is reached.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \param omega The relaxation parameter (\f$\omega\f$) for the SSOR method. Must be in the range \f$(0, 2)\f$.
+     * \return An integer status code:
+     * - `0` if the solver converged successfully within the specified tolerance.
+     * - `1` if the maximum number of iterations was reached without convergence.
+     * - Other negative values for errors (e.g., invalid omega, singular diagonal element).
+     */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double omega);
 };
-
 
 
 #endif

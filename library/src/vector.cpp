@@ -75,7 +75,7 @@ void vector::copy_from(const vector& x)
 
 void vector::zeros()
 {
-    fill_with_zeros(hvec.data(), hvec.size());
+    (hvec.data(), hvec.size());
 }
     
 void vector::ones()

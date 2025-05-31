@@ -68,27 +68,38 @@
  * Example usage (conceptual):
  *
  * ```cpp
- * //  4 -1  0  0 -1
- * // -1  4 -1  0  0
- * //  0 -1  4 -1  0
- * //  0  0 -1  4 -1
- * // -1  0  0 -1  4
- * std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
- * std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
- * std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
+ * int m = 5;
+ * int n = 5;
+ * int nnz = 15;
  *
- * // Solution vector
- * std::vector<double> x(m, 0.0);
- *
- * // Righthand side vector
- * std::vector<double> b(m, 1.0);
- *
- * iter_control control;
- * control.max_iter = 1000;
- * control.rel_tol = 1e-08;
- * control.abs_tol = 1e-08;
- *
- * int iter = jacobi(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), m, control);
+ *  //  4 -1  0  0 -1
+ *  // -1  4 -1  0  0
+ *  //  0 -1  4 -1  0
+ *  //  0  0 -1  4 -1
+ *  // -1  0  0 -1  4
+ *  std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
+ *  std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
+ *  std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
+ *  
+ *  csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ *  
+ *  // Solution vector
+ *  vector x(A.get_m());
+ *  x.zeros();
+ *  
+ *  // Righthand side vector
+ *  vector b(A.get_m());
+ *  b.ones();
+ *  
+ *  jacobi_solver jacobi;
+ *  jacobi.build(A);
+ *  
+ *  iter_control control;
+ *  control.max_iter = 1000;
+ *  control.rel_tol = 1e-08;
+ *  control.abs_tol = 1e-08;
+ *  
+ *  int iter = jacobi.solve(A, x, b, control);
  * ```
  *
  * Please refer to the specific function documentation for detailed usage and available parameters for each solver.
@@ -135,21 +146,21 @@
  * @section classical_solvers Classical Stationary Iterative Methods
  *
  * This module contains the following classical iterative solvers:
- * - \ref jacobi : The Jacobi method.
- * - \ref gs : The Gauss-Seidel method.
- * - \ref sor : The Successive Over-Relaxation (SOR) method.
- * - \ref ssor : The Symmetric Successive Over-Relaxation (SSOR) method.
- * - \ref sgs : The Symmetric Gauss-Seidel method.
- * - \ref rich : The Richardson iteration method.
+ * - \ref jacobi_solver : The Jacobi method.
+ * - \ref gs_solver : The Gauss-Seidel method.
+ * - \ref sor_solver : The Successive Over-Relaxation (SOR) method.
+ * - \ref ssor_solver : The Symmetric Successive Over-Relaxation (SSOR) method.
+ * - \ref sgs_solver : The Symmetric Gauss-Seidel method.
+ * - \ref rich_solver : The Richardson iteration method.
  *
  * These methods are characterized by their simplicity and iterative refinement of the solution based on splitting the system matrix.
  *
  * @section krylov_solvers Krylov Subspace Methods
  *
  * This module implements powerful Krylov subspace methods, which often exhibit faster convergence for large-scale problems:
- * - \ref cg : The Conjugate Gradient (CG) method (suitable for symmetric positive-definite matrices).
- * - \ref bicgstab : The Bi-Conjugate Gradient Stabilized (BiCGSTAB) method (for non-symmetric matrices).
- * - \ref gmres : The Generalized Minimal Residual (GMRES) method (for non-symmetric matrices).
+ * - \ref cg_solver : The Conjugate Gradient (CG) method (suitable for symmetric positive-definite matrices).
+ * - \ref bicgstab_solver : The Bi-Conjugate Gradient Stabilized (BiCGSTAB) method (for non-symmetric matrices).
+ * - \ref gmres_solver : The Generalized Minimal Residual (GMRES) method (for non-symmetric matrices).
  *
  * These methods build an orthonormal basis for the Krylov subspace and find the approximate solution within that subspace that minimizes the residual.
  *

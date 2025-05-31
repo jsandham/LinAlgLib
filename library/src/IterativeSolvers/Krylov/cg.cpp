@@ -141,7 +141,8 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
         initial_res_norm = res.norm_inf2();
 
         // z = (M^-1) * res
-        precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        precond->solve(res, z);
 
         // p = z
         p.copy_from(z);
@@ -161,7 +162,8 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
             compute_residual(A, x, b, res);
 
             // z = (M^-1) * res
-            precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+            // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+            precond->solve(res, z);
 
             // p = z
             p.copy_from(z);
@@ -187,7 +189,8 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
         }
 
         // z = (M^-1) * res
-        precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        precond->solve(res, z);
 
         // find beta
         double old_gamma = gamma;

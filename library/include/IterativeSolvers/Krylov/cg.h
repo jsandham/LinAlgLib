@@ -39,139 +39,144 @@
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
 
-/*! \ingroup iterative_solvers
- * \brief Preconditioned conjugate gradient iterative linear solver.
+/*! \brief A solver class implementing the Conjugate Gradient (CG) method.
  *
  * \details
- * \p cg solves the sparse linear system \f$A x = b\f$ using the preconditioned
- * conjugate gradient (PCG) iterative solver. The conjugate gradient method
- * is an efficient algorithm for solving symmetric positive-definite linear
- * systems. Preconditioning is often used to accelerate the convergence of
- * the CG method by transforming the original system into one with more
- * favorable spectral properties.
+ * This class provides functionality to solve large, sparse, **symmetric positive definite (SPD)**
+ * systems of linear equations of the form \f$A \cdot x = b\f$ using the Conjugate Gradient (CG)
+ * iterative method. CG is an extremely powerful and widely used Krylov subspace method
+ * for SPD systems, known for its rapid convergence. It can be used with or without a preconditioner
+ * to further accelerate convergence.
  *
- * **Algorithm Overview:**
+ * \section cg_algorithm The Conjugate Gradient Algorithm
  *
- * The Preconditioned Conjugate Gradient method iteratively refines an initial
- * guess for the solution vector \f$x\f$. At each iteration, it computes a
- * search direction (\f$p\f$) that is conjugate to the previous search
- * directions with respect to the preconditioned system. The step length
- * (\f$\alpha\f$) along this direction is chosen to minimize the preconditioned
- * residual. The solution and the residual are then updated. The preconditioning
- * is applied by solving a related system involving the preconditioner matrix
- * (\f$M\f$) to obtain a preconditioned residual (\f$z\f$).
+ * The Conjugate Gradient algorithm aims to find an approximate solution \f$\mathbf{x}\f$ to \f$A\mathbf{x} = \mathbf{b}\f$
+ * by iteratively minimizing the quadratic function \f$\phi(\mathbf{x}) = \frac{1}{2}\mathbf{x}^T A \mathbf{x} - \mathbf{x}^T \mathbf{b}\f$.
+ * The method generates a sequence of search directions that are A-conjugate (or A-orthogonal),
+ * meaning \f$\mathbf{p}_i^T A \mathbf{p}_j = 0\f$ for \f$i \neq j\f$. This ensures that each new search
+ * direction is independent of previous directions in the A-inner product sense.
  *
- * The algorithm typically proceeds as follows:
+ * The non-preconditioned Conjugate Gradient algorithm steps are:
  *
- * 1. Initialize: Set the initial guess \f$x_0\f$, compute the initial residual
- * \f$r_0 = b - A x_0\f$. If the initial residual is sufficiently small,
- * return \f$x_0\f$.
- * 2. Precondition: Solve \f$M z_0 = r_0\f$ for \f$z_0\f$.
- * 3. Initialize the search direction: \f$p_0 = z_0\f$.
- * 4. For \f$k = 0, 1, 2, ...\f$ until convergence:
- * a. Compute the matrix-vector product: \f$w_k = A p_k\f$.
- * b. Compute the step length: \f$\alpha_k = (z_k^T r_k) / (p_k^T w_k)\f$.
- * c. Update the solution: \f$x_{k+1} = x_k + \alpha_k p_k\f$.
- * d. Update the residual: \f$r_{k+1} = r_k - \alpha_k w_k\f$.
- * e. Check for convergence: If \f$||r_{k+1}||<\f$ tolerance, return \f$x_{k+1}\f$.
- * f. Precondition: Solve \f$M z_{k+1} = r_{k+1}\f$ for \f$z_{k+1}\f$.
- * g. Compute the scalar \f$\beta_k = (z_{k+1}^T r_{k+1}) / (z_k^T r_k)\f$.
- * h. Update the search direction: \f$p_{k+1} = z_{k+1} + \beta_k p_k\f$.
+ * 1. **Initialize:**
+ * Set initial guess \f$\mathbf{x}^{(0)}\f$.
+ * Compute initial residual \f$\mathbf{r}^{(0)} = \mathbf{b} - A \mathbf{x}^{(0)}\f$.
+ * Set initial search direction \f$\mathbf{p}^{(0)} = \mathbf{r}^{(0)}\f$.
  *
- * The \p restart_iter parameter allows for restarting the CG algorithm periodically
- * to potentially improve convergence, especially when the eigenvalue distribution
- * of the preconditioned matrix is unfavorable. After \p restart_iter iterations,
- * the search direction is reset to the preconditioned residual.
+ * 2. **Iterate** for \f$k = 0, 1, 2, \dots\f$ until convergence:
+ * a. Compute \f$\alpha_k = \frac{{\mathbf{r}^{(k)}}^T \mathbf{r}^{(k)}}{{\mathbf{p}^{(k)}}^T A \mathbf{p}^{(k)}}\f$
+ * b. Update solution: \f$\mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + \alpha_k \mathbf{p}^{(k)}\f$
+ * c. Update residual: \f$\mathbf{r}^{(k+1)} = \mathbf{r}^{(k)} - \alpha_k A \mathbf{p}^{(k)}\f$
+ * d. Check for convergence: If \f$\| \mathbf{r}^{(k+1)} \|_2 < \text{tolerance}\f$, then stop.
+ * e. Compute \f$\beta_k = \frac{{\mathbf{r}^{(k+1)}}^T \mathbf{r}^{(k+1)}}{{\mathbf{r}^{(k)}}^T \mathbf{r}^{(k)}}\f$
+ * f. Update search direction: \f$\mathbf{p}^{(k+1)} = \mathbf{r}^{(k+1)} + \beta_k \mathbf{p}^{(k)}\f$
  *
- * \note Requires the sparse matrix \f$A\f$ to be symmetric. While the standard
- * Conjugate Gradient method requires the matrix to be symmetric positive-definite,
- * the preconditioned version can sometimes be applied to symmetric indefinite
- * systems, although convergence is not guaranteed. The preconditioner \f$M\f$
- * should ideally be symmetric and positive-definite as well to preserve the
- * properties of the CG method.
+ * \subsection cg_preconditioned Preconditioned Conjugate Gradient (PCG)
  *
- * @param[in] csr_row_ptr
- * Array of \p n+1 elements that point to the start of every row of
- * the sparse CSR matrix \f$A\f$.
- * @param[in] csr_col_ind
- * Array of \p nnz elements containing the column indices of the
- * non-zero entries in the sparse CSR matrix \f$A\f$.
- * @param[in] csr_val
- * Array of \p nnz elements containing the numerical values of the
- * non-zero entries in the sparse CSR matrix \f$A\f$.
- * @param[inout] x
- * Array of \p n elements containing the initial guess for the solution
- * vector \f$x\f$ of the system \f$A x = b\f$. On output, if the solver
- * converges, this array will contain the computed solution.
- * @param[in] b
- * Array of \p n elements containing the right-hand side vector \f$b\f$ of
- * the linear system \f$A x = b\f$.
- * @param[in] n
- * The dimension of the square sparse CSR matrix \f$A\f$ (number of rows or columns)
- * and the size of the vectors \f$x\f$ and \f$b\f$.
- * @param[in] precond
- * Pointer to a preconditioner object. This object must provide a method to
- * solve a linear system of the form \f$M z = r\f$, where \f$M\f$ is the
- * preconditioner matrix and \f$r\f$ is the residual vector. The specific
- * type of the preconditioner (e.g., Jacobi, ILU, ICC) is determined by the
- * actual object pointed to by \p precond. If no preconditioning is desired,
- * a null pointer or an identity preconditioner can be used.
- * @param[in] control
- * Structure of type \ref iter_control specifying the convergence criteria
- * (relative tolerance, absolute tolerance) and the maximum number of iterations
- * for the CG solver. The solver will stop if either the relative or absolute
- * tolerance is met, or if the maximum number of iterations is reached.
- * @param[in] restart_iter
- * The number of iterations after which the conjugate gradient algorithm is
- * restarted. A restart involves resetting the search direction to the
- * preconditioned residual. Setting \p restart_iter to a large value (greater
- * than the expected number of iterations) effectively disables restarting.
+ * For the preconditioned version, a preconditioner \f$M \approx A^{-1}\f$ is used. The preconditioner
+ * must be symmetric and positive definite for the PCG algorithm to maintain its theoretical
+ * convergence properties. The algorithm steps are modified by applying the preconditioner:
  *
- * @retval int
- * The number of iterations performed by the CG solver. If the solver converges
- * within the specified tolerance and maximum iterations, the return value is
- * the number of iterations taken. If the solver does not converge, -1 is
- * returned.
+ * 1. **Initialize:**
+ * Set initial guess \f$\mathbf{x}^{(0)}\f$.
+ * Compute initial residual \f$\mathbf{r}^{(0)} = \mathbf{b} - A \mathbf{x}^{(0)}\f$.
+ * Solve \f$M \mathbf{z}^{(0)} = \mathbf{r}^{(0)}\f$ (preconditioning step).
+ * Set initial search direction \f$\mathbf{p}^{(0)} = \mathbf{z}^{(0)}\f$.
  *
- * \par Example
- * \code{.cpp}
- * #include <vector>
+ * 2. **Iterate** for \f$k = 0, 1, 2, \dots\f$ until convergence:
+ * a. Compute \f$\alpha_k = \frac{{\mathbf{r}^{(k)}}^T \mathbf{z}^{(k)}}{{\mathbf{p}^{(k)}}^T A \mathbf{p}^{(k)}}\f$
+ * b. Update solution: \f$\mathbf{x}^{(k+1)} = \mathbf{x}^{(k)} + \alpha_k \mathbf{p}^{(k)}\f$
+ * c. Update residual: \f$\mathbf{r}^{(k+1)} = \mathbf{r}^{(k)} - \alpha_k A \mathbf{p}^{(k)}\f$
+ * d. Check for convergence: If \f$\| \mathbf{r}^{(k+1)} \|_2 < \text{tolerance}\f$, then stop.
+ * e. Solve \f$M \mathbf{z}^{(k+1)} = \mathbf{r}^{(k+1)}\f$ (preconditioning step).
+ * f. Compute \f$\beta_k = \frac{{\mathbf{r}^{(k+1)}}^T \mathbf{z}^{(k+1)}}{{\mathbf{r}^{(k)}}^T \mathbf{z}^{(k)}}\f$
+ * g. Update search direction: \f$\mathbf{p}^{(k+1)} = \mathbf{z}^{(k+1)} + \beta_k \mathbf{p}^{(k)}\f$
+ *
+ * \section cg_convergence Convergence and Applicability
+ *
+ * The CG method is guaranteed to converge for any symmetric positive definite matrix \f$A\f$.
+ * Its convergence rate depends on the condition number of \f$A\f$ (or \f$M^{-1}A\f$ for PCG).
+ * A lower condition number leads to faster convergence. Preconditioners are crucial for
+ * reducing the effective condition number and thus accelerating convergence, especially
+ * for ill-conditioned problems.
+ * The parameter `restart_iter` allows for restarting the CG algorithm every few iterations.
+ * This can sometimes improve robustness or manage memory for very large problems,
+ * though it generally slows down convergence for well-conditioned systems.
+ *
+ * \section cg_example Example Usage
+ * Below is a simplified example demonstrating how to use the `cg_solver` class
+ * with and without a preconditioner. This assumes `csr_matrix`, `vector`, `preconditioner`,
+ * and `iter_control` classes are properly defined and functional.
+ *
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
- * #include "linalg.h"
+ * #include <vector>
  *
  * int main() {
- * int m, n, nnz;
- * std::vector<int> csr_row_ptr;
- * std::vector<int> csr_col_ind;
- * std::vector<double> csr_val;
- * const char* matrix_file = "my_matrix.mtx";
- * load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ * // Define a sample sparse SPD matrix A (e.g., a symmetric tridiagonal matrix)
+ * // A = [ 4 -1  0 ]
+ * //     [-1  4 -1 ]
+ * //     [ 0 -1  4 ]
+ * std::vector<int> row_ptr = {0, 2, 5, 7};
+ * std::vector<int> col_ind = {0, 1, 0, 1, 2, 1, 2};
+ * std::vector<double> val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0};
  *
- * // Solution vector
- * std::vector<double> x(m, 0.0);
+ * int m = 3; // Number of rows
+ * int n = 3; // Number of columns
+ * int nnz = 7; // Number of non-zeros
  *
- * // Righthand side vector
- * std::vector<double> b(m, 1.0);
+ * csr_matrix A(row_ptr, col_ind, val, m, n, nnz);
+ * // A.make_diagonally_dominant(); // Ensure it's SPD if not inherently
  *
- * // ILU preconditioner
- * ilu_precond precond;
- * precond.build(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, n, nnz);
+ * // Define the right-hand side vector b
+ * std::vector<double> b_data = {5.0, 3.0, 10.0};
+ * vector b(b_data);
  *
+ * // Define an initial guess for the solution vector x (e.g., all zeros)
+ * vector x(m);
+ * x.zeros();
+ *
+ * // Set up iteration control
  * iter_control control;
- * control.rel_tol = 1e-8;
- * control.max_iter = 1000;
+ * control.max_iterations = 200;
+ * control.tolerance = 1e-7;
  *
- * int it = cg(csr_row_ptr.data(),
- * csr_col_ind.data(),
- * csr_val.data(),
- * x.data(),
- * b.data(),
- * m,
- * &precond,
- * control,
- * 100);
+ * // Create a CG solver instance
+ * cg_solver solver;
  *
- * std::cout << "Number of iterations: " << it << std::endl;
+ * // --- Non-preconditioned solve ---
+ * std::cout << "--- Starting non-preconditioned CG solver ---" << std::endl;
+ * vector x_nonprecond = x; // Copy initial guess
+ * int status_nonprecond = solver.solve_nonprecond(A, x_nonprecond, b, control);
+ *
+ * if (status_nonprecond == 0) {
+ * std::cout << "Non-preconditioned CG converged successfully!" << std::endl;
+ * } else {
+ * std::cout << "Non-preconditioned CG did NOT converge. Status code: " << status_nonprecond << std::endl;
+ * }
+ * std::cout << "Approximate solution x (non-preconditioned):" << std::endl;
+ * for (int i = 0; i < x_nonprecond.get_size(); ++i) {
+ * std::cout << "x[" << i << "] = " << x_nonprecond[i] << std::endl;
+ * }
+ *
+ * // --- Preconditioned solve (e.g., with Jacobi preconditioner) ---
+ * std::cout << "\n--- Starting preconditioned CG solver (Jacobi) ---" << std::endl;
+ * jacobi_precond jacobi_prec;
+ * jacobi_prec.build(A); // Build the preconditioner for matrix A
+ *
+ * vector x_precond = x; // Copy initial guess
+ * int status_precond = solver.solve_precond(A, x_precond, b, &jacobi_prec, control);
+ *
+ * if (status_precond == 0) {
+ * std::cout << "Preconditioned CG converged successfully!" << std::endl;
+ * } else {
+ * std::cout << "Preconditioned CG did NOT converge. Status code: " << status_precond << std::endl;
+ * }
+ * std::cout << "Approximate solution x (preconditioned):" << std::endl;
+ * for (int i = 0; i < x_precond.get_size(); ++i) {
+ * std::cout << "x[" << i << "] = " << x_precond[i] << std::endl;
+ * }
  *
  * return 0;
  * }
@@ -180,22 +185,107 @@
 class cg_solver
 {
 private:
+    /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{r}\f$. */
     vector z;
+    /*! \brief Search direction vector. */
     vector p;
+    /*! \brief Residual vector in the CG algorithm. */
     vector res;
 
+    /*! \brief Number of iterations after which the solver should restart.
+     * A value of 0 or a very large number typically means no restart.
+     * For CG, restarts are usually not needed for exact arithmetic but can
+     * be beneficial for large problems or in the presence of floating-point errors.
+     */
     int restart_iter;
 
 public:
+    /*! \brief Default constructor.
+     * Initializes a new `cg_solver` object.
+     */
     cg_solver();
+
+    /*! \brief Destructor.
+     * Cleans up any resources allocated by the `cg_solver` object.
+     */
     ~cg_solver();
 
+    /*! \brief Deleted copy constructor.
+     * Prevents direct copying of `cg_solver` objects to ensure proper memory management.
+     */
     cg_solver (const cg_solver&) = delete;
+
+    /*! \brief Deleted copy assignment operator.
+     * Prevents direct assignment of one `cg_solver` object to another to ensure proper memory management.
+     */
     cg_solver& operator= (const cg_solver&) = delete;
 
+    /*! \brief Builds necessary data structures for the Conjugate Gradient solver.
+     * \details
+     * For CG, this typically involves allocating and resizing the internal
+     * work vectors (`z`, `p`, `res`) to match the dimensions of the matrix `A`.
+     * \param A The sparse matrix in CSR format for which the solver is being built.
+     */
     void build(const csr_matrix& A);
+
+    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned Conjugate Gradient method.
+     *
+     * This method implements the CG algorithm without any explicit preconditioning.
+     * It iteratively refines the solution `x` until the convergence criteria from `control`
+     * are met or the maximum number of iterations is reached.
+     *
+     * \note This method assumes the input matrix `A` is symmetric positive definite.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \return An integer status code:
+     * - `0` if the solver converged successfully within the specified tolerance.
+     * - `1` if the maximum number of iterations was reached without convergence.
+     * - Negative values might indicate issues like a non-positive definite matrix or division by zero.
+     */
     int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+
+    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned Conjugate Gradient method.
+     *
+     * This method implements the CG algorithm with the provided preconditioner.
+     * It iteratively refines the solution `x` until the convergence criteria from `control`
+     * are met or the maximum number of iterations is reached.
+     *
+     * \note This method assumes the input matrix `A` is symmetric positive definite,
+     * and the provided `preconditioner` is also symmetric positive definite.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param precond A pointer to a `preconditioner` object to be used. The `build` method
+     * of the preconditioner should have been called previously for matrix `A`.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \return An integer status code:
+     * - `0` if the solver converged successfully within the specified tolerance.
+     * - `1` if the maximum number of iterations was reached without convergence.
+     * - Negative values might indicate issues with the matrix, preconditioner, or numerical stability.
+     */
     int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+
+    /*! \brief Generic solve method for the Conjugate Gradient solver (delegates to non-preconditioned or preconditioned).
+     *
+     * This method acts as a convenience wrapper. If `precond` is `nullptr`, it calls
+     * `solve_nonprecond`. Otherwise, it calls `solve_precond`.
+     *
+     * \note This method assumes the input matrix `A` is symmetric positive definite.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param precond A pointer to a `preconditioner` object to be used. If `nullptr`, no preconditioning is applied.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
+     */
     int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
 

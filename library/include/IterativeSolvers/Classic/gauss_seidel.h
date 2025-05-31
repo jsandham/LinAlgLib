@@ -38,168 +38,181 @@
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
  */
 
-/**
- * @brief Performs the Gauss-Seidel iterative method for solving a linear system of equations.
+/*! \brief A solver class implementing the Gauss-Seidel iterative method.
  *
- * Solves the linear system Ax = b, where A is a sparse matrix represented in Compressed Sparse Row (CSR) format.
+ * \details
+ * This class provides functionality to solve linear systems of equations of the form
+ * \f$A \cdot x = b\f$ using the Gauss-Seidel iterative method. It supports building
+ * necessary data structures from a `csr_matrix` and performing the iterative solution
+ * process controlled by an `iter_control` object.
  *
- * @param[in] csr_row_ptr Array of size (n+1) containing row pointers for the CSR matrix.
- * csr_row_ptr[i] stores the index of the first non-zero element in row i.
- * csr_row_ptr[n] stores the number of non-zero elements in the matrix.
- * @param[in] csr_col_ind Array of size (number of non-zero elements) containing the column indices
- * for the non-zero elements of the CSR matrix.
- * @param[in] csr_val Array of size (number of non-zero elements) containing the values
- * of the non-zero elements of the CSR matrix.
- * @param[in,out] x Array of size n. On input, it contains the initial guess for the solution.
- * On output, it contains the computed solution.
- * @param[in] b Array of size n containing the right-hand side vector.
- * @param[in] n The order of the square matrix A.
- * @param[in] control Structure containing iteration control parameters.
+ * \section gs_derivation Derivation of the Gauss-Seidel Method
  *
- * @return Returns 0 if the iteration converges, and 1 otherwise.
+ * Consider a system of \f$n\f$ linear equations with \f$n\f$ unknowns:
+ * \f$ A \mathbf{x} = \mathbf{b} \f$
+ * where \f$A\f$ is an \f$n \times n\f$ matrix, \f$\mathbf{x}\f$ is the vector of unknowns,
+ * and \f$\mathbf{b}\f$ is the known right-hand side vector.
  *
- * @details
- * The Gauss-Seidel method is an iterative technique for solving a system of linear equations.  It is similar to the Jacobi method,
- * but it uses updated values of the solution vector \f$\mathbf{x}\f$ as soon as they are computed.
- * For a matrix equation
+ * We can write the matrix \f$A\f$ as a sum of three components:
+ * \f$ A = L + D + U \f$
+ * where:
+ * - \f$D\f$ is a diagonal matrix containing the diagonal elements of \f$A\f$.
+ * - \f$L\f$ is a strictly lower triangular matrix containing the lower triangular elements of \f$A\f$ (with zeros on the diagonal).
+ * - \f$U\f$ is a strictly upper triangular matrix containing the upper triangular elements of \f$A\f$ (with zeros on the diagonal).
  *
- * \f$ A\mathbf{x} = \mathbf{b}, \f$
+ * Substituting this decomposition into the original equation:
+ * \f$ (L + D + U) \mathbf{x} = \mathbf{b} \f$
  *
- * where \f$ A \f$ is a known square matrix of size \f$n \times n\f$, \f$\mathbf{b}\f$ is a known vector of length \f$n\f$,
- * and \f$\mathbf{x}\f$ is an unknown vector of length \f$n\f$ that we want to solve for, the Gauss-Seidel method
- * iteratively refines an initial guess for \f$\mathbf{x}\f$ until convergence.
+ * Rearranging the terms to isolate the diagonal part and the lower triangular part on the left-hand side:
+ * \f$ (L + D) \mathbf{x} = \mathbf{b} - U \mathbf{x} \f$
  *
- * **Derivation of the Gauss-Seidel Iteration**
+ * Now, we introduce the iterative nature of the Gauss-Seidel method. Let \f$\mathbf{x}^{(k)}\f$ be the approximation
+ * of the solution vector at iteration \f$k\f$. The Gauss-Seidel method updates the components of \f$\mathbf{x}\f$
+ * sequentially, using the *most recently computed* values. This is the key difference from the Jacobi method,
+ * which uses values from the *previous* iteration entirely.
  *
- * We can decompose the matrix \f$A\f$ into its diagonal, lower triangular, and upper triangular parts:
+ * The iterative formula for the Gauss-Seidel method is derived by expressing \f$\mathbf{x}^{(k+1)}\f$:
+ * \f$ (L + D) \mathbf{x}^{(k+1)} = \mathbf{b} - U \mathbf{x}^{(k)} \f$
  *
- * \f$ A = D + L + U, \f$
+ * To obtain the elements of \f$\mathbf{x}^{(k+1)}\f$ individually, we can write out the \f$i\f$-th equation:
+ * \f$ \sum_{j=1}^{i-1} A_{ij} x_j^{(k+1)} + A_{ii} x_i^{(k+1)} + \sum_{j=i+1}^{n} A_{ij} x_j^{(k)} = b_i \f$
  *
- * where
+ * Solving for $x_i^{(k+1)}$:
+ * \f$ A_{ii} x_i^{(k+1)} = b_i - \sum_{j=1}^{i-1} A_{ij} x_j^{(k+1)} - \sum_{j=i+1}^{n} A_{ij} x_j^{(k)} \f$
  *
- * \f$
- * D = \begin{pmatrix}
- * a_{11} & 0      & \cdots & 0      \\
- * 0      & a_{22} & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & a_{nn}
- * \end{pmatrix},
- * \f$
+ * And finally, the explicit iterative formula for each component \f$x_i\f$ at iteration \f$k+1\f$:
+ * \f$ x_i^{(k+1)} = \frac{1}{A_{ii}} \left( b_i - \sum_{j=1}^{i-1} A_{ij} x_j^{(k+1)} - \sum_{j=i+1}^{n} A_{ij} x_j^{(k)} \right) \f$
  *
- * \f$
- * L = \begin{pmatrix}
- * 0      & 0      & \cdots & 0      \\
- * a_{21} & 0      & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * a_{n1} & a_{n2} & \cdots & 0
- * \end{pmatrix},
- * \f$
+ * This formula shows that when computing \f$x_i^{(k+1)}\f$, we use the newly updated values \f$x_j^{(k+1)}\f$
+ * for \f$j < i\f$ and the values from the previous iteration \f$x_j^{(k)}\f$ for \f$j > i\f$.
  *
- * \f$
- * U = \begin{pmatrix}
- * 0      & a_{12} & \cdots & a_{1n} \\
- * 0      & 0      & \cdots & a_{2n} \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & 0
- * \end{pmatrix}.
- * \f$
+ * \section gs_convergence Convergence Criteria
+ * The Gauss-Seidel method is guaranteed to converge if the matrix \f$A\f$ is either:
+ * - Strictly diagonally dominant: \f$|A_{ii}| > \sum_{j=1, j \neq i}^{n} |A_{ij}|\f$ for all \f$i\f$.
+ * - Symmetric and positive definite.
  *
- * Substituting this decomposition into the equation \f$ A\mathbf{x} = \mathbf{b} \f$, we get
+ * \section gs_example Example Usage
+ * Below is a simplified example demonstrating how to use the `gs_solver` class.
+ * This assumes the `csr_matrix`, `vector`, and `iter_control` classes are properly defined
+ * and functional.
  *
- * \f$ (D + L + U)\mathbf{x} = \mathbf{b}. \f$
- *
- * Rearranging, we have
- *
- * \f$ (D + L)\mathbf{x} = \mathbf{b} - U\mathbf{x}. \f$
- *
- * Assuming that \f$(D + L)\f$ is invertible, we can solve for \f$\mathbf{x}\f$:
- *
- * \f$ \mathbf{x} = (D + L)^{-1}(\mathbf{b} - U\mathbf{x}). \f$
- *
- * This equation suggests an iterative scheme:
- *
- * \f$ \mathbf{x}^{(k+1)} = (D + L)^{-1}(\mathbf{b} - U\mathbf{x}^{(k)}), \f$
- *
- * where \f$\mathbf{x}^{(k)}\f$ is the \f$k\f$-th approximation of the solution \f$\mathbf{x}\f$.
- *
- * In component form, the Gauss-Seidel update is:
- *
- * \f$ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j < i} a_{ij} x_j^{(k+1)} - \sum_{j > i} a_{ij} x_j^{(k)} \right), \quad i = 1, 2, \dots, n. \f$
- *
- * Notice that the updated values \f$x_j^{(k+1)}\f$ for \f$j < i\f$ are used in the calculation of \f$x_i^{(k+1)}\f$,
- * which is the key difference from the Jacobi method.
- *
- * The iteration continues until a stopping criterion is met, such as the residual norm being sufficiently small
- * or the maximum number of iterations being reached.
- *
- * **CSR Implementation Details**
- *
- * The function operates on a matrix stored in CSR format, which is an efficient storage scheme for sparse matrices.
- * The CSR format uses three arrays to represent the matrix:
- *
- * - `csr_row_ptr`: Stores the starting index of each row in the `csr_col_ind` and `csr_val` arrays.
- * - `csr_col_ind`: Stores the column indices of the non-zero elements.
- * - `csr_val`: Stores the values of the non-zero elements.
- *
- * This implementation efficiently calculates the matrix-vector products using the CSR format.
- *
- * **Code Example**
- *
- * @code
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
  * #include <vector>
- * #include <cmath>
  *
  * int main() {
- * // Example usage:
- * // Define the CSR matrix A
- * int n = 4;
- * std::vector<int> csr_row_ptr = {0, 2, 5, 7, 9};
- * std::vector<int> csr_col_ind = {0, 1, 0, 1, 2, 1, 3, 2, 3};
- * std::vector<double> csr_val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0};
+ * // Define a sample sparse matrix A (e.g., a tridiagonal matrix)
+ * // For simplicity, let's create a 3x3 matrix:
+ * // [ 4 -1  0 ]
+ * // [-1  4 -1 ]
+ * // [ 0 -1  4 ]
+ *
+ * std::vector<int> row_ptr = {0, 2, 5, 7}; // For 3 rows
+ * std::vector<int> col_ind = {0, 1, 0, 1, 2, 1, 2};
+ * std::vector<double> val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0};
+ *
+ * int m = 3; // Number of rows
+ * int n = 3; // Number of columns
+ * int nnz = 7; // Number of non-zeros
+ *
+ * csr_matrix A(row_ptr, col_ind, val, m, n, nnz);
  *
  * // Define the right-hand side vector b
- * std::vector<double> b = {3.0, 3.0, 3.0, 3.0};
+ * std::vector<double> b_data = {5.0, 3.0, 10.0};
+ * vector b(b_data);
  *
- * // Define the initial guess for x
- * std::vector<double> x(n, 0.0);
+ * // Define an initial guess for the solution vector x (e.g., all zeros)
+ * vector x(m);
+ * x.zeros();
  *
- * // Define the iteration control parameters
+ * // Set up iteration control
  * iter_control control;
+ * control.max_iterations = 100;
+ * control.tolerance = 1e-6;
  *
- * // Solve the system using Gauss-Seidel
- * int result = gs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), n, control);
+ * // Create a Gauss-Seidel solver instance
+ * gs_solver solver;
  *
- * if (result == 0) {
- * std::cout << "Gauss-Seidel converged. Solution x = ";
- * for (double val : x) {
- * std::cout << val << " ";
- * }
- * std::cout << std::endl;
+ * // Build the solver (e.g., pre-process the matrix)
+ * solver.build(A);
+ *
+ * // Solve the system
+ * std::cout << "Starting Gauss-Seidel solver..." << std::endl;
+ * int status = solver.solve(A, x, b, control);
+ *
+ * if (status == 0) {
+ * std::cout << "Gauss-Seidel converged successfully!" << std::endl;
  * } else {
- * std::cout << "Gauss-Seidel did not converge." << std::endl;
+ * std::cout << "Gauss-Seidel did NOT converge. Status code: " << status << std::endl;
+ * }
+ *
+ * std::cout << "Approximate solution x:" << std::endl;
+ * for (int i = 0; i < x.get_size(); ++i) {
+ * std::cout << "x[" << i << "] = " << x[i] << std::endl;
  * }
  *
  * return 0;
  * }
- * @endcode
- *
+ * \endcode
  */
 class gs_solver
 {
 private:
+    /*! \brief Internal vector to store the residual during the solve process. */
     vector res;
 
 public:
+    /*! \brief Default constructor.
+     * Initializes a new `gs_solver` object.
+     */
     gs_solver();
+
+    /*! \brief Destructor.
+     * Cleans up any resources allocated by the `gs_solver` object.
+     */
     ~gs_solver();
 
+    /*! \brief Deleted copy constructor.
+     * Prevents direct copying of `gs_solver` objects to avoid shallow copies and
+     * ensure proper memory management.
+     */
     gs_solver (const gs_solver&) = delete;
+
+    /*! \brief Deleted copy assignment operator.
+     * Prevents direct assignment of one `gs_solver` object to another to avoid shallow copies
+     * and ensure proper memory management.
+     */
     gs_solver& operator= (const gs_solver&) = delete;
 
+    /*! \brief Builds necessary data structures for the Gauss-Seidel solver.
+     * \details
+     * This method might pre-process the input matrix `A` to optimize the
+     * Gauss-Seidel iterations. For example, it might extract the diagonal elements
+     * of `A` for efficient division in the iterative step.
+     * \param A The sparse matrix in CSR format for which the solver is being built.
+     */
     void build(const csr_matrix& A);
+
+    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Gauss-Seidel method.
+     *
+     * This method iteratively updates the solution vector `x` until the convergence
+     * criteria specified by `control` are met or the maximum number of iterations
+     * is reached.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \return An integer status code:
+     * - `0` if the solver converged successfully within the specified tolerance.
+     * - `1` if the maximum number of iterations was reached without convergence.
+     * - Other negative values for errors (e.g., matrix not diagonally dominant, singular diagonal element).
+     */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
+
 
 
 #endif

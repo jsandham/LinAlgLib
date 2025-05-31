@@ -37,125 +37,151 @@
  * multigrid
  */
 
-/*! \ingroup iterative_solvers
- * \brief Smoothed Aggregation setup for Algebraic Multigrid.
+/*! \brief Sets up the hierarchy for a Smoothed Aggregation Algebraic Multigrid (SAAMG) solver.
  *
  * \details
- * \p saamg_setup is the core function responsible for generating the multigrid
- * hierarchy required by Algebraic Multigrid (AMG) solvers using the Smoothed
- * Aggregation (SA) method. This involves constructing a series of coarser
- * grid operators, along with the prolongation (interpolation) operators that
- * transfer corrections from coarser to finer levels, and the restriction
- * (projection) operators that transfer residuals from finer to coarser levels.
- * The hierarchy is built based on the input sparse matrix representing the
- * discretized problem on the finest level.
+ * This function constructs the multigrid hierarchy required for the Smoothed Aggregation
+ * Algebraic Multigrid (SAAMG) method. SAAMG is an advanced type of algebraic multigrid (AMG)
+ * method, building upon unsmoothed aggregation by incorporating a "smoothing" step into
+ * the prolongation operator. This smoothing typically improves the robustness and convergence
+ * of the AMG solver, especially for more complex problems or when simple aggregation might
+ * lead to oscillatory error components that are not well-interpolated.
  *
- * **How Smoothed Aggregation Works:**
+ * \section saamag_method Smoothed Aggregation Method
  *
- * Smoothed Aggregation is an algebraic multigrid method that builds the
- * coarse levels and transfer operators directly from the system matrix, without
- * relying on geometric information. The general process involves the following key steps:
+ * Smoothed Aggregation AMG follows a similar philosophy to Unsmoothed Aggregation, in that
+ * it groups fine-grid unknowns into aggregates to form coarse-grid degrees of freedom.
+ * However, SAAMG introduces an additional "smoothing" step in the construction of the
+ * prolongation (interpolation) operator.
  *
- * 1.  **Aggregation:** The degrees of freedom (rows/columns of the matrix) on the
- * current (finer) level are grouped into disjoint sets called "aggregates."
- * This aggregation is typically done based on the strength of connections
- * between the degrees of freedom, as represented by the entries in the matrix.
- * Strongly connected degrees of freedom are more likely to be grouped
- * together. Various algorithms exist for performing this aggregation, often
- * employing graph-based approaches on the sparsity pattern of the matrix.
- * Each aggregate on level \f$l\f$ will correspond to a single degree of
- * freedom on the next coarser level \f$l+1\f$.
+ * The general setup procedure for SAAMG for each level, starting from the finest (level 0) matrix \f$A_0 = \text{mat_A}\f$:
  *
- * 2.  **Tentative Prolongation:** An initial "tentative" prolongation operator
- * (\f$P_{tent}\f$) is constructed based on the aggregation. This operator
- * defines how to interpolate values from the coarse level back to the fine
- * level based on the aggregates. A simple approach is to define a piecewise
- * constant interpolation within each aggregate. If a coarse-level degree
- * of freedom (representing an aggregate) has a value of 1, then all the
- * fine-level degrees of freedom belonging to that aggregate receive a value
- * of 1. Degrees of freedom in other aggregates receive 0. This tentative
- * prolongation is generally not smooth enough.
+ * 1.  \b Aggregation: Partition the fine-grid nodes into disjoint sets called aggregates.
+ * This step is identical to that in UAAMG. Algorithms like Ruge-Stuben (RS) coarsening,
+ * or simpler greedy aggregation algorithms based on graph properties of the matrix, can be used.
+ * Each aggregate forms a single coarse-grid degree of freedom. This step yields an initial
+ * unsmoothed prolongation operator \f$P_0\f$ (e.g., piecewise constant interpolation).
  *
- * 3.  **Prolongation Smoothing:** The tentative prolongation operator is then
- * "smoothed" using an iterative method, typically a few steps of a
- * point-wise smoother like weighted Jacobi applied to the original system
- * matrix (or a related matrix). This smoothing step aims to improve the
- * interpolation by making it better at representing the "algebraically
- * smooth" error components that standard smoothers like Jacobi or
- * Gauss-Seidel struggle to reduce. The resulting "smoothed" prolongation
- * operator (\f$P\f$) is then used to transfer corrections from the coarse
- * level to the fine level.
+ * 2.  \b Smoothing \b of \b Prolongation \b Operator: The key difference from UAAMG.
+ * The initial prolongation operator \f$P_0\f$ is "smoothed" to obtain the final prolongation operator \f$P\f$.
+ * This smoothing step often involves applying a few iterations of a simple stationary
+ * relaxation method (like weighted Jacobi or a polynomial filter) to the columns of \f$P_0\f$.
+ * A common smoothing formula is:
+ * \f$ P = (I - \omega D^{-1} A) P_0 \f$
+ * where \f$D\f$ is the diagonal of \f$A\f$, \f$I\f$ is the identity matrix, and \f$\omega\f$ is a relaxation
+ * parameter (similar to SOR or Jacobi damping). This step helps to ensure that highly
+ * oscillatory error components (which are poorly represented by piecewise constant interpolation)
+ * are effectively interpolated to the coarse grid.
  *
- * 4.  **Restriction Operator:** The restriction operator (\f$R\f$) is typically
- * chosen as the transpose (or a scaled transpose) of the prolongation
- * operator (\f$R = P^T\f$). This variational approach ensures that the
- * coarse-level problem is a Galerkin projection of the fine-level problem,
- * leading to good energy properties. The restriction operator transfers the
- * residual from the fine level to the coarse level.
+ * 3.  \b Restriction \b Operator \b Construction: The restriction operator \f$R\f$ is chosen
+ * as the transpose of the smoothed prolongation operator, i.e., \f$R = P^T\f$. This ensures a Galerkin
+ * coarse-grid approximation.
  *
- * 5.  **Coarse-Level Operator:** The system matrix on the coarser level
- * (\f$A_c\f$) is computed using a Galerkin triple product: \f$A_c = R A P\f$,
- * where \f$A\f$ is the system matrix on the finer level. This step ensures
- * that the coarse-level problem accurately represents the residual equation
- * on the coarser grid.
+ * 4.  \b Coarse-Grid \b Operator \b Construction: The coarse-grid matrix \f$A_c\f$ (or \f$A_{level+1}\f$)
+ * is formed using the Galerkin product:
+ * \f$ A_{level+1} = R A_{level} P = P^T A_{level} P \f$
  *
- * These steps are repeated recursively to build a hierarchy of coarser levels
- * until a sufficiently small (and thus easily solvable) coarse-level problem
- * is obtained. The resulting hierarchy (prolongation operators, restriction
- * operators, and coarse-level matrices) is stored in the \ref heirarchy
- * structure and is then used in the multigrid solve phase with appropriate
- * cycling strategies (like V-cycle, W-cycle, F-cycle) and smoothers at each level.
+ * These steps are repeated recursively until the coarse-grid problem is small enough to be
+ * solved directly or a maximum number of levels is reached.
  *
- * @param[in] csr_row_ptr
- * Array of \p m+1 elements that point to the start of every row of
- * the input sparse matrix in CSR format.
- * @param[in] csr_col_ind
- * Array of \p nnz elements containing the column indices of the
- * non-zero entries in the input sparse matrix (CSR format).
- * @param[in] csr_val
- * Array of \p nnz elements containing the numerical values of the
- * non-zero entries in the input sparse matrix (CSR format).
- * @param[in] m
- * Number of rows in the input sparse CSR matrix.
- * @param[in] n
- * Number of columns in the input sparse CSR matrix.
- * @param[in] nnz
- * Number of non-zero elements in the input sparse CSR matrix.
- * @param[in] max_level
- * Maximum number of levels to be generated in the multigrid hierarchy.
- * The actual number of levels generated might be less than \p max_level
- * depending on the coarsening process.
- * @param[out] hierarchy
- * Structure of type \ref heirarchy that will be populated with the
- * generated hierarchy of restriction operators, prolongation operators,
- * and coarse-level system matrices.
+ * \param mat_A The fine-grid (finest level) sparse matrix in CSR format. This is the matrix
+ * for which the multigrid hierarchy is to be constructed.
+ * \param max_level The maximum number of levels to build in the hierarchy. The hierarchy
+ * will contain `max_level + 1` levels (level 0 to `max_level`).
+ * The coarsest level will be `max_level`.
+ * \param hierarchy A reference to a `hierarchy` object that will be populated with the
+ * constructed multigrid levels (matrices, prolongation/restriction operators).
+ * This object should be capable of storing `max_level + 1` levels of data.
  *
- * \par Example
- * \code{.cpp}
- * #include <vector>
+ * \section saamag_example Example Usage
+ * Below is a simplified example demonstrating how to use the `saamg_setup` function.
+ * This assumes `csr_matrix`, `vector`, `hierarchy`, and `iter_control` classes are
+ * properly defined and functional.
+ *
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
- * #include "linalg.h"
+ * #include <vector>
+ * #include <algorithm> // For std::sort
+ * #include <utility>   // For std::pair
  *
  * int main() {
- * int m, n, nnz;
- * std::vector<int> csr_row_ptr;
- * std::vector<int> csr_col_ind;
- * std::vector<double> csr_val;
- * const char* matrix_file = "my_matrix.mtx";
- * load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ * // 1. Create a sample sparse matrix (e.g., from a 1D Poisson problem for simplicity)
+ * // A 5x5 matrix for demonstration:
+ * // [ 2 -1  0  0  0 ]
+ * // [-1  2 -1  0  0 ]
+ * // [ 0 -1  2 -1  0 ]
+ * // [ 0  0 -1  2 -1 ]
+ * // [ 0  0  0 -1  2 ]
  *
- * // Solution vector
- * std::vector<double> x(m, 0.0);
+ * int N = 5; // Size of the matrix
+ * std::vector<int> row_ptr(N + 1);
+ * std::vector<int> col_ind;
+ * std::vector<double> val;
  *
- * // Righthand side vector
- * std::vector<double> b(m, 1.0);
+ * row_ptr[0] = 0;
+ * int nnz_count = 0;
+ * for (int i = 0; i < N; ++i) {
+ * // Diagonal element
+ * col_ind.push_back(i);
+ * val.push_back(2.0);
+ * nnz_count++;
  *
- * heirarchy hierarchy;
- * saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierarchy);
+ * // Off-diagonal (left)
+ * if (i > 0) {
+ * col_ind.push_back(i - 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * // Off-diagonal (right)
+ * if (i < N - 1) {
+ * col_ind.push_back(i + 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * row_ptr[i+1] = nnz_count;
+ * }
  *
- * int cycles = amg_solve(hierarchy, x.data(), b.data(), 10, 10, 1e-8,
- * Cycle::Vcycle, Smoother::Gauss_Seidel);
- * std::cout << "Number of cycles: " << cycles << std::endl;
+ * // Sort elements by column index within each row to ensure CSR format
+ * // (This is a simplified example; a real CSR builder would handle this)
+ * for (int i = 0; i < N; ++i) {
+ * std::vector<std::pair<int, double>> row_elements;
+ * for (int k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
+ * row_elements.push_back({col_ind[k], val[k]});
+ * }
+ * std::sort(row_elements.begin(), row_elements.end());
+ * for (int k = 0; k < row_elements.size(); ++k) {
+ * col_ind[row_ptr[i] + k] = row_elements[k].first;
+ * val[row_ptr[i] + k] = row_elements[k].second;
+ * }
+ * }
+ *
+ * csr_matrix A(row_ptr, col_ind, val, N, N, nnz_count);
+ *
+ * // 2. Define the maximum number of multigrid levels
+ * int max_levels = 2; // Including level 0, this means 3 levels (0, 1, 2)
+ *
+ * // 3. Create a hierarchy object
+ * hierarchy mg_hierarchy;
+ *
+ * // 4. Call the SAAMG setup function
+ * std::cout << "Setting up SAAMG hierarchy with max_level = " << max_levels << "..." << std::endl;
+ * saamg_setup(A, max_levels, mg_hierarchy);
+ * std::cout << "SAAMG hierarchy setup complete." << std::endl;
+ *
+ * // You can now inspect the hierarchy, e.g., print sizes of matrices at each level
+ * std::cout << "\nHierarchy Levels:" << std::endl;
+ * for (int level = 0; level <= max_levels; ++level) {
+ * // Assuming hierarchy has a method to get matrix at a level
+ * // This part is illustrative as hierarchy class structure is not provided
+ * const csr_matrix& A_level = mg_hierarchy.get_matrix(level);
+ * std::cout << "Level " << level << ": Matrix size = " << A_level.get_num_rows() << "x" << A_level.get_num_cols() << std::endl;
+ * }
+ *
+ * // Further usage would involve passing this hierarchy to an AMG solver
+ * // For instance:
+ * // amg_solver solver;
+ * // solver.solve(mg_hierarchy, x, b, control);
  *
  * return 0;
  * }

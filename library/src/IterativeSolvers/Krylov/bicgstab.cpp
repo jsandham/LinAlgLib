@@ -156,7 +156,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
     p.copy_from(r);
 
     // M*z = r
-    precond->solve(r.get_vec(), z.get_vec(), A.get_m());
+    // precond->solve(r.get_vec(), z.get_vec(), A.get_m());
+    precond->solve(r, z);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -172,7 +173,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
         axpy(-alpha, q, r);
 
         // M * v = r
-        precond->solve(r.get_vec(), v.get_vec(), A.get_m());
+        // precond->solve(r.get_vec(), v.get_vec(), A.get_m());
+        precond->solve(r, v);
 
         // t = A * v
         A.multiply_vector(t, v);
@@ -215,7 +217,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
         }
 
         // M * z = p
-        precond->solve(p.get_vec(), z.get_vec(), A.get_m());
+        // precond->solve(p.get_vec(), z.get_vec(), A.get_m());
+        precond->solve(p, z);
 
         iter++;
     }

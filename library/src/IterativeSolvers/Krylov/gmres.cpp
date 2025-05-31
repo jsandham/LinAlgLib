@@ -60,8 +60,17 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
         // z = A * q_(k-1)
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, qkm1, z, n);
 
+        vector vec_z(n);
+        vector vec_qk(n);
+
+        for(int i = 0; i < n; i++)
+        {
+            vec_z[i] = z[i];
+            vec_qk[i] = qk[i];
+        }
+
         // qk = (M^-1) * z
-        precond->solve(z, qk, n);
+        precond->solve(vec_z, vec_qk);
     }
     else
     {
@@ -298,7 +307,8 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b,
     compute_residual(A, x, b, res);
 
     // z = (M^-1) * res
-    precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+    // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+    precond->solve(res, z);
 
     double res_norm = z.norm_euclid2();
     double initial_res_norm = res_norm;
@@ -400,7 +410,8 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b,
         compute_residual(A, x, b, res);
 
         // z = (M^-1) * res
-        precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
+        precond->solve(res, z);
 
         res_norm = z.norm_euclid2();
 

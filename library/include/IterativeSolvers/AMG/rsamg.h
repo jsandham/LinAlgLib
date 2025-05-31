@@ -42,92 +42,159 @@
 // LINALGLIB_API void rsamg_setup_legacy(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
 //                  int max_level, heirarchy &hierarchy);
 
-/*! \ingroup iterative_solvers
- * \brief Ruge-Stüben Algebraic Multigrid setup.
+/*! \brief Sets up the hierarchy for a Ruge-Stuben Algebraic Multigrid (RSAMG) solver.
  *
  * \details
- * \p rsamg_setup generates the hierarchy of restriction, prolongation, and
- * coarse grid operators using the Ruge-Stüben Algebraic Multigrid (AMG) method.
- * Ruge-Stüben is a classical AMG approach that relies on the concept of
- * "strong connections" within the system matrix to determine the coarse grid
- * structure and the interpolation operators.
+ * This function constructs the multigrid hierarchy required for the Ruge-Stuben Algebraic Multigrid (RSAMG) method.
+ * RSAMG is one of the foundational and most widely used classical AMG methods. It is particularly effective
+ * for solving linear systems arising from elliptic partial differential equations (PDEs), especially
+ * when the matrix is symmetric positive definite (SPD) or M-matrix.
+ * The core idea of RSAMG lies in partitioning the unknowns (nodes) into "C-nodes" (coarse-grid nodes)
+ * and "F-nodes" (fine-grid nodes) based on the strength of their connections.
  *
- * The Ruge-Stüben setup typically involves the following steps:
+ * \section rsamg_method Ruge-Stuben Method
  *
- * 1.  **Strong/Weak Connections:** Determining the strength of connection
- * between pairs of degrees of freedom based on the magnitude of the off-diagonal
- * entries in the matrix. A common criterion is to compare the off-diagonal
- * entry with some fraction of the magnitude of the diagonal entry.
+ * The Ruge-Stuben (RS) approach for building the multigrid hierarchy is based on measuring the
+ * "strength" of connections between degrees of freedom. A connection \f$A_{ij}\f$ is considered strong
+ * if its magnitude is large relative to other off-diagonal entries in row \f$i\f$.
  *
- * 2.  **Independent Set (C/F Splitting):** Partitioning the degrees of freedom
- * into two sets: C (coarse) points and F (fine) points. C points will be
- * represented on the coarser grid, while F points will be interpolated from
- * the C points. This splitting is often done greedily, prioritizing points
- * that strongly influence many other points to be in the C set, while ensuring
- * that the C set is a maximal independent set with respect to strong connections.
+ * The setup procedure for RSAMG for each level, starting from the finest (level 0) matrix \f$A_0 = A\f$:
  *
- * 3.  **Prolongation (Interpolation) Operator:** Constructing an interpolation
- * operator that defines how to transfer values from the coarse grid (C points)
- * to the fine grid (F points). The interpolation weights are typically based
- * on the strong connections between F points and their neighboring C points.
+ * 1.  \b Strength \b of \b Connection: Define a measure for the strength of connection between
+ * node \f$i\f$ and node \f$j\f$. A common definition is that \f$j\f$ strongly depends on \f$i\f$ if:
+ * \f$ |A_{ij}| \ge \alpha \cdot \max_{k \neq i} |A_{ik}| \f$
+ * for some parameter \f$\alpha \in [0, 1)\f$ (e.g., \f$\alpha = 0.25\f$ or \f$0.5\f$).
+ * Let \f$S_i\f$ be the set of nodes \f$j\f$ that strongly influence node \f$i\f$.
  *
- * 4.  **Restriction (Projection) Operator:** Defining a restriction operator that
- * transfers residuals from the fine grid to the coarse grid. A common choice
- * is the transpose of the prolongation operator (or a scaled transpose),
- * leading to a Galerkin projection.
+ * 2.  \b C/F \b Point \b Selection (Coarsening): Partition the set of all nodes \f$\Omega\f$ into
+ * a coarse set \f$C\f$ (C-nodes) and a fine set \f$F\f$ (F-nodes). This is typically done greedily:
+ * a. Initialize \f$C = \emptyset\f$, \f$F = \emptyset\f$, and all nodes are "unassigned".
+ * b. Iteratively select an unassigned node that is strongly influenced by the most unassigned nodes.
+ * This node becomes a C-node. Add it to \f$C\f$. All unassigned neighbors strongly influenced by this
+ * new C-node are designated as F-nodes and added to \f$F\f$.
+ * c. Repeat until all nodes are assigned.
+ * This strategy aims to ensure that F-nodes are strongly connected to at least one C-node.
  *
- * 5.  **Coarse-Level Operator:** Forming the system matrix on the coarser level
- * using a Galerkin projection: \f$A_c = R A P\f$, where \f$A\f$ is the matrix
- * on the finer level, \f$R\f$ is the restriction operator, and \f$P\f$ is the
- * prolongation operator.
+ * 3.  \b Prolongation \b Operator \b Construction: Construct the prolongation (interpolation) operator \f$P\f$.
+ * The interpolation operator maps coarse-grid vectors to fine-grid vectors. For RSAMG, \f$P\f$ is constructed
+ * such that F-nodes are interpolated from their C-node neighbors.
+ * For an F-node \f$i\f$, its value is interpolated from a weighted sum of its C-node neighbors:
+ * \f$ x_i = \sum_{j \in C \cap S_i} P_{ij} x_j \f$
+ * The weights \f$P_{ij}\f$ are derived from the entries of the matrix \f$A\f$. A common formula for \f$P_{ij}\f$ for \f$i \in F, j \in C\f$:
+ * \f$ P_{ij} = \frac{-A_{ij}}{A_{ii} - \sum_{k \in F \cap S_i} A_{ik}} \f$
+ * (This is a simplified representation; the full formula can be more complex, involving sums over strong F-F connections as well).
+ * For C-nodes, \f$P_{ii} = 1\f$ if \f$i \in C\f$, and \f$P_{ij} = 0\f$ for \f$i \in C, i \neq j\f$.
  *
- * These steps are applied recursively until a sufficiently small coarse-level
- * problem is obtained. The resulting hierarchy of operators is stored in the
- * \ref heirarchy structure and can then be used by an AMG solver (e.g.,
- * \ref amg_solve) to efficiently solve the linear system.
+ * 4.  \b Restriction \b Operator \b Construction: The restriction operator \f$R\f$ is often chosen
+ * as the transpose of the prolongation operator, i.e., \f$R = P^T\f$. This ensures a Galerkin
+ * coarse-grid approximation and preserves symmetry if \f$A\f$ is symmetric.
  *
- * @param[in] csr_row_ptr
- * Array of \p m+1 elements that point to the start of every row of
- * the input sparse matrix in CSR format.
- * @param[in] csr_col_ind
- * Array of \p nnz elements containing the column indices of the
- * non-zero entries in the input sparse matrix (CSR format).
- * @param[in] csr_val
- * Array of \p nnz elements containing the numerical values of the
- * non-zero entries in the input sparse matrix (CSR format).
- * @param[in] m
- * Number of rows in the input sparse CSR matrix.
- * @param[in] n
- * Number of columns in the input sparse CSR matrix.
- * @param[in] nnz
- * Number of non-zero elements in the input sparse CSR matrix.
- * @param[in] max_level
- * Maximum number of levels to be generated in the multigrid hierarchy.
- * The actual number of levels generated might be less than \p max_level
- * depending on the coarsening process.
- * @param[out] hierarchy
- * Structure of type \ref heirarchy that will be populated with the
- * generated hierarchy of restriction operators, prolongation operators,
- * and coarse-level system matrices.
+ * 5.  \b Coarse-Grid \b Operator \b Construction: The coarse-grid matrix \f$A_c\f$ (or \f$A_{level+1}\f$)
+ * is formed using the Galerkin product:
+ * \f$ A_{level+1} = R A_{level} P = P^T A_{level} P \f$
  *
- * \par Example
- * \code{.cpp}
- * #include <vector>
+ * These steps are repeated recursively until the coarse-grid problem is small enough to be
+ * solved directly (e.g., by direct factorization) or a maximum number of levels is reached.
+ *
+ * \param A The fine-grid (finest level) sparse matrix in CSR format. This is the matrix
+ * for which the multigrid hierarchy is to be constructed. It is generally assumed to be
+ * a square matrix.
+ * \param max_level The maximum number of levels to build in the hierarchy. The hierarchy
+ * will contain `max_level + 1` levels (level 0 to `max_level`).
+ * The coarsest level will be `max_level`.
+ * \param hierarchy A reference to a `hierarchy` object that will be populated with the
+ * constructed multigrid levels (matrices, prolongation/restriction operators).
+ * This object should be capable of storing `max_level + 1` levels of data.
+ *
+ * \section rsamg_example Example Usage
+ * Below is a simplified example demonstrating how to use the `rsamg_setup` function.
+ * This assumes `csr_matrix`, `vector`, `hierarchy`, and `iter_control` classes are
+ * properly defined and functional.
+ *
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
- * #include "linalg.h"
+ * #include <vector>
+ * #include <algorithm> // For std::sort
+ * #include <utility>   // For std::pair
  *
  * int main() {
- * int m, n, nnz;
- * std::vector<int> csr_row_ptr;
- * std::vector<int> csr_col_ind;
- * std::vector<double> csr_val;
- * const char* matrix_file = "my_matrix.mtx";
- * load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ * // 1. Create a sample sparse matrix (e.g., from a 1D Poisson problem for simplicity)
+ * // A 5x5 matrix for demonstration:
+ * // [ 2 -1  0  0  0 ]
+ * // [-1  2 -1  0  0 ]
+ * // [ 0 -1  2 -1  0 ]
+ * // [ 0  0 -1  2 -1 ]
+ * // [ 0  0  0 -1  2 ]
  *
- * heirarchy hierarchy;
- * rsamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierarchy);
+ * int N = 5; // Size of the matrix
+ * std::vector<int> row_ptr(N + 1);
+ * std::vector<int> col_ind;
+ * std::vector<double> val;
  *
- * std::cout << "Ruge-Stüben AMG hierarchy setup complete." << std::endl;
+ * row_ptr[0] = 0;
+ * int nnz_count = 0;
+ * for (int i = 0; i < N; ++i) {
+ * // Diagonal element
+ * col_ind.push_back(i);
+ * val.push_back(2.0);
+ * nnz_count++;
+ *
+ * // Off-diagonal (left)
+ * if (i > 0) {
+ * col_ind.push_back(i - 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * // Off-diagonal (right)
+ * if (i < N - 1) {
+ * col_ind.push_back(i + 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * row_ptr[i+1] = nnz_count;
+ * }
+ *
+ * // Sort elements by column index within each row to ensure CSR format
+ * // (This is a simplified example; a real CSR builder would handle this)
+ * for (int i = 0; i < N; ++i) {
+ * std::vector<std::pair<int, double>> row_elements;
+ * for (int k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
+ * row_elements.push_back({col_ind[k], val[k]});
+ * }
+ * std::sort(row_elements.begin(), row_elements.end());
+ * for (int k = 0; k < row_elements.size(); ++k) {
+ * col_ind[row_ptr[i] + k] = row_elements[k].first;
+ * val[row_ptr[i] + k] = row_elements[k].second;
+ * }
+ * }
+ *
+ * csr_matrix A(row_ptr, col_ind, val, N, N, nnz_count);
+ *
+ * // 2. Define the maximum number of multigrid levels
+ * int max_levels = 2; // Including level 0, this means 3 levels (0, 1, 2)
+ *
+ * // 3. Create a hierarchy object
+ * hierarchy mg_hierarchy;
+ *
+ * // 4. Call the RSAMG setup function
+ * std::cout << "Setting up RSAMG hierarchy with max_level = " << max_levels << "..." << std::endl;
+ * rsamg_setup(A, max_levels, mg_hierarchy);
+ * std::cout << "RSAMG hierarchy setup complete." << std::endl;
+ *
+ * // You can now inspect the hierarchy, e.g., print sizes of matrices at each level
+ * std::cout << "\nHierarchy Levels:" << std::endl;
+ * for (int level = 0; level <= max_levels; ++level) {
+ * // Assuming hierarchy has a method to get matrix at a level
+ * // This part is illustrative as hierarchy class structure is not provided
+ * const csr_matrix& A_level = mg_hierarchy.get_matrix(level);
+ * std::cout << "Level " << level << ": Matrix size = " << A_level.get_num_rows() << "x" << A_level.get_num_cols() << std::endl;
+ * }
+ *
+ * // Further usage would involve passing this hierarchy to an AMG solver
+ * // For instance:
+ * // amg_solver solver;
+ * // solver.solve(mg_hierarchy, x, b, control);
  *
  * return 0;
  * }

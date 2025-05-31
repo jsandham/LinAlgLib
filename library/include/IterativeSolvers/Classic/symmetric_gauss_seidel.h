@@ -39,153 +39,171 @@
  * seidel solver
  */
 
-/**
- * @brief Performs the Symmetric Gauss-Seidel (SGS) iterative method for solving a linear system of equations.
+/*! \brief A solver class implementing the Symmetric Gauss-Seidel (SGS) iterative method.
  *
- * Solves the linear system Ax = b, where A is a sparse matrix represented in Compressed Sparse Row (CSR) format.
+ * \details
+ * This class provides functionality to solve linear systems of equations of the form
+ * \f$A \cdot x = b\f$ using the Symmetric Gauss-Seidel (SGS) iterative method.
+ * SGS applies a forward Gauss-Seidel sweep followed by a backward Gauss-Seidel sweep
+ * as a single iteration. This method often exhibits better convergence properties
+ * than the standard Gauss-Seidel method, particularly for symmetric matrices, and
+ * is frequently used as a preconditioner for Krylov subspace methods like Conjugate Gradient.
  *
- * @param[in] csr_row_ptr Array of size (n+1) containing row pointers for the CSR matrix.
- * csr_row_ptr[i] stores the index of the first non-zero element in row i.
- * csr_row_ptr[n] stores the number of non-zero elements in the matrix.
- * @param[in] csr_col_ind Array of size (number of non-zero elements) containing the column indices
- * for the non-zero elements of the CSR matrix.
- * @param[in] csr_val Array of size (number of non-zero elements) containing the values
- * of the non-zero elements of the CSR matrix.
- * @param[in,out] x Array of size n. On input, it contains the initial guess for the solution.
- * On output, it contains the computed solution.
- * @param[in] b Array of size n containing the right-hand side vector.
- * @param[in] n The order of the square matrix A.
- * @param[in] control Structure containing iteration control parameters.
+ * \section sgs_derivation Derivation of the SGS Method
  *
- * @return Returns 0 if the iteration converges, and 1 otherwise.
+ * The Symmetric Gauss-Seidel (SGS) method is constructed by combining a forward Gauss-Seidel
+ * sweep and a backward Gauss-Seidel sweep.
  *
- * @details
- * The Symmetric Gauss-Seidel (SGS) method is an iterative technique for solving a system of linear equations.
- * It combines a forward and a backward Gauss-Seidel sweep.
- * For a matrix equation
+ * We decompose the matrix \f$A\f$ into its diagonal (\f$D\f$), strictly lower triangular (\f$L\f$),
+ * and strictly upper triangular (\f$U\f$) parts: \f$A = L + D + U\f$.
  *
- * \f$ A\mathbf{x} = \mathbf{b}, \f$
+ * A single SGS iteration from \f$\mathbf{x}^{(k)}\f$ to \f$\mathbf{x}^{(k+1)}\f$ consists of two steps:
  *
- * where \f$ A \f$ is a known square matrix of size \f$n \times n\f$, \f$\mathbf{b}\f$ is a known vector of length \f$n\f$,
- * and \f$\mathbf{x}\f$ is an unknown vector of length \f$n\f$ that we want to solve for, the SGS method
- * iteratively refines an initial guess for \f$\mathbf{x}\f$ until convergence.
+ * \subsection sgs_forward_sweep Forward Gauss-Seidel Sweep
+ * In the first half-step, we perform a standard Gauss-Seidel iteration to compute an intermediate
+ * vector \f$\mathbf{x}^{(k+1/2)}\f$:
+ * \f$ (L + D) \mathbf{x}^{(k+1/2)} = \mathbf{b} - U \mathbf{x}^{(k)} \f$
+ * This can be written component-wise as:
+ * \f$ x_i^{(k+1/2)} = \frac{1}{A_{ii}} \left( b_i - \sum_{j=1}^{i-1} A_{ij} x_j^{(k+1/2)} - \sum_{j=i+1}^{n} A_{ij} x_j^{(k)} \right) \f$
  *
- * **Derivation of the Symmetric Gauss-Seidel Iteration**
+ * \subsection sgs_backward_sweep Backward Gauss-Seidel Sweep
+ * In the second half-step, we use the intermediate \f$\mathbf{x}^{(k+1/2)}\f$ to compute the
+ * new iterate \f$\mathbf{x}^{(k+1)}\f$ using a backward Gauss-Seidel sweep. This means
+ * iterating from \f$i=n\f$ down to \f$1\f$:
+ * \f$ (U + D) \mathbf{x}^{(k+1)} = \mathbf{b} - L \mathbf{x}^{(k+1/2)} \f$
+ * Component-wise, this is:
+ * \f$ x_i^{(k+1)} = \frac{1}{A_{ii}} \left( b_i - \sum_{j=i+1}^{n} A_{ij} x_j^{(k+1)} - \sum_{j=1}^{i-1} A_{ij} x_j^{(k+1/2)} \right) \f$
  *
- * We decompose the matrix \f$A\f$ into its diagonal, lower triangular, and upper triangular parts:
+ * When used as a preconditioner, the action of the SGS preconditioner \f$M_{SGS}\f$ is equivalent to:
+ * \f$ M_{SGS}^{-1} = (D+L)^{-1} + (D+U)^{-1} - D^{-1} \f$
+ * Or, if \f$A\f$ is symmetric, it can be seen as:
+ * \f$ M_{SGS}^{-1} = (D+L)^{-1} D (D+L)^T \f$
  *
- * \f$ A = D + L + U, \f$
+ * \section sgs_convergence Convergence Criteria
  *
- * where
+ * The Symmetric Gauss-Seidel method is guaranteed to converge if the matrix \f$A\f$ is
+ * symmetric and positive definite.
  *
- * \f$
- * D = \begin{pmatrix}
- * a_{11} & 0      & \cdots & 0      \\
- * 0      & a_{22} & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & a_{nn}
- * \end{pmatrix},
- * \f$
+ * \section sgs_example Example Usage
+ * Below is a simplified example demonstrating how to use the `sgs_solver` class.
+ * This assumes the `csr_matrix`, `vector`, and `iter_control` classes are properly defined
+ * and functional.
  *
- * \f$
- * L = \begin{pmatrix}
- * 0      & 0      & \cdots & 0      \\
- * a_{21} & 0      & \cdots & 0      \\
- * \vdots & \vdots & \ddots & \vdots \\
- * a_{n1} & a_{n2} & \cdots & 0
- * \end{pmatrix},
- * \f$
- *
- * \f$
- * U = \begin{pmatrix}
- * 0      & a_{12} & \cdots & a_{1n} \\
- * 0      & 0      & \cdots & a_{2n} \\
- * \vdots & \vdots & \ddots & \vdots \\
- * 0      & 0      & \cdots & 0
- * \end{pmatrix}.
- * \f$
- *
- * The SGS method consists of two steps: a forward sweep and a backward sweep.
- *
- * **Forward Sweep:**
- *
- * \f$ \mathbf{x}^{(k+1/2)} = (D + L)^{-1} ( \mathbf{b} - U \mathbf{x}^{(k)} ) \f$
- *
- * **Backward Sweep:**
- *
- * \f$ \mathbf{x}^{(k+1)} = (D + U)^{-1} ( \mathbf{b} - L \mathbf{x}^{(k+1/2)} ) \f$
- *
- * Combining the forward and backward sweeps, we get the Symmetric Gauss-Seidel iteration.
- *
- * The iteration continues until a stopping criterion is met, such as the residual norm being sufficiently small
- * or the maximum number of iterations being reached.
- *
- * **CSR Implementation Details**
- *
- * The function operates on a matrix stored in CSR format, which is an efficient storage scheme for sparse matrices.
- * The CSR format uses three arrays to represent the matrix:
- *
- * - `csr_row_ptr`: Stores the starting index of each row in the `csr_col_ind` and `csr_val` arrays.
- * - `csr_col_ind`: Stores the column indices of the non-zero elements.
- * - `csr_val`: Stores the values of the non-zero elements.
- *
- * This implementation efficiently calculates the matrix-vector products using the CSR format.
- *
- * **Code Example**
- *
- * @code
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
  * #include <vector>
- * #include <cmath>
  *
  * int main() {
- * // Example usage:
- * // Define the CSR matrix A
- * int n = 4;
- * std::vector<int> csr_row_ptr = {0, 2, 5, 7, 9};
- * std::vector<int> csr_col_ind = {0, 1, 0, 1, 2, 1, 3, 2, 3};
- * std::vector<double> csr_val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0};
+ * // Define a sample sparse matrix A (e.g., a symmetric tridiagonal matrix)
+ * // For simplicity, let's create a 3x3 matrix:
+ * // [ 4 -1  0 ]
+ * // [-1  4 -1 ]
+ * // [ 0 -1  4 ]
+ *
+ * std::vector<int> row_ptr = {0, 2, 5, 7}; // For 3 rows
+ * std::vector<int> col_ind = {0, 1, 0, 1, 2, 1, 2};
+ * std::vector<double> val = {4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0};
+ *
+ * int m = 3; // Number of rows
+ * int n = 3; // Number of columns
+ * int nnz = 7; // Number of non-zeros
+ *
+ * csr_matrix A(row_ptr, col_ind, val, m, n, nnz);
  *
  * // Define the right-hand side vector b
- * std::vector<double> b = {3.0, 3.0, 3.0, 3.0};
+ * std::vector<double> b_data = {5.0, 3.0, 10.0};
+ * vector b(b_data);
  *
- * // Define the initial guess for x
- * std::vector<double> x(n, 0.0);
+ * // Define an initial guess for the solution vector x (e.g., all zeros)
+ * vector x(m);
+ * x.zeros();
  *
- * // Define the iteration control parameters
+ * // Set up iteration control
  * iter_control control;
+ * control.max_iterations = 100;
+ * control.tolerance = 1e-6;
  *
- * // Solve the system using SGS iteration
- * int result = sgs(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), n, control);
+ * // Create an SGS solver instance
+ * sgs_solver solver;
  *
- * if (result == 0) {
- * std::cout << "SGS iteration converged. Solution x = ";
- * for (double val : x) {
- * std::cout << val << " ";
- * }
- * std::cout << std::endl;
+ * // Build the solver (e.g., pre-process the matrix)
+ * solver.build(A);
+ *
+ * // Solve the system
+ * std::cout << "Starting Symmetric Gauss-Seidel solver..." << std::endl;
+ * int status = solver.solve(A, x, b, control);
+ *
+ * if (status == 0) {
+ * std::cout << "Symmetric Gauss-Seidel converged successfully!" << std::endl;
  * } else {
- * std::cout << "SGS iteration did not converge." << std::endl;
+ * std::cout << "Symmetric Gauss-Seidel did NOT converge. Status code: " << status << std::endl;
+ * }
+ *
+ * std::cout << "Approximate solution x:" << std::endl;
+ * for (int i = 0; i < x.get_size(); ++i) {
+ * std::cout << "x[" << i << "] = " << x[i] << std::endl;
  * }
  *
  * return 0;
  * }
- * @endcode
- *
+ * \endcode
  */
 class sgs_solver
 {
 private:
+    /*! \brief Internal vector to store the residual during the solve process. */
     vector res;
-    
+
 public:
+    /*! \brief Default constructor.
+     * Initializes a new `sgs_solver` object.
+     */
     sgs_solver();
+
+    /*! \brief Destructor.
+     * Cleans up any resources allocated by the `sgs_solver` object.
+     */
     ~sgs_solver();
 
+    /*! \brief Deleted copy constructor.
+     * Prevents direct copying of `sgs_solver` objects to avoid shallow copies and
+     * ensure proper memory management.
+     */
     sgs_solver (const sgs_solver&) = delete;
+
+    /*! \brief Deleted copy assignment operator.
+     * Prevents direct assignment of one `sgs_solver` object to another to avoid shallow copies
+     * and ensure proper memory management.
+     */
     sgs_solver& operator= (const sgs_solver&) = delete;
 
+    /*! \brief Builds necessary data structures for the Symmetric Gauss-Seidel solver.
+     * \details
+     * This method typically involves pre-processing the input matrix `A` to
+     * facilitate efficient forward and backward Gauss-Seidel sweeps. This may
+     * include extracting the diagonal elements and setting up for triangular solves.
+     * \param A The sparse matrix in CSR format for which the solver is being built.
+     */
     void build(const csr_matrix& A);
+
+    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Gauss-Seidel (SGS) method.
+     *
+     * This method iteratively updates the solution vector `x` by performing a
+     * forward Gauss-Seidel sweep followed by a backward Gauss-Seidel sweep,
+     * until the convergence criteria specified by `control` are met or the
+     * maximum number of iterations is reached.
+     *
+     * \param A The sparse coefficient matrix in CSR format.
+     * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+     * \param b The right-hand side vector.
+     * \param control An `iter_control` object that manages the iteration process,
+     * including convergence tolerance and maximum iterations.
+     * \return An integer status code:
+     * - `0` if the solver converged successfully within the specified tolerance.
+     * - `1` if the maximum number of iterations was reached without convergence.
+     * - Other negative values for errors (e.g., singular diagonal element).
+     */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
 

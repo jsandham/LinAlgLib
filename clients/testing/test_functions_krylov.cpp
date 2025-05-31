@@ -97,7 +97,7 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     if(p != nullptr)
     {
         std::cout << "Build preconditioner" << std::endl;
-        p->build(mat_A.get_row_ptr(), mat_A.get_col_ind(), mat_A.get_val(), mat_A.get_m(), mat_A.get_n(), mat_A.get_nnz());
+        p->build(mat_A);
     }
 
     int iter = 0;

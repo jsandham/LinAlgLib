@@ -193,121 +193,173 @@ enum class Smoother
     */
     SSOR
 };
-
-/*! \ingroup iterative_solvers
- * \brief Algebraic Multigrid solver.
+/*! \brief Solves a linear system using the Algebraic Multigrid (AMG) method.
  *
  * \details
- * \p amg_solve iteratively solves a linear system of equations \f$A x = b\f$
- * using an Algebraic Multigrid (AMG) method. This function assumes that a
- * multigrid hierarchy (containing restriction operators, prolongation operators,
- * and coarse-level matrices) has already been constructed and is provided
- * as input. The specific cycling strategy and smoother to be used during the
- * solve phase are also specified as input parameters.
+ * This function implements the core multigrid cycle (V-cycle, W-cycle, or F-cycle, specified by `cycle`)
+ * to solve a linear system \f$A \cdot x = b\f$ using a pre-constructed AMG hierarchy.
+ * AMG is an iterative method specifically designed for solving large sparse linear systems,
+ * particularly effective for those arising from discretized partial differential equations.
+ * It works by recursively solving the problem on a sequence of coarser grids,
+ * where errors that are "smooth" (low-frequency) on finer grids appear "rough" (high-frequency)
+ * on coarser grids and can be effectively damped by simple iterative smoothers.
  *
- * The AMG solve process typically involves recursively applying the following steps:
+ * \section amg_cycle_description AMG Cycle Description
  *
- * 1.  **Pre-smoothing:** Apply a few iterations (\p n1) of a chosen smoother
- * (e.g., Jacobi, Gauss-Seidel) to the current solution on the current level
- * to reduce high-frequency errors.
+ * The `amg_solve` function orchestrates an AMG cycle to reduce the error in the solution.
+ * Each cycle typically involves the following steps:
  *
- * 2.  **Residual Calculation:** Compute the residual \f$r = b - A x\f$.
+ * 1.  \b Pre-smoothing: Apply `n1` iterations of a chosen `smoother` to the current
+ * approximate solution \f$\mathbf{x}\f$ on the current level. This step aims to damp
+ * high-frequency error components.
  *
- * 3.  **Restriction:** Project the residual to the next coarser level using the
- * restriction operator.
+ * 2.  \b Coarse-grid \b Correction:
+ * a. Compute the residual \f$\mathbf{r} = \mathbf{b} - A \mathbf{x}\f$.
+ * b. Restrict the residual to the next coarser grid: \f$\mathbf{r}_c = R \mathbf{r}\f$,
+ * where \f$R\f$ is the restriction operator from the `hierarchy`.
+ * c. Solve the coarse-grid error equation \f$A_c \mathbf{e}_c = \mathbf{r}_c\f$ recursively.
+ * If the coarsest level is reached, the problem is solved directly (e.g., using a direct solver).
+ * The exact recursive call depends on the `Cycle` type.
+ * d. Prolongate the coarse-grid error back to the fine grid: \f$\mathbf{e} = P \mathbf{e}_c\f$,
+ * where \f$P\f$ is the prolongation operator from the `hierarchy`.
+ * e. Update the fine-grid solution: \f$\mathbf{x} = \mathbf{x} + \mathbf{e}\f$.
  *
- * 4.  **Coarse-Level Correction:** Solve the residual equation on the coarser
- * level (either recursively using AMG or directly if the coarsest level
- * is small enough) to obtain a coarse-level correction.
- *
- * 5.  **Prolongation:** Interpolate the coarse-level correction back to the current
- * (finer) level using the prolongation operator.
- *
- * 6.  **Correction Update:** Add the interpolated correction to the current solution.
- *
- * 7.  **Post-smoothing:** Apply a few more iterations (\p n2) of the chosen
- * smoother to the updated solution on the current level to further reduce
+ * 3.  \b Post-smoothing: Apply `n2` iterations of the chosen `smoother` to the updated
+ * approximate solution \f$\mathbf{x}\f$ on the current level. This further dampens remaining
  * high-frequency errors.
  *
- * The order and number of recursive calls to the coarse level depend on the
- * chosen cycle type (\ref Vcycle, \ref Wcycle, or \ref Fcycle). The iteration
- * continues until a specified convergence criterion (defined by the tolerance
- * \p tol or the \ref iter_control struct) is met or the maximum number of
- * iterations is reached.
+ * The `Cycle` enumeration defines how the coarse-grid problem (step 2c) is handled recursively:
+ * - \b V-Cycle (`Cycle::Vcycle`): The coarse-grid problem is solved by recursively applying
+ * a single AMG V-cycle. This is the simplest and most common cycle type.
+ * - \b W-Cycle (`Cycle::Wcycle`): The coarse-grid problem is solved by recursively applying
+ * *more than one* V-cycle (typically two) on the coarser level before interpolating back.
+ * This can lead to more thorough error reduction at the cost of increased computation per cycle.
+ * - \b F-Cycle (`Cycle::Fcycle`): The F-cycle starts by recursively solving the problem on the
+ * coarsest level, then interpolates the solution to the next finer level and performs
+ * one or more V-cycles. This process is repeated, gradually moving to finer levels.
+ * It's often used to provide a good initial guess and can lead to faster overall convergence.
  *
- * **Note:** Before calling \p amg_solve, the \p hierarchy structure must be
- * properly initialized by calling a setup function such as \ref saamg_setup
- * or \ref uaamg_setup (or another AMG setup routine).
+ * \param hierarchy A constant reference to the `hierarchy` object, which contains all the
+ * necessary matrices (`A_cs`), prolongation operators (`prolongations`), and restriction
+ * operators (`restrictions`) for all levels of the multigrid hierarchy. This hierarchy
+ * must have been previously set up by a function like `uaamg_setup`, `saamg_setup`,
+ * or `rsamg_setup`.
+ * \param x On input, an initial guess for the solution vector; on output, the computed solution vector.
+ * \param b The right-hand side vector of the linear system.
+ * \param n1 The number of pre-smoothing iterations to perform at each level.
+ * \param n2 The number of post-smoothing iterations to perform at each level.
+ * \param cycle An enumeration value (`Cycle::Vcycle`, `Cycle::Wcycle`, or `Cycle::Fcycle`)
+ * specifying the type of multigrid cycle to be performed.
+ * \param smoother An enumeration value (`Smoother::Jacobi`, `Smoother::Gauss_Seidel`, `Smoother::Symm_Gauss_Seidel`, `Smoother::SOR`, `Smoother::SSOR`)
+ * specifying the type of stationary iterative method to be used as a smoother at each level.
+ * \param control An `iter_control` object that manages the overall iterative process,
+ * including convergence tolerance (`rel_tol`, `abs_tol`) and maximum number of cycles (`max_cycle`).
  *
- * @param[in] hierarchy
- * Structure of type \ref heirarchy containing the hierarchy of restriction
- * operators, prolongation operators, and coarse-level system matrices. This
- * structure must have been populated by a prior call to an AMG setup function
- * (e.g., \ref saamg_setup or \ref uaamg_setup).
- * @param[inout] x
- * Array of \p m elements serving as both the initial guess and the output
- * solution vector for the linear system \f$A x = b\f$. On input, it should
- * contain an initial guess for the solution. On output, it will contain the
- * converged solution (if convergence is achieved).
- * @param[in] b
- * Array of \p m elements containing the right-hand side vector of the linear
- * system \f$A x = b\f$.
- * @param[in] n1
- * Number of pre-smoothing iterations to perform at each level (except the
- * coarsest) before the residual is restricted to the coarser level.
- * @param[in] n2
- * Number of post-smoothing iterations to perform at each level (except the
- * coarsest) after the correction is interpolated from the coarser level.
- * @param[in] cycle
- * Enumeration value of type \ref Cycle specifying the multigrid cycle type to
- * be used during the solve phase (e.g., \ref Vcycle, \ref Wcycle, \ref Fcycle).
- * @param[in] smoother
- * Enumeration value of type \ref Smoother specifying the iterative method to
- * be used as a smoother at each level of the multigrid hierarchy (e.g.,
- * \ref Jacobi, \ref Gauss_Seidel).
- * @param[in] control
- * Structure of type \ref iter_control specifying the convergence criteria
- * (relative tolerance, absolute tolerance) and the maximum number of iterations
- * for the AMG solve.
+ * \return An integer status code:
+ * - `0` if the AMG solver converged successfully within the specified tolerance.
+ * - `1` if the maximum number of cycles (`control.max_cycle`) was reached without convergence.
+ * - Negative values indicate errors (e.g., singular matrix on coarsest level, hierarchy not properly built).
  *
- * @retval int
- * The total number of multigrid cycles performed during the solve phase.
- * Returns -1 if the solver did not converge to a solution within the specified
- * tolerance and maximum number of iterations.
+ * \section amg_example Example Usage
+ * Below is a simplified example demonstrating how to use the `amg_solve` function.
+ * This assumes `csr_matrix`, `vector`, `hierarchy`, `iter_control`, `Cycle` enum,
+ * and `Smoother` enum are properly defined and functional.
  *
- * \par Example
- * \code{.cpp}
- * #include <vector>
+ * \code
+ * #include "linalglib.h"
  * #include <iostream>
- * #include "linalg.h"
+ * #include <vector>
+ * #include <algorithm> // For std::min
+ * #include <utility>   // For std::pair
  *
  * int main() {
- * int m, n, nnz;
- * std::vector<int> csr_row_ptr;
- * std::vector<int> csr_col_ind;
- * std::vector<double> csr_val;
- * const char* matrix_file = "my_matrix.mtx";
- * load_mtx_file(matrix_file, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+ * // 1. Create a sample sparse matrix (e.g., from a 1D Poisson problem)
+ * int N = 100; // Size of the matrix
+ * std::vector<int> row_ptr(N + 1);
+ * std::vector<int> col_ind;
+ * std::vector<double> val;
  *
- * // Solution vector
- * std::vector<double> x(m, 0.0);
+ * row_ptr[0] = 0;
+ * int nnz_count = 0;
+ * for (int i = 0; i < N; ++i) {
+ * col_ind.push_back(i);
+ * val.push_back(2.0);
+ * nnz_count++;
+ * if (i > 0) {
+ * col_ind.push_back(i - 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * if (i < N - 1) {
+ * col_ind.push_back(i + 1);
+ * val.push_back(-1.0);
+ * nnz_count++;
+ * }
+ * row_ptr[i+1] = nnz_count;
+ * }
+ * // Sort elements by column index within each row to ensure proper CSR format
+ * for (int i = 0; i < N; ++i) {
+ * std::vector<std::pair<int, double>> row_elements;
+ * for (int k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
+ * row_elements.push_back({col_ind[k], val[k]});
+ * }
+ * std::sort(row_elements.begin(), row_elements.end());
+ * for (int k = 0; k < row_elements.size(); ++k) {
+ * col_ind[row_ptr[i] + k] = row_elements[k].first;
+ * val[row_ptr[i] + k] = row_elements[k].second;
+ * }
+ * }
+ * csr_matrix A(row_ptr, col_ind, val, N, N, nnz_count);
  *
- * // Righthand side vector
- * std::vector<double> b(m, 1.0);
+ * // Define the right-hand side vector b (e.g., all ones)
+ * vector b(N);
+ * for (int i = 0; i < N; ++i) {
+ * b[i] = 1.0;
+ * }
  *
- * heirarchy hierarchy;
- * saamg_setup(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), m, m, nnz, 10, hierarchy);
+ * // Define an initial guess for the solution vector x (e.g., all zeros)
+ * vector x(N);
+ * x.zeros();
  *
+ * // 2. Setup the AMG hierarchy (using Unsmoothed Aggregation as an example)
+ * int max_levels = 5; // Maximum number of levels
+ * hierarchy mg_hierarchy;
+ * std::cout << "Setting up UAAMG hierarchy..." << std::endl;
+ * uaamg_setup(A, max_levels, mg_hierarchy);
+ * std::cout << "Hierarchy setup complete." << std::endl;
+ *
+ * // 3. Set AMG parameters
+ * int n1 = 2; // Number of pre-smoothing iterations
+ * int n2 = 2; // Number of post-smoothing iterations
+ * Cycle cycle_type = Cycle::Vcycle; // Use V-cycle
+ * Smoother smoother_type = Smoother::Jacobi; // Use Jacobi smoother
+ *
+ * // 4. Set up iteration control
  * iter_control control;
- * control.max_iter = 20;
- * int cycles = amg_solve(hierarchy, x.data(), b.data(), 2, 2, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
- * std::cout << "Number of cycles: " << cycles << std::endl;
+ * control.rel_tol = 1e-7;
+ * control.abs_tol = 1e-10;
+ * control.max_cycle = 50; // Max 50 AMG cycles
+ *
+ * // 5. Call the AMG solve function
+ * std::cout << "\nStarting AMG solver (V-cycle, Jacobi smoother)..." << std::endl;
+ * int status = amg_solve(mg_hierarchy, x, b, n1, n2, cycle_type, smoother_type, control);
+ *
+ * if (status == 0) {
+ * std::cout << "AMG converged successfully!" << std::endl;
+ * } else {
+ * std::cout << "AMG did NOT converge. Status code: " << status << std::endl;
+ * }
+ *
+ * // Optional: Print a few elements of the solution
+ * std::cout << "Approximate solution x (first 5 elements):" << std::endl;
+ * for (int i = 0; i < std::min(5, N); ++i) {
+ * std::cout << "x[" << i << "] = " << x[i] << std::endl;
+ * }
  *
  * return 0;
  * }
  * \endcode
  */
-/**@}*/
 LINALGLIB_API int amg_solve(const heirarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control);
 
