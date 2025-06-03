@@ -34,6 +34,8 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //****************************************************************************
 //
 // Generalised Minimum Residual
@@ -307,7 +309,6 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b,
     compute_residual(A, x, b, res);
 
     // z = (M^-1) * res
-    // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
     precond->solve(res, z);
 
     double res_norm = z.norm_euclid2();
@@ -410,7 +411,6 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b,
         compute_residual(A, x, b, res);
 
         // z = (M^-1) * res
-        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
         precond->solve(res, z);
 
         res_norm = z.norm_euclid2();

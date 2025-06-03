@@ -34,6 +34,8 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //****************************************************************************
 //
 // Stabilized Bi-Conjugate Gradient
@@ -78,7 +80,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vect
     while (!control.exceed_max_iter(iter))
     {
         // v = Ap
-        A.multiply_vector(v, p);
+        A.multiply_by_vector(v, p);
 
         double alpha = rho / r0.dot(v);
 
@@ -86,7 +88,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vect
         axpy(-alpha, v, r);
 
         // t = A * r
-        A.multiply_vector(t, r);
+        A.multiply_by_vector(t, r);
 
         double omega1 = t.dot(r);
         double omega2 = t.dot(t);
@@ -156,7 +158,6 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
     p.copy_from(r);
 
     // M*z = r
-    // precond->solve(r.get_vec(), z.get_vec(), A.get_m());
     precond->solve(r, z);
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -165,7 +166,7 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
     while (!control.exceed_max_iter(iter))
     {
         // q = A*z
-        A.multiply_vector(q, z);
+        A.multiply_by_vector(q, z);
 
         double alpha = rho / r0.dot(q);
 
@@ -173,11 +174,10 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
         axpy(-alpha, q, r);
 
         // M * v = r
-        // precond->solve(r.get_vec(), v.get_vec(), A.get_m());
         precond->solve(r, v);
 
         // t = A * v
-        A.multiply_vector(t, v);
+        A.multiply_by_vector(t, v);
 
         double omega1 = t.dot(r);
         double omega2 = t.dot(t);
@@ -217,7 +217,6 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
         }
 
         // M * z = p
-        // precond->solve(p.get_vec(), z.get_vec(), A.get_m());
         precond->solve(p, z);
 
         iter++;

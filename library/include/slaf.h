@@ -33,6 +33,8 @@
 #include "vector.h"
 #include "csr_matrix.h"
 
+namespace linalg
+{
 // Compute y = alpha * x + y
 LINALGLIB_API void axpy(int n, double alpha, const double* x, double* y);
 LINALGLIB_API void axpy(double alpha, const vector& x, vector& y);
@@ -125,5 +127,6 @@ LINALGLIB_API double norm_inf(const double *array, int n);
 
 LINALGLIB_API void print_matrix(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
            int nnz);
+}
 
 #endif

@@ -39,6 +39,8 @@
  * a matrix. Used algebraic multigrid solvers
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  *  \brief Compute smoothed aggregation strong connections
  */
@@ -48,5 +50,6 @@ LINALGLIB_API void compute_strong_connections(const csr_matrix &A, double eps, s
  *  \brief Compute classical strength matrix
  */
 LINALGLIB_API void compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, std::vector<int> &connections);
+}
 
 #endif

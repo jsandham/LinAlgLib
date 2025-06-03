@@ -38,6 +38,8 @@
  *  \brief sor.h provides interface for sor solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Successive Over-Relaxation (SOR) iterative method.
  *
  * \details
@@ -214,5 +216,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double omega);
 };
+}
 
 #endif

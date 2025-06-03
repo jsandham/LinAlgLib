@@ -40,8 +40,8 @@ namespace Testing
         std::string filename;
         Solver solver;
         Preconditioner precond;
-        Cycle cycle;
-        Smoother smoother;
+        linalg::Cycle cycle;
+        linalg::Smoother smoother;
         int presmoothing;
         int postsmoothing;
         int max_iters;

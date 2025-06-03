@@ -32,23 +32,23 @@
 
 int main()
 {
-    csr_matrix A;
+    linalg::csr_matrix A;
     A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
 
     // Solution vector
-    vector x(A.get_m());
+    linalg::vector x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    vector b(A.get_m());
+    linalg::vector b(A.get_m());
     b.ones();
 
-    hierarchy hierachy;
-    uaamg_setup(A, 2, hierachy);
+    linalg::hierarchy hierachy;
+    linalg::uaamg_setup(A, 2, hierachy);
 
-    iter_control control;
+    linalg::iter_control control;
 
-    int cycles = amg_solve(hierachy, x, b, 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
+    int cycles = linalg::amg_solve(hierachy, x, b, 2, 2, linalg::Cycle::Wcycle, linalg::Smoother::Gauss_Seidel, control);
 
     // Print solution
     std::cout << "x" << std::endl;

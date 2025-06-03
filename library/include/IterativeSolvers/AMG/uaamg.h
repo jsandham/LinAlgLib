@@ -37,6 +37,8 @@
  * algebraic multigrid
  */
 
+namespace linalg
+{
 /*! \brief Sets up the hierarchy for an Unsmoothed Aggregation Algebraic Multigrid (UAAMG) solver.
  *
  * \details
@@ -185,5 +187,6 @@
  * \endcode
  */
 void uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy);
+}
 
 #endif

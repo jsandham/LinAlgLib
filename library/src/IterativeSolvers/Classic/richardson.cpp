@@ -33,9 +33,13 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //-------------------------------------------------------------------------------
 // richardson method
 //-------------------------------------------------------------------------------
+namespace linalg
+{
 void richardson_iteration(const csr_matrix& A, vector& x, vector& res, double theta)
 {
     ROUTINE_TRACE("richardson_iteration");
@@ -51,6 +55,7 @@ void richardson_iteration(const csr_matrix& A, vector& x, vector& res, double th
     {
         x_ptr[j] = x_ptr[j] + theta * res_ptr[j];
     }
+}
 }
 
 rich_solver::rich_solver(){}

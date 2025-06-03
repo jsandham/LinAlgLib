@@ -40,6 +40,8 @@
  *  algebraic multigrid solvers
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  *  \brief Compute aggregates using parallel maximum independent set
  */
@@ -55,6 +57,7 @@ LINALGLIB_API void compute_cfpoint_first_pass(const csr_matrix &S, const csr_mat
   *  \brief Compute classical C/F points (second pass)
   */
 LINALGLIB_API void compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32_t> &cfpoints);
+}
  
 
 #endif

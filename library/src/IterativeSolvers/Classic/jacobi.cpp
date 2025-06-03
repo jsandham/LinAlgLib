@@ -32,9 +32,13 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //-------------------------------------------------------------------------------
 // jacobi method
 //-------------------------------------------------------------------------------
+namespace linalg
+{
 void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const vector& b)
 {
     ROUTINE_TRACE("jacobi_iteration");
@@ -64,6 +68,7 @@ void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const 
         }
         x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
+}
 }
 
 jacobi_solver::jacobi_solver(){}

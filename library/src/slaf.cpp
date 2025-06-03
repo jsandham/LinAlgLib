@@ -43,7 +43,7 @@
 //-------------------------------------------------------------------------------
 // Compute y = alpha * x + y
 //-------------------------------------------------------------------------------
-void axpy(int n, double alpha, const double* x, double* y)
+void linalg::axpy(int n, double alpha, const double* x, double* y)
 {
     ROUTINE_TRACE("axpy");
 
@@ -69,15 +69,15 @@ void axpy(int n, double alpha, const double* x, double* y)
     }
 }
 
-void axpy(double alpha, const vector& x, vector& y)
+void linalg::axpy(double alpha, const vector& x, vector& y)
 {
-    axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
+    linalg::axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 //-------------------------------------------------------------------------------
 // Compute y = alpha * x + beta * y
 //-------------------------------------------------------------------------------
-void axpby(int n, double alpha, const double* x, double beta, double* y)
+void linalg::axpby(int n, double alpha, const double* x, double beta, double* y)
 {
     ROUTINE_TRACE("axpby");
 
@@ -133,15 +133,15 @@ void axpby(int n, double alpha, const double* x, double beta, double* y)
     }
 }
 
-void axpby(double alpha, const vector& x, double beta, vector& y)
+void linalg::axpby(double alpha, const vector& x, double beta, vector& y)
 {
-    axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
+    linalg::axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 //-------------------------------------------------------------------------------
 // Compute y = alpha * A * x + beta * y
 //-------------------------------------------------------------------------------
-void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
+void linalg::csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
            const double *x, double beta, double *y)
 {
     ROUTINE_TRACE("csrmv");
@@ -174,7 +174,7 @@ void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const in
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A * B + beta * D
 //-------------------------------------------------------------------------------
-void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+void linalg::csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
                  const int *csr_col_ind_A, const int *csr_row_ptr_B, const int *csr_col_ind_B, double beta,
                  const int *csr_row_ptr_D, const int *csr_col_ind_D, int *csr_row_ptr_C, int *nnz_C)
 {
@@ -238,7 +238,7 @@ void csrgemm_nnz(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double al
     *nnz_C = csr_row_ptr_C[m];
 }
 
-void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
+void linalg::csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha, const int *csr_row_ptr_A,
              const int *csr_col_ind_A, const double *csr_val_A, const int *csr_row_ptr_B, const int *csr_col_ind_B,
              const double *csr_val_B, double beta, const int *csr_row_ptr_D, const int *csr_col_ind_D,
              const double *csr_val_D, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
@@ -345,7 +345,7 @@ void csrgemm(int m, int n, int k, int nnz_A, int nnz_B, int nnz_D, double alpha,
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A + beta * B
 //-------------------------------------------------------------------------------
-void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+void linalg::csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
                  double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B, int *csr_row_ptr_C, int *nnz_C)
 {
     ROUTINE_TRACE("csrgeam_nnz");
@@ -391,7 +391,7 @@ void csrgeam_nnz(int m, int n, int nnz_A, int nnz_B, double alpha, const int *cs
     *nnz_C = csr_row_ptr_C[m];
 }
 
-void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
+void linalg::csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_row_ptr_A, const int *csr_col_ind_A,
              const double *csr_val_A, double beta, const int *csr_row_ptr_B, const int *csr_col_ind_B,
              const double *csr_val_B, const int *csr_row_ptr_C, int *csr_col_ind_C, double *csr_val_C)
 {
@@ -469,6 +469,8 @@ void csrgeam(int m, int n, int nnz_A, int nnz_B, double alpha, const int *csr_ro
     }
 }
 
+namespace linalg
+{
 static double get_diagonal_value(int col, int diag_index, const double *csr_val, int *structural_zero,
                                  int *numeric_zero)
 {
@@ -493,11 +495,12 @@ static double get_diagonal_value(int col, int diag_index, const double *csr_val,
 
     return diag_val;
 }
+}
 
 //-------------------------------------------------------------------------------
 // Compute incomplete LU factorization inplace
 //-------------------------------------------------------------------------------
-void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+void linalg::csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
              int *structural_zero, int *numeric_zero)
 {
     ROUTINE_TRACE("csrilu0");
@@ -560,7 +563,7 @@ void csrilu0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_i
 //----------------------------------------------------------------------------------------
 // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
 //----------------------------------------------------------------------------------------
-void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
+void linalg::csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_ind, double *csr_val,
             int *structural_zero, int *numeric_zero)
 {
     ROUTINE_TRACE("csric0");
@@ -632,7 +635,7 @@ void csric0(int m, int n, int nnz, const int *csr_row_ptr, const int *csr_col_in
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
-void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+void linalg::matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                            double *y, int n)
 {
     ROUTINE_TRACE("matrix_vector_product");
@@ -686,7 +689,7 @@ void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const
 //-------------------------------------------------------------------------------
 // dot product z = x*y
 //-------------------------------------------------------------------------------
-double dot_product(const double *x, const double *y, int n)
+double linalg::dot_product(const double *x, const double *y, int n)
 {
     ROUTINE_TRACE("dot_product");
 
@@ -705,7 +708,7 @@ double dot_product(const double *x, const double *y, int n)
 //-------------------------------------------------------------------------------
 // fill array with zeros
 //-------------------------------------------------------------------------------
-void fill_with_zeros(double *x, int n)
+void linalg::fill_with_zeros(double *x, int n)
 {
     ROUTINE_TRACE("fill_with_zeros");
 
@@ -721,7 +724,7 @@ void fill_with_zeros(double *x, int n)
 //-------------------------------------------------------------------------------
 // fill array with ones
 //-------------------------------------------------------------------------------
-void fill_with_ones(double *x, int n)
+void linalg::fill_with_ones(double *x, int n)
 {
     ROUTINE_TRACE("fill_with_ones");
 
@@ -737,7 +740,7 @@ void fill_with_ones(double *x, int n)
 //-------------------------------------------------------------------------------
 // exclusive scan
 //-------------------------------------------------------------------------------
-void compute_exclusize_scan(double *x, int n)
+void linalg::compute_exclusize_scan(double *x, int n)
 {
     if(n > 0)
     {
@@ -753,7 +756,7 @@ void compute_exclusize_scan(double *x, int n)
 //-------------------------------------------------------------------------------
 // Compute residual res = b - A * x
 //-------------------------------------------------------------------------------
-void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+void linalg::compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
     const double* b, double* res, int n)
 {
     ROUTINE_TRACE("compute_residual");
@@ -776,15 +779,15 @@ void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const doub
     }
 }
 
-void compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res)
+void linalg::compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res)
 {
-    compute_residual(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), res.get_vec(), A.get_m());
+    linalg::compute_residual(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), res.get_vec(), A.get_m());
 }
 
 //-------------------------------------------------------------------------------
 // copy array
 //-------------------------------------------------------------------------------
-void copy(int* dest, const int* src, int n)
+void linalg::copy(int* dest, const int* src, int n)
 {
     ROUTINE_TRACE("copy");
 
@@ -797,7 +800,7 @@ void copy(int* dest, const int* src, int n)
     }
 }
 
-void copy(double* dest, const double* src, int n)
+void linalg::copy(double* dest, const double* src, int n)
 {
     ROUTINE_TRACE("copy");
 
@@ -813,7 +816,7 @@ void copy(double* dest, const double* src, int n)
 //-------------------------------------------------------------------------------
 // diagonal d = diag(A)
 //-------------------------------------------------------------------------------
-void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n)
+void linalg::diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n)
 {
     ROUTINE_TRACE("diagonal");
 
@@ -836,15 +839,15 @@ void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_
     }
 }
 
-void diagonal(const csr_matrix& A, vector& d)
+void linalg::diagonal(const csr_matrix& A, vector& d)
 {
-    diagonal(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
+    linalg::diagonal(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }
 
 //-------------------------------------------------------------------------------
 // solve Lx = b where L is a lower triangular sparse matrix
 //-------------------------------------------------------------------------------
-void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+void linalg::forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                    int n, bool unit_diag)
 {
     ROUTINE_TRACE("forward_solve");
@@ -889,7 +892,7 @@ void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double 
 //-------------------------------------------------------------------------------
 // solve Ux = b where U is a upper triangular sparse matrix
 //-------------------------------------------------------------------------------
-void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
+void linalg::backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,
                     int n, bool unit_diag)
 {
     ROUTINE_TRACE("backward_solve");
@@ -922,7 +925,7 @@ void backward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double
 //-------------------------------------------------------------------------------
 // error e = |b-A*x|
 //-------------------------------------------------------------------------------
-double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
+double linalg::error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
              int n)
 {
     ROUTINE_TRACE("error");
@@ -947,7 +950,7 @@ double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_v
 //-------------------------------------------------------------------------------
 // error e = |b-A*x| stops calculating error if error goes above tolerance
 //-------------------------------------------------------------------------------
-double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+double linalg::fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                   const double *b, int n, double tol)
 {
     ROUTINE_TRACE("fast_error");
@@ -974,7 +977,7 @@ double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *
 //-------------------------------------------------------------------------------
 // infinity norm
 //-------------------------------------------------------------------------------
-double norm_inf(const double *array, int n)
+double linalg::norm_inf(const double *array, int n)
 {
     ROUTINE_TRACE("norm_inf");
 
@@ -993,7 +996,7 @@ double norm_inf(const double *array, int n)
 //-------------------------------------------------------------------------------
 // euclidean norm
 //-------------------------------------------------------------------------------
-double norm_euclid(const double *array, int n)
+double linalg::norm_euclid(const double *array, int n)
 {
     ROUTINE_TRACE("norm_euclid");
     return std::sqrt(dot_product(array, array, n));
@@ -1002,7 +1005,7 @@ double norm_euclid(const double *array, int n)
 //-------------------------------------------------------------------------------
 // print matrix to console
 //-------------------------------------------------------------------------------
-void print_matrix(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
+void linalg::print_matrix(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
            int nnz)
 {
     ROUTINE_TRACE("print_matrix");

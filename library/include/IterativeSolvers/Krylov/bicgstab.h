@@ -39,6 +39,8 @@
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Bi-Conjugate Gradient Stabilized (BiCGSTAB) method.
  *
  * \details
@@ -302,4 +304,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
+}
+
 #endif

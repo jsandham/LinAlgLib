@@ -36,6 +36,8 @@
  *  \brief rsamg.h provides interface for classical algebraic multigrid
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  *  \brief Legacy Ruge Steuben algebraic multigrid setup
  */
@@ -201,6 +203,6 @@
  * \endcode
  */
 LINALGLIB_API void rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy);
-
+}
 
 #endif

@@ -41,6 +41,8 @@
  *  \brief amg.h provides interface for algebraic multigrid solver
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  * \brief Data structure for storing the matrix hierarchy used in algebraic multigrid solver
  *
@@ -362,5 +364,6 @@ enum class Smoother
  */
 LINALGLIB_API int amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control);
+}
 
 #endif

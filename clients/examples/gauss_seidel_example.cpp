@@ -43,21 +43,21 @@ int main()
     // std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
     // std::vector<double> csr_val = { 4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0,
     // -1.0, 4.0 };
-    csr_matrix A;
+    linalg::csr_matrix A;
     A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
 
     // Solution vector
-    vector x(A.get_m());
+    linalg::vector x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    vector b(A.get_m());
+    linalg::vector b(A.get_m());
     b.ones();
 
-    gs_solver gs;
+    linalg::gs_solver gs;
     gs.build(A);
 
-    iter_control control;
+    linalg::iter_control control;
     control.max_iter = 1000;
     control.rel_tol = 1e-08;
     control.abs_tol = 1e-08;

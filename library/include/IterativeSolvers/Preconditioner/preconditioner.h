@@ -38,6 +38,8 @@
  *  \brief preconditioner.h provides different preconditioners that can be used with Krylov solvers
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  * \brief Abstract base class for preconditioners.
  *
@@ -340,5 +342,6 @@ public:
      */
     void solve(const vector& rhs, vector& x) const override;
 };
+}
 
 #endif

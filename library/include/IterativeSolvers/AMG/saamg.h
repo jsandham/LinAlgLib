@@ -37,6 +37,8 @@
  * multigrid
  */
 
+namespace linalg
+{
 /*! \brief Sets up the hierarchy for a Smoothed Aggregation Algebraic Multigrid (SAAMG) solver.
  *
  * \details
@@ -188,6 +190,6 @@
  * \endcode
  */
 LINALGLIB_API void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hierarchy);
-
+}
 
 #endif

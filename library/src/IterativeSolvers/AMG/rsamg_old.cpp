@@ -30,6 +30,8 @@
 #include <iostream>
 #include <stdlib.h>
 
+using namespace linalg;
+
 //********************************************************************************
 //
 // AMG: Classical Algebraic Multigrid

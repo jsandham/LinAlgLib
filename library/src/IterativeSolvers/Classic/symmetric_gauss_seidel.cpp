@@ -32,9 +32,13 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //-------------------------------------------------------------------------------
 // symmetric Gauss Seidel method
 //-------------------------------------------------------------------------------
+namespace linalg
+{
 void symm_gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b)
 {
     ROUTINE_TRACE("symm_gauss_seidel_iteration");
@@ -98,6 +102,7 @@ void symm_gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b
         
         x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
+}
 }
 
 sgs_solver::sgs_solver(){}

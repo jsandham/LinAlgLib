@@ -39,6 +39,8 @@
  * seidel solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Symmetric Gauss-Seidel (SGS) iterative method.
  *
  * \details
@@ -206,5 +208,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
+}
 
 #endif

@@ -38,6 +38,8 @@
 //
 //********************************************************************************
 
+namespace linalg
+{
 static unsigned int hash1(unsigned int x)
 {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -221,8 +223,9 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, con
         }
     }
 }
+}
 
-bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
+bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
                                    std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes)
 {
     ROUTINE_TRACE("compute_aggregates_using_pmis");
@@ -356,7 +359,6 @@ bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &
     return true;
 }
 
-
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (first pass)
 //-------------------------------------------------------------------------------
@@ -365,7 +367,7 @@ bool compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &
 #define U_POINT 2 // Unassigned point
 #define FF_POINT 3 // Future F-point
 
-void compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, std::vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, std::vector<uint32_t> &cfpoints)
 {
     assert(S.get_m() == S.get_n());
     assert(ST.get_m() == ST.get_n());
@@ -577,13 +579,10 @@ void compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, std::
     }
 }
 
-
-
-
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (second pass)
 //-------------------------------------------------------------------------------
-void compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32_t> &cfpoints)
 {
     const int* csr_row_ptr_S = S.get_row_ptr();
     const int* csr_col_ind_S = S.get_col_ind();

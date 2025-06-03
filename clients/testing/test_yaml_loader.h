@@ -261,20 +261,20 @@ template <> struct convert<Testing::Preconditioner>
     }
 };
 
-template <> struct convert<Cycle>
+template <> struct convert<linalg::Cycle>
 {
-    static Node encode(const Cycle &rhs)
+    static Node encode(const linalg::Cycle &rhs)
     {
         Node node;
         switch (rhs)
         {
-        case Cycle::Fcycle:
+        case linalg::Cycle::Fcycle:
             node = "Fcycle";
             break;
-        case Cycle::Vcycle:
+        case linalg::Cycle::Vcycle:
             node = "Vcycle";
             break;
-        case Cycle::Wcycle:
+        case linalg::Cycle::Wcycle:
             node = "Wcycle";
             break;
         }
@@ -282,46 +282,46 @@ template <> struct convert<Cycle>
         return node;
     }
 
-    static bool decode(const Node &node, Cycle &rhs)
+    static bool decode(const Node &node, linalg::Cycle &rhs)
     {
         std::string type = node.as<std::string>();
         if (type == "Fcycle")
         {
-            rhs = Cycle::Fcycle;
+            rhs = linalg::Cycle::Fcycle;
         }
         else if (type == "Vcycle")
         {
-            rhs = Cycle::Vcycle;
+            rhs = linalg::Cycle::Vcycle;
         }
         else if (type == "Wcycle")
         {
-            rhs = Cycle::Wcycle;
+            rhs = linalg::Cycle::Wcycle;
         }
 
         return true;
     }
 };
 
-template <> struct convert<Smoother>
+template <> struct convert<linalg::Smoother>
 {
-    static Node encode(const Smoother &rhs)
+    static Node encode(const linalg::Smoother &rhs)
     {
         Node node;
         switch (rhs)
         {
-        case Smoother::Jacobi:
+        case linalg::Smoother::Jacobi:
             node = "Jacobi";
             break;
-        case Smoother::Gauss_Seidel:
+        case linalg::Smoother::Gauss_Seidel:
             node = "Gauss_Seidel";
             break;
-        case Smoother::Symm_Gauss_Seidel:
+        case linalg::Smoother::Symm_Gauss_Seidel:
             node = "Symm_Gauss_Seidel";
             break;
-        case Smoother::SOR:
+        case linalg::Smoother::SOR:
             node = "SOR";
             break;
-        case Smoother::SSOR:
+        case linalg::Smoother::SSOR:
             node = "SSOR";
             break;
         }
@@ -329,28 +329,28 @@ template <> struct convert<Smoother>
         return node;
     }
 
-    static bool decode(const Node &node, Smoother &rhs)
+    static bool decode(const Node &node, linalg::Smoother &rhs)
     {
         std::string type = node.as<std::string>();
         if (type == "Jacobi")
         {
-            rhs = Smoother::Jacobi;
+            rhs = linalg::Smoother::Jacobi;
         }
         else if (type == "Gauss_Seidel")
         {
-            rhs = Smoother::Gauss_Seidel;
+            rhs = linalg::Smoother::Gauss_Seidel;
         }
         else if (type == "Symm_Gauss_Seidel")
         {
-            rhs = Smoother::Symm_Gauss_Seidel;
+            rhs = linalg::Smoother::Symm_Gauss_Seidel;
         }
         else if (type == "SOR")
         {
-            rhs = Smoother::SOR;
+            rhs = linalg::Smoother::SOR;
         }
         else if (type == "SSOR")
         {
-            rhs = Smoother::SSOR;
+            rhs = linalg::Smoother::SSOR;
         }
 
         return true;
@@ -408,8 +408,8 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string filepath
         std::vector<Testing::Solver> solvers = read_values<Testing::Solver>(category, "solver", root_node["Tests"], Testing::Solver::Jacobi);
         std::vector<std::string> matrices = read_values<std::string>(category, "matrix_file", root_node["Tests"], "");
         std::vector<Testing::Preconditioner> preconds = read_values<Testing::Preconditioner>(category, "precond", root_node["Tests"], Testing::Preconditioner::None);
-        std::vector<Cycle> cycles = read_values<Cycle>(category, "cycle", root_node["Tests"], Cycle::Vcycle);
-        std::vector<Smoother> smoothers = read_values<Smoother>(category, "smoother", root_node["Tests"], Smoother::Jacobi);
+        std::vector<linalg::Cycle> cycles = read_values<linalg::Cycle>(category, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
+        std::vector<linalg::Smoother> smoothers = read_values<linalg::Smoother>(category, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
         std::vector<int> presmoothings = read_values<int>(category, "presmoothing", root_node["Tests"], 1);
         std::vector<int> postsmoothings = read_values<int>(category, "postsmoothing", root_node["Tests"], 1);
         std::vector<int> max_iters = read_values<int>(category, "max_iters", root_node["Tests"], 1000);

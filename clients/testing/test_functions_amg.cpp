@@ -32,6 +32,8 @@
 
 #include "linalg.h"
 
+using namespace linalg;
+
 bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 {
     csr_matrix mat_A;
@@ -51,7 +53,7 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
     vector vec_e(mat_A.get_n());
     vec_e.ones();
 
-    mat_A.multiply_vector(vec_b, vec_e);
+    mat_A.multiply_by_vector(vec_b, vec_e);
 
     int max_levels = 100;
 

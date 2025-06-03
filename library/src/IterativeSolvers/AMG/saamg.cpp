@@ -45,6 +45,9 @@
 // AMG: Smoothed Aggregation Algebraic Multigrid
 //
 //********************************************************************************
+
+namespace linalg
+{
 static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &A, const std::vector<int> &connections,
                                                               const std::vector<int64_t> &aggregates,
                                                               const std::vector<int64_t> &aggregate_root_nodes,
@@ -120,8 +123,6 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
 
     assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
 
-    //prolongation.csr_col_ind.resize(prolongation.nnz);
-    //prolongation.csr_val.resize(prolongation.nnz);
     prolongation.resize(prolongation.get_m(), prolongation.get_n(), nnz);
 
     // Fill P
@@ -194,8 +195,9 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
 
     return true;
 }
+}
 
-void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hierarchy)
+void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("saamg_setup");
     std::cout << "saamg_setup" << std::endl;

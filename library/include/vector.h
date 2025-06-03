@@ -33,6 +33,8 @@
  *  \brief vector.h provides vector class
  */
 
+namespace linalg
+{
 /*! \brief A class for representing and manipulating vectors.
  *
  * \details
@@ -175,5 +177,5 @@ public:
      */
     void move_to_host();
 };
-
+}
 #endif

@@ -36,6 +36,8 @@
 
 #include "../../trace.h"
 
+namespace linalg
+{
 void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const vector& b);
 void gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b);
 void symm_gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b);
@@ -109,7 +111,7 @@ static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // compute wres = R*r
         vector wres(Nc);
         wres.zeros();
-        R.multiply_vector(wres, r);
+        R.multiply_by_vector(wres, r);
 
         // set e = 0
         vector ec(Nc);
@@ -119,7 +121,7 @@ static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         vcycle(hierarchy, ec, wres, n1, n2, currentLevel + 1, smoother);
 
         // correct x = x + P*ec
-        P.multiply_vector_and_add(x, ec);
+        P.multiply_by_vector_and_add(x, ec);
 
         // do n2 smoothing steps on A*x=b
         for (int i = 0; i < n2; i++)
@@ -229,7 +231,7 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // compute wres = R*r
         vector wres(Nc);
         wres.zeros();
-        R.multiply_vector(wres, r);
+        R.multiply_by_vector(wres, r);
 
         // set ec = 0
         vector ec(Nc);
@@ -243,7 +245,7 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // std::endl;
 
         // correct x = x + P*ec
-        P.multiply_vector_and_add(x, ec);
+        P.multiply_by_vector_and_add(x, ec);
 
         // do n2 smoothing steps on A*x=b
         for (int i = 0; i < n2; i++)
@@ -255,7 +257,7 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         compute_residual(A, x, b, r);
 
         // compute wres = R*r
-        R.multiply_vector(wres, r);
+        R.multiply_by_vector(wres, r);
 
         // recursively solve Ac*ec = R*r = wres
         wcycle(hierarchy, ec, wres, n1, n2, n3, currentLevel + 1, smoother);
@@ -263,7 +265,7 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // std::endl;
 
         // correct x = x + P*ec
-        P.multiply_vector_and_add(x, ec);
+        P.multiply_by_vector_and_add(x, ec);
 
         // do n3 smoothing steps on A*x=b
         for (int i = 0; i < n3; i++)
@@ -346,7 +348,7 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // compute wres = R*r
         vector wres(Nc);
         wres.zeros();
-        R.multiply_vector(wres, r);
+        R.multiply_by_vector(wres, r);
 
         // set ec = 0
         vector ec(Nc);
@@ -360,7 +362,7 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // std::endl;
 
         // correct x = x + P*ec
-        P.multiply_vector_and_add(x, ec);
+        P.multiply_by_vector_and_add(x, ec);
 
         // do n2 smoothing steps on A*x=b
         for (int i = 0; i < n2; i++)
@@ -372,7 +374,7 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         compute_residual(A, x, b, r);
 
         // compute wres = R*r
-        R.multiply_vector(wres, r);
+        R.multiply_by_vector(wres, r);
 
         // recursively solve Ac*ec = R*r = wres
         vcycle(hierarchy, ec, wres, n1, n2, currentLevel + 1, smoother);
@@ -380,7 +382,7 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         // std::endl;
 
         // correct x = x + P*ec
-        P.multiply_vector_and_add(x, ec);
+        P.multiply_by_vector_and_add(x, ec);
 
         // do n3 smoothing steps on A*x=b
         for (int i = 0; i < n3; i++)
@@ -426,8 +428,9 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         }
     }
 }
+}
 
-int amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
+int linalg::amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control)
 {           
     ROUTINE_TRACE("amg_solve");

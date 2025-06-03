@@ -38,6 +38,8 @@
  *  \brief jacobi.h provides interface for jacobi solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Jacobi iterative method.
  *
  * \details
@@ -215,6 +217,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
-
+}
 
 #endif

@@ -697,6 +697,8 @@
 #define F_POINT 0 // F-point
 #define C_POINT 1 // C-point
 
+namespace linalg
+{
 static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, std::vector<uint32_t> cfpoints)
 {
     // Determine number of C points. The prolongation operator will have number 
@@ -889,8 +891,9 @@ static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_m
         }
     }
 }
+}
 
-void rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
+void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("rsamg_setup");
 

@@ -45,26 +45,26 @@ int main()
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
     
-    csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
-    vector x(A.get_m());
+    linalg::vector x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    vector b(A.get_m());
+    linalg::vector b(A.get_m());
     b.ones();
 
-    iter_control control;
+    linalg::iter_control control;
 
     // Jacobi preconditioner
-    jacobi_precond precond;
-    //ic_precond precond;
-    //ilu_precond precond;
+    linalg::jacobi_precond precond;
+    //linalg::ic_precond precond;
+    //linalg::ilu_precond precond;
 
     precond.build(A);
 
-    cg_solver cg;
+    linalg::cg_solver cg;
     cg.build(A);
 
     int iter = cg.solve(A, x, b, &precond, control);

@@ -34,6 +34,8 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //****************************************************************************
 //
 // Conjugate Gradient
@@ -89,7 +91,7 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector& b,
         }
 
         // z = A * p and alpha = (r, r) / (A * p, p)
-        A.multiply_vector(z, p);
+        A.multiply_by_vector(z, p);
         double alpha = gamma / z.dot(p);
 
         // update x = x + alpha * p
@@ -141,7 +143,6 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
         initial_res_norm = res.norm_inf2();
 
         // z = (M^-1) * res
-        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
         precond->solve(res, z);
 
         // p = z
@@ -162,7 +163,6 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
             compute_residual(A, x, b, res);
 
             // z = (M^-1) * res
-            // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
             precond->solve(res, z);
 
             // p = z
@@ -172,7 +172,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
         }
 
         // z = A * p and alpha = (z, r) / (Ap, p)
-        A.multiply_vector(z, p);
+        A.multiply_by_vector(z, p);
         double alpha = gamma / z.dot(p);
 
         // update x = x + alpha * p
@@ -189,7 +189,6 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
         }
 
         // z = (M^-1) * res
-        // precond->solve(res.get_vec(), z.get_vec(), A.get_m());
         precond->solve(res, z);
 
         // find beta

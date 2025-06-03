@@ -32,9 +32,13 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
+
 //-------------------------------------------------------------------------------
 // symmetric successive over-relaxation method
 //-------------------------------------------------------------------------------
+namespace linalg
+{
 void ssor_iteration(const csr_matrix& A, vector& x, const vector& b, double omega)
 {
     ROUTINE_TRACE("ssor_iteration");
@@ -98,6 +102,7 @@ void ssor_iteration(const csr_matrix& A, vector& x, const vector& b, double omeg
         
         x_ptr[j] = x_ptr[j] + omega * ((b_ptr[j] - sigma) / ajj - x_ptr[j]);
     }
+}
 }
 
 ssor_solver::ssor_solver(){}

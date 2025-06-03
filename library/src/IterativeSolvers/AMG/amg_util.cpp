@@ -29,23 +29,23 @@
 
 #include "../../trace.h"
 
-void transpose(const csr_matrix &prolongation, csr_matrix &restriction)
+void linalg::transpose(const csr_matrix &prolongation, csr_matrix &restriction)
 {
     ROUTINE_TRACE("transpose");
 
     prolongation.transpose(restriction);
 }
 
-void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
+void linalg::galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
 {
     ROUTINE_TRACE("galarkin_triple_product");
 
     // Compute AP = A * P;
     csr_matrix AP;
-    A.multiply_matrix(AP, P);
+    A.multiply_by_matrix(AP, P);
 
     // Compute A_coarse = R * A * P
-    R.multiply_matrix(A_coarse, AP);
+    R.multiply_by_matrix(A_coarse, AP);
 
     //A_coarse.print_matrix("A coarse");
 }

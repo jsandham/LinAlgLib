@@ -43,6 +43,9 @@
 // AMG: Unsmoothed Aggregation Algebraic Multigrid
 //
 //********************************************************************************
+
+namespace linalg
+{
 static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix &A,
                                                                 const std::vector<int> &connections,
                                                                 const std::vector<int64_t> &aggregates,
@@ -104,8 +107,6 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 
     assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
 
-    //prolongation.csr_col_ind.resize(prolongation.nnz);
-    //prolongation.csr_val.resize(prolongation.nnz);
     prolongation.resize(prolongation.get_m(), prolongation.get_n(), nnz);
 
     int* csr_col_ind_P = prolongation.get_col_ind();
@@ -127,8 +128,9 @@ static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix
 
     return true;
 }
+}
 
-void uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
+void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
 {
     ROUTINE_TRACE("uaamg_setup");
 

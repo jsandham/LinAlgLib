@@ -30,6 +30,8 @@
 #include <iostream>
 #include <vector>
 
+using namespace linalg;
+
 jacobi_precond::jacobi_precond() {}
 jacobi_precond::~jacobi_precond() {}
 

@@ -39,6 +39,8 @@
  *  \brief gmres.h provides interface for generalized minimum residual solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Generalized Minimum Residual (GMRES) method.
  *
  * \details
@@ -330,6 +332,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
-
+}
 
 #endif

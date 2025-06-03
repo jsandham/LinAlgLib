@@ -44,20 +44,20 @@ int main()
     std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val = {4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0};
 
-    csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
-    vector x(A.get_m());
+    linalg::vector x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    vector b(A.get_m());
+    linalg::vector b(A.get_m());
     b.ones();
 
-    gmres_solver gmres;
+    linalg::gmres_solver gmres;
     gmres.build(A, 5);
 
-    iter_control control;
+    linalg::iter_control control;
 
     int iter = gmres.solve(A, x, b, nullptr, control);
 

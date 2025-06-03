@@ -36,6 +36,8 @@
  *  \brief amg_util.h provides interface for algebraic multigrid solver
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
 * \brief Transpose a CSR matrix.
 *
@@ -73,5 +75,6 @@ LINALGLIB_API void transpose(const csr_matrix &prolongation, csr_matrix &restric
 * number of degrees of freedom on the coarse level.
 */
 LINALGLIB_API void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse);
+}
 
 #endif

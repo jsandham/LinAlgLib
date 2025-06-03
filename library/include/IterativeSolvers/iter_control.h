@@ -32,6 +32,8 @@
  *  in Classical, Krylov, and AMG solvers
  */
 
+namespace linalg
+{
 /**
  * @brief Structure to control the iterative solution process.
  *
@@ -104,5 +106,6 @@ struct iter_control
     */
     bool exceed_max_cycle(int cycle) const;
 };
+}
 
 #endif

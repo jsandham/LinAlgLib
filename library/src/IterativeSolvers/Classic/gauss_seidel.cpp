@@ -32,6 +32,7 @@
 
 #include "../../trace.h"
 
+using namespace linalg;
 
 // A = L + U + D
 // A * x = b
@@ -43,6 +44,8 @@
 //-------------------------------------------------------------------------------
 // gauss-seidel method
 //-------------------------------------------------------------------------------
+namespace linalg
+{
 void gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b)
 {
     ROUTINE_TRACE("gauss_seidel_iteration");
@@ -78,6 +81,7 @@ void gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b)
     
         x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
+}
 }
 
 gs_solver::gs_solver(){}

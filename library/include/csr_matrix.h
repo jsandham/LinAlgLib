@@ -36,6 +36,8 @@
  *  \brief csr_matrx.h provides class for CSR sparse matrices
  */
 
+namespace linalg
+{
 /*! \ingroup iterative_solvers
  * \brief Data class for storing sparse CSR matrices
  *
@@ -202,7 +204,7 @@ public:
      * \param y The output `vector` to store the result of the multiplication.
      * \param x The input `vector` to multiply with the matrix.
      */
-    void multiply_vector(vector& y, const vector& x) const;
+    void multiply_by_vector(vector& y, const vector& x) const;
 
     /*! \brief Multiplies the CSR matrix by a vector and adds the result: \f$y = y + A \cdot x\f$.
      *
@@ -211,7 +213,7 @@ public:
      * it contains the accumulated result.
      * \param x The input `vector` to multiply with the matrix.
      */
-    void multiply_vector_and_add(vector& y, const vector& x) const;
+    void multiply_by_vector_and_add(vector& y, const vector& x) const;
 
     /*! \brief Multiplies this CSR matrix by another CSR matrix: \f$C = A \cdot B\f$.
      *
@@ -219,7 +221,7 @@ public:
      * \param C The output `csr_matrix` to store the product \f$A \cdot B\f$.
      * \param B The right-hand side `csr_matrix` in the multiplication.
      */
-    void multiply_matrix(csr_matrix& C, const csr_matrix& B) const;
+    void multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const;
 
     /*! \brief Computes the transpose of the CSR matrix: \f$T = A^T\f$.
      *
@@ -263,5 +265,6 @@ public:
      */
     void print_matrix(const std::string name) const;
 };
+}
 
 #endif

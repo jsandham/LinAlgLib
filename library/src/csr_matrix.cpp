@@ -34,6 +34,8 @@
 #include <iomanip>
 #include <assert.h>
 
+using namespace linalg;
+
 csr_matrix::csr_matrix()
 {
 
@@ -139,17 +141,17 @@ void csr_matrix::extract_diagonal(vector& diag) const
     diagonal(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), diag.get_vec(), m);
 }
 
-void csr_matrix::multiply_vector(vector& y, const vector& x) const
+void csr_matrix::multiply_by_vector(vector& y, const vector& x) const
 {
     matrix_vector_product(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), y.get_vec(), m);
 }
 
-void csr_matrix::multiply_vector_and_add(vector& y, const vector& x) const
+void csr_matrix::multiply_by_vector_and_add(vector& y, const vector& x) const
 {
     csrmv(m, n, nnz, 1.0, hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), 1.0, y.get_vec());
 }
 
-void csr_matrix::multiply_matrix(csr_matrix& C, const csr_matrix& B) const
+void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     // Compute C = A * B
     double alpha = 1.0;

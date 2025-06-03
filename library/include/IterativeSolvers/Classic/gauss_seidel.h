@@ -38,6 +38,8 @@
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Gauss-Seidel iterative method.
  *
  * \details
@@ -212,7 +214,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
 };
-
-
+}
 
 #endif

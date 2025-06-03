@@ -424,29 +424,29 @@ bool check_solution(const std::vector<int> &csr_row_ptr, const std::vector<int> 
     }
 
     std::vector<double> initial_residual(m);
-    compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), initial_x.data(), b.data(), initial_residual.data(), m);
+    linalg::compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), initial_x.data(), b.data(), initial_residual.data(), m);
 
     double initial_residual_norm = 0.0;
     if(norm_type == 0)
     {
-        initial_residual_norm = norm_inf(initial_residual.data(), m);
+        initial_residual_norm = linalg::norm_inf(initial_residual.data(), m);
     }
     else
     {
-        initial_residual_norm = norm_euclid(initial_residual.data(), m);
+        initial_residual_norm = linalg::norm_euclid(initial_residual.data(), m);
     }
 
     std::vector<double> residual(m);
-    compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), residual.data(), m);
+    linalg::compute_residual(csr_row_ptr.data(), csr_col_ind.data(), csr_val.data(), x.data(), b.data(), residual.data(), m);
 
     double residual_norm = 0.0;
     if(norm_type == 0)
     {
-        residual_norm = norm_inf(residual.data(), m);
+        residual_norm = linalg::norm_inf(residual.data(), m);
     }
     else
     {
-        residual_norm = norm_euclid(residual.data(), m);
+        residual_norm = linalg::norm_euclid(residual.data(), m);
     }
 
     std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;

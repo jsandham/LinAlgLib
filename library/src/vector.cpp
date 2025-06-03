@@ -28,6 +28,8 @@
 #include "../include/slaf.h"
 
 #include <assert.h>
+
+using namespace linalg;
 vector::vector()
 {
 }
@@ -75,7 +77,7 @@ void vector::copy_from(const vector& x)
 
 void vector::zeros()
 {
-    (hvec.data(), hvec.size());
+    fill_with_zeros(hvec.data(), hvec.size());
 }
     
 void vector::ones()

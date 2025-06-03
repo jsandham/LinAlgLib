@@ -7,6 +7,8 @@
 
 #include "../trace.h"
 
+using namespace linalg;
+
 bool iter_control::residual_converges(double residual_norm, double initial_residual_norm) const
 {
     ROUTINE_TRACE("residual_converges");

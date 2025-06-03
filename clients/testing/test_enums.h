@@ -184,34 +184,34 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string CycleToString(Cycle cycle)
+    inline std::string CycleToString(linalg::Cycle cycle)
     {
         switch(cycle)
         {
-            case Cycle::Vcycle:
+            case linalg::Cycle::Vcycle:
                 return "Vcycle";
-            case Cycle::Wcycle:
+            case linalg::Cycle::Wcycle:
                 return "Wcycle";
-            case Cycle::Fcycle:
+            case linalg::Cycle::Fcycle:
                 return "Fcycle";
         }
 
         return "Invalid";
     }
 
-    inline std::string SmootherToString(Smoother smoother)
+    inline std::string SmootherToString(linalg::Smoother smoother)
     {
         switch(smoother)
         {
-            case Smoother::Jacobi:
+            case linalg::Smoother::Jacobi:
                 return "Jacobi";
-            case Smoother::Gauss_Seidel:
+            case linalg::Smoother::Gauss_Seidel:
                 return "Gauss_Seidel";
-            case Smoother::Symm_Gauss_Seidel:
+            case linalg::Smoother::Symm_Gauss_Seidel:
                 return "Symm_Gauss_Seidel";
-            case Smoother::SOR:
+            case linalg::Smoother::SOR:
                 return "SOR";
-            case Smoother::SSOR:
+            case linalg::Smoother::SSOR:
                 return "SSOR";
         }
 

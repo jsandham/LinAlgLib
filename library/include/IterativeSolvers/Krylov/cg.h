@@ -39,6 +39,8 @@
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
 
+namespace linalg
+{
 /*! \brief A solver class implementing the Conjugate Gradient (CG) method.
  *
  * \details
@@ -288,5 +290,6 @@ public:
      */
     int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
 };
+}
 
 #endif
