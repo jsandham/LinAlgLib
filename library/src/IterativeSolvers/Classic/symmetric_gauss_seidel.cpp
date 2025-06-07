@@ -39,7 +39,7 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void symm_gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b)
+void symm_gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b)
 {
     ROUTINE_TRACE("symm_gauss_seidel_iteration");
 
@@ -114,7 +114,7 @@ void sgs_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int sgs_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control)
+int sgs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
 {
     ROUTINE_TRACE("sgs_solver::solve");
 

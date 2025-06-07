@@ -69,7 +69,7 @@ public:
     * \param rhs Right-hand side vector of the preconditioning system.
     * \param x Output vector containing the solution of the preconditioning system.
     */
-    virtual void solve(const vector& rhs, vector& x) const = 0;
+    virtual void solve(const vector<double>& rhs, vector<double>& x) const = 0;
 };
 
 /*! \ingroup iterative_solvers
@@ -85,7 +85,7 @@ class jacobi_precond : public preconditioner
 {
 private:
     /*! \brief Stores the inverse of the diagonal elements of the matrix. */
-    vector diag;
+    vector<double> diag;
 
 public:
     /*! \brief Constructs a new `jacobi_precond` object. */
@@ -110,7 +110,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 
 /*! \ingroup iterative_solvers
@@ -155,7 +155,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 
 /*! \ingroup iterative_solvers
@@ -175,7 +175,7 @@ private:
     /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
     double omega;
     /*! \brief Stores the diagonal elements of the matrix A, often used in the SOR solve process. */
-    vector diag;
+    vector<double> diag;
 
 public:
     /*! \brief Constructs a new `SOR_precond` object with a specified relaxation parameter.
@@ -202,7 +202,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 
 /*! \ingroup iterative_solvers
@@ -219,7 +219,7 @@ private:
     /*! \brief Stores a copy of the original matrix A. */
     csr_matrix A;
     /*! \brief Stores the diagonal elements of the matrix A, used in the SGS solve process. */
-    vector diag;
+    vector<double> diag;
 
 public:
     /*! \brief Constructs a new `symmetric_gauss_seidel_precond` object. */
@@ -244,7 +244,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 
 /*! \ingroup iterative_solvers
@@ -292,7 +292,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 
 /*! \ingroup iterative_solvers
@@ -340,7 +340,7 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector& rhs, vector& x) const override;
+    void solve(const vector<double>& rhs, vector<double>& x) const override;
 };
 }
 

@@ -188,11 +188,11 @@ class cg_solver
 {
 private:
     /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{r}\f$. */
-    vector z;
+    vector<double> z;
     /*! \brief Search direction vector. */
-    vector p;
+    vector<double> p;
     /*! \brief Residual vector in the CG algorithm. */
-    vector res;
+    vector<double> res;
 
     /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
@@ -248,7 +248,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values might indicate issues like a non-positive definite matrix or division by zero.
      */
-    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
 
     /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned Conjugate Gradient method.
      *
@@ -271,7 +271,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values might indicate issues with the matrix, preconditioner, or numerical stability.
      */
-    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 
     /*! \brief Generic solve method for the Conjugate Gradient solver (delegates to non-preconditioned or preconditioned).
      *
@@ -288,7 +288,7 @@ public:
      * including convergence tolerance and maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 };
 }
 

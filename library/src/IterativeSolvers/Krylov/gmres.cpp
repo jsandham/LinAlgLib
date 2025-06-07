@@ -62,8 +62,8 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
         // z = A * q_(k-1)
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, qkm1, z, n);
 
-        vector vec_z(n);
-        vector vec_qk(n);
+        vector<double> vec_z(n);
+        vector<double> vec_qk(n);
 
         for(int i = 0; i < n; i++)
         {
@@ -165,7 +165,7 @@ void gmres_solver::build(const csr_matrix& A, int restart)
     s.resize(restart);
 }
 
-int gmres_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control)
+int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
 {
     ROUTINE_TRACE("gmres_solver::solve_nonprecond");
 
@@ -299,7 +299,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector&
     return iter;
 }
 
-int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("gmres_solver::solve_precond");
 
@@ -441,7 +441,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b,
     return iter;
 }
 
-int gmres_solver::solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int gmres_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("gmres_solver::solve");
 

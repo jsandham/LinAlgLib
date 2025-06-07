@@ -53,7 +53,7 @@ void cg_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int cg_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control)
+int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
 {
     ROUTINE_TRACE("cg_solver::solve_nonprecond");
 
@@ -126,7 +126,7 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector& b,
     return iter;
 }
 
-int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("cg_solver::solve_precond");
 
@@ -210,7 +210,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, co
     return iter;
 }
 
-int cg_solver::solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int cg_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("cg_solver::solve");
 

@@ -69,7 +69,7 @@ void linalg::axpy(int n, double alpha, const double* x, double* y)
     }
 }
 
-void linalg::axpy(double alpha, const vector& x, vector& y)
+void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
     linalg::axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
@@ -133,7 +133,7 @@ void linalg::axpby(int n, double alpha, const double* x, double beta, double* y)
     }
 }
 
-void linalg::axpby(double alpha, const vector& x, double beta, vector& y)
+void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
     linalg::axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
@@ -708,14 +708,14 @@ double linalg::dot_product(const double *x, const double *y, int n)
 //-------------------------------------------------------------------------------
 // fill array with zeros
 //-------------------------------------------------------------------------------
-void linalg::fill_with_zeros(double *x, int n)
+void linalg::fill_with_zeros(double *x, size_t n)
 {
     ROUTINE_TRACE("fill_with_zeros");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         x[i] = 0.0;
     }
@@ -724,14 +724,14 @@ void linalg::fill_with_zeros(double *x, int n)
 //-------------------------------------------------------------------------------
 // fill array with ones
 //-------------------------------------------------------------------------------
-void linalg::fill_with_ones(double *x, int n)
+void linalg::fill_with_ones(double *x, size_t n)
 {
     ROUTINE_TRACE("fill_with_ones");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         x[i] = 1.0;
     }
@@ -779,7 +779,7 @@ void linalg::compute_residual(const int *csr_row_ptr, const int *csr_col_ind, co
     }
 }
 
-void linalg::compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res)
+void linalg::compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res)
 {
     linalg::compute_residual(A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), b.get_vec(), res.get_vec(), A.get_m());
 }
@@ -787,27 +787,27 @@ void linalg::compute_residual(const csr_matrix& A, const vector& x, const vector
 //-------------------------------------------------------------------------------
 // copy array
 //-------------------------------------------------------------------------------
-void linalg::copy(int* dest, const int* src, int n)
+void linalg::copy(int* dest, const int* src, size_t n)
 {
     ROUTINE_TRACE("copy");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         dest[i] = src[i];
     }
 }
 
-void linalg::copy(double* dest, const double* src, int n)
+void linalg::copy(double* dest, const double* src, size_t n)
 {
     ROUTINE_TRACE("copy");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         dest[i] = src[i];
     }
@@ -839,7 +839,7 @@ void linalg::diagonal(const int *csr_row_ptr, const int *csr_col_ind, const doub
     }
 }
 
-void linalg::diagonal(const csr_matrix& A, vector& d)
+void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 {
     linalg::diagonal(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }

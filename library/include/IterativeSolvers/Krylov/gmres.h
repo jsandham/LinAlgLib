@@ -228,20 +228,20 @@ class gmres_solver
 {
 private:
     /*! \brief Upper Hessenberg matrix `H` (or \f$\bar{H}_m\f$), used in the Arnoldi process. */
-    vector H; // Stores coefficients of Hessenberg matrix, often flattened
+    vector<double> H; // Stores coefficients of Hessenberg matrix, often flattened
     /*! \brief Orthonormal basis vectors `Q` (or `V`), storing the Krylov subspace basis.
      * \details This is typically a collection of `m+1` vectors, often stored contiguously
      * in a larger vector or an array of vectors.
      */
-    vector Q; // Stores orthonormal basis vectors v_1, ..., v_{m+1}
+    vector<double> Q; // Stores orthonormal basis vectors v_1, ..., v_{m+1}
     /*! \brief Cosine rotation values from Givens rotations. */
-    vector c;
+    vector<double> c;
     /*! \brief Sine rotation values from Givens rotations. */
-    vector s;
+    vector<double> s;
     /*! \brief Residual vector or temporary storage for vector operations. */
-    vector res;
+    vector<double> res;
     /*! \brief Intermediate vector for preconditioning or other operations. */
-    vector z;
+    vector<double> z;
 
     /*! \brief The restart parameter `m` for GMRES(m).
      * \details This defines the maximum dimension of the Krylov subspace before restarting.
@@ -295,7 +295,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns (e.g., null vectors).
      */
-    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
 
     /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned GMRES method.
      *
@@ -315,7 +315,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns or issues with the preconditioner.
      */
-    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 
     /*! \brief Generic solve method for the GMRES solver (delegates to non-preconditioned or preconditioned).
      *
@@ -330,7 +330,7 @@ public:
      * including convergence tolerance and total maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 };
 }
 

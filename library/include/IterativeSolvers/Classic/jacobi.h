@@ -160,12 +160,12 @@ class jacobi_solver
 {
 private:
     /*! \brief Internal vector to store the residual during the solve process. */
-    vector res;
+    vector<double> res;
     /*! \brief Internal vector to store the solution from the previous iteration.
      * \details This is crucial for the Jacobi method, as it uses values from the
      * entirely previous iteration to compute the current one.
      */
-    vector xold;
+    vector<double> xold;
 
 public:
     /*! \brief Default constructor.
@@ -215,7 +215,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., singular diagonal element).
      */
-    int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
 };
 }
 

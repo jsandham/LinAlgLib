@@ -374,11 +374,9 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 
     const int* csr_row_ptr_S = S.get_row_ptr();
     const int* csr_col_ind_S = S.get_col_ind();
-    const double* csr_val_S = S.get_val();
 
     const int* csr_row_ptr_ST = ST.get_row_ptr();
     const int* csr_col_ind_ST = ST.get_col_ind();
-    const double* csr_val_ST = ST.get_val();
 
     // Start by setting all points as unassigned
     for(int i = 0; i < S.get_m(); i++)
@@ -586,7 +584,6 @@ void linalg::compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32
 {
     const int* csr_row_ptr_S = S.get_row_ptr();
     const int* csr_col_ind_S = S.get_col_ind();
-    const double* csr_val_S = S.get_val();
 
     for(int i = 0; i < S.get_m(); i++)
     {

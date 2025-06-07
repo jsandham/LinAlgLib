@@ -41,7 +41,7 @@ void jacobi_precond::build(const csr_matrix& A)
     diagonal(A, diag);
 }
 
-void jacobi_precond::solve(const vector& rhs, vector& x) const
+void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // Solve M * x = rhs where M = D
     for (int i = 0; i < rhs.get_size(); i++)
@@ -58,7 +58,7 @@ void gauss_seidel_precond::build(const csr_matrix& A)
     this->A.copy_from(A);
 }
 
-void gauss_seidel_precond::solve(const vector& rhs, vector& x) const
+void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // Solve M * x = rhs where M = L + D
     forward_solve(this->A.get_row_ptr(), this->A.get_col_ind(), this->A.get_val(), rhs.get_vec(), x.get_vec(), this->A.get_m(), false);
@@ -75,7 +75,7 @@ void SOR_precond::build(const csr_matrix& A)
     diagonal(A, diag);
 }
 
-void SOR_precond::solve(const vector& rhs, vector& x) const
+void SOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     const int* csr_row_ptr = this->A.get_row_ptr();
     const int* csr_col_ind = this->A.get_col_ind();
@@ -117,7 +117,7 @@ void symmetric_gauss_seidel_precond::build(const csr_matrix& A)
     diagonal(A, diag);
 }
 
-void symmetric_gauss_seidel_precond::solve(const vector& rhs, vector& x) const
+void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // M = (D - E) * D^-1 * (D - F) where A = D-E-F
     //
@@ -141,7 +141,7 @@ void symmetric_gauss_seidel_precond::solve(const vector& rhs, vector& x) const
     const int* csr_col_ind = this->A.get_col_ind();
     const double* csr_val = this->A.get_val();
 
-    vector y(this->A.get_m());
+    vector<double> y(this->A.get_m());
 
     // Solve (D - E) * D^-1 * y = rhs
     // (I - E * D^-1) * y = rhs
@@ -191,11 +191,11 @@ void ilu_precond::build(const csr_matrix& A)
     //print("LU", csr_row_ptr_LU.data(), csr_col_ind_LU.data(), csr_val_LU.data(), m, n, nnz);
 }
 
-void ilu_precond::solve(const vector& rhs, vector& x) const
+void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // L * U * x = rhs
     // Let y = U * x 
-    vector y(rhs.get_size());
+    vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
     forward_solve(LU.get_row_ptr(), LU.get_col_ind(), LU.get_val(), rhs.get_vec(), y.get_vec(), LU.get_m(), true); 
@@ -259,11 +259,11 @@ void ic_precond::build(const csr_matrix& A)
     //print("LLT", m_csr_row_ptr_LLT.data(), m_csr_col_ind_LLT.data(), m_csr_val_LLT.data(), m, n, nnz);
 }
 
-void ic_precond::solve(const vector& rhs, vector& x) const
+void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // L * L^T * x = rhs
     // Let y = L^T * x 
-    vector y(rhs.get_size());
+    vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
     forward_solve(LLT.get_row_ptr(), LLT.get_col_ind(), LLT.get_val(), rhs.get_vec(), y.get_vec(), LLT.get_m(), false); 

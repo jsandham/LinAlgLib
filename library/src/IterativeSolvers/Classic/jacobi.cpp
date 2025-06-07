@@ -39,7 +39,7 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const vector& b)
+void jacobi_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& xold, const vector<double>& b)
 {
     ROUTINE_TRACE("jacobi_iteration");
 
@@ -81,7 +81,7 @@ void jacobi_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int jacobi_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control)
+int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
 {
     ROUTINE_TRACE("jacobi_solver::solve");
 

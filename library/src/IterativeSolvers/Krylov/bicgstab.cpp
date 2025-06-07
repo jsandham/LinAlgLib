@@ -57,7 +57,7 @@ void bicgstab_solver::build(const csr_matrix& A)
     q.resize(A.get_m());
 }
 
-int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control)
+int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve_nonprecond");
 
@@ -138,7 +138,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector& x, const vect
     return iter;
 }
 
-int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve_precond");
 
@@ -230,7 +230,7 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector& x, const vector&
     return iter;
 }
 
-int bicgstab_solver::solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner* precond, iter_control control)
+int bicgstab_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve");
 

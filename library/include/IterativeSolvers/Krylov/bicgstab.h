@@ -201,19 +201,19 @@ class bicgstab_solver
 {
 private:
     /*! \brief Residual vector in the BiCGSTAB algorithm. */
-    vector r;
+    vector<double> r;
     /*! \brief Initial residual vector, used for biorthogonality. */
-    vector r0;
+    vector<double> r0;
     /*! \brief Search direction vector. */
-    vector p;
+    vector<double> p;
     /*! \brief Vector for \f$A \cdot \mathbf{p}\f$ or \f$A \cdot \mathbf{z}\f$ terms. */
-    vector v;
+    vector<double> v;
     /*! \brief Vector for \f$A \cdot \mathbf{s}\f$ terms. */
-    vector t;
+    vector<double> t;
     /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{p}\f$. */
-    vector z;
+    vector<double> z;
     /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{s}\f$. */
-    vector q;
+    vector<double> q;
 
     /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
@@ -267,7 +267,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns (e.g., division by zero due to loss of orthogonality).
      */
-    int solve_nonprecond(const csr_matrix& A, vector& x, const vector& b, iter_control control);
+    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
 
     /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned BiCGSTAB method.
      *
@@ -287,7 +287,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns or issues with the preconditioner.
      */
-    int solve_precond(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 
     /*! \brief Generic solve method for the BiCGSTAB solver (delegates to non-preconditioned or preconditioned).
      *
@@ -302,7 +302,7 @@ public:
      * including convergence tolerance and maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector& x, const vector& b, const preconditioner *precond, iter_control control);
+    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
 };
 }
 

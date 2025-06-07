@@ -57,7 +57,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
 
     // Determine number of columns in the prolongation matrix. This will be
     // the maximum aggregate plus one.
-    int n = -1;
+    int64_t n = -1;
     for (size_t i = 0; i < aggregates.size(); i++)
     {
        if (n < aggregates[i])
@@ -67,7 +67,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
     }
     n++;
 
-    prolongation.resize(A.get_m(), n, 0);
+    prolongation.resize(A.get_m(), (int)n, 0);
 
     std::cout << "prolongation.n: " << prolongation.get_n() << " A.m: " << A.get_m() << "A.nnz: " << A.get_nnz() << std::endl;
 
@@ -103,8 +103,8 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
             }
         }
 
-        csr_row_ptr_P[i + 1] = table.size();
-        nnz += table.size();
+        csr_row_ptr_P[i + 1] = (int)table.size();
+        nnz += (int)table.size();
     }
 
     // exclusive scan on prolongation row pointer array
@@ -128,7 +128,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
     // Fill P
     for (int i = 0; i < A.get_m(); i++)
     {
-        std::map<int, double> table;
+        std::map<int64_t, double> table;
 
         int start = csr_row_ptr_A[i];
         int end = csr_row_ptr_A[i + 1];
@@ -161,7 +161,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
             // prolongation
             if (col == i || connections[j] == 1)
             {
-                int aggregate = aggregates[col];
+                int64_t aggregate = aggregates[col];
 
                 if (aggregate >= 0)
                 {
@@ -187,7 +187,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
         int count = 0;
         for (auto it = table.begin(); it != table.end(); it++)
         {
-            csr_col_ind_P[prolongation_start + count] = it->first;
+            csr_col_ind_P[prolongation_start + count] = (int)it->first;
             csr_val_P[prolongation_start + count] = it->second;
             ++count;
         }
@@ -219,7 +219,7 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hier
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix &A = hierarchy.A_cs[level];
+        const csr_matrix &A_fine = hierarchy.A_cs[level];
         csr_matrix &A_coarse = hierarchy.A_cs[level + 1];
         csr_matrix &P = hierarchy.prolongations[level];
         csr_matrix &R = hierarchy.restrictions[level];
@@ -228,17 +228,17 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hier
         std::vector<int64_t> aggregates;
         std::vector<int64_t> aggregate_root_nodes;
 
-        connections.resize(A.get_nnz(), 0);
-        aggregates.resize(A.get_m(), 0);
+        connections.resize(A_fine.get_nnz(), 0);
+        aggregates.resize(A_fine.get_m(), 0);
 
         // Compute strength of connections
-        compute_strong_connections(A, eps, connections);
+        compute_strong_connections(A_fine, eps, connections);
 
         // Compute aggregations using parallel maximal independent set
-        compute_aggregates_using_pmis(A, connections, aggregates, aggregate_root_nodes);
+        compute_aggregates_using_pmis(A_fine, connections, aggregates, aggregate_root_nodes);
 
         // Construct prolongation matrix using smoothed aggregation
-        construct_prolongation_using_smoothed_aggregation(A, connections, aggregates, aggregate_root_nodes, relax, P);
+        construct_prolongation_using_smoothed_aggregation(A_fine, connections, aggregates, aggregate_root_nodes, relax, P);
 
         if (P.get_n() == 0)
         {
@@ -249,7 +249,7 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hier
         P.transpose(R);
 
         // Compute coarse grid matrix using Galarkin triple product A_c = R * A_f * P
-        galarkin_triple_product(R, A, P, A_coarse);
+        galarkin_triple_product(R, A_fine, P, A_coarse);
 
         level++;
         eps *= 0.5;

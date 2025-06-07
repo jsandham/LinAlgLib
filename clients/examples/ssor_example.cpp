@@ -47,11 +47,11 @@ int main()
     linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
-    linalg::vector x(A.get_m());
+    linalg::vector<double> x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    linalg::vector b(A.get_m());
+    linalg::vector<double> b(A.get_m());
     b.ones();
 
     linalg::ssor_solver ssor;

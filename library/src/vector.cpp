@@ -30,94 +30,116 @@
 #include <assert.h>
 
 using namespace linalg;
-vector::vector()
+
+template <typename T>
+vector<T>::vector()
 {
 }
 
-vector::vector(size_t size)
+template <typename T>
+vector<T>::vector(size_t size)
 {
     hvec.resize(size);
 }
 
-vector::vector(const std::vector<double>& vec)
+template <typename T>
+vector<T>::vector(const std::vector<T>& vec)
 {
     hvec = vec;
     on_host = true;
 }
 
-vector::~vector()
+template <typename T>
+vector<T>::~vector()
 {
 
 }
 
-bool vector::is_on_host() const
+template <typename T>
+bool vector<T>::is_on_host() const
 {
     return on_host;
 }
 
-int vector::get_size() const
+template <typename T>
+size_t vector<T>::get_size() const
 {
     return hvec.size();
 }
 
-double* vector::get_vec()
+template <typename T>
+T* vector<T>::get_vec()
 {
     return hvec.data();
 }
 
-const double* vector::get_vec() const
+template <typename T>
+const T* vector<T>::get_vec() const
 {
     return hvec.data();
 }
 
-void vector::copy_from(const vector& x)
+template <typename T>
+void vector<T>::copy_from(const vector& x)
 {
     copy(hvec.data(), x.get_vec(), hvec.size());
 }
 
-void vector::zeros()
+template <typename T>
+void vector<T>::zeros()
 {
     fill_with_zeros(hvec.data(), hvec.size());
 }
     
-void vector::ones()
+template <typename T>
+void vector<T>::ones()
 {
     fill_with_ones(hvec.data(), hvec.size());
 }
 
-void vector::exclusize_scan()
+template <typename T>
+void vector<T>::exclusize_scan()
 {
     compute_exclusize_scan(hvec.data(), hvec.size());
 }
 
-double vector::dot(const vector& x) const
+template <typename T>
+T vector<T>::dot(const vector& x) const
 {
     assert(this->get_size() == x.get_size());
 
     return dot_product(this->get_vec(), x.get_vec(), this->get_size());
 }
 
-double vector::norm_euclid2() const
+template <typename T>
+T vector<T>::norm_euclid2() const
 {
     return norm_euclid(hvec.data(), hvec.size());
 }
     
-double vector::norm_inf2() const
+template <typename T>
+T vector<T>::norm_inf2() const
 {
     return norm_inf(hvec.data(), hvec.size());
 }
 
-void vector::resize(size_t size)
+template <typename T>
+void vector<T>::resize(size_t size)
 {
     hvec.resize(size);
 }
 
-void vector::move_to_device()
+template <typename T>
+void vector<T>::move_to_device()
 {
 
 }
 
-void vector::move_to_host()
+template <typename T>
+void vector<T>::move_to_host()
 {
 
 }
+
+// template class vector<int>;
+template class vector<double>;

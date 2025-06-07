@@ -136,17 +136,17 @@ void csr_matrix::copy_from(const csr_matrix& A)
     copy(this->hcsr_val.data(), A.get_val(), this->hcsr_val.size());
 }
 
-void csr_matrix::extract_diagonal(vector& diag) const
+void csr_matrix::extract_diagonal(vector<double>& diag) const
 {
     diagonal(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), diag.get_vec(), m);
 }
 
-void csr_matrix::multiply_by_vector(vector& y, const vector& x) const
+void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
 {
     matrix_vector_product(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), y.get_vec(), m);
 }
 
-void csr_matrix::multiply_by_vector_and_add(vector& y, const vector& x) const
+void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
 {
     csrmv(m, n, nnz, 1.0, hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), 1.0, y.get_vec());
 }

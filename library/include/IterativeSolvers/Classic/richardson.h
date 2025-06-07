@@ -162,7 +162,7 @@ class rich_solver
 {
 private:
     /*! \brief Internal vector to store the residual during the solve process. */
-    vector res;
+    vector<double> res;
 
 public:
     /*! \brief Default constructor.
@@ -212,7 +212,7 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., invalid input).
      */
-    int solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double theta);
+    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double theta);
 };
 }
 

@@ -42,11 +42,12 @@ namespace linalg
  * operations on vectors. It supports both host (CPU) and device (GPU) memory
  * management for efficient computation in different environments.
  */
+template<typename T>
 class vector
 {
 private:
     /*! \brief The underlying `std::vector` storing the elements of the vector on the host. */
-    std::vector<double> hvec;
+    std::vector<T> hvec;
 
     /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
     bool on_host;
@@ -65,7 +66,7 @@ public:
     /*! \brief Constructor to initialize a vector from a `std::vector<double>`.
      * \param vec A `std::vector<double>` whose elements will be copied into this vector.
      */
-    vector(const std::vector<double>& vec);
+    vector(const std::vector<T>& vec);
 
     /*! \brief Destructor.
      * Cleans up any resources allocated by the vector.
@@ -88,7 +89,7 @@ public:
      * \param index The index of the element to access.
      * \return A reference to the element at the specified index.
      */
-    double& operator[](size_t index)
+    T& operator[](size_t index)
     {
         return hvec[index];
     }
@@ -97,7 +98,7 @@ public:
      * \param index The index of the element to access.
      * \return A constant reference to the element at the specified index.
      */
-    const double& operator[](size_t index) const
+    const T& operator[](size_t index) const
     {
         return hvec[index];
     }
@@ -110,17 +111,17 @@ public:
     /*! \brief Returns the number of elements in the vector.
      * \return The size of the vector.
      */
-    int get_size() const;
+    size_t get_size() const;
 
     /*! \brief Returns a non-constant pointer to the beginning of the vector's underlying data.
      * \return A `double*` to the first element of the vector. This allows modification of the vector.
      */
-    double* get_vec();
+    T* get_vec();
 
     /*! \brief Returns a constant pointer to the beginning of the vector's underlying data.
      * \return A `const double*` to the first element of the vector. This prevents modification of the vector.
      */
-    const double* get_vec() const;
+    const T* get_vec() const;
 
     /*! \brief Copies the contents of another `vector` into this object.
      *
@@ -145,18 +146,18 @@ public:
      * \param x The other vector to compute the dot product with.
      * \return The dot product of the two vectors.
      */
-    double dot(const vector& x) const;
+    T dot(const vector& x) const;
 
     /*! \brief Computes the Euclidean (L2) norm squared of the vector.
      * \return The square of the Euclidean norm (\f$\|v\|_2^2\f$).
      */
-    double norm_euclid2() const;
+    T norm_euclid2() const;
 
     /*! \brief Computes the infinity norm squared of the vector.
      * \details This typically refers to the square of the maximum absolute element.
      * \return The square of the infinity norm (\f$\|v\|_\infty^2\f$).
      */
-    double norm_inf2() const;
+    T norm_inf2() const;
 
     /*! \brief Resizes the vector to the specified size.
      * \details If the new size is smaller, elements beyond the new size are truncated.
@@ -177,5 +178,6 @@ public:
      */
     void move_to_host();
 };
+
 }
 #endif

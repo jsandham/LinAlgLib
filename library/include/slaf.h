@@ -37,11 +37,11 @@ namespace linalg
 {
 // Compute y = alpha * x + y
 LINALGLIB_API void axpy(int n, double alpha, const double* x, double* y);
-LINALGLIB_API void axpy(double alpha, const vector& x, vector& y);
+LINALGLIB_API void axpy(double alpha, const vector<double>& x, vector<double>& y);
 
 // Compute y = alpha * x + beta * y
 LINALGLIB_API void axpby(int n, double alpha, const double* x, double beta, double* y);
-LINALGLIB_API void axpby(double alpha, const vector& x, double beta, vector& y);
+LINALGLIB_API void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
 
 // Compute y = alpha * A * x + beta * y
 LINALGLIB_API void csrmv(int m, int n, int nnz, double alpha, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val,
@@ -89,24 +89,24 @@ LINALGLIB_API double dot_product(const double *x, const double *y, int n);
 LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
                       const double* b, double* res, int n);
 
-LINALGLIB_API void compute_residual(const csr_matrix& A, const vector& x, const vector& b, vector& res);
+LINALGLIB_API void compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res);
 
 // Fill array with zeros
-LINALGLIB_API void fill_with_zeros(double *x, int n);
+LINALGLIB_API void fill_with_zeros(double *x, size_t n);
 
 // Fill array with ones
-LINALGLIB_API void fill_with_ones(double *x, int n);
+LINALGLIB_API void fill_with_ones(double *x, size_t n);
 
 // Exclusive scan
 LINALGLIB_API void compute_exclusize_scan(double *x, int n);
 
 // Copy array
-LINALGLIB_API void copy(int* dest, const int* src, int n);
-LINALGLIB_API void copy(double* dest, const double* src, int n);
+LINALGLIB_API void copy(int* dest, const int* src, size_t n);
+LINALGLIB_API void copy(double* dest, const double* src, size_t n);
 
 // Extract diagonal entries
 LINALGLIB_API void diagonal(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, double *d, int n);
-LINALGLIB_API void diagonal(const csr_matrix& A, vector& d);
+LINALGLIB_API void diagonal(const csr_matrix& A, vector<double>& d);
 
 // Solve Lx = b where L is a lower triangular sparse matrix
 LINALGLIB_API void forward_solve(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *b, double *x,

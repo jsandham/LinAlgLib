@@ -47,11 +47,11 @@ int main()
     A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
 
     // Solution vector
-    linalg::vector x(A.get_m());
+    linalg::vector<double> x(A.get_m());
     x.zeros();
 
     // Righthand side vector
-    linalg::vector b(A.get_m());
+    linalg::vector<double> b(A.get_m());
     b.ones();
 
     linalg::gs_solver gs;

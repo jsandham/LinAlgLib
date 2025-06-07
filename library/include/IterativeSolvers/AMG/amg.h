@@ -362,7 +362,7 @@ enum class Smoother
  * }
  * \endcode
  */
-LINALGLIB_API int amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
+LINALGLIB_API int amg_solve(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control);
 }
 

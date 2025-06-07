@@ -41,17 +41,17 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     mat_A.read_mtx(arg.filename);
 
     // Solution vector
-    vector vec_x(mat_A.get_m());
+    vector<double> vec_x(mat_A.get_m());
     vec_x.zeros();
 
-    vector vec_init_x(mat_A.get_m());
+    vector<double> vec_init_x(mat_A.get_m());
     vec_init_x.zeros();
 
     // Righthand side vector
-    vector vec_b(mat_A.get_m());
+    vector<double> vec_b(mat_A.get_m());
     vec_b.ones();
 
-    vector vec_e(mat_A.get_n());
+    vector<double> vec_e(mat_A.get_n());
     vec_e.ones();
 
     mat_A.multiply_by_vector(vec_b, vec_e);

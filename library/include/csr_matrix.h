@@ -196,7 +196,7 @@ public:
      * This method populates the provided `vector` with the diagonal elements of the CSR matrix.
      * \param diag An output `vector` that will store the diagonal elements.
      */
-    void extract_diagonal(vector& diag) const;
+    void extract_diagonal(vector<double>& diag) const;
 
     /*! \brief Multiplies the CSR matrix by a vector: \f$y = A \cdot x\f$.
      *
@@ -204,7 +204,7 @@ public:
      * \param y The output `vector` to store the result of the multiplication.
      * \param x The input `vector` to multiply with the matrix.
      */
-    void multiply_by_vector(vector& y, const vector& x) const;
+    void multiply_by_vector(vector<double>& y, const vector<double>& x) const;
 
     /*! \brief Multiplies the CSR matrix by a vector and adds the result: \f$y = y + A \cdot x\f$.
      *
@@ -213,7 +213,7 @@ public:
      * it contains the accumulated result.
      * \param x The input `vector` to multiply with the matrix.
      */
-    void multiply_by_vector_and_add(vector& y, const vector& x) const;
+    void multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const;
 
     /*! \brief Multiplies this CSR matrix by another CSR matrix: \f$C = A \cdot B\f$.
      *

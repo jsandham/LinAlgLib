@@ -39,7 +39,7 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void ssor_iteration(const csr_matrix& A, vector& x, const vector& b, double omega)
+void ssor_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b, double omega)
 {
     ROUTINE_TRACE("ssor_iteration");
 
@@ -114,7 +114,7 @@ void ssor_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int ssor_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double omega)
+int ssor_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double omega)
 {
     ROUTINE_TRACE("ssor_solver::solve");
 

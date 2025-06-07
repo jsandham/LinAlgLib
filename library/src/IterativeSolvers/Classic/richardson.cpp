@@ -40,7 +40,7 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void richardson_iteration(const csr_matrix& A, vector& x, vector& res, double theta)
+void richardson_iteration(const csr_matrix& A, vector<double>& x, vector<double>& res, double theta)
 {
     ROUTINE_TRACE("richardson_iteration");
 
@@ -67,7 +67,7 @@ void rich_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int rich_solver::solve(const csr_matrix& A, vector& x, const vector& b, iter_control control, double theta)
+int rich_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double theta)
 {
     ROUTINE_TRACE("rich_solver::solve");
 

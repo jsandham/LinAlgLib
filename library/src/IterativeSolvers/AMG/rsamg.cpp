@@ -818,7 +818,7 @@ static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_m
 
                 if(i == A_col_j)
                 {
-                    diag == csr_val_A[j];
+                    diag = csr_val_A[j];
                 }
                 else
                 {

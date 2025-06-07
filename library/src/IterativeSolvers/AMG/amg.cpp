@@ -38,13 +38,13 @@
 
 namespace linalg
 {
-void jacobi_iteration(const csr_matrix& A, vector& x, const vector& xold, const vector& b);
-void gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b);
-void symm_gauss_seidel_iteration(const csr_matrix& A, vector& x, const vector& b);
-void sor_iteration(const csr_matrix& A, vector& x, const vector& b, const double omega);
-void ssor_iteration(const csr_matrix& A, vector& x, const vector& b, const double omega);
+void jacobi_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& xold, const vector<double>& b);
+void gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b);
+void symm_gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b);
+void sor_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b, const double omega);
+void ssor_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b, const double omega);
 
-static void apply_smoother(const csr_matrix& A, vector& x, const vector& b, Smoother smoother)
+static void apply_smoother(const csr_matrix& A, vector<double>& x, const vector<double>& b, Smoother smoother)
 {
     ROUTINE_TRACE("apply_smoother");
 
@@ -52,7 +52,7 @@ static void apply_smoother(const csr_matrix& A, vector& x, const vector& b, Smoo
     {
     case Smoother::Jacobi: 
     {
-        vector xold(A.get_m());
+        vector<double> xold(A.get_m());
         xold.copy_from(x);
        
         jacobi_iteration(A, x, xold, b);
@@ -75,7 +75,7 @@ static void apply_smoother(const csr_matrix& A, vector& x, const vector& b, Smoo
     }
 }
 
-static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int currentLevel,
+static void vcycle(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("vcycle");
@@ -105,16 +105,16 @@ static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         }
 
         // compute residual r = b - A*x = A*e
-        vector r(N);
+        vector<double> r(N);
         compute_residual(A, x, b, r);
 
         // compute wres = R*r
-        vector wres(Nc);
+        vector<double> wres(Nc);
         wres.zeros();
         R.multiply_by_vector(wres, r);
 
         // set e = 0
-        vector ec(Nc);
+        vector<double> ec(Nc);
         ec.zeros();
 
         // recursively solve Ac*ec = R*r = wres
@@ -195,7 +195,7 @@ static void vcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
     }
 }
 
-static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
+static void wcycle(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("wcycle");
@@ -225,16 +225,16 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         }
 
         // compute residual r = b - A*x = A*e
-        vector r(N);
+        vector<double> r(N);
         compute_residual(A, x, b, r);
 
         // compute wres = R*r
-        vector wres(Nc);
+        vector<double> wres(Nc);
         wres.zeros();
         R.multiply_by_vector(wres, r);
 
         // set ec = 0
-        vector ec(Nc);
+        vector<double> ec(Nc);
         ec.zeros();
 
         // recursively solve Ac*ec = R*r = wres
@@ -312,7 +312,7 @@ static void wcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
     }
 }
 
-static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, int n3, int currentLevel,
+static void fcycle(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, int n3, int currentLevel,
                    Smoother smoother)
 {
     ROUTINE_TRACE("fcycle");
@@ -342,16 +342,16 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
         }
 
         // compute residual r = b - A*x = A*e
-        vector r(N);
+        vector<double> r(N);
         compute_residual(A, x, b, r);
 
         // compute wres = R*r
-        vector wres(Nc);
+        vector<double> wres(Nc);
         wres.zeros();
         R.multiply_by_vector(wres, r);
 
         // set ec = 0
-        vector ec(Nc);
+        vector<double> ec(Nc);
         ec.zeros();
 
         // recursively solve Ac*ec = R*r = wres
@@ -430,7 +430,7 @@ static void fcycle(const hierarchy &hierarchy, vector& x, const vector& b, int n
 }
 }
 
-int linalg::amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, int n1, int n2, Cycle cycle,
+int linalg::amg_solve(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, Cycle cycle,
               Smoother smoother, iter_control control)
 {           
     ROUTINE_TRACE("amg_solve");
@@ -439,7 +439,7 @@ int linalg::amg_solve(const hierarchy &hierarchy, vector& x, const vector& b, in
 
     const csr_matrix &A = hierarchy.A_cs[0];
 
-    vector residual(A.get_m());
+    vector<double> residual(A.get_m());
     compute_residual(A, x, b, residual);
 
     double initial_res_norm = residual.norm_inf2();
