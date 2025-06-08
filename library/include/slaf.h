@@ -84,6 +84,7 @@ LINALGLIB_API void matrix_vector_product(const int *csr_row_ptr, const int *csr_
 
 // Compute result = x * y
 LINALGLIB_API double dot_product(const double *x, const double *y, int n);
+LINALGLIB_API double dot_product(const vector<double>& x, const vector<double>& y);
 
 // Compute residual res = b - A * x
 LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
@@ -92,16 +93,25 @@ LINALGLIB_API void compute_residual(const int *csr_row_ptr, const int *csr_col_i
 LINALGLIB_API void compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res);
 
 // Fill array with zeros
+LINALGLIB_API void fill_with_zeros(uint32_t *x, size_t n);
+LINALGLIB_API void fill_with_zeros(int32_t *x, size_t n);
+LINALGLIB_API void fill_with_zeros(int64_t *x, size_t n);
 LINALGLIB_API void fill_with_zeros(double *x, size_t n);
 
 // Fill array with ones
+LINALGLIB_API void fill_with_ones(uint32_t *x, size_t n);
+LINALGLIB_API void fill_with_ones(int32_t *x, size_t n);
+LINALGLIB_API void fill_with_ones(int64_t *x, size_t n);
 LINALGLIB_API void fill_with_ones(double *x, size_t n);
 
 // Exclusive scan
 LINALGLIB_API void compute_exclusize_scan(double *x, int n);
+LINALGLIB_API void exclusize_scan(vector<double>& x);
 
 // Copy array
-LINALGLIB_API void copy(int* dest, const int* src, size_t n);
+LINALGLIB_API void copy(uint32_t* dest, const uint32_t* src, size_t n);
+LINALGLIB_API void copy(int32_t* dest, const int32_t* src, size_t n);
+LINALGLIB_API void copy(int64_t* dest, const int64_t* src, size_t n);
 LINALGLIB_API void copy(double* dest, const double* src, size_t n);
 
 // Extract diagonal entries
@@ -123,7 +133,9 @@ LINALGLIB_API double fast_error(const int *csr_row_ptr, const int *csr_col_ind, 
                   const double *b, int n, double tol);
 
 LINALGLIB_API double norm_euclid(const double *array, int n);
+LINALGLIB_API double norm_euclid(const vector<double>& array);
 LINALGLIB_API double norm_inf(const double *array, int n);
+LINALGLIB_API double norm_inf(const vector<double>& array);
 
 LINALGLIB_API void print_matrix(const std::string name, const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n,
            int nnz);

@@ -48,9 +48,9 @@
 
 namespace linalg
 {
-static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &A, const std::vector<int> &connections,
-                                                              const std::vector<int64_t> &aggregates,
-                                                              const std::vector<int64_t> &aggregate_root_nodes,
+static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &A, const vector<int> &connections,
+                                                              const vector<int64_t> &aggregates,
+                                                              const vector<int64_t> &aggregate_root_nodes,
                                                               double relax, csr_matrix &prolongation)
 {
     ROUTINE_TRACE("construct_prolongation_using_smoothed_aggregation");
@@ -58,7 +58,7 @@ static bool construct_prolongation_using_smoothed_aggregation(const csr_matrix &
     // Determine number of columns in the prolongation matrix. This will be
     // the maximum aggregate plus one.
     int64_t n = -1;
-    for (size_t i = 0; i < aggregates.size(); i++)
+    for (size_t i = 0; i < aggregates.get_size(); i++)
     {
        if (n < aggregates[i])
        {
@@ -224,9 +224,9 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hier
         csr_matrix &P = hierarchy.prolongations[level];
         csr_matrix &R = hierarchy.restrictions[level];
 
-        std::vector<int> connections;
-        std::vector<int64_t> aggregates;
-        std::vector<int64_t> aggregate_root_nodes;
+        vector<int> connections;
+        vector<int64_t> aggregates;
+        vector<int64_t> aggregate_root_nodes;
 
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);

@@ -172,7 +172,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
     // res = b - A * x
     compute_residual(A, x, b, res);
 
-    double res_norm = res.norm_euclid2();
+    double res_norm = norm_euclid(res);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -271,7 +271,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
         // res = b - A * x
         compute_residual(A, x, b, res);
 
-        res_norm = res.norm_euclid2();
+        res_norm = norm_euclid(res);
 
         // Check norm of residual against tolerance
         if(control.residual_converges(res_norm, initial_res_norm))
@@ -311,7 +311,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
     // z = (M^-1) * res
     precond->solve(res, z);
 
-    double res_norm = z.norm_euclid2();
+    double res_norm = norm_euclid(z);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -413,7 +413,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
         // z = (M^-1) * res
         precond->solve(res, z);
 
-        res_norm = z.norm_euclid2();
+        res_norm = norm_euclid(z);
 
         // Check norm of residual against tolerance
         if(control.residual_converges(res_norm, initial_res_norm))

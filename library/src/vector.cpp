@@ -27,6 +27,8 @@
 #include "../include/vector.h"
 #include "../include/slaf.h"
 
+#include "trace.h"
+
 #include <assert.h>
 
 using namespace linalg;
@@ -40,6 +42,12 @@ template <typename T>
 vector<T>::vector(size_t size)
 {
     hvec.resize(size);
+}
+
+template <typename T>
+vector<T>::vector(size_t size, T val)
+{
+    hvec.resize(size, val);
 }
 
 template <typename T>
@@ -82,45 +90,22 @@ const T* vector<T>::get_vec() const
 template <typename T>
 void vector<T>::copy_from(const vector& x)
 {
+    ROUTINE_TRACE("vector<T>::copy_from");
     copy(hvec.data(), x.get_vec(), hvec.size());
 }
 
 template <typename T>
 void vector<T>::zeros()
 {
+    ROUTINE_TRACE("vector<T>::zeros");
     fill_with_zeros(hvec.data(), hvec.size());
 }
     
 template <typename T>
 void vector<T>::ones()
 {
+    ROUTINE_TRACE("vector<T>::ones");
     fill_with_ones(hvec.data(), hvec.size());
-}
-
-template <typename T>
-void vector<T>::exclusize_scan()
-{
-    compute_exclusize_scan(hvec.data(), hvec.size());
-}
-
-template <typename T>
-T vector<T>::dot(const vector& x) const
-{
-    assert(this->get_size() == x.get_size());
-
-    return dot_product(this->get_vec(), x.get_vec(), this->get_size());
-}
-
-template <typename T>
-T vector<T>::norm_euclid2() const
-{
-    return norm_euclid(hvec.data(), hvec.size());
-}
-    
-template <typename T>
-T vector<T>::norm_inf2() const
-{
-    return norm_inf(hvec.data(), hvec.size());
 }
 
 template <typename T>
@@ -130,16 +115,36 @@ void vector<T>::resize(size_t size)
 }
 
 template <typename T>
+void vector<T>::resize(size_t size, T val)
+{
+    hvec.resize(size, val);
+}
+
+template <typename T>
+void vector<T>::clear()
+{
+    hvec.clear();
+}
+
+template <typename T>
+void vector<T>::assign(size_t size, T val)
+{
+    hvec.assign(size, val);
+}
+
+template <typename T>
 void vector<T>::move_to_device()
 {
-
+    ROUTINE_TRACE("vector<T>::move_to_device");
 }
 
 template <typename T>
 void vector<T>::move_to_host()
 {
-
+    ROUTINE_TRACE("vector<T>::move_to_host");
 }
 
-// template class vector<int>;
+template class vector<uint32_t>;
+template class vector<int32_t>;
+template class vector<int64_t>;
 template class vector<double>;

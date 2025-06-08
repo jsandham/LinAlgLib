@@ -48,8 +48,7 @@ static unsigned int hash1(unsigned int x)
     return x / 2;
 }
 
-static void initialize_pmis_state(const csr_matrix &A, const std::vector<int> &connections, std::vector<int> &state,
-                                  std::vector<int> &hash)
+static void initialize_pmis_state(const csr_matrix &A, const vector<int> &connections, vector<int> &state, vector<int> &hash)
 {
     ROUTINE_TRACE("initialize_pmis_state");
 
@@ -101,9 +100,9 @@ static pmis_node lexographical_max(const pmis_node *ti, const pmis_node *tj)
     return *ti;
 }
 
-static void find_maximum_distance_two_node(const csr_matrix &A, const std::vector<int> &connections,
-                                           const std::vector<int> &state, const std::vector<int> &hash,
-                                           std::vector<int64_t> &aggregates, std::vector<int> &max_state,
+static void find_maximum_distance_two_node(const csr_matrix &A, const vector<int> &connections,
+                                           const vector<int> &state, const vector<int> &hash,
+                                           vector<int64_t> &aggregates, vector<int> &max_state,
                                            bool &complete)
 {
     ROUTINE_TRACE("find_maximum_distance_two_node");
@@ -185,10 +184,10 @@ static void find_maximum_distance_two_node(const csr_matrix &A, const std::vecto
     }
 }
 
-static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, const std::vector<int> &connections,
-                                                        const std::vector<int> &state, std::vector<int64_t> &aggregates,
-                                                        std::vector<int64_t> &aggregate_root_nodes,
-                                                        std::vector<int> &max_state)
+static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, const vector<int> &connections,
+                                                        const vector<int> &state, vector<int64_t> &aggregates,
+                                                        vector<int64_t> &aggregate_root_nodes,
+                                                        vector<int> &max_state)
 {
     ROUTINE_TRACE("add_unassigned_nodes_to_closest_aggregation");
 
@@ -225,8 +224,8 @@ static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, con
 }
 }
 
-bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const std::vector<int> &connections,
-                                   std::vector<int64_t> &aggregates, std::vector<int64_t> &aggregate_root_nodes)
+bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int> &connections,
+                                   vector<int64_t> &aggregates, vector<int64_t> &aggregate_root_nodes)
 {
     ROUTINE_TRACE("compute_aggregates_using_pmis");
 
@@ -237,9 +236,9 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const std::vecto
     // }
     // std::cout << "" << std::endl;
 
-    std::vector<int> hash(A.get_m());
-    std::vector<int> state(A.get_m());
-    std::vector<int> max_state(A.get_m());
+    vector<int> hash(A.get_m());
+    vector<int> state(A.get_m());
+    vector<int> max_state(A.get_m());
 
     // Initialize parallel maximal independent set state
     initialize_pmis_state(A, connections, max_state, hash);
@@ -286,7 +285,7 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const std::vecto
 
     aggregate_root_nodes.resize(A.get_m(), -1);
 
-    for (size_t i = 0; i < aggregates.size(); i++)
+    for (size_t i = 0; i < aggregates.get_size(); i++)
     {
         aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
     }
@@ -367,7 +366,7 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const std::vecto
 #define U_POINT 2 // Unassigned point
 #define FF_POINT 3 // Future F-point
 
-void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, std::vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, vector<uint32_t> &cfpoints)
 {
     assert(S.get_m() == S.get_n());
     assert(ST.get_m() == ST.get_n());
@@ -580,7 +579,7 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (second pass)
 //-------------------------------------------------------------------------------
-void linalg::compute_cfpoint_second_pass(const csr_matrix &S, std::vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_second_pass(const csr_matrix &S, vector<uint32_t> &cfpoints)
 {
     const int* csr_row_ptr_S = S.get_row_ptr();
     const int* csr_col_ind_S = S.get_col_ind();

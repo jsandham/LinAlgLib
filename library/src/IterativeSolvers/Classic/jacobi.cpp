@@ -88,7 +88,7 @@ int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<do
     // res = b - A * x
     compute_residual(A, x, b, res);
 
-    double initial_res_norm = res.norm_inf2();
+    double initial_res_norm = norm_inf(res);
 
     // copy of x
     xold.copy_from(x);
@@ -103,7 +103,7 @@ int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<do
 
         compute_residual(A, x, b, res);
 
-        double res_norm = res.norm_inf2();
+        double res_norm = norm_inf(res);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {

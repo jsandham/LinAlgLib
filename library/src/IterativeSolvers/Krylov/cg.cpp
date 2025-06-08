@@ -65,12 +65,12 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
         // res = b - A * x
         compute_residual(A, x, b, res);
 
-        initial_res_norm = res.norm_inf2();
+        initial_res_norm = norm_inf(res);
 
         // p = res
         p.copy_from(res);
 
-        gamma = res.dot(res);
+        gamma = dot_product(res, res);
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -87,12 +87,12 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
             // p = res
             p.copy_from(res);
 
-            gamma = res.dot(res);
+            gamma = dot_product(res, res);
         }
 
         // z = A * p and alpha = (r, r) / (A * p, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / z.dot(p);
+        double alpha = gamma / dot_product(z, p);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -100,7 +100,7 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
         // update res = res - alpha * z
         axpy(-alpha, z, res);
 
-        double res_norm = res.norm_inf2();
+        double res_norm = norm_inf(res);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {
@@ -109,7 +109,7 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
 
         // find beta
         double old_gamma = gamma;
-        gamma = res.dot(res);
+        gamma = dot_product(res, res);
         double beta = gamma / old_gamma;
 
         // update p = res + beta * p
@@ -140,7 +140,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
         // res = b - A * x
         compute_residual(A, x, b, res);
         
-        initial_res_norm = res.norm_inf2();
+        initial_res_norm = norm_inf(res);
 
         // z = (M^-1) * res
         precond->solve(res, z);
@@ -148,7 +148,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
         // p = z
         p.copy_from(z);
 
-        gamma = z.dot(res);
+        gamma = dot_product(z, res);
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -168,12 +168,12 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
             // p = z
             p.copy_from(z);
 
-            gamma = z.dot(res);
+            gamma = dot_product(z, res);
         }
 
         // z = A * p and alpha = (z, r) / (Ap, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / z.dot(p);
+        double alpha = gamma / dot_product(z, p);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -181,7 +181,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
         // update res = res - alpha * z
         axpy(-alpha, z, res);
 
-        double res_norm = res.norm_inf2();
+        double res_norm = norm_inf(res);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {
@@ -193,7 +193,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
 
         // find beta
         double old_gamma = gamma;
-        gamma = z.dot(res);
+        gamma = dot_product(z, res);
         double beta = gamma / old_gamma;
 
         // update p = z + beta * p

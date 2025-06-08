@@ -699,7 +699,7 @@
 
 namespace linalg
 {
-static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, std::vector<uint32_t> cfpoints)
+static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, vector<uint32_t> cfpoints)
 {
     // Determine number of C points. The prolongation operator will have number 
     // of columns equal to the number of C points
@@ -921,8 +921,8 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
         csr_matrix S;
         csr_matrix ST;
 
-        std::vector<int> connections(A_fine.get_nnz(), 0);
-        std::vector<uint32_t> cfpoints(A_fine.get_m(), 0);
+        vector<int> connections(A_fine.get_nnz(), 0);
+        vector<uint32_t> cfpoints(A_fine.get_m(), 0);
 
         compute_classical_strong_connections(A_fine, theta, S, connections);
 
@@ -933,7 +933,7 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
         compute_cfpoint_second_pass(S, cfpoints);
 
         std::cout << "cfpoints (second pass)" << std::endl;
-        for(size_t i = 0; i < cfpoints.size(); i++)
+        for(size_t i = 0; i < cfpoints.get_size(); i++)
         {
             std::cout << cfpoints[i] << " ";
         }

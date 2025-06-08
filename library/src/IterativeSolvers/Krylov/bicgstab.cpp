@@ -64,12 +64,12 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
     // r = b - A * x and initial error
     compute_residual(A, x, b, r);
 
-    double initial_res_norm = r.norm_inf2();
+    double initial_res_norm =norm_inf(r);
    
     // r0 = r
     r0.copy_from(r);
 
-    double rho = r0.dot(r);
+    double rho = dot_product(r0, r);
 
     // p = r
     p.copy_from(r);
@@ -82,7 +82,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         // v = Ap
         A.multiply_by_vector(v, p);
 
-        double alpha = rho / r0.dot(v);
+        double alpha = rho / dot_product(r0, v);
 
         // r = r - alpha * v
         axpy(-alpha, v, r);
@@ -90,8 +90,8 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         // t = A * r
         A.multiply_by_vector(t, r);
 
-        double omega1 = t.dot(r);
-        double omega2 = t.dot(t);
+        double omega1 = dot_product(t, r);
+        double omega2 = dot_product(t, t);
 
         if(omega1 == 0.0 || omega2 == 0.0)
         {
@@ -110,7 +110,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         // r = r - omega * t
         axpy(-omega, t, r);
 
-        double res_norm = r.norm_inf2();
+        double res_norm = norm_inf(r);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {
@@ -118,7 +118,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         }
 
         double rho_prev = rho;
-        rho = r0.dot(r);
+        rho = dot_product(r0, r);
         double beta = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * v)
@@ -147,12 +147,12 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
     // r = b - A * x and initial error
     compute_residual(A, x, b, r);
 
-    double initial_res_norm = r.norm_inf2();
+    double initial_res_norm = norm_inf(r);
 
     // r0 = r
     r0.copy_from(r);
 
-    double rho = r0.dot(r);
+    double rho = dot_product(r0, r);
 
     // p = r
     p.copy_from(r);
@@ -168,8 +168,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         // q = A*z
         A.multiply_by_vector(q, z);
 
-        double alpha = rho / r0.dot(q);
-
+        double alpha = rho / dot_product(r0, q);
+        
         // r = r - alpha * q
         axpy(-alpha, q, r);
 
@@ -179,8 +179,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         // t = A * v
         A.multiply_by_vector(t, v);
 
-        double omega1 = t.dot(r);
-        double omega2 = t.dot(t);
+        double omega1 = dot_product(t, r);
+        double omega2 = dot_product(t, t);
 
         if(omega1 == 0.0 || omega2 == 0.0)
         {
@@ -199,7 +199,7 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         // r = r - omega * t
         axpy(-omega, t, r);
 
-        double res_norm = r.norm_inf2();
+        double res_norm = norm_inf(r);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {
@@ -207,7 +207,7 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         }
 
         double rho_prev = rho;
-        rho = r0.dot(r);
+        rho = dot_product(r0, r);
         double beta = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * q)

@@ -27,6 +27,8 @@
 #include "../include/csr_matrix.h"
 #include "../include/slaf.h"
 
+#include "trace.h"
+
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -36,7 +38,7 @@
 
 using namespace linalg;
 
-csr_matrix::csr_matrix()
+csr_matrix::csr_matrix() : m(0), n(0), nnz(0), on_host(true)
 {
 
 }
@@ -48,15 +50,14 @@ csr_matrix::csr_matrix(const std::vector<int>& csr_row_ptr,
                          int n, 
                          int nnz)
 {
-    this->hcsr_row_ptr = csr_row_ptr;
-    this->hcsr_col_ind = csr_col_ind;
-    this->hcsr_val = csr_val;
+    this->csr_row_ptr = csr_row_ptr;
+    this->csr_col_ind = csr_col_ind;
+    this->csr_val = csr_val;
     this->m = m;
     this->n = n;
     this->nnz = nnz;
 
     this->on_host = true;
-
 }
 csr_matrix::~csr_matrix()
 {
@@ -84,39 +85,39 @@ int csr_matrix::get_nnz() const
 
 const int* csr_matrix::get_row_ptr() const
 {
-    return hcsr_row_ptr.data();
+    return csr_row_ptr.get_vec();
 }
 
 const int* csr_matrix::get_col_ind() const
 {
-    return hcsr_col_ind.data();
+    return csr_col_ind.get_vec();
 }
 
 const double* csr_matrix::get_val() const
 {
-    return hcsr_val.data();
+    return csr_val.get_vec();
 }
 
 int* csr_matrix::get_row_ptr()
 {
-    return hcsr_row_ptr.data();
+    return csr_row_ptr.get_vec();
 }
 
 int* csr_matrix::get_col_ind()
 {
-    return hcsr_col_ind.data();
+    return csr_col_ind.get_vec();
 }
 
 double* csr_matrix::get_val()
 {
-    return hcsr_val.data();
+    return csr_val.get_vec();
 }
 
 void csr_matrix::resize(int m, int n, int nnz)
 {
-    this->hcsr_row_ptr.resize(m + 1);
-    this->hcsr_col_ind.resize(nnz);
-    this->hcsr_val.resize(nnz);
+    this->csr_row_ptr.resize(m + 1);
+    this->csr_col_ind.resize(nnz);
+    this->csr_val.resize(nnz);
     this->m = m;
     this->n = n;
     this->nnz = nnz;
@@ -124,35 +125,65 @@ void csr_matrix::resize(int m, int n, int nnz)
 
 void csr_matrix::copy_from(const csr_matrix& A)
 {
+    ROUTINE_TRACE("csr_matrix::copy_from");
+
     this->m = A.get_m();
     this->n = A.get_n();
     this->nnz = A.get_nnz();
-    this->hcsr_row_ptr.resize(A.get_m() + 1);
-    this->hcsr_col_ind.resize(A.get_nnz());
-    this->hcsr_val.resize(A.get_nnz());
+    this->csr_row_ptr.resize(A.get_m() + 1);
+    this->csr_col_ind.resize(A.get_nnz());
+    this->csr_val.resize(A.get_nnz());
 
-    copy(this->hcsr_row_ptr.data(), A.get_row_ptr(), this->hcsr_row_ptr.size());
-    copy(this->hcsr_col_ind.data(), A.get_col_ind(), this->hcsr_col_ind.size());
-    copy(this->hcsr_val.data(), A.get_val(), this->hcsr_val.size());
+    this->csr_row_ptr.copy_from(A.csr_row_ptr);
+    this->csr_col_ind.copy_from(A.csr_col_ind);
+    this->csr_val.copy_from(A.csr_val);
+}
+
+void csr_matrix::move_to_device()
+{
+    ROUTINE_TRACE("csr_matrix::move_to_device");
+
+    csr_row_ptr.move_to_device();
+    csr_col_ind.move_to_device();
+    csr_val.move_to_device();
+}
+
+void csr_matrix::move_to_host()
+{
+    ROUTINE_TRACE("csr_matrix::move_to_host");
+
+    csr_row_ptr.move_to_host();
+    csr_col_ind.move_to_host();
+    csr_val.move_to_host();
 }
 
 void csr_matrix::extract_diagonal(vector<double>& diag) const
 {
-    diagonal(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), diag.get_vec(), m);
+    ROUTINE_TRACE("csr_matrix::extract_diagonal");
+
+    diagonal(*this, diag);
+
+    //diagonal(csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), diag.get_vec(), m);
 }
 
 void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
 {
-    matrix_vector_product(hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), y.get_vec(), m);
+    ROUTINE_TRACE("csr_matrix::multiply_by_vector");
+
+    matrix_vector_product(csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), x.get_vec(), y.get_vec(), m);
 }
 
 void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
 {
-    csrmv(m, n, nnz, 1.0, hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(), x.get_vec(), 1.0, y.get_vec());
+    ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
+
+    csrmv(m, n, nnz, 1.0, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), x.get_vec(), 1.0, y.get_vec());
 }
 
 void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
+    ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
+
     // Compute C = A * B
     double alpha = 1.0;
     double beta = 0.0;
@@ -161,27 +192,29 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
     C.m = m;
     C.n = B.n;
     C.nnz = 0;
-    C.hcsr_row_ptr.resize(C.m + 1, 0);
+    C.csr_row_ptr.resize(C.m + 1, 0);
 
-    csrgemm_nnz(m, B.n, n, nnz, B.nnz, 0, alpha, hcsr_row_ptr.data(), hcsr_col_ind.data(), B.hcsr_row_ptr.data(),
-                B.hcsr_col_ind.data(), beta, nullptr, nullptr, C.hcsr_row_ptr.data(), &C.nnz);
+    csrgemm_nnz(m, B.n, n, nnz, B.nnz, 0, alpha, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), B.csr_row_ptr.get_vec(),
+                B.csr_col_ind.get_vec(), beta, nullptr, nullptr, C.csr_row_ptr.get_vec(), &C.nnz);
 
-    C.hcsr_col_ind.resize(C.nnz);
-    C.hcsr_val.resize(C.nnz);
+    C.csr_col_ind.resize(C.nnz);
+    C.csr_val.resize(C.nnz);
 
-    csrgemm(m, B.n, n, nnz, B.nnz, 0, alpha, hcsr_row_ptr.data(), hcsr_col_ind.data(), hcsr_val.data(),
-            B.hcsr_row_ptr.data(), B.hcsr_col_ind.data(), B.hcsr_val.data(), beta, nullptr, nullptr, nullptr,
-            C.hcsr_row_ptr.data(), C.hcsr_col_ind.data(), C.hcsr_val.data());
+    csrgemm(m, B.n, n, nnz, B.nnz, 0, alpha, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(),
+            B.csr_row_ptr.get_vec(), B.csr_col_ind.get_vec(), B.csr_val.get_vec(), beta, nullptr, nullptr, nullptr,
+            C.csr_row_ptr.get_vec(), C.csr_col_ind.get_vec(), C.csr_val.get_vec());
 }
 
 void csr_matrix::transpose(csr_matrix& T) const
 {
+    ROUTINE_TRACE("csr_matrix::transpose");
+
     T.resize(n, m, nnz);
 
     // Fill arrays
     for (size_t i = 0; i < T.get_m() + 1; i++)
     {
-        T.hcsr_row_ptr[i] = 0;
+        T.csr_row_ptr[i] = 0;
     }
 
     for (size_t i = 0; i < T.get_nnz(); i++)
@@ -193,12 +226,12 @@ void csr_matrix::transpose(csr_matrix& T) const
 
     for (int i = 0; i < m; i++)
     {
-        int row_start = hcsr_row_ptr[i];
-        int row_end = hcsr_row_ptr[i + 1];
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
         for (int j = row_start; j < row_end; j++)
         {
-            T.get_row_ptr()[hcsr_col_ind[j] + 1]++;
+            T.get_row_ptr()[csr_col_ind[j] + 1]++;
         }
     }
 
@@ -210,13 +243,13 @@ void csr_matrix::transpose(csr_matrix& T) const
 
     for (int i = 0; i < m; i++)
     {
-        int row_start = hcsr_row_ptr[i];
-        int row_end = hcsr_row_ptr[i + 1];
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
 
         for (int j = row_start; j < row_end; j++)
         {
-            int col = hcsr_col_ind[j];
-            double val = hcsr_val[j];
+            int col = csr_col_ind[j];
+            double val = csr_val[j];
 
             int start = T.get_row_ptr()[col];
             int end = T.get_row_ptr()[col + 1];
@@ -234,16 +267,6 @@ void csr_matrix::transpose(csr_matrix& T) const
     }
 
     // T.print_matrix("T");
-}
-
-void csr_matrix::move_to_device()
-{
-
-}
-
-void csr_matrix::move_to_host()
-{
-
 }
 
 // Structure to hold triplet (COO) format data
@@ -264,6 +287,8 @@ struct triplet
 
 bool csr_matrix::read_mtx(const std::string& filename)
 {
+    ROUTINE_TRACE("csr_matrix::read_mtx");
+
     std::ifstream file(filename);
     if (!file.is_open()) 
     {
@@ -433,29 +458,29 @@ bool csr_matrix::read_mtx(const std::string& filename)
     if (nnz == 0) 
     {
         // Handle empty matrix case: all dimensions valid but no entries
-        hcsr_row_ptr.assign(m + 1, 0);
-        hcsr_col_ind.clear();
-        hcsr_val.clear();
+        csr_row_ptr.assign(m + 1, 0);
+        csr_col_ind.clear();
+        csr_val.clear();
         return true;
     }
 
-    hcsr_row_ptr.assign(m + 1, 0); // Initialize with zeros
-    hcsr_col_ind.resize(nnz);
-    hcsr_val.resize(nnz);
+    csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
+    csr_col_ind.resize(nnz);
+    csr_val.resize(nnz);
 
     for (int64_t i = 0; i < nnz; ++i) 
     {
         const triplet& t = triplets[i];
     
-        hcsr_row_ptr[t.row + 1]++;
-        hcsr_col_ind[i] = t.col;
-        hcsr_val[i] = t.value;
+        csr_row_ptr[t.row + 1]++;
+        csr_col_ind[i] = t.col;
+        csr_val[i] = t.value;
     }
 
     // Convert counts to cumulative sum (prefix sum) for row_ptr
     for (int i = 0; i < m; ++i) 
     {
-        hcsr_row_ptr[i + 1] += hcsr_row_ptr[i];
+        csr_row_ptr[i + 1] += csr_row_ptr[i];
     }
 
     return true;
@@ -463,6 +488,8 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
 bool csr_matrix::write_mtx(const std::string& filename)
 {
+    ROUTINE_TRACE("csr_matrix::write_mtx");
+
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
@@ -504,10 +531,10 @@ bool csr_matrix::write_mtx(const std::string& filename)
     // Write non-zero elements
     for (int i = 0; i < m; ++i) 
     {
-        for (int j_idx = hcsr_row_ptr[i]; j_idx < hcsr_row_ptr[i + 1]; ++j_idx) 
+        for (int j_idx = csr_row_ptr[i]; j_idx < csr_row_ptr[i + 1]; ++j_idx) 
         {
             // Matrix Market uses 1-based indexing
-            file << (i + 1) << " " << (hcsr_col_ind[j_idx] + 1) << " " << hcsr_val[j_idx] << "\n";
+            file << (i + 1) << " " << (csr_col_ind[j_idx] + 1) << " " << csr_val[j_idx] << "\n";
         }
     }
 
@@ -517,19 +544,21 @@ bool csr_matrix::write_mtx(const std::string& filename)
 
 void csr_matrix::make_diagonally_dominant()
 {
-    assert(((int)hcsr_row_ptr.size() - 1) == m);
-    assert(((int)hcsr_val.size()) == nnz);
+    ROUTINE_TRACE("csr_matrix::make_diagonally_dominant");
+
+    assert(((int)csr_row_ptr.get_size() - 1) == m);
+    assert(((int)csr_val.get_size()) == nnz);
 
     // Return early is matrix has no diagonal
     int diagonal_count = 0;
     for (int i = 0; i < m; i++)
     {
-        int start = hcsr_row_ptr[i];
-        int end = hcsr_row_ptr[i + 1];
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
 
         for (int j = start; j < end; j++)
         {
-            if (hcsr_col_ind[j] == i)
+            if (csr_col_ind[j] == i)
             {
                 diagonal_count++;
                 break;
@@ -545,23 +574,23 @@ void csr_matrix::make_diagonally_dominant()
     // Make matrix diagonally dominant so that convergence is guaranteed
     for (int i = 0; i < m; i++)
     {
-        int start = hcsr_row_ptr[i];
-        int end = hcsr_row_ptr[i + 1];
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
 
         double row_sum = 0;
         for (int j = start; j < end; j++)
         {
-            if (hcsr_col_ind[j] != i)
+            if (csr_col_ind[j] != i)
             {
-                row_sum += std::abs(hcsr_val[j]);
+                row_sum += std::abs(csr_val[j]);
             }
         }
 
         for (int j = start; j < end; j++)
         {
-            if (hcsr_col_ind[j] == i)
+            if (csr_col_ind[j] == i)
             {
-                hcsr_val[j] = std::max(std::abs(hcsr_val[j]), 1.1 * row_sum);
+                csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
                 break;
             }
         }
@@ -570,16 +599,18 @@ void csr_matrix::make_diagonally_dominant()
 
 void csr_matrix::print_matrix(const std::string name) const
 {
+    ROUTINE_TRACE("csr_matrix::print_matrix");
+
     std::cout << name << std::endl;
     for (int i = 0; i < m; i++)
     {
-        int start = hcsr_row_ptr[i];
-        int end = hcsr_row_ptr[i + 1];
+        int start = csr_row_ptr[i];
+        int end = csr_row_ptr[i + 1];
 
         std::vector<double> temp(n, 0.0);
         for (int j = start; j < end; j++)
         {
-            temp[hcsr_col_ind[j]] = (hcsr_val.size() != 0) ? hcsr_val[j] : 1.0;
+            temp[csr_col_ind[j]] = (csr_val.get_size() != 0) ? csr_val[j] : 1.0;
         }
 
         for (int j = 0; j < n; j++)

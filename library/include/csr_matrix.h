@@ -67,30 +67,30 @@ private:
     /**
      * @brief Row pointer array of CSR format.
      *
-     * `hcsr_row_ptr` is an array of length `m + 1`. `hcsr_row_ptr[i]` stores the index
+     * `csr_row_ptr` is an array of length `m + 1`. `csr_row_ptr[i]` stores the index
      * in the `csr_col_ind` and `csr_val` arrays where the non-zero elements of the
-     * `i`-th row start. The last element, `hcsr_row_ptr[m]`, stores the total number
+     * `i`-th row start. The last element, `csr_row_ptr[m]`, stores the total number
      * of non-zero elements (`nnz`).
      */
-    std::vector<int> hcsr_row_ptr;
+    vector<int> csr_row_ptr;
 
     /**
      * @brief Column indices array of CSR format.
      *
-     * `hcsr_col_ind` is an array of length `nnz` that stores the column index of each
+     * `csr_col_ind` is an array of length `nnz` that stores the column index of each
      * non-zero element. The column indices for the non-zero elements in row `i` are
-     * stored in `hcsr_col_ind[hcsr_row_ptr[i] : hcsr_row_ptr[i+1] - 1]`.
+     * stored in `csr_col_ind[csr_row_ptr[i] : csr_row_ptr[i+1] - 1]`.
      */
-    std::vector<int> hcsr_col_ind;
+    vector<int> csr_col_ind;
 
     /**
      * @brief Values array of CSR format.
      *
-     * `hcsr_val` is an array of length `nnz` that stores the numerical value of each
+     * `csr_val` is an array of length `nnz` that stores the numerical value of each
      * non-zero element. The values for the non-zero elements in row `i` are stored
-     * in `hcsr_val[hcsr_row_ptr[i] : hcsr_row_ptr[i+1] - 1]`.
+     * in `csr_val[csr_row_ptr[i] : csr_row_ptr[i+1] - 1]`.
      */
-    std::vector<double> hcsr_val;
+    vector<double> csr_val;
 
     /*! \brief Flag indicating if the matrix data is currently on the host (CPU) or device (GPU). */
     bool on_host;
@@ -144,32 +144,32 @@ public:
     int get_nnz() const;
 
     /*! \brief Returns a constant pointer to the beginning of the row pointer array.
-     * \return A `const int*` to `hcsr_row_ptr`.
+     * \return A `const int*` to `csr_row_ptr`.
      */
     const int* get_row_ptr() const;
 
     /*! \brief Returns a constant pointer to the beginning of the column indices array.
-     * \return A `const int*` to `hcsr_col_ind`.
+     * \return A `const int*` to `csr_col_ind`.
      */
     const int* get_col_ind() const;
 
     /*! \brief Returns a constant pointer to the beginning of the values array.
-     * \return A `const double*` to `hcsr_val`.
+     * \return A `const double*` to `csr_val`.
      */
     const double* get_val() const;
 
     /*! \brief Returns a non-constant pointer to the beginning of the row pointer array.
-     * \return An `int*` to `hcsr_row_ptr`. This allows modification of the array.
+     * \return An `int*` to `csr_row_ptr`. This allows modification of the array.
      */
     int* get_row_ptr();
 
     /*! \brief Returns a non-constant pointer to the beginning of the column indices array.
-     * \return An `int*` to `hcsr_col_ind`. This allows modification of the array.
+     * \return An `int*` to `csr_col_ind`. This allows modification of the array.
      */
     int* get_col_ind();
 
     /*! \brief Returns a non-constant pointer to the beginning of the values array.
-     * \return A `double*` to `hcsr_val`. This allows modification of the array.
+     * \return A `double*` to `csr_val`. This allows modification of the array.
      */
     double* get_val();
 
@@ -190,6 +190,18 @@ public:
      * \param A The source `csr_matrix` to copy from.
      */
     void copy_from(const csr_matrix& A);
+
+    /*! \brief Moves the matrix data from host memory to device memory (e.g., GPU).
+     * \details This method handles the necessary memory transfers if a device is available
+     * and `on_host` is true. After this call, `is_on_host()` will return `false`.
+     */
+    void move_to_device();
+
+    /*! \brief Moves the matrix data from device memory to host memory (e.g., CPU).
+     * \details This method handles the necessary memory transfers if data is on a device
+     * and `on_host` is false. After this call, `is_on_host()` will return `true`.
+     */
+    void move_to_host();
 
     /*! \brief Extracts the diagonal elements of the matrix.
      *
@@ -228,18 +240,6 @@ public:
      * \param T The output `csr_matrix` that will store the transpose of this matrix.
      */
     void transpose(csr_matrix& T) const;
-
-    /*! \brief Moves the matrix data from host memory to device memory (e.g., GPU).
-     * \details This method handles the necessary memory transfers if a device is available
-     * and `on_host` is true. After this call, `is_on_host()` will return `false`.
-     */
-    void move_to_device();
-
-    /*! \brief Moves the matrix data from device memory to host memory (e.g., CPU).
-     * \details This method handles the necessary memory transfers if data is on a device
-     * and `on_host` is false. After this call, `is_on_host()` will return `true`.
-     */
-    void move_to_host();
 
     /*! \brief Reads a sparse matrix from a Matrix Market (.mtx) file into this CSR object.
      * \param filename The path to the .mtx file.

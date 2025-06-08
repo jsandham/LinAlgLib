@@ -442,7 +442,7 @@ int linalg::amg_solve(const hierarchy &hierarchy, vector<double>& x, const vecto
     vector<double> residual(A.get_m());
     compute_residual(A, x, b, residual);
 
-    double initial_res_norm = residual.norm_inf2();
+    double initial_res_norm = norm_inf(residual);
 
     // AMG recursive solve
     int n3 = n2;
@@ -463,7 +463,7 @@ int linalg::amg_solve(const hierarchy &hierarchy, vector<double>& x, const vecto
         }
 
         compute_residual(A, x, b, residual);
-        double res_norm = residual.norm_inf2();
+        double res_norm = norm_inf(residual);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {

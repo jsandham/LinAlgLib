@@ -33,7 +33,7 @@
 
 #include "../../trace.h"
 
-void linalg::compute_strong_connections(const csr_matrix &A, double eps, std::vector<int> &connections)
+void linalg::compute_strong_connections(const csr_matrix &A, double eps, vector<int> &connections)
 {
     ROUTINE_TRACE("compute_strong_connections");
 
@@ -71,7 +71,7 @@ void linalg::compute_strong_connections(const csr_matrix &A, double eps, std::ve
 //-------------------------------------------------------------------------------
 // -A[i,j] >= theta * max( -A[i,k] )   where k != i
 //-------------------------------------------------------------------------------
-void linalg::compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, std::vector<int> &connections)
+void linalg::compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, vector<int> &connections)
 {
     //S.m = A.m;
     //S.n = A.n;

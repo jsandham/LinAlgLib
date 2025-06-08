@@ -705,9 +705,64 @@ double linalg::dot_product(const double *x, const double *y, int n)
     return dot_prod;
 }
 
+double linalg::dot_product(const vector<double>& x, const vector<double>& y)
+{
+    ROUTINE_TRACE("dot_product");
+
+    assert(x.get_size() == y.get_size());
+
+    double dot_prod = 0.0;
+#if defined(_OPENMP)
+#pragma omp parallel for reduction(+: dot_prod)
+#endif
+    for (int i = 0; i < x.get_size(); i++)
+    {
+        dot_prod += x[i] * y[i];
+    }
+
+    return dot_prod;
+}
+
+
 //-------------------------------------------------------------------------------
 // fill array with zeros
 //-------------------------------------------------------------------------------
+void linalg::fill_with_zeros(uint32_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_zeros");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 0;
+    }
+}
+void linalg::fill_with_zeros(int32_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_zeros");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 0;
+    }
+}
+void linalg::fill_with_zeros(int64_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_zeros");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 0;
+    }
+}
 void linalg::fill_with_zeros(double *x, size_t n)
 {
     ROUTINE_TRACE("fill_with_zeros");
@@ -724,6 +779,42 @@ void linalg::fill_with_zeros(double *x, size_t n)
 //-------------------------------------------------------------------------------
 // fill array with ones
 //-------------------------------------------------------------------------------
+void linalg::fill_with_ones(uint32_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_ones");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 1;
+    }
+}
+void linalg::fill_with_ones(int32_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_ones");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 1;
+    }
+}
+void linalg::fill_with_ones(int64_t *x, size_t n)
+{
+    ROUTINE_TRACE("fill_with_ones");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        x[i] = 1;
+    }
+}
 void linalg::fill_with_ones(double *x, size_t n)
 {
     ROUTINE_TRACE("fill_with_ones");
@@ -747,6 +838,19 @@ void linalg::compute_exclusize_scan(double *x, int n)
         x[0] = 0;
 
         for(int i = 0; i < n - 1; i++)
+        {
+            x[i + 1] += x[i];
+        }
+    }
+}
+
+void linalg::exclusize_scan(vector<double>& x)
+{
+    if(x.get_size() > 0)
+    {
+        x[0] = 0;
+
+        for(int i = 0; i < x.get_size() - 1; i++)
         {
             x[i + 1] += x[i];
         }
@@ -787,7 +891,7 @@ void linalg::compute_residual(const csr_matrix& A, const vector<double>& x, cons
 //-------------------------------------------------------------------------------
 // copy array
 //-------------------------------------------------------------------------------
-void linalg::copy(int* dest, const int* src, size_t n)
+void linalg::copy(uint32_t* dest, const uint32_t* src, size_t n)
 {
     ROUTINE_TRACE("copy");
 
@@ -799,7 +903,30 @@ void linalg::copy(int* dest, const int* src, size_t n)
         dest[i] = src[i];
     }
 }
+void linalg::copy(int32_t* dest, const int32_t* src, size_t n)
+{
+    ROUTINE_TRACE("copy");
 
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        dest[i] = src[i];
+    }
+}
+void linalg::copy(int64_t* dest, const int64_t* src, size_t n)
+{
+    ROUTINE_TRACE("copy");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (size_t i = 0; i < n; i++)
+    {
+        dest[i] = src[i];
+    }
+}
 void linalg::copy(double* dest, const double* src, size_t n)
 {
     ROUTINE_TRACE("copy");
@@ -993,6 +1120,22 @@ double linalg::norm_inf(const double *array, int n)
     return norm;
 }
 
+double linalg::norm_inf(const vector<double>& array)
+{
+    ROUTINE_TRACE("norm_inf");
+
+    double norm = 0.0;
+#if defined(_OPENMP)
+#pragma omp parallel for reduction(max: norm)
+#endif
+    for (int i = 0; i < array.get_size(); i++)
+    {
+        norm = std::max(std::abs(array[i]), norm);
+    }
+
+    return norm;
+}
+
 //-------------------------------------------------------------------------------
 // euclidean norm
 //-------------------------------------------------------------------------------
@@ -1000,6 +1143,12 @@ double linalg::norm_euclid(const double *array, int n)
 {
     ROUTINE_TRACE("norm_euclid");
     return std::sqrt(dot_product(array, array, n));
+}
+
+double linalg::norm_euclid(const vector<double>& array)
+{
+    ROUTINE_TRACE("norm_euclid");
+    return std::sqrt(dot_product(array, array));
 }
 
 //-------------------------------------------------------------------------------

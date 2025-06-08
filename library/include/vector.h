@@ -63,6 +63,8 @@ public:
      */
     vector(size_t size);
 
+    vector(size_t size, T val);
+
     /*! \brief Constructor to initialize a vector from a `std::vector<double>`.
      * \param vec A `std::vector<double>` whose elements will be copied into this vector.
      */
@@ -77,13 +79,13 @@ public:
      * Prevents direct copying of `vector` objects to avoid shallow copies and
      * ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    vector (const vector&) = delete;
+    //vector (const vector&) = delete;
 
     /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `vector` to another to avoid shallow copies
      * and ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    vector& operator= (const vector&) = delete;
+    //vector& operator= (const vector&) = delete;
 
     /*! \brief Overload of the array subscript operator for non-constant access.
      * \param index The index of the element to access.
@@ -136,35 +138,18 @@ public:
     /*! \brief Sets all elements of the vector to one. */
     void ones();
 
-    /*! \brief Performs an exclusive scan (prefix sum) on the vector.
-     * \details Each element `hvec[i]` will be replaced by the sum of elements
-     * `hvec[0]` to `hvec[i-1]`. The first element `hvec[0]` will be 0.
-     */
-    void exclusize_scan();
-
-    /*! \brief Computes the dot product of this vector with another vector.
-     * \param x The other vector to compute the dot product with.
-     * \return The dot product of the two vectors.
-     */
-    T dot(const vector& x) const;
-
-    /*! \brief Computes the Euclidean (L2) norm squared of the vector.
-     * \return The square of the Euclidean norm (\f$\|v\|_2^2\f$).
-     */
-    T norm_euclid2() const;
-
-    /*! \brief Computes the infinity norm squared of the vector.
-     * \details This typically refers to the square of the maximum absolute element.
-     * \return The square of the infinity norm (\f$\|v\|_\infty^2\f$).
-     */
-    T norm_inf2() const;
-
     /*! \brief Resizes the vector to the specified size.
      * \details If the new size is smaller, elements beyond the new size are truncated.
      * If the new size is larger, new elements are default-initialized.
      * \param size The new desired size of the vector.
      */
     void resize(size_t size);
+
+    void resize(size_t size, T val);
+
+    void clear();
+
+    void assign(size_t size, T val);
 
     /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available

@@ -100,7 +100,7 @@ int gs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double
     // res = b - A * x
     compute_residual(A, x, b, res);
 
-    double initial_res_norm = res.norm_inf2();
+    double initial_res_norm = norm_inf(res);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -112,7 +112,7 @@ int gs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double
 
         compute_residual(A, x, b, res);
 
-        double res_norm = res.norm_inf2();
+        double res_norm = norm_inf(res);
 
         if (control.residual_converges(res_norm, initial_res_norm))
         {
