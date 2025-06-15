@@ -27,7 +27,7 @@
 #ifndef RSAMG_OLD_H
 #define RSAMG_OLD_H
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 
 /*! \file
  *  \brief raamg_old.h provides interface for classical algebraic multigrid

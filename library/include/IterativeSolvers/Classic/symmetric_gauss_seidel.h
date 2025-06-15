@@ -27,7 +27,7 @@
 #ifndef SYMMETRIC_GAUSS_SEIDEL_H
 #define SYMMETRIC_GAUSS_SEIDEL_H
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 
 #include "../iter_control.h"
 

@@ -26,7 +26,6 @@
 
 #include "IterativeSolvers/AMG/amg_aggregation.h"
 #include "IterativeSolvers/AMG/amg.h"
-#include "slaf.h"
 #include <assert.h>
 #include <iostream>
 

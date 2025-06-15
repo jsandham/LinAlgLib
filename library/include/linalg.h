@@ -223,7 +223,7 @@
 // Eigenvalues solvers
 #include "EigenValueSolvers/power_iteration.h"
 
-#include "slaf.h"
+#include "linalg_math.h"
 #include "IterativeSolvers/iter_control.h"
 
 #endif

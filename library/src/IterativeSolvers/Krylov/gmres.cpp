@@ -25,7 +25,8 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/Krylov/gmres.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
+
 #include "math.h"
 #include <iostream>
 #include <vector>
@@ -41,6 +42,45 @@ using namespace linalg;
 // Generalised Minimum Residual
 //
 //****************************************************************************
+
+static void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+                           double *y, int n)
+{
+    ROUTINE_TRACE("matrix_vector_product");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        int row_start = csr_row_ptr[i];
+        int row_end = csr_row_ptr[i + 1];
+
+        double s = 0.0;
+        for (int j = row_start; j < row_end; j++)
+        {
+            s += csr_val[j] * x[csr_col_ind[j]];
+        }
+
+        y[i] = s;
+    }
+}
+
+static double dot_product(const double *x, const double *y, int n)
+{
+    ROUTINE_TRACE("dot_product");
+
+    double dot_prod = 0.0;
+#if defined(_OPENMP)
+#pragma omp parallel for reduction(+: dot_prod)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        dot_prod += x[i] * y[i];
+    }
+
+    return dot_prod;
+}
 
 // A : n x n
 // Q : n x (restart + 1)

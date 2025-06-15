@@ -25,7 +25,7 @@
 ##################################################################################
 
 set(LINALGLIB_HEADERS_PUBLIC
-  include/slaf.h
+  include/linalg_math.h
   include/EigenValueSolvers/power_iteration.h
   include/IterativeSolvers/AMG/amg_aggregation.h
   include/IterativeSolvers/AMG/amg_strength.h
@@ -51,7 +51,10 @@ set(LINALGLIB_HEADERS_PUBLIC
 )
 
 set(LINALGLIB_SOURCE
+  src/Math/Host/math.cpp
+  src/Math/Device/math.cpp
   src/slaf.cpp
+  src/linalg_math.cpp
   src/EigenValueSolvers/power_iteration.cpp
   src/IterativeSolvers/AMG/amg_aggregation.cpp
   src/IterativeSolvers/AMG/amg_strength.cpp

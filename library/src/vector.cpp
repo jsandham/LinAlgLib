@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../include/vector.h"
-#include "../include/slaf.h"
+#include "../include/linalg_math.h"
 
 #include "trace.h"
 
@@ -36,17 +36,20 @@ using namespace linalg;
 template <typename T>
 vector<T>::vector()
 {
+    this->on_host = true;
 }
 
 template <typename T>
 vector<T>::vector(size_t size)
 {
+    this->on_host = true;
     hvec.resize(size);
 }
 
 template <typename T>
 vector<T>::vector(size_t size, T val)
 {
+    this->on_host = true;
     hvec.resize(size, val);
 }
 
@@ -91,21 +94,21 @@ template <typename T>
 void vector<T>::copy_from(const vector& x)
 {
     ROUTINE_TRACE("vector<T>::copy_from");
-    copy(hvec.data(), x.get_vec(), hvec.size());
+    copy(*this, x);
 }
 
 template <typename T>
 void vector<T>::zeros()
 {
     ROUTINE_TRACE("vector<T>::zeros");
-    fill_with_zeros(hvec.data(), hvec.size());
+    fill_with_zeros(*this);
 }
     
 template <typename T>
 void vector<T>::ones()
 {
     ROUTINE_TRACE("vector<T>::ones");
-    fill_with_ones(hvec.data(), hvec.size());
+    fill_with_ones(*this);
 }
 
 template <typename T>

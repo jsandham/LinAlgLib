@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
 
 #include "../AMG/amg.h"

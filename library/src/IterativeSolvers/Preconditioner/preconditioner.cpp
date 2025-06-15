@@ -25,6 +25,7 @@
 //********************************************************************************
 #include "../../../include/IterativeSolvers/Preconditioner/preconditioner.h"
 #include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
 #include "../../../include/IterativeSolvers/AMG/saamg.h"
 #include "math.h"
 #include <iostream>
@@ -61,7 +62,7 @@ void gauss_seidel_precond::build(const csr_matrix& A)
 void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // Solve M * x = rhs where M = L + D
-    forward_solve(this->A.get_row_ptr(), this->A.get_col_ind(), this->A.get_val(), rhs.get_vec(), x.get_vec(), this->A.get_m(), false);
+    forward_solve(this->A, rhs, x, false);
 }
 
 SOR_precond::SOR_precond(double omega) : omega(omega) {}
@@ -170,7 +171,7 @@ void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<dou
     }
 
     // Solve (D - F) * x = y
-    backward_solve(csr_row_ptr, csr_col_ind, csr_val, y.get_vec(), x.get_vec(), A.get_m(), false);
+    backward_solve(this->A, y, x, false);
 }
 
 ilu_precond::ilu_precond() {}
@@ -184,7 +185,8 @@ void ilu_precond::build(const csr_matrix& A)
     int numeric_zero = -1;
 
     // In place incomplete LU factorization
-    csrilu0(LU.get_m(), LU.get_n(), LU.get_nnz(), LU.get_row_ptr(), LU.get_col_ind(), LU.get_val(), &structural_zero, &numeric_zero);
+    csrilu0(LU, &structural_zero, &numeric_zero);
+    //csrilu0(LU.get_m(), LU.get_n(), LU.get_nnz(), LU.get_row_ptr(), LU.get_col_ind(), LU.get_val(), &structural_zero, &numeric_zero);
 
     //std::cout << "structural_zero: " << structural_zero << " numeric_zero: " << numeric_zero << std::endl;
 
@@ -198,10 +200,10 @@ void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LU.get_row_ptr(), LU.get_col_ind(), LU.get_val(), rhs.get_vec(), y.get_vec(), LU.get_m(), true); 
+    forward_solve(LU, rhs, y, true); 
 
     // Solve U * x = y
-    backward_solve(LU.get_row_ptr(), LU.get_col_ind(), LU.get_val(), y.get_vec(), x.get_vec(), LU.get_m(), false); 
+    backward_solve(LU, y, x, false); 
 }
 
 
@@ -223,7 +225,8 @@ void ic_precond::build(const csr_matrix& A)
     double* csr_val_LLT = LLT.get_val();
 
     // In place incomplete Cholesky factorization
-    csric0(m, n, nnz, csr_row_ptr_LLT, csr_col_ind_LLT, csr_val_LLT, &structural_zero, &numeric_zero);
+    csric0(LLT, &structural_zero, &numeric_zero);
+    //csric0(m, n, nnz, csr_row_ptr_LLT, csr_col_ind_LLT, csr_val_LLT, &structural_zero, &numeric_zero);
 
     // Fill inplace the upper triangular part with L^T
     for(int row = 0; row < m; row++)
@@ -266,8 +269,8 @@ void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LLT.get_row_ptr(), LLT.get_col_ind(), LLT.get_val(), rhs.get_vec(), y.get_vec(), LLT.get_m(), false); 
+    forward_solve(LLT, rhs, y, false); 
 
     // Solve L^T * x = y
-    backward_solve(LLT.get_row_ptr(), LLT.get_col_ind(), LLT.get_val(), y.get_vec(), x.get_vec(), LLT.get_m(), false); 
+    backward_solve(LLT, y, x, false); 
 }

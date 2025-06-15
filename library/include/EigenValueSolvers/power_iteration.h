@@ -27,7 +27,7 @@
 #ifndef __POWER_ITERATION_H__
 #define __POWER_ITERATION_H__
 
-#include "../linalglib_export.h"
+#include "../linalg_export.h"
 
 /*! \ingroup iterative_solvers
  * \brief Power iteration to find the dominant eigenvalue and corresponding eigenvector.

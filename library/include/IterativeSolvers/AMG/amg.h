@@ -31,7 +31,7 @@
 
 #include "amg_util.h"
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 #include "../../vector.h"
 #include "../../csr_matrix.h"
 

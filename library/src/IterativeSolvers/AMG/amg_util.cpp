@@ -25,16 +25,8 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg_util.h"
-#include "../../../include/slaf.h"
 
 #include "../../trace.h"
-
-void linalg::transpose(const csr_matrix &prolongation, csr_matrix &restriction)
-{
-    ROUTINE_TRACE("transpose");
-
-    prolongation.transpose(restriction);
-}
 
 void linalg::galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
 {

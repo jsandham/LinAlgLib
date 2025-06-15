@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../include/csr_matrix.h"
-#include "../include/slaf.h"
+#include "../include/linalg_math.h"
 
 #include "trace.h"
 
@@ -162,111 +162,34 @@ void csr_matrix::extract_diagonal(vector<double>& diag) const
     ROUTINE_TRACE("csr_matrix::extract_diagonal");
 
     diagonal(*this, diag);
-
-    //diagonal(csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), diag.get_vec(), m);
 }
 
 void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector");
 
-    matrix_vector_product(csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), x.get_vec(), y.get_vec(), m);
+    matrix_vector_product(*this, x, y);
 }
 
 void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
 
-    csrmv(m, n, nnz, 1.0, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(), x.get_vec(), 1.0, y.get_vec());
+    matrix_vector_product(1.0, *this, x, 1.0, y);
 }
 
 void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
 
-    // Compute C = A * B
-    double alpha = 1.0;
-    double beta = 0.0;
-
-    // Determine number of non-zeros in C = A * B product
-    C.m = m;
-    C.n = B.n;
-    C.nnz = 0;
-    C.csr_row_ptr.resize(C.m + 1, 0);
-
-    csrgemm_nnz(m, B.n, n, nnz, B.nnz, 0, alpha, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), B.csr_row_ptr.get_vec(),
-                B.csr_col_ind.get_vec(), beta, nullptr, nullptr, C.csr_row_ptr.get_vec(), &C.nnz);
-
-    C.csr_col_ind.resize(C.nnz);
-    C.csr_val.resize(C.nnz);
-
-    csrgemm(m, B.n, n, nnz, B.nnz, 0, alpha, csr_row_ptr.get_vec(), csr_col_ind.get_vec(), csr_val.get_vec(),
-            B.csr_row_ptr.get_vec(), B.csr_col_ind.get_vec(), B.csr_val.get_vec(), beta, nullptr, nullptr, nullptr,
-            C.csr_row_ptr.get_vec(), C.csr_col_ind.get_vec(), C.csr_val.get_vec());
+    matrix_matrix_product(C, *this, B);
 }
 
 void csr_matrix::transpose(csr_matrix& T) const
 {
-    ROUTINE_TRACE("csr_matrix::transpose");
+    ROUTINE_TRACE("csr_matrix::transpose_matrix");
 
-    T.resize(n, m, nnz);
-
-    // Fill arrays
-    for (size_t i = 0; i < T.get_m() + 1; i++)
-    {
-        T.csr_row_ptr[i] = 0;
-    }
-
-    for (size_t i = 0; i < T.get_nnz(); i++)
-    {
-        T.get_col_ind()[i] = -1;
-    }
-
-    // print_matrix("A");
-
-    for (int i = 0; i < m; i++)
-    {
-        int row_start = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
-
-        for (int j = row_start; j < row_end; j++)
-        {
-            T.get_row_ptr()[csr_col_ind[j] + 1]++;
-        }
-    }
-
-    // Exclusive scan on row pointer array
-    for (int i = 0; i < T.get_m(); i++)
-    {
-        T.get_row_ptr()[i + 1] += T.get_row_ptr()[i];
-    }
-
-    for (int i = 0; i < m; i++)
-    {
-        int row_start = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
-
-        for (int j = row_start; j < row_end; j++)
-        {
-            int col = csr_col_ind[j];
-            double val = csr_val[j];
-
-            int start = T.get_row_ptr()[col];
-            int end = T.get_row_ptr()[col + 1];
-
-            for (int k = start; k < end; k++)
-            {
-                if (T.get_col_ind()[k] == -1)
-                {
-                    T.get_col_ind()[k] = i;
-                    T.get_val()[k] = val;
-                    break;
-                }
-            }
-        }
-    }
-
-    // T.print_matrix("T");
+    transpose_matrix(*this, T);
 }
 
 // Structure to hold triplet (COO) format data
@@ -288,6 +211,12 @@ struct triplet
 bool csr_matrix::read_mtx(const std::string& filename)
 {
     ROUTINE_TRACE("csr_matrix::read_mtx");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to read from matrix market file" << std::endl;
+        return false;
+    }
 
     std::ifstream file(filename);
     if (!file.is_open()) 
@@ -490,6 +419,12 @@ bool csr_matrix::write_mtx(const std::string& filename)
 {
     ROUTINE_TRACE("csr_matrix::write_mtx");
 
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to write to matrix market file" << std::endl;
+        return false;
+    }
+
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
@@ -546,6 +481,12 @@ void csr_matrix::make_diagonally_dominant()
 {
     ROUTINE_TRACE("csr_matrix::make_diagonally_dominant");
 
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to make diagonally dominant" << std::endl;
+        return;
+    }
+
     assert(((int)csr_row_ptr.get_size() - 1) == m);
     assert(((int)csr_val.get_size()) == nnz);
 
@@ -600,6 +541,12 @@ void csr_matrix::make_diagonally_dominant()
 void csr_matrix::print_matrix(const std::string name) const
 {
     ROUTINE_TRACE("csr_matrix::print_matrix");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to print to console" << std::endl;
+        return;
+    }
 
     std::cout << name << std::endl;
     for (int i = 0; i < m; i++)

@@ -27,7 +27,7 @@
 #ifndef JACOBI_H
 #define JACOBI_H
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 
 #include "../iter_control.h"
 

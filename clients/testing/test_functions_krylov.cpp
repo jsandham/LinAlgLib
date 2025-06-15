@@ -136,15 +136,5 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     int norm_type = (solver_type == KrylovSolver::GMRES) ? 1 : 0;
 
-    int m = mat_A.get_m();
-    int n = mat_A.get_n();
-    int nnz = mat_A.get_nnz();
-    std::vector<int> csr_row_ptr(mat_A.get_row_ptr(), mat_A.get_row_ptr() + (m + 1));
-    std::vector<int> csr_col_ind(mat_A.get_col_ind(), mat_A.get_col_ind() + nnz);
-    std::vector<double> csr_val(mat_A.get_val(), mat_A.get_val() + nnz);
-    std::vector<double> b(vec_b.get_vec(), vec_b.get_vec() + m);
-    std::vector<double> x(vec_x.get_vec(), vec_x.get_vec() + n);
-    std::vector<double> init_x(vec_init_x.get_vec(), vec_init_x.get_vec() + n);
-
-    return check_solution(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz, b, x, init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
+    return check_solution(mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

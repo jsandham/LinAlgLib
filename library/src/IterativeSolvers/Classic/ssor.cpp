@@ -25,7 +25,8 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/Classic/ssor.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
+
 #include <iostream>
 #include <chrono>
 #include <vector>

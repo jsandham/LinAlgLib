@@ -28,7 +28,7 @@
 #include "../../../include/IterativeSolvers/AMG/amg_aggregation.h"
 #include "../../../include/IterativeSolvers/AMG/amg_strength.h"
 #include "../../../include/IterativeSolvers/AMG/amg_util.h"
-#include "../../../include/slaf.h"
+
 #include <algorithm>
 #include <assert.h>
 #include <cstring>

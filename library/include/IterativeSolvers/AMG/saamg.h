@@ -27,7 +27,7 @@
 #ifndef SAAMG_H
 #define SAAMG_H
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
 
 #include "amg.h"

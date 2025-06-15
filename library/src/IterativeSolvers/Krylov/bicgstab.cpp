@@ -25,7 +25,8 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/Krylov/bicgstab.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
+
 #include "math.h"
 #include <iostream>
 #include <vector>

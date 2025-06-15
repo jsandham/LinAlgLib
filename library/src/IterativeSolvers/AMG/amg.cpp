@@ -25,7 +25,8 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
+
 #include "math.h"
 #include <algorithm>
 #include <assert.h>

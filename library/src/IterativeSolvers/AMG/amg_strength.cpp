@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/amg_strength.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
@@ -42,8 +42,9 @@ void linalg::compute_strong_connections(const csr_matrix &A, double eps, vector<
     const double* csr_val_A = A.get_val();
 
     // Extract diagaonl
-    std::vector<double> diag(A.get_m());
-    diagonal(csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag.data(), A.get_m());
+    vector<double> diag(A.get_m());
+    A.extract_diagonal(diag);
+    // diagonal(csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag.data(), A.get_m());
 
     // double eps2 = eps * eps;
 

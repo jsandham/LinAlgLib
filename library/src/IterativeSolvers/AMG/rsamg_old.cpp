@@ -25,7 +25,7 @@
 //********************************************************************************
 
 #include "../../../include/IterativeSolvers/AMG/rsamg_old.h"
-#include "../../../include/slaf.h"
+#include "../../../include/linalg_math.h"
 #include "math.h"
 #include <iostream>
 #include <stdlib.h>
@@ -50,6 +50,57 @@ struct array
     int value;
     unsigned id;
 };
+
+
+//-------------------------------------------------------------------------------
+// error e = |b-A*x|
+//-------------------------------------------------------------------------------
+static double error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x, const double *b,
+             int n)
+{
+    double e = 0.0;
+    for (int j = 0; j < n; j++)
+    {
+        int row_start = csr_row_ptr[j];
+        int row_end = csr_row_ptr[j + 1];
+
+        double s = 0.0;
+        for (int i = row_start; i < row_end; i++)
+        {
+            s += csr_val[i] * x[csr_col_ind[i]];
+        }
+        e = e + (b[j] - s) * (b[j] - s);
+    }
+
+    return std::sqrt(e);
+}
+
+//-------------------------------------------------------------------------------
+// error e = |b-A*x| stops calculating error if error goes above tolerance
+//-------------------------------------------------------------------------------
+static double fast_error(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
+                  const double *b, int n, double tol)
+{
+    int j = 0;
+    double e = 0.0;
+    while (e < tol && j < n)
+    {
+        int row_start = csr_row_ptr[j];
+        int row_end = csr_row_ptr[j + 1];
+
+        double s = 0.0;
+        for (int i = row_start; i < row_end; i++)
+        {
+            s += csr_val[i] * x[csr_col_ind[i]];
+        }
+
+        e = e + (b[j] - s) * (b[j] - s);
+        j++;
+    }
+
+    return std::sqrt(e);
+}
+
 
 //-------------------------------------------------------------------------------
 // AMG main function

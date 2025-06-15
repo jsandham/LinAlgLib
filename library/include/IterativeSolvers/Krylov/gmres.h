@@ -27,7 +27,7 @@
 #ifndef GMRES_H
 #define GMRES_H
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 
 #include "../iter_control.h"
 #include "../Preconditioner/preconditioner.h"

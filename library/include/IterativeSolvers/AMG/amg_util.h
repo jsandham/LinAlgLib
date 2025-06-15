@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "../../linalglib_export.h"
+#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
 
 /*! \file
@@ -38,22 +38,6 @@
 
 namespace linalg
 {
-/*! \ingroup iterative_solvers
-* \brief Transpose a CSR matrix.
-*
-* \param prolongation The input CSR matrix to be transposed. Typically represents a prolongation operator.
-* \param restriction The output CSR matrix that will store the transpose of the input matrix. Typically represents a restriction operator.
-*
-* \details
-* This function computes the transpose of a given CSR matrix. If the input matrix
-* represents a prolongation operator (mapping from a coarser to a finer grid), its
-* transpose typically serves as a restriction operator (mapping from a finer to a
-* coarser grid) in multigrid methods. The dimensions of the output `restriction`
-* matrix will be swapped compared to the input `prolongation` matrix (i.e., if
-* `prolongation` is \f$m \times n\f$, then `restriction` will be \f$n \times m\f$).
-*/
-LINALGLIB_API void transpose(const csr_matrix &prolongation, csr_matrix &restriction);
-
 /*! \ingroup iterative_solvers
 * \brief Compute the Galerkin triple product for algebraic multigrid.
 *
