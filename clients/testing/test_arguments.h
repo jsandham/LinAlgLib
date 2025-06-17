@@ -39,7 +39,7 @@ namespace Testing
     {
         std::string filename;
         Solver solver;
-        Preconditioner precond;
+        preconditioner precond;
         linalg::Cycle cycle;
         linalg::Smoother smoother;
         int presmoothing;

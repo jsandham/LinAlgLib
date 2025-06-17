@@ -30,8 +30,8 @@
 
 #include "trace.h"
 
-#include "Math/Host/math.h"
-#include "Math/Device/math.h"
+#include "backend/host/math.h"
+#include "backend/device/math.h"
 
 // Compute y = alpha * x + y
 void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
@@ -74,9 +74,6 @@ void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<do
 // Compute y = A * x
 void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y)
 {
-    std::cout << "A.is_on_host(): " << A.is_on_host() << " x.is_on_host(): " << x.is_on_host() << " y.is_on_host(): " << y.is_on_host() << std::endl;
-
-
     if(A.is_on_host() != x.is_on_host() || A.is_on_host() != y.is_on_host())
     {
         std::cout << "Error (matrix_vector_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
@@ -128,6 +125,25 @@ void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr
     else
     {
         device::matrix_matrix_product(C, A, B);
+    }
+}
+
+// Compute C = A + B
+void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
+{
+    if(C.is_on_host() != A.is_on_host() || C.is_on_host() != B.is_on_host())
+    {
+        std::cout << "Error (matrix_matrix_addition): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(C.is_on_host())
+    {
+        host::matrix_matrix_addition(C, A, B);
+    }
+    else
+    {
+        device::matrix_matrix_addition(C, A, B);
     }
 }
 

@@ -37,7 +37,7 @@
  * @section intro_sec Introduction
  *
  * This library provides a comprehensive collection of iterative solvers for large linear systems of the form \f$\mathbf{Ax} = \mathbf{b}\f$.
- * It includes classical stationary iterative methods, Krylov subspace methods, and Algebraic Multigrid (AMG) techniques.
+ * It includes classical stationary iterative methods, krylov subspace methods, and Algebraic Multigrid (amg) techniques.
  * This documentation will guide you through the library's structure, how to get started, and the fundamental concepts behind the implemented solvers.
  *
  * @section toc Table of Contents
@@ -146,32 +146,32 @@
  * @section classical_solvers Classical Stationary Iterative Methods
  *
  * This module contains the following classical iterative solvers:
- * - \ref jacobi_solver : The Jacobi method.
- * - \ref gs_solver : The Gauss-Seidel method.
- * - \ref sor_solver : The Successive Over-Relaxation (SOR) method.
- * - \ref ssor_solver : The Symmetric Successive Over-Relaxation (SSOR) method.
- * - \ref sgs_solver : The Symmetric Gauss-Seidel method.
- * - \ref rich_solver : The Richardson iteration method.
+ * - \ref linalg::jacobi_solver : The Jacobi method.
+ * - \ref linalg::gs_solver : The Gauss-Seidel method.
+ * - \ref linalg::sor_solver : The Successive Over-Relaxation (SOR) method.
+ * - \ref linalg::ssor_solver : The Symmetric Successive Over-Relaxation (SSOR) method.
+ * - \ref linalg::sgs_solver : The Symmetric Gauss-Seidel method.
+ * - \ref linalg::rich_solver : The Richardson iteration method.
  *
  * These methods are characterized by their simplicity and iterative refinement of the solution based on splitting the system matrix.
  *
- * @section krylov_solvers Krylov Subspace Methods
+ * @section krylov_solvers krylov Subspace Methods
  *
- * This module implements powerful Krylov subspace methods, which often exhibit faster convergence for large-scale problems:
- * - \ref cg_solver : The Conjugate Gradient (CG) method (suitable for symmetric positive-definite matrices).
- * - \ref bicgstab_solver : The Bi-Conjugate Gradient Stabilized (BiCGSTAB) method (for non-symmetric matrices).
- * - \ref gmres_solver : The Generalized Minimal Residual (GMRES) method (for non-symmetric matrices).
+ * This module implements powerful krylov subspace methods, which often exhibit faster convergence for large-scale problems:
+ * - \ref linalg::cg_solver : The Conjugate Gradient (CG) method (suitable for symmetric positive-definite matrices).
+ * - \ref linalg::bicgstab_solver : The Bi-Conjugate Gradient Stabilized (BiCGSTAB) method (for non-symmetric matrices).
+ * - \ref linalg::gmres_solver : The Generalized Minimal Residual (GMRES) method (for non-symmetric matrices).
  *
- * These methods build an orthonormal basis for the Krylov subspace and find the approximate solution within that subspace that minimizes the residual.
+ * These methods build an orthonormal basis for the krylov subspace and find the approximate solution within that subspace that minimizes the residual.
  *
- * @section amg_solvers Algebraic Multigrid (AMG) Solvers
+ * @section amg_solvers Algebraic Multigrid (amg) Solvers
  *
  * This module features Algebraic Multigrid solvers, which are highly effective for solving large sparse linear systems arising from discretized partial differential equations:
- * - \ref uaamg_setup : AMG based on unsmoothed aggregation.
- * - \ref saamg_setup : AMG based on smoothed aggregation.
- * - \ref rsamg_setup : The classical Ruge-Stüben AMG algorithm.
+ * - \ref linalg::uaamg_setup : amg based on unsmoothed aggregation.
+ * - \ref linalg::saamg_setup : amg based on smoothed aggregation.
+ * - \ref linalg::rsamg_setup : The classical Ruge-Stüben amg algorithm.
  *
- * AMG methods use a hierarchy of coarser grids to accelerate the convergence of the iterative process. They involve inter-grid transfer operators (restriction and prolongation) and smoothing operations on each level.
+ * amg methods use a hierarchy of coarser grids to accelerate the convergence of the iterative process. They involve inter-grid transfer operators (restriction and prolongation) and smoothing operations on each level.
  *
  * @section concepts Fundamental Concepts
  *
@@ -182,9 +182,9 @@
  * - **Convergence:** An iterative method converges if the sequence of approximate solutions approaches the true solution as the number of iterations increases.
  * - **Residual:** The residual vector \f$\mathbf{r} = \mathbf{b} - \mathbf{Ax}\f$ measures the error in the current approximate solution \f$\mathbf{x}\f$. The goal of an iterative solver is to reduce the norm of the residual.
  * - **Splitting:** Classical iterative methods often rely on splitting the matrix \f$\mathbf{A}\f$ into components (e.g., \f$\mathbf{A} = \mathbf{D} - \mathbf{L} - \mathbf{U}\f$, where \f$\mathbf{D}\f$ is the diagonal, \f$\mathbf{L}\f$ is the lower triangular, and \f$\mathbf{U}\f$ is the upper triangular part).
- * - **Krylov Subspace:** For a matrix \f$\mathbf{A}\f$ and a starting vector \f$\mathbf{r}_0\f$, the \f$k\f$-th Krylov subspace is defined as \f$K_k(\mathbf{A}, \mathbf{r}_0) = \text{span}\{\mathbf{r}_0, \mathbf{Ar}_0, \mathbf{A}^2\mathbf{r}_0, ..., \mathbf{A}^{k-1}\mathbf{r}_0\}\f$. Krylov subspace methods seek an approximate solution in these subspaces.
+ * - **krylov Subspace:** For a matrix \f$\mathbf{A}\f$ and a starting vector \f$\mathbf{r}_0\f$, the \f$k\f$-th krylov subspace is defined as \f$K_k(\mathbf{A}, \mathbf{r}_0) = \text{span}\{\mathbf{r}_0, \mathbf{Ar}_0, \mathbf{A}^2\mathbf{r}_0, ..., \mathbf{A}^{k-1}\mathbf{r}_0\}\f$. krylov subspace methods seek an approximate solution in these subspaces.
  * - **Preconditioning:** Preconditioning involves transforming the original linear system into an equivalent system that is easier to solve by an iterative method, often by reducing the condition number of the matrix. This library may include options for preconditioning in some solvers.
- * - **Grid Hierarchy (Multigrid):** AMG methods utilize a hierarchy of coarser grids to accelerate convergence by efficiently reducing errors at different frequency ranges.
+ * - **Grid Hierarchy (Multigrid):** amg methods utilize a hierarchy of coarser grids to accelerate convergence by efficiently reducing errors at different frequency ranges.
  * - **Restriction and Prolongation:** These are operators used in multigrid methods to transfer vectors between different grid levels (coarsening and refinement).
  * - **Smoothing:** Smoothing operations (often a few iterations of a basic iterative method like Gauss-Seidel or Jacobi) are applied on each grid level to reduce high-frequency errors.
  */
@@ -195,35 +195,35 @@
 // CSR matrix
 #include "csr_matrix.h"
 
-// Classic Linear solvers
-#include "IterativeSolvers/Classic/jacobi.h"
-#include "IterativeSolvers/Classic/gauss_seidel.h"
-#include "IterativeSolvers/Classic/sor.h"
-#include "IterativeSolvers/Classic/symmetric_gauss_seidel.h"
-#include "IterativeSolvers/Classic/ssor.h"
-#include "IterativeSolvers/Classic/richardson.h"
+// classic Linear solvers
+#include "iterative_solvers/classic/jacobi.h"
+#include "iterative_solvers/classic/gauss_seidel.h"
+#include "iterative_solvers/classic/sor.h"
+#include "iterative_solvers/classic/symmetric_gauss_seidel.h"
+#include "iterative_solvers/classic/ssor.h"
+#include "iterative_solvers/classic/richardson.h"
 
-// Krylov Linear solvers
-#include "IterativeSolvers/Krylov/gmres.h"
-#include "IterativeSolvers/Krylov/cg.h"
-#include "IterativeSolvers/Krylov/bicgstab.h"
+// krylov Linear solvers
+#include "iterative_solvers/krylov/gmres.h"
+#include "iterative_solvers/krylov/cg.h"
+#include "iterative_solvers/krylov/bicgstab.h"
 
 // Algrbraic multi-grid solvers
-#include "IterativeSolvers/AMG/amg_aggregation.h"
-#include "IterativeSolvers/AMG/amg_strength.h"
-#include "IterativeSolvers/AMG/amg.h"
-#include "IterativeSolvers/AMG/rsamg.h"
-#include "IterativeSolvers/AMG/rsamg_old.h"
-#include "IterativeSolvers/AMG/saamg.h"
-#include "IterativeSolvers/AMG/uaamg.h"
+#include "iterative_solvers/amg/amg_aggregation.h"
+#include "iterative_solvers/amg/amg_strength.h"
+#include "iterative_solvers/amg/amg.h"
+#include "iterative_solvers/amg/rsamg.h"
+#include "iterative_solvers/amg/rsamg_old.h"
+#include "iterative_solvers/amg/saamg.h"
+#include "iterative_solvers/amg/uaamg.h"
 
 // Preconditioners
-#include "IterativeSolvers/Preconditioner/preconditioner.h"
+#include "iterative_solvers/preconditioner/preconditioner.h"
 
 // Eigenvalues solvers
-#include "EigenValueSolvers/power_iteration.h"
+#include "eigen_value_solvers/power_iteration.h"
 
 #include "linalg_math.h"
-#include "IterativeSolvers/iter_control.h"
+#include "iterative_solvers/iter_control.h"
 
 #endif

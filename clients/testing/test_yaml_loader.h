@@ -192,32 +192,32 @@ template <> struct convert<Testing::ClassicalSolver>
     }
 };
 
-template <> struct convert<Testing::Preconditioner>
+template <> struct convert<Testing::preconditioner>
 {
-    static Node encode(const Testing::Preconditioner &rhs)
+    static Node encode(const Testing::preconditioner &rhs)
     {
         Node node;
         switch (rhs)
         {
-        case Testing::Preconditioner::Jacobi:
+        case Testing::preconditioner::Jacobi:
             node = "Jacobi";
             break;
-        case Testing::Preconditioner::GaussSeidel:
+        case Testing::preconditioner::GaussSeidel:
             node = "GaussSeidel";
             break;
-        case Testing::Preconditioner::SOR:
+        case Testing::preconditioner::SOR:
             node = "SOR";
             break;
-        case Testing::Preconditioner::SymmGaussSeidel:
+        case Testing::preconditioner::SymmGaussSeidel:
             node = "SymmGaussSeidel";
             break;
-        case Testing::Preconditioner::IC:
+        case Testing::preconditioner::IC:
             node = "IC";
             break;
-        case Testing::Preconditioner::ILU:
+        case Testing::preconditioner::ILU:
             node = "ILU";
             break;
-        case Testing::Preconditioner::None:
+        case Testing::preconditioner::None:
             node = "None";
             break;
         }
@@ -225,36 +225,36 @@ template <> struct convert<Testing::Preconditioner>
         return node;
     }
 
-    static bool decode(const Node &node, Testing::Preconditioner &rhs)
+    static bool decode(const Node &node, Testing::preconditioner &rhs)
     {
         std::string type = node.as<std::string>();
         if (type == "Jacobi")
         {
-            rhs = Testing::Preconditioner::Jacobi;
+            rhs = Testing::preconditioner::Jacobi;
         }
         if (type == "GaussSeidel")
         {
-            rhs = Testing::Preconditioner::GaussSeidel;
+            rhs = Testing::preconditioner::GaussSeidel;
         }
         if (type == "SOR")
         {
-            rhs = Testing::Preconditioner::SOR;
+            rhs = Testing::preconditioner::SOR;
         }
         if (type == "SymmGaussSeidel")
         {
-            rhs = Testing::Preconditioner::SymmGaussSeidel;
+            rhs = Testing::preconditioner::SymmGaussSeidel;
         }
         else if (type == "IC")
         {
-            rhs = Testing::Preconditioner::IC;
+            rhs = Testing::preconditioner::IC;
         }
         else if (type == "ILU")
         {
-            rhs = Testing::Preconditioner::ILU;
+            rhs = Testing::preconditioner::ILU;
         }
         else if(type == "None")
         {
-            rhs = Testing::Preconditioner::None;
+            rhs = Testing::preconditioner::None;
         }
 
         return true;
@@ -407,7 +407,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string filepath
 
         std::vector<Testing::Solver> solvers = read_values<Testing::Solver>(category, "solver", root_node["Tests"], Testing::Solver::Jacobi);
         std::vector<std::string> matrices = read_values<std::string>(category, "matrix_file", root_node["Tests"], "");
-        std::vector<Testing::Preconditioner> preconds = read_values<Testing::Preconditioner>(category, "precond", root_node["Tests"], Testing::Preconditioner::None);
+        std::vector<Testing::preconditioner> preconds = read_values<Testing::preconditioner>(category, "precond", root_node["Tests"], Testing::preconditioner::None);
         std::vector<linalg::Cycle> cycles = read_values<linalg::Cycle>(category, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
         std::vector<linalg::Smoother> smoothers = read_values<linalg::Smoother>(category, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
         std::vector<int> presmoothings = read_values<int>(category, "presmoothing", root_node["Tests"], 1);

@@ -26,55 +26,54 @@
 
 set(LINALGLIB_HEADERS_PUBLIC
   include/linalg_math.h
-  include/EigenValueSolvers/power_iteration.h
-  include/IterativeSolvers/AMG/amg_aggregation.h
-  include/IterativeSolvers/AMG/amg_strength.h
-  include/IterativeSolvers/AMG/amg_util.h
-  include/IterativeSolvers/AMG/amg.h
-  include/IterativeSolvers/AMG/rsamg_old.h
-  include/IterativeSolvers/AMG/rsamg.h
-  include/IterativeSolvers/AMG/saamg.h
-  include/IterativeSolvers/AMG/uaamg.h
-  include/IterativeSolvers/Classic/gauss_seidel.h
-  include/IterativeSolvers/Classic/jacobi.h
-  include/IterativeSolvers/Classic/richardson.h
-  include/IterativeSolvers/Classic/sor.h
-  include/IterativeSolvers/Classic/ssor.h
-  include/IterativeSolvers/Classic/symmetric_gauss_seidel.h
-  include/IterativeSolvers/Krylov/bicgstab.h
-  include/IterativeSolvers/Krylov/gmres.h
-  include/IterativeSolvers/Krylov/cg.h
-  include/IterativeSolvers/Preconditioner/preconditioner.h
+  include/eigen_value_solvers/power_iteration.h
+  include/iterative_solvers/amg/amg_aggregation.h
+  include/iterative_solvers/amg/amg_strength.h
+  include/iterative_solvers/amg/amg_util.h
+  include/iterative_solvers/amg/amg.h
+  include/iterative_solvers/amg/rsamg_old.h
+  include/iterative_solvers/amg/rsamg.h
+  include/iterative_solvers/amg/saamg.h
+  include/iterative_solvers/amg/uaamg.h
+  include/iterative_solvers/classic/gauss_seidel.h
+  include/iterative_solvers/classic/jacobi.h
+  include/iterative_solvers/classic/richardson.h
+  include/iterative_solvers/classic/sor.h
+  include/iterative_solvers/classic/ssor.h
+  include/iterative_solvers/classic/symmetric_gauss_seidel.h
+  include/iterative_solvers/krylov/bicgstab.h
+  include/iterative_solvers/krylov/gmres.h
+  include/iterative_solvers/krylov/cg.h
+  include/iterative_solvers/preconditioner/preconditioner.h
   include/vector.h
   include/csr_matrix.h
   include/linalg.h
 )
 
 set(LINALGLIB_SOURCE
-  src/Math/Host/math.cpp
-  src/Math/Device/math.cpp
-  src/slaf.cpp
+  src/backend/host/math.cpp
+  src/backend/device/math.cpp
   src/linalg_math.cpp
-  src/EigenValueSolvers/power_iteration.cpp
-  src/IterativeSolvers/AMG/amg_aggregation.cpp
-  src/IterativeSolvers/AMG/amg_strength.cpp
-  src/IterativeSolvers/AMG/amg_util.cpp
-  src/IterativeSolvers/AMG/amg.cpp
-  src/IterativeSolvers/AMG/rsamg_old.cpp
-  src/IterativeSolvers/AMG/rsamg.cpp
-  src/IterativeSolvers/AMG/saamg.cpp
-  src/IterativeSolvers/AMG/uaamg.cpp
-  src/IterativeSolvers/Classic/gauss_seidel.cpp
-  src/IterativeSolvers/Classic/jacobi.cpp
-  src/IterativeSolvers/Classic/richardson.cpp
-  src/IterativeSolvers/Classic/sor.cpp
-  src/IterativeSolvers/Classic/ssor.cpp
-  src/IterativeSolvers/Classic/symmetric_gauss_seidel.cpp
-  src/IterativeSolvers/Krylov/bicgstab.cpp
-  src/IterativeSolvers/Krylov/gmres.cpp
-  src/IterativeSolvers/Krylov/cg.cpp
-  src/IterativeSolvers/Preconditioner/preconditioner.cpp
-  src/IterativeSolvers/iter_control.cpp
+  src/eigen_value_solvers/power_iteration.cpp
+  src/iterative_solvers/amg/amg_aggregation.cpp
+  src/iterative_solvers/amg/amg_strength.cpp
+  src/iterative_solvers/amg/amg_util.cpp
+  src/iterative_solvers/amg/amg.cpp
+  src/iterative_solvers/amg/rsamg_old.cpp
+  src/iterative_solvers/amg/rsamg.cpp
+  src/iterative_solvers/amg/saamg.cpp
+  src/iterative_solvers/amg/uaamg.cpp
+  src/iterative_solvers/classic/gauss_seidel.cpp
+  src/iterative_solvers/classic/jacobi.cpp
+  src/iterative_solvers/classic/richardson.cpp
+  src/iterative_solvers/classic/sor.cpp
+  src/iterative_solvers/classic/ssor.cpp
+  src/iterative_solvers/classic/symmetric_gauss_seidel.cpp
+  src/iterative_solvers/krylov/bicgstab.cpp
+  src/iterative_solvers/krylov/gmres.cpp
+  src/iterative_solvers/krylov/cg.cpp
+  src/iterative_solvers/preconditioner/preconditioner.cpp
+  src/iterative_solvers/iter_control.cpp
   src/vector.cpp
   src/csr_matrix.cpp
   src/perfetto_trace.cpp

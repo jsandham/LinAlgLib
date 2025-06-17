@@ -32,20 +32,8 @@
 
 int main()
 {
-    int m = 5;
-    int n = 5;
-    int nnz = 15;
-
-    //  4 -1  0  0 -1
-    // -1  4 -1  0  0
-    //  0 -1  4 -1  0
-    //  0  0 -1  4 -1
-    // -1  0  0 -1  4
-    std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
-    std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
-    std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
-    
-    linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    linalg::csr_matrix A;
+    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
 
     // Solution vector
     linalg::vector<double> x(A.get_m());
@@ -71,13 +59,13 @@ int main()
 
     std::cout << "iter: " << iter << std::endl;
 
-    // Print solution
-    std::cout << "x" << std::endl;
-    for (int i = 0; i < x.get_size(); i++)
-    {
-        std::cout << x[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // // Print solution
+    // std::cout << "x" << std::endl;
+    // for (int i = 0; i < x.get_size(); i++)
+    // {
+    //     std::cout << x[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     return 0;
 }

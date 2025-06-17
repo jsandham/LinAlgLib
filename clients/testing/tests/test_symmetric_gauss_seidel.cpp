@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(symmetric_gauss_seidel, IterativeSolvers, "tests/test_symmetric_gauss_seidel.yaml");
+INSTANTIATE_TEST(symmetric_gauss_seidel, iterative_solvers, "tests/test_symmetric_gauss_seidel.yaml");

@@ -70,7 +70,7 @@ namespace Testing
         RSAMG
     };
 
-    enum class Preconditioner
+    enum class preconditioner
     {
         Jacobi,
         GaussSeidel,
@@ -146,23 +146,23 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string PreconditionerToString(Preconditioner precond)
+    inline std::string PreconditionerToString(preconditioner precond)
     {
         switch(precond)
         {
-            case Preconditioner::Jacobi:
+            case preconditioner::Jacobi:
                 return "Jacobi";
-            case Preconditioner::GaussSeidel:
+            case preconditioner::GaussSeidel:
                 return "GaussSeidel";
-            case Preconditioner::SOR:
+            case preconditioner::SOR:
                 return "SOR";
-            case Preconditioner::SymmGaussSeidel:
+            case preconditioner::SymmGaussSeidel:
                 return "SymmGaussSeidel";
-            case Preconditioner::ILU:
+            case preconditioner::ILU:
                 return "ILU";
-            case Preconditioner::IC:
+            case preconditioner::IC:
                 return "IC";
-            case Preconditioner::None:
+            case preconditioner::None:
                 return "None";
         }
 

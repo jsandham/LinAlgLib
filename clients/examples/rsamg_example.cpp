@@ -33,7 +33,7 @@
 int main()
 {
     linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/ex5/ex5.mtx");
+    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
 
     // Solution vector
     linalg::vector<double> x(A.get_m());
@@ -47,18 +47,20 @@ int main()
     rsamg_setup(A, 10, hierachy);
 
     linalg::iter_control control;
+    control.rel_tol = 1e-08;
+    control.abs_tol = 1e-08;
 
     // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
     // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
     // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::SOR, control);
 
-    // Print solution
-    std::cout << "x" << std::endl;
-    for (int i = 0; i < x.get_size(); i++)
-    {
-    	std::cout << x[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // // Print solution
+    // std::cout << "x" << std::endl;
+    // for (int i = 0; i < x.get_size(); i++)
+    // {
+    // 	std::cout << x[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     return 0;
 }

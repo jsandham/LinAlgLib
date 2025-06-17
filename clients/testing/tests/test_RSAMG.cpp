@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(RSAMG, IterativeSolvers, "tests/test_RSAMG.yaml");
+INSTANTIATE_TEST(RSAMG, iterative_solvers, "tests/test_RSAMG.yaml");

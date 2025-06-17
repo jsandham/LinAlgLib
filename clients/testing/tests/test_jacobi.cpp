@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(jacobi, IterativeSolvers, "tests/test_jacobi.yaml");
+INSTANTIATE_TEST(jacobi, iterative_solvers, "tests/test_jacobi.yaml");

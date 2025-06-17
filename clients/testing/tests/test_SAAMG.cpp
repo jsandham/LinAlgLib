@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(SAAMG, IterativeSolvers, "tests/test_SAAMG.yaml");
+INSTANTIATE_TEST(SAAMG, iterative_solvers, "tests/test_SAAMG.yaml");

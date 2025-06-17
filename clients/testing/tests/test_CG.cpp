@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(CG, IterativeSolvers, "tests/test_CG.yaml");
+INSTANTIATE_TEST(CG, iterative_solvers, "tests/test_CG.yaml");

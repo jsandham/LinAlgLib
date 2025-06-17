@@ -73,25 +73,25 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
             break;
     }
 
-    preconditioner* p = nullptr;
+    linalg::preconditioner* p = nullptr;
     switch(arg.precond)
     {
-        case Testing::Preconditioner::Jacobi:
+        case Testing::preconditioner::Jacobi:
             p = new jacobi_precond;
             break;
-        case Testing::Preconditioner::GaussSeidel:
+        case Testing::preconditioner::GaussSeidel:
             p = new gauss_seidel_precond;
             break;
-        case Testing::Preconditioner::SOR:
+        case Testing::preconditioner::SOR:
             p = new SOR_precond(0.3);
             break;
-        case Testing::Preconditioner::SymmGaussSeidel:
+        case Testing::preconditioner::SymmGaussSeidel:
             p = new symmetric_gauss_seidel_precond;
             break;
-        case Testing::Preconditioner::ILU:
+        case Testing::preconditioner::ILU:
             p = new ilu_precond;
             break;
-        case Testing::Preconditioner::IC:
+        case Testing::preconditioner::IC:
             p = new ic_precond;
             break;
     }
