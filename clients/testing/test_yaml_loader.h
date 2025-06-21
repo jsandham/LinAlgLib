@@ -443,6 +443,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string filepath
                                         {
                                             for(size_t r = 0; r < omegas.size(); r++)
                                             {
+                                                tests[index].category = category;
                                                 tests[index].solver = solvers[i]; 
                                                 tests[index].filename = matrices[j]; 
                                                 tests[index].precond = preconds[k]; 

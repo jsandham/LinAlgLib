@@ -151,7 +151,7 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
         csr_matrix &P = hierarchy.prolongations[level];
         csr_matrix &R = hierarchy.restrictions[level];
 
-        A_fine.print_matrix("A_fine");
+        // A_fine.print_matrix("A_fine");
         
         vector<int> connections;
         vector<int64_t> aggregates;

@@ -932,19 +932,19 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
 
         compute_cfpoint_second_pass(S, cfpoints);
 
-        std::cout << "cfpoints (second pass)" << std::endl;
-        for(size_t i = 0; i < cfpoints.get_size(); i++)
-        {
-            std::cout << cfpoints[i] << " ";
-        }
-        std::cout << "" << std::endl;
+        // std::cout << "cfpoints (second pass)" << std::endl;
+        // for(size_t i = 0; i < cfpoints.get_size(); i++)
+        // {
+        //     std::cout << cfpoints[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
 
-        S.print_matrix("S");
+        // S.print_matrix("S");
 
         // compute interpolation matrix P
         direct_interpolation(A_fine, S, P, cfpoints);
 
-        P.print_matrix("Weight");
+        // P.print_matrix("Weight");
 
         if (P.get_n() == 0)
         {

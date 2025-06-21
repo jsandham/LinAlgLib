@@ -77,6 +77,7 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
               << " arg.smoother: " << SmootherToString(arg.smoother) << std::endl;
 
     iter_control control;
+    control.max_cycle = arg.max_iters;
 
     // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
     int cycles = amg_solve(hierachy, vec_x, vec_b, arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);

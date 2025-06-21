@@ -36,37 +36,37 @@
 #include "test_functions.h"
 #include "test_yaml_loader.h"
 
-#define DEFINE_FUNCTION_CLASS(FUNCTION)     \
-class FUNCTION : public testing::TestWithParam<Arguments>    \
+#define DEFINE_TEST_FIXTURE_CLASS(TEST_FIXTURE)     \
+class TEST_FIXTURE : public testing::TestWithParam<Arguments>    \
 {                                                            \
 protected:                                                   \
-    FUNCTION() {}                                            \
-    virtual ~FUNCTION() {}                                   \
+    TEST_FIXTURE() {}                                            \
+    virtual ~TEST_FIXTURE() {}                                   \
     virtual void SetUp() {}                                  \
     virtual void TearDown() {}                               \
 };
 
-#define DEFINE_TEST_P(FUNCTION)                               \
-TEST_P(FUNCTION, linear_solvers)                              \
+#define DEFINE_TEST_P(TEST_FIXTURE, TEST_NAME)                               \
+TEST_P(TEST_FIXTURE, TEST_NAME)                              \
 {                                                             \
     EXPECT_TRUE(test_dispatch(GetParam()));                   \
 }
 
-#define DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATEGORY, YAML_TEST_FILE)  \
+#define DEFINE_INSTANTIATE_TEST_SUITE_P(CATEGORY, TEST_FIXTURE, YAML_TEST_FILE)  \
 INSTANTIATE_TEST_SUITE_P(                                                    \
     CATEGORY,                                                                   \
-    FUNCTION,                                                                \
+    TEST_FIXTURE,                                                                \
     testing::ValuesIn(generate_tests(YAML_TEST_FILE)),                       \
-    [](const testing::TestParamInfo<FUNCTION::ParamType>& info) {            \
+    [](const testing::TestParamInfo<TEST_FIXTURE::ParamType>& info) {            \
         return info.param.generate_test_name();                              \
     });
 
-#define INSTANTIATE_TEST(FUNCTION, CATEGORY, YAML_TEST_FILE)             \
+#define INSTANTIATE_TEST(CATEGORY, TEST_FIXTURE, TEST_NAME, YAML_TEST_FILE)             \
 namespace Testing                                                        \
 {                                                                        \
-    DEFINE_FUNCTION_CLASS(FUNCTION);                                     \
-    DEFINE_TEST_P(FUNCTION);                                             \
-    DEFINE_INSTANTIATE_TEST_SUITE_P(FUNCTION, CATEGORY, YAML_TEST_FILE); \
+    DEFINE_TEST_FIXTURE_CLASS(TEST_FIXTURE);                                     \
+    DEFINE_TEST_P(TEST_FIXTURE, TEST_NAME);                                             \
+    DEFINE_INSTANTIATE_TEST_SUITE_P(CATEGORY, TEST_FIXTURE, YAML_TEST_FILE); \
 }
 
 #endif

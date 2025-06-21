@@ -37,6 +37,7 @@ namespace Testing
 {
     struct Arguments
     {
+        std::string category;
         std::string filename;
         Solver solver;
         preconditioner precond;
@@ -90,7 +91,8 @@ namespace Testing
                 }
             }
             
-            std::string name = SolverToString(this->solver) + "_" 
+            std::string name = category + "_"
+                             + SolverToString(this->solver) + "_" 
                              + PreconditionerToString(this->precond) + "_"
                              + CycleToString(this->cycle) + "_"
                              + SmootherToString(this->smoother) + "_"
