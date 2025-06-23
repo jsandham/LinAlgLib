@@ -27,7 +27,6 @@
 #include "../../../include/iterative_solvers/krylov/bicgstab.h"
 #include "../../../include/linalg_math.h"
 
-#include "math.h"
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -83,10 +82,11 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         // v = Ap
         A.multiply_by_vector(v, p);
 
+        // scalar<double> alpha = rho / dot_product(r0, v);
         double alpha = rho / dot_product(r0, v);
 
         // r = r - alpha * v
-        axpy(-alpha, v, r);
+        axpy(-1.0 * alpha, v, r);
 
         // t = A * r
         A.multiply_by_vector(t, r);
@@ -101,15 +101,13 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
             break;
         }
         double omega = omega1 / omega2;
+        //scalar<double> omega = omega1 / omega2;
 
         // x = x + alpha * p + omega * r
-        for (int i = 0; i < A.get_m(); i++)
-        {
-            x[i] = x[i] + alpha * p[i] + omega * r[i];
-        }
+        axpbypgz(alpha, p, omega, r, 1.0, x);
 
         // r = r - omega * t
-        axpy(-omega, t, r);
+        axpy(-1.0 * omega, t, r);
 
         double res_norm = norm_inf(r);
 
@@ -123,10 +121,8 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
         double beta = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * v)
-        for (int i = 0; i < A.get_m(); i++)
-        {
-            p[i] = r[i] + beta * (p[i] - omega * v[i]);
-        }
+        // p = r - beta * omega * v + beta * p
+        axpbypgz(1.0, r, -1.0 * beta * omega, v, beta, p);
 
         iter++;
     }
@@ -169,10 +165,11 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         // q = A*z
         A.multiply_by_vector(q, z);
 
+        // scalar<double> alpha = rho / dot_product(r0, q);
         double alpha = rho / dot_product(r0, q);
         
         // r = r - alpha * q
-        axpy(-alpha, q, r);
+        axpy(-1.0 * alpha, q, r);
 
         // M * v = r
         precond->solve(r, v);
@@ -192,13 +189,10 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         double omega = omega1 / omega2;
 
         // x = x + alpha * z + omega * v
-        for (int i = 0; i < A.get_m(); i++)
-        {
-            x[i] = x[i] + alpha * z[i] + omega * v[i];
-        }
+        axpbypgz(alpha, z, omega, v, 1.0, x);
 
         // r = r - omega * t
-        axpy(-omega, t, r);
+        axpy(-1.0 * omega, t, r);
 
         double res_norm = norm_inf(r);
 
@@ -212,10 +206,8 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
         double beta = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * q)
-        for (int i = 0; i < A.get_m(); i++)
-        {
-            p[i] = r[i] + beta * (p[i] - omega * q[i]);
-        }
+        // p = r - beta * omega * q + beta * p
+        axpbypgz(1.0, r, -1.0 * beta * omega, q, beta, p);
 
         // M * z = p
         precond->solve(p, z);

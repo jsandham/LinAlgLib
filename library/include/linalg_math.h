@@ -30,6 +30,7 @@
 #include <string>
 
 #include "linalg_export.h"
+#include "scalar.h"
 #include "vector.h"
 #include "csr_matrix.h"
 
@@ -48,6 +49,7 @@ namespace linalg
      * it contains the result of the DAXPY operation.
      */
     LINALGLIB_API void axpy(double alpha, const vector<double>& x, vector<double>& y);
+    LINALGLIB_API void axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y);
 
     /**
      * @brief Computes the DAXPBY operation: \f$y = \alpha \cdot x + \beta \cdot y\f$.
@@ -59,6 +61,23 @@ namespace linalg
      * it contains the result of the DAXPBY operation.
      */
     LINALGLIB_API void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
+    LINALGLIB_API void axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y);
+
+
+
+    /**
+     * @brief Computes the DAXPBYPGZ operation: \f$z = \alpha \cdot x + \beta \cdot y + \gamma \cdot z\f$.
+     *
+     * @param alpha The scalar multiplier \f$\alpha\f$.
+     * @param x The input vector \f$x\f$.
+     * @param beta The scalar multiplier \f$\beta\f$.
+     * @param y The input vector \f$y\f$.
+     * @param gamma The scalar multiplier \f$\gamma\f$.
+     * @param z The input/output vector \f$z\f$. On input, it contains the initial values; on output,
+     * it contains the result of the DAXPBYPGZ operation.
+     */
+    LINALGLIB_API void axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z);
+    LINALGLIB_API void axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z);
 
     /**
      * @brief Computes the matrix-vector product: \f$y = A \cdot x\f$.
@@ -185,6 +204,7 @@ namespace linalg
      * @return The double-precision floating-point result of the dot product.
      */
     LINALGLIB_API double dot_product(const vector<double>& x, const vector<double>& y);
+    LINALGLIB_API void dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result);
 
     /**
      * @brief Computes the residual vector for a linear system: \f$res = b - A \cdot x\f$.

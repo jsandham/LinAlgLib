@@ -30,6 +30,7 @@
 #include <string>
 
 #include "linalg_export.h"
+#include "scalar.h"
 #include "vector.h"
 #include "csr_matrix.h"
 
@@ -40,8 +41,20 @@ namespace linalg
         // Compute y = alpha * x + y
         void axpy(double alpha, const vector<double>& x, vector<double>& y);
 
+        // Compute y = alpha * x + y
+        void axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y);
+
         // Compute y = alpha * x + beta * y
         void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
+
+        // Compute y = alpha * x + beta * y
+        void axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y);
+
+        // Compute z = alpha * x + beta * y + gamma * z
+        void axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z);
+
+        // Compute z = alpha * x + beta * y + gamma * z
+        void axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z);
 
         // Compute y = A * x
         void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y);
@@ -72,6 +85,9 @@ namespace linalg
 
         // Dot product
         double dot_product(const vector<double>& x, const vector<double>& y);
+
+        // Dot product
+        void dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result);
 
         // Compute residual
         void compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res);

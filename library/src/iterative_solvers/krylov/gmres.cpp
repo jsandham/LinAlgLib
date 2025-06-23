@@ -27,7 +27,6 @@
 #include "../../../include/iterative_solvers/krylov/gmres.h"
 #include "../../../include/linalg_math.h"
 
-#include "math.h"
 #include <iostream>
 #include <vector>
 #include <chrono>

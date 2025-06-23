@@ -32,6 +32,7 @@
 #include "../iter_control.h"
 #include "../preconditioner/preconditioner.h"
 
+#include "../../scalar.h"
 #include "../../vector.h"
 #include "../../csr_matrix.h"
 
@@ -193,6 +194,11 @@ private:
     vector<double> p;
     /*! \brief Residual vector in the CG algorithm. */
     vector<double> res;
+
+    //scalar<double> old_gamma;
+    //scalar<double> gamma;
+    //scalar<double> alpha;
+    //scalar<double> beta;
 
     /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.

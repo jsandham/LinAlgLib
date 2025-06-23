@@ -27,7 +27,6 @@
 #include "../../../include/iterative_solvers/amg/amg.h"
 #include "../../../include/linalg_math.h"
 
-#include "math.h"
 #include <algorithm>
 #include <assert.h>
 #include <iostream>

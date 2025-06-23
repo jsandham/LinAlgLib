@@ -24,7 +24,7 @@
 //
 //********************************************************************************
 #include <iostream>
-#include "math.h"
+#include "device_math.h"
 
 // Compute y = alpha * x + y
 void linalg::device::axpy(double alpha, const vector<double>& x, vector<double>& y)
@@ -32,28 +32,52 @@ void linalg::device::axpy(double alpha, const vector<double>& x, vector<double>&
     std::cout << "Error: axpy on device not implemented" << std::endl;
 }
 
+// Compute y = alpha * x + y
+void linalg::device::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
+{
+    std::cout << "Error: axpy on device not implemented" << std::endl;
+}
+
 // Compute y = alpha * x + beta * y
 void linalg::device::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: axpyby on device not implemented" << std::endl;
+}
+
+// Compute y = alpha * x + beta * y
+void linalg::device::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
+{
+    std::cout << "Error: axpyby on device not implemented" << std::endl;
+}
+
+// Compute z = alpha * x + beta * y + gamma * z
+void linalg::device::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
+{
+    std::cout << "Error: axpbypgz on device not implemented" << std::endl;
+}
+
+// Compute z = alpha * x + beta * y + gamma * z
+void linalg::device::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
+{
+    std::cout << "Error: axpbypgz on device not implemented" << std::endl;
 }
 
 // Compute y = A * x
 void linalg::device::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
 }
 
 // Compute y = alpha * A * x + beta * y
 void linalg::device::matrix_vector_product(double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>&y)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
 }
 
 // Compute C = A * B
 void linalg::device::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: matrix_matrix_product on device not implemented" << std::endl;
 }
 
 // Compute C = A + B
@@ -89,45 +113,52 @@ void linalg::device::backward_solve(const csr_matrix& A, const vector<double>& b
 // Transpose matrix
 void linalg::device::transpose_matrix(const csr_matrix &A, csr_matrix &transposeA)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: transpose_matrix on device not implemented" << std::endl;
 }
 
 // Dot product
 double linalg::device::dot_product(const vector<double>& x, const vector<double>& y)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: dot_product on device not implemented" << std::endl;
     return 0.0;
+}
+
+// Dot product
+void linalg::device::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
+{
+    std::cout << "Error: dot_product on device not implemented" << std::endl;
+    *(result.get_val()) = 0.0;
 }
 
 // Compute residual
 void linalg::device::compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: compute_residual on device not implemented" << std::endl;
 }
 
 // Exclusive scan
 void linalg::device::exclusize_scan(vector<double>& x)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: exclusize_scan on device not implemented" << std::endl;
 }
 
 // Extract diagonal entries
 void linalg::device::diagonal(const csr_matrix& A, vector<double>& d)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: diagonal on device not implemented" << std::endl;
 }
 
 // Euclidean norm
 double linalg::device::norm_euclid(const vector<double>& array)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: norm_euclid on device not implemented" << std::endl;
     return 0.0;
 }
 
 // Infinity norm
 double linalg::device::norm_inf(const vector<double>& array)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    std::cout << "Error: norm_inf on device not implemented" << std::endl;
     return 0.0;
 }
 

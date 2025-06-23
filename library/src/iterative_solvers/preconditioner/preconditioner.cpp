@@ -26,7 +26,7 @@
 #include "../../../include/iterative_solvers/preconditioner/preconditioner.h"
 #include "../../../include/linalg_math.h"
 #include "../../../include/iterative_solvers/amg/saamg.h"
-#include "math.h"
+
 #include <iostream>
 #include <vector>
 

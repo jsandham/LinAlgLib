@@ -28,7 +28,6 @@
 #include "../../../include/linalg_math.h"
 
 #include <iostream>
-#include <math.h>
 #include <vector>
 #include <chrono>
 

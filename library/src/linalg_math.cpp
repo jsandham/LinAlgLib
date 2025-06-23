@@ -30,13 +30,31 @@
 
 #include "trace.h"
 
-#include "backend/host/math.h"
-#include "backend/device/math.h"
+#include "backend/host/host_math.h"
+#include "backend/device/device_math.h"
 
 // Compute y = alpha * x + y
 void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
     if(x.is_on_host() != y.is_on_host())
+    {
+        std::cout << "Error (axpy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(x.is_on_host())
+    {
+        host::axpy(alpha, x, y);
+    }
+    else
+    {
+        device::axpy(alpha, x, y);
+    }
+}
+
+void linalg::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
+{
+    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != alpha.is_on_host())
     {
         std::cout << "Error (axpy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
         return;
@@ -68,6 +86,63 @@ void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<do
     else
     {
         device::axpby(alpha, x, beta, y);
+    }
+}
+void linalg::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
+{
+    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != alpha.is_on_host() || x.is_on_host() != beta.is_on_host())
+    {
+        std::cout << "Error (axpby): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(x.is_on_host())
+    {
+        host::axpby(alpha, x, beta, y);
+    }
+    else
+    {
+        device::axpby(alpha, x, beta, y);
+    }
+}
+
+// Compute z = alpha * x + beta * y + gamma * z
+void linalg::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
+{
+    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != z.is_on_host())
+    {
+        std::cout << "Error (axpbypgz): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(x.is_on_host())
+    {
+        host::axpbypgz(alpha, x, beta, y, gamma, z);
+    }
+    else
+    {
+        device::axpbypgz(alpha, x, beta, y, gamma, z);
+    }
+}
+void linalg::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
+{
+    if(x.is_on_host() != y.is_on_host() || 
+       x.is_on_host() != z.is_on_host() ||
+       x.is_on_host() != alpha.is_on_host() || 
+       x.is_on_host() != beta.is_on_host() ||
+       x.is_on_host() != gamma.is_on_host())
+    {
+        std::cout << "Error (axpbypgz): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(x.is_on_host())
+    {
+        host::axpbypgz(alpha, x, beta, y, gamma, z);
+    }
+    else
+    {
+        device::axpbypgz(alpha, x, beta, y, gamma, z);
     }
 }
 
@@ -246,6 +321,27 @@ double linalg::dot_product(const vector<double>& x, const vector<double>& y)
     else
     {
         return device::dot_product(x, y);
+    }
+}
+
+
+
+// Dot product
+void linalg::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
+{
+    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != result.is_on_host())
+    {
+        std::cout << "Error (dot_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
+        return;
+    }
+
+    if(x.is_on_host())
+    {
+        host::dot_product(x, y, result);
+    }
+    else
+    {
+        device::dot_product(x, y, result);
     }
 }
 

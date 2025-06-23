@@ -189,6 +189,9 @@
  * - **Smoothing:** Smoothing operations (often a few iterations of a basic iterative method like Gauss-Seidel or Jacobi) are applied on each grid level to reduce high-frequency errors.
  */
 
+// Scalar
+#include "scalar.h"
+
 // Vector
 #include "vector.h"
 

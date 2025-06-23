@@ -29,7 +29,7 @@
 #include <iostream>
 #include <assert.h>
 
-#include "math.h"
+#include "host_math.h"
 #include "../../trace.h"
 
 namespace linalg
@@ -119,6 +119,22 @@ static void host_axpby(int n, double alpha, const double* x, double beta, double
         {
             y[i] = alpha * x[i] + beta * y[i];
         }
+    }
+}
+
+//-------------------------------------------------------------------------------
+// Compute z = alpha * x + beta * y + gamma * z
+//-------------------------------------------------------------------------------
+static void host_axpbypgz(int n, double alpha, const double* x, double beta, const double* y, double gamma, double* z)
+{
+    ROUTINE_TRACE("host_axpbypgz");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+    for (int i = 0; i < n; i++)
+    {
+        z[i] = alpha * x[i] + beta * y[i] + gamma * z[i];
     }
 }
 
@@ -992,12 +1008,44 @@ void linalg::host::axpy(double alpha, const vector<double>& x, vector<double>& y
     host_axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
+// Compute y = alpha * x + y
+void linalg::host::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
+{
+    ROUTINE_TRACE("linalg::host::axpy");
+
+    host_axpy(x.get_size(), *alpha.get_val(), x.get_vec(), y.get_vec());
+}
+
 // Compute y = alpha * x + beta * y
 void linalg::host::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
     ROUTINE_TRACE("linalg::host::axpby");
 
     host_axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
+}
+
+// Compute y = alpha * x + beta * y
+void linalg::host::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
+{
+    ROUTINE_TRACE("linalg::host::axpby");
+
+    host_axpby(x.get_size(), *alpha.get_val(), x.get_vec(), *beta.get_val(), y.get_vec());
+}
+
+// Compute z = alpha * x + beta * y + gamma * z
+void linalg::host::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
+{
+    ROUTINE_TRACE("linalg::host::axpbypgz");
+
+    host_axpbypgz(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
+}
+
+// Compute z = alpha * x + beta * y + gamma * z
+void linalg::host::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
+{
+    ROUTINE_TRACE("linalg::host::axpbypgz");
+
+    host_axpbypgz(x.get_size(), *alpha.get_val(), x.get_vec(), *beta.get_val(), y.get_vec(), *gamma.get_val(), z.get_vec());
 }
 
 // Compute y = A * x
@@ -1171,6 +1219,14 @@ double linalg::host::dot_product(const vector<double>& x, const vector<double>& 
     ROUTINE_TRACE("linalg::host::dot_product");
 
     return host_dot_product(x.get_vec(), y.get_vec(), x.get_size());
+}
+
+// Dot product
+void linalg::host::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
+{
+    ROUTINE_TRACE("linalg::host::dot_product");
+
+    *(result.get_val()) = host_dot_product(x.get_vec(), y.get_vec(), x.get_size());
 }
 
 // Compute residual

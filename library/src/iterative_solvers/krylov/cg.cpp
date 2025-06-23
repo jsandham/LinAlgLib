@@ -27,7 +27,6 @@
 #include "../../../include/iterative_solvers/krylov/cg.h"
 #include "../../../include/linalg_math.h"
 
-#include "math.h"
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -93,13 +92,13 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
 
         // z = A * p and alpha = (r, r) / (A * p, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p);
+        scalar<double> alpha = gamma / dot_product(z, p);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
 
         // update res = res - alpha * z
-        axpy(-alpha, z, res);
+        axpy(-1.0 * alpha, z, res);
 
         double res_norm = norm_inf(res);
 
@@ -111,10 +110,10 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
         // find beta
         double old_gamma = gamma;
         gamma = dot_product(res, res);
-        double beta = gamma / old_gamma;
+        scalar<double> beta = gamma / old_gamma;
 
         // update p = res + beta * p
-        axpby(1.0, res, beta, p);
+        axpby(scalar<double>::one(), res, beta, p);
 
         iter++;
     }
@@ -174,13 +173,14 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
 
         // z = A * p and alpha = (z, r) / (Ap, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p);
+        scalar<double> alpha = gamma / dot_product(z, p);
+        // scalar<double> neg_alpha = -1.0 * alpha;
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
 
         // update res = res - alpha * z
-        axpy(-alpha, z, res);
+        axpy(-1.0 * alpha, z, res);
 
         double res_norm = norm_inf(res);
 
@@ -195,10 +195,10 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
         // find beta
         double old_gamma = gamma;
         gamma = dot_product(z, res);
-        double beta = gamma / old_gamma;
+        scalar<double> beta = gamma / old_gamma;
 
         // update p = z + beta * p
-        axpby(1.0, z, beta, p);
+        axpby(scalar<double>::one(), z, beta, p);
 
         iter++;
     }

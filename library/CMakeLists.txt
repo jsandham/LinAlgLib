@@ -45,14 +45,17 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/iterative_solvers/krylov/gmres.h
   include/iterative_solvers/krylov/cg.h
   include/iterative_solvers/preconditioner/preconditioner.h
+  include/scalar.h
   include/vector.h
   include/csr_matrix.h
   include/linalg.h
 )
 
 set(LINALGLIB_SOURCE
-  src/backend/host/math.cpp
-  src/backend/device/math.cpp
+  src/backend/host/host_math.cpp
+  src/backend/device/device_math.cpp
+  src/backend/host/host_scalar.cpp
+  src/backend/device/device_scalar.cpp
   src/linalg_math.cpp
   src/eigen_value_solvers/power_iteration.cpp
   src/iterative_solvers/amg/amg_aggregation.cpp
@@ -74,12 +77,53 @@ set(LINALGLIB_SOURCE
   src/iterative_solvers/krylov/cg.cpp
   src/iterative_solvers/preconditioner/preconditioner.cpp
   src/iterative_solvers/iter_control.cpp
+  src/scalar.cpp
   src/vector.cpp
   src/csr_matrix.cpp
   src/perfetto_trace.cpp
 )
 
-add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
+set(LINALGLIB_CUDA_SOURCE 
+  src/backend/device/device_math.cpp
+  src/backend/device/device_scalar.cpp)
+
+# Provide an option for the user to enable CUDA
+option(ENABLE_CUDA "Enable CUDA compilation if NVIDIA CUDA Toolkit is available" ON)
+
+set(BUILD_WITH_CUDA FALSE CACHE BOOL "Internal flag: Project is building with CUDA support" INTERNAL)
+
+# Conditionally enable the CUDA language
+if(ENABLE_CUDA)
+    # The robust way to check for language support before enabling is via CheckLanguage.
+    include(CheckLanguage)
+    check_language(CUDA) # This sets CMAKE_CUDA_COMPILER if nvcc is found
+
+    if(CMAKE_CUDA_COMPILER)
+        message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}.")
+        enable_language(CUDA) # Now actually enable it
+
+         set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "Target CUDA architectures for project")
+
+        find_package(CUDAToolkit QUIET)
+        if (CUDAToolkit_FOUND)
+            message(STATUS "CUDA toolkit found: ${CUDAToolkit_FOUND}. Enabling CUDA support.")
+            set(BUILD_WITH_CUDA TRUE CACHE BOOL "Internal flag: Project is building with CUDA support" INTERNAL)
+        endif()
+    endif()
+endif()
+
+if(BUILD_WITH_CUDA)
+  add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC} ${LINALGLIB_CUDA_SOURCE})
+
+  # Link necessary CUDA libraries for the CUDA-enabled library
+  # CUDA::cudart is often implicitly linked by nvcc but explicit is clearer.
+  target_link_libraries(linalglib PRIVATE CUDA::cudart)
+
+  # Add a definition for C++ code to know if CUDA is enabled within the library
+  target_compile_definitions(linalglib PRIVATE LINALGLIB_HAS_CUDA)
+else()
+  add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
+endif()
 
 if (WIN32)
   target_link_libraries(linalglib PUBLIC perfetto ws2_32)

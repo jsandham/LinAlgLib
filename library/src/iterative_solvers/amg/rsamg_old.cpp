@@ -26,7 +26,7 @@
 
 #include "../../../include/iterative_solvers/amg/rsamg_old.h"
 #include "../../../include/linalg_math.h"
-#include "math.h"
+
 #include <iostream>
 #include <stdlib.h>
 
