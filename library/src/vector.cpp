@@ -94,21 +94,21 @@ template <typename T>
 void vector<T>::copy_from(const vector& x)
 {
     ROUTINE_TRACE("vector<T>::copy_from");
-    copy(*this, x);
+    copy<T>(*this, x);
 }
 
 template <typename T>
 void vector<T>::zeros()
 {
     ROUTINE_TRACE("vector<T>::zeros");
-    fill_with_zeros(*this);
+    fill<T>(*this, (T)0);
 }
     
 template <typename T>
 void vector<T>::ones()
 {
     ROUTINE_TRACE("vector<T>::ones");
-    fill_with_ones(*this);
+    fill<T>(*this, (T)1);
 }
 
 template <typename T>

@@ -236,3 +236,29 @@ int bicgstab_solver::solve(const csr_matrix& A, vector<double>& x, const vector<
         return solve_precond(A, x, b, precond, control);
     }
 }
+
+void bicgstab_solver::move_to_host()
+{
+    ROUTINE_TRACE("bicgstab_solver::move_to_host");
+    
+    r.move_to_host();
+    r0.move_to_host();
+    p.move_to_host();
+    v.move_to_host();
+    t.move_to_host();
+    z.move_to_host();
+    q.move_to_host();
+}
+
+void bicgstab_solver::move_to_device()
+{
+    ROUTINE_TRACE("bicgstab_solver::move_to_device");
+
+    r.move_to_device();
+    r0.move_to_device();
+    p.move_to_device();
+    v.move_to_device();
+    t.move_to_device();
+    z.move_to_device();
+    q.move_to_device();
+}

@@ -258,49 +258,30 @@ namespace linalg
      */
     LINALGLIB_API double norm_inf(const vector<double>& array);
 
-    // Fill array with zeros
-    LINALGLIB_API void fill_with_zeros(vector<uint32_t> &vec);
-    LINALGLIB_API void fill_with_zeros(vector<int32_t> &vec);
-    LINALGLIB_API void fill_with_zeros(vector<int64_t> &vec);
-    LINALGLIB_API void fill_with_zeros(vector<double> &vec);
+    /**
+     * @brief Fills a vector with a specified value.
+     *
+     * This function assigns the given value to every element in the input vector.
+     *
+     * @tparam T Type of the elements in the vector.
+     * @param vec Reference to the vector to fill.
+     * @param value The value to assign to each element of the vector.
+     */
+    template <typename T>
+    LINALGLIB_API void fill(vector<T> &vec, T value);
 
-    // Fill array with ones
-    LINALGLIB_API void fill_with_ones(vector<uint32_t> &vec);
-    LINALGLIB_API void fill_with_ones(vector<int32_t> &vec);
-    LINALGLIB_API void fill_with_ones(vector<int64_t> &vec);
-    LINALGLIB_API void fill_with_ones(vector<double> &vec);
-
-    // Copy array
-    LINALGLIB_API void copy(vector<uint32_t> &dest, const vector<uint32_t> &src);
-    LINALGLIB_API void copy(vector<int32_t> &dest, const vector<int32_t> &src);
-    LINALGLIB_API void copy(vector<int64_t> &dest, const vector<int64_t> &src);
-    LINALGLIB_API void copy(vector<double> &dest, const vector<double> &src);
-
-
-    // /**
-    //  * @brief Fills a vector with zeros.
-    //  * @tparam T The type of elements in the vector.
-    //  * @param vec The vector to be filled with zeros.
-    //  */
-    // template<typename T>
-    // LINALGLIB_API void fill_with_zeros(vector<T>& vec);
-
-    // /**
-    //  * @brief Fills a vector with ones.
-    //  * @tparam T The type of elements in the vector.
-    //  * @param vec The vector to be filled with ones.
-    //  */
-    // template<typename T>
-    // LINALGLIB_API void fill_with_ones(vector<T>& vec);
-
-    // /**
-    //  * @brief Copies the elements from a source vector to a destination vector.
-    //  * @tparam T The type of elements in the vectors.
-    //  * @param dest The destination vector.
-    //  * @param src The source vector from which to copy.
-    //  */
-    // template<typename T>
-    // LINALGLIB_API void copy(vector<T>& dest, const vector<T>& src);
+    /**
+     * @brief Copies the contents of one vector into another.
+     *
+     * This function assigns the contents of the source vector to the destination vector.
+     * The destination vector will be resized to match the source vector's size.
+     *
+     * @tparam T Type of the elements in the vector.
+     * @param dest Reference to the destination vector that will receive the copied elements.
+     * @param src Constant reference to the source vector from which elements will be copied.
+     */
+    template <typename T>
+    LINALGLIB_API void copy(vector<T> &dest, const vector<T> &src);
 }
 
 #endif

@@ -33,553 +33,372 @@
 #include "backend/host/host_math.h"
 #include "backend/device/device_math.h"
 
-// Compute y = alpha * x + y
-void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
+enum class backend
 {
-    if(x.is_on_host() != y.is_on_host())
-    {
-        std::cout << "Error (axpy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
+    host,
+    device,
+    invalid
+};
 
-    if(x.is_on_host())
+template<typename T, typename... Rest>
+backend determine_backend(const T& first, const Rest&... rest) 
+{
+    bool first_is_on_host = first.is_on_host();
+    bool rest_equal_to_first = ((rest.is_on_host() == first_is_on_host) && ...);
+    if(rest_equal_to_first)
     {
-        host::axpy(alpha, x, y);
+        return first_is_on_host ? backend::host : backend::device;
     }
     else
     {
-        device::axpy(alpha, x, y);
+        return backend::invalid;
+    }
+}
+
+// Compute y = alpha * x + y
+void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
+{
+    switch(determine_backend(x, y))
+    {
+        case backend::host:
+            return host::axpy(alpha, x, y);
+        case backend::device:
+            return device::axpy(alpha, x, y);
+        case backend::invalid:
+            return;
     }
 }
 
 void linalg::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
 {
-    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != alpha.is_on_host())
+    switch(determine_backend(alpha, x, y))
     {
-        std::cout << "Error (axpy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::axpy(alpha, x, y);
-    }
-    else
-    {
-        device::axpy(alpha, x, y);
+        case backend::host:
+            return host::axpy(alpha, x, y);
+        case backend::device:
+            return device::axpy(alpha, x, y);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute y = alpha * x + beta * y
 void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
-    if(x.is_on_host() != y.is_on_host())
+    switch(determine_backend(x, y))
     {
-        std::cout << "Error (axpby): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::axpby(alpha, x, beta, y);
-    }
-    else
-    {
-        device::axpby(alpha, x, beta, y);
+        case backend::host:
+            return host::axpby(alpha, x, beta, y);
+        case backend::device:
+            return device::axpby(alpha, x, beta, y);
+        case backend::invalid:
+            return;
     }
 }
 void linalg::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
 {
-    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != alpha.is_on_host() || x.is_on_host() != beta.is_on_host())
+    switch(determine_backend(alpha, x, beta, y))
     {
-        std::cout << "Error (axpby): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::axpby(alpha, x, beta, y);
-    }
-    else
-    {
-        device::axpby(alpha, x, beta, y);
+        case backend::host:
+            return host::axpby(alpha, x, beta, y);
+        case backend::device:
+            return device::axpby(alpha, x, beta, y);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
 void linalg::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
 {
-    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != z.is_on_host())
+    switch(determine_backend(x, y, z))
     {
-        std::cout << "Error (axpbypgz): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::axpbypgz(alpha, x, beta, y, gamma, z);
-    }
-    else
-    {
-        device::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::host:
+            return host::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::device:
+            return device::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::invalid:
+            return;
     }
 }
 void linalg::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
 {
-    if(x.is_on_host() != y.is_on_host() || 
-       x.is_on_host() != z.is_on_host() ||
-       x.is_on_host() != alpha.is_on_host() || 
-       x.is_on_host() != beta.is_on_host() ||
-       x.is_on_host() != gamma.is_on_host())
+    switch(determine_backend(alpha, x, beta, y, gamma, z))
     {
-        std::cout << "Error (axpbypgz): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::axpbypgz(alpha, x, beta, y, gamma, z);
-    }
-    else
-    {
-        device::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::host:
+            return host::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::device:
+            return device::axpbypgz(alpha, x, beta, y, gamma, z);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute y = A * x
 void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y)
 {
-    if(A.is_on_host() != x.is_on_host() || A.is_on_host() != y.is_on_host())
+    switch(determine_backend(A, x, y))
     {
-        std::cout << "Error (matrix_vector_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::matrix_vector_product(A, x, y);
-    }
-    else
-    {
-        device::matrix_vector_product(A, x, y);
+        case backend::host:
+            return host::matrix_vector_product(A, x, y);
+        case backend::device:
+            return device::matrix_vector_product(A, x, y);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute y = alpha * A * x + beta * y
 void linalg::matrix_vector_product(double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>&y)
 {
-    if(A.is_on_host() != x.is_on_host() || A.is_on_host() != y.is_on_host())
+    switch(determine_backend(A, x, y))
     {
-        std::cout << "Error (matrix_vector_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::matrix_vector_product(alpha, A, x, beta, y);
-    }
-    else
-    {
-        device::matrix_vector_product(alpha, A, x, beta, y);
+        case backend::host:
+            return host::matrix_vector_product(alpha, A, x, beta, y);
+        case backend::device:
+            return device::matrix_vector_product(alpha, A, x, beta, y);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute C = A * B
 void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    if(C.is_on_host() != A.is_on_host() || C.is_on_host() != B.is_on_host())
+    switch(determine_backend(C, A, B))
     {
-        std::cout << "Error (matrix_matrix_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(C.is_on_host())
-    {
-        host::matrix_matrix_product(C, A, B);
-    }
-    else
-    {
-        device::matrix_matrix_product(C, A, B);
+        case backend::host:
+            return host::matrix_matrix_product(C, A, B);
+        case backend::device:
+            return device::matrix_matrix_product(C, A, B);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute C = A + B
 void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    if(C.is_on_host() != A.is_on_host() || C.is_on_host() != B.is_on_host())
+    switch(determine_backend(C, A, B))
     {
-        std::cout << "Error (matrix_matrix_addition): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(C.is_on_host())
-    {
-        host::matrix_matrix_addition(C, A, B);
-    }
-    else
-    {
-        device::matrix_matrix_addition(C, A, B);
+        case backend::host:
+            return host::matrix_matrix_addition(C, A, B);
+        case backend::device:
+            return device::matrix_matrix_addition(C, A, B);
+        case backend::invalid:
+            return;
     }
 }
 
 // Incomplete IC factorization
 void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
-    if(LL.is_on_host())
+    switch(determine_backend(LL))
     {
-        host::csric0(LL, structural_zero, numeric_zero);
-    }
-    else
-    {
-        device::csric0(LL, structural_zero, numeric_zero);
+        case backend::host:
+            return host::csric0(LL, structural_zero, numeric_zero);
+        case backend::device:
+            return device::csric0(LL, structural_zero, numeric_zero);
+        case backend::invalid:
+            return;
     }
 }
 
 // Incomplete LU factorization
 void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 {
-    if(LU.is_on_host())
+    switch(determine_backend(LU))
     {
-        host::csrilu0(LU, structural_zero, numeric_zero);
-    }
-    else
-    {
-        device::csrilu0(LU, structural_zero, numeric_zero);
+        case backend::host:
+            return host::csrilu0(LU, structural_zero, numeric_zero);
+        case backend::device:
+            return device::csrilu0(LU, structural_zero, numeric_zero);
+        case backend::invalid:
+            return;
     }
 }
 
 // Forward solve
 void linalg::forward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
 {
-    if(A.is_on_host() != b.is_on_host() || A.is_on_host() != x.is_on_host())
+    switch(determine_backend(A, b, x))
     {
-        std::cout << "Error (forward_solve): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::forward_solve(A, b, x, unit_diag);
-    }
-    else
-    {
-        device::forward_solve(A, b, x, unit_diag);
+        case backend::host:
+            return host::forward_solve(A, b, x, unit_diag);
+        case backend::device:
+            return device::forward_solve(A, b, x, unit_diag);
+        case backend::invalid:
+            return;
     }
 }
 
 // Backward solve
 void linalg::backward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
 {
-    if(A.is_on_host() != b.is_on_host() || A.is_on_host() != x.is_on_host())
+    switch(determine_backend(A, b, x))
     {
-        std::cout << "Error (backward_solve): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::backward_solve(A, b, x, unit_diag);
-    }
-    else
-    {
-        device::backward_solve(A, b, x, unit_diag);
+        case backend::host:
+            return host::backward_solve(A, b, x, unit_diag);
+        case backend::device:
+            return device::backward_solve(A, b, x, unit_diag);
+        case backend::invalid:
+            return;
     }
 }
 
 // Transpose matrix
 void linalg::transpose_matrix(const csr_matrix &A, csr_matrix &transposeA)
 {
-    if(A.is_on_host() != transposeA.is_on_host())
+    switch(determine_backend(A, transposeA))
     {
-        std::cout << "Error (transpose_matrix): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::transpose_matrix(A, transposeA);
-    }
-    else
-    {
-        device::transpose_matrix(A, transposeA);
+        case backend::host:
+            return host::transpose_matrix(A, transposeA);
+        case backend::device:
+            return device::transpose_matrix(A, transposeA);
+        case backend::invalid:
+            return;
     }
 }
 
 // Dot product
 double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 {
-    if(x.is_on_host() != y.is_on_host())
+    switch(determine_backend(x, y))
     {
-        std::cout << "Error (dot_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return 0.0;
+        case backend::host:
+            return host::dot_product(x, y);
+        case backend::device:
+            return device::dot_product(x, y);
+        case backend::invalid:
+            return 0.0;
     }
 
-    if(x.is_on_host())
-    {
-        return host::dot_product(x, y);
-    }
-    else
-    {
-        return device::dot_product(x, y);
-    }
+    return 0.0;
 }
-
-
 
 // Dot product
 void linalg::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
 {
-    if(x.is_on_host() != y.is_on_host() || x.is_on_host() != result.is_on_host())
+    switch(determine_backend(x, y, result))
     {
-        std::cout << "Error (dot_product): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        host::dot_product(x, y, result);
-    }
-    else
-    {
-        device::dot_product(x, y, result);
+        case backend::host:
+            return host::dot_product(x, y, result);
+        case backend::device:
+            return device::dot_product(x, y, result);
+        case backend::invalid:
+            return;
     }
 }
 
 // Compute residual
 void linalg::compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res)
 {
-    if(A.is_on_host() != x.is_on_host() || A.is_on_host() != b.is_on_host() || A.is_on_host() != res.is_on_host())
+    switch(determine_backend(A, x, b, res))
     {
-        std::cout << "Error (compute_residual): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::compute_residual(A, x, b, res);
-    }
-    else
-    {
-        device::compute_residual(A, x, b, res);
+        case backend::host:
+            return host::compute_residual(A, x, b, res);
+        case backend::device:
+            return device::compute_residual(A, x, b, res);
+        case backend::invalid:
+            return;
     }
 }
 
 // Exclusive scan
 void linalg::exclusize_scan(vector<double>& x)
 {
-    if(x.is_on_host())
+    switch(determine_backend(x))
     {
-        host::exclusize_scan(x);
-    }
-    else
-    {
-        device::exclusize_scan(x);
+        case backend::host:
+            return host::exclusize_scan(x);
+        case backend::device:
+            return device::exclusize_scan(x);
+        case backend::invalid:
+            return;
     }
 }
 
 // Extract diagonal entries
 void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 {
-    if(A.is_on_host() != d.is_on_host())
+    switch(determine_backend(A, d))
     {
-        std::cout << "Error (diagonal): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        host::diagonal(A, d);
-    }
-    else
-    {
-        device::diagonal(A, d);
+        case backend::host:
+            return host::diagonal(A, d);
+        case backend::device:
+            return device::diagonal(A, d);
+        case backend::invalid:
+            return;
     }
 }
 
 // Euclidean norm
 double linalg::norm_euclid(const vector<double>& array)
 {
-    if(array.is_on_host())
+    switch(determine_backend(array))
     {
-        return host::norm_euclid(array);
+        case backend::host:
+            return host::norm_euclid(array);
+        case backend::device:
+            return device::norm_euclid(array);
+        case backend::invalid:
+            return 0.0;
     }
-    else
-    {
-        return device::norm_euclid(array);
-    }
+    return 0.0;
 }
 
 // Infinity norm
 double linalg::norm_inf(const vector<double>& array)
 {
-    if(array.is_on_host())
+    switch(determine_backend(array))
     {
-        return host::norm_inf(array);
+        case backend::host:
+            return host::norm_inf(array);
+        case backend::device:
+            return device::norm_inf(array);
+        case backend::invalid:
+            return 0.0;
     }
-    else
+
+    return 0.0;
+}
+
+// Fill array with value
+template<typename T>
+void linalg::fill(vector<T> &vec, T value)
+{
+    switch(determine_backend(vec))
     {
-        return device::norm_inf(array);
+        case backend::host:
+            return host::fill(vec, value);
+        case backend::device:
+            return device::fill(vec, value);
+        case backend::invalid:
+            return;
     }
 }
 
-// Fill array with zeros
-void linalg::fill_with_zeros(vector<uint32_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_zeros(vec);
-    }
-    else
-    {
-        device::fill_with_zeros(vec);
-    }
-}
-void linalg::fill_with_zeros(vector<int32_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_zeros(vec);
-    }
-    else
-    {
-        device::fill_with_zeros(vec);
-    }
-}
-void linalg::fill_with_zeros(vector<int64_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_zeros(vec);
-    }
-    else
-    {
-        device::fill_with_zeros(vec);
-    }
-}
-void linalg::fill_with_zeros(vector<double> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_zeros(vec);
-    }
-    else
-    {
-        device::fill_with_zeros(vec);
-    }
-}
-
-// Fill array with ones
-void linalg::fill_with_ones(vector<uint32_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_ones(vec);
-    }
-    else
-    {
-        device::fill_with_ones(vec);
-    }
-}
-void linalg::fill_with_ones(vector<int32_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_ones(vec);
-    }
-    else
-    {
-        device::fill_with_ones(vec);
-    }
-}
-void linalg::fill_with_ones(vector<int64_t> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_ones(vec);
-    }
-    else
-    {
-        device::fill_with_ones(vec);
-    }
-}
-void linalg::fill_with_ones(vector<double> &vec)
-{
-    if(vec.is_on_host())
-    {
-        host::fill_with_ones(vec);
-    }
-    else
-    {
-        device::fill_with_ones(vec);
-    }
-}
+template void linalg::fill<uint32_t>(vector<uint32_t> &vec, uint32_t value);
+template void linalg::fill<int32_t>(vector<int32_t> &vec, int32_t value);
+template void linalg::fill<int64_t>(vector<int64_t> &vec, int64_t value);
+template void linalg::fill<double>(vector<double> &vec, double value);
 
 // Copy array
-void linalg::copy(vector<uint32_t> &dest, const vector<uint32_t> &src)
+template <typename T>
+void linalg::copy(vector<T> &dest, const vector<T> &src)
 {
-    if(dest.is_on_host() != src.is_on_host())
+    switch(determine_backend(dest, src))
     {
-        std::cout << "Error (copy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(dest.is_on_host())
-    {
-        host::copy(dest, src);
-    }
-    else
-    {
-        device::copy(dest, src);
+        case backend::host:
+            return host::copy(dest, src);
+        case backend::device:
+            return device::copy(dest, src);
+        case backend::invalid:
+            return;
     }
 }
-void linalg::copy(vector<int32_t> &dest, const vector<int32_t> &src)
-{
-    if(dest.is_on_host() != src.is_on_host())
-    {
-        std::cout << "Error (copy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
 
-    if(dest.is_on_host())
-    {
-        host::copy(dest, src);
-    }
-    else
-    {
-        device::copy(dest, src);
-    }
-}
-void linalg::copy(vector<int64_t> &dest, const vector<int64_t> &src)
-{
-    if(dest.is_on_host() != src.is_on_host())
-    {
-        std::cout << "Error (copy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(dest.is_on_host())
-    {
-        host::copy(dest, src);
-    }
-    else
-    {
-        device::copy(dest, src);
-    }
-}
-void linalg::copy(vector<double> &dest, const vector<double> &src)
-{
-    if(dest.is_on_host() != src.is_on_host())
-    {
-        std::cout << "Error (copy): Mixing host and device inputs not supported. Skipping computation." << std::endl;
-        return;
-    }
-
-    if(dest.is_on_host())
-    {
-        host::copy(dest, src);
-    }
-    else
-    {
-        device::copy(dest, src);
-    }
-}
+template void linalg::copy<uint32_t>(vector<uint32_t> &dest, const vector<uint32_t> &src);
+template void linalg::copy<int32_t>(vector<int32_t> &dest, const vector<int32_t> &src);
+template void linalg::copy<int64_t>(vector<int64_t> &dest, const vector<int64_t> &src);
+template void linalg::copy<double>(vector<double> &dest, const vector<double> &src);

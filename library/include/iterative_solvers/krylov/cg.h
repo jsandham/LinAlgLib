@@ -198,6 +198,7 @@ private:
     //scalar<double> old_gamma;
     //scalar<double> gamma;
     //scalar<double> alpha;
+    //scalar<double> neg_alpha;
     //scalar<double> beta;
 
     /*! \brief Number of iterations after which the solver should restart.
@@ -295,6 +296,16 @@ public:
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
     int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+
+    /**
+     * @brief Moves data from device memory to host memory.
+     */
+    void move_to_host();
+
+    /**
+     * @brief Moves data from host memory to device memory.
+     */
+    void move_to_device();
 };
 }
 

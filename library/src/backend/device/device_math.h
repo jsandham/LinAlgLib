@@ -104,23 +104,13 @@ namespace linalg
         // Infinity norm
         double norm_inf(const vector<double>& array);
 
-        // Fill array with zeros
-        void fill_with_zeros(vector<uint32_t> &vec);
-        void fill_with_zeros(vector<int32_t> &vec);
-        void fill_with_zeros(vector<int64_t> &vec);
-        void fill_with_zeros(vector<double> &vec);
-
-        // Fill array with ones
-        void fill_with_ones(vector<uint32_t> &vec);
-        void fill_with_ones(vector<int32_t> &vec);
-        void fill_with_ones(vector<int64_t> &vec);
-        void fill_with_ones(vector<double> &vec);
+        // Fill array with value
+        template<typename T>
+        void fill(vector<T> &vec, T value);
 
         // Copy array
-        void copy(vector<uint32_t> &dest, const vector<uint32_t> &src);
-        void copy(vector<int32_t> &dest, const vector<int32_t> &src);
-        void copy(vector<int64_t> &dest, const vector<int64_t> &src);
-        void copy(vector<double> &dest, const vector<double> &src);
+        template<typename T>
+        void copy(vector<T> &dest, const vector<T> &src);
     }
 }
 

@@ -162,56 +162,26 @@ double linalg::device::norm_inf(const vector<double>& array)
     return 0.0;
 }
 
-// Fill array with zeros
-void linalg::device::fill_with_zeros(vector<uint32_t> &vec)
+// Fill array with value
+template<typename T>
+void linalg::device::fill(vector<T> &vec, T value)
 {
-    std::cout << "Error: fill_with_zeros on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_zeros(vector<int32_t> &vec)
-{
-    std::cout << "Error: fill_with_zeros on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_zeros(vector<int64_t> &vec)
-{
-    std::cout << "Error: fill_with_zeros on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_zeros(vector<double> &vec)
-{
-    std::cout << "Error: fill_with_zeros on device not implemented" << std::endl;
+    std::cout << "Error: fill on device not implemented" << std::endl;
 }
 
-// Fill array with ones
-void linalg::device::fill_with_ones(vector<uint32_t> &vec)
-{
-    std::cout << "Error: fill_with_ones on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_ones(vector<int32_t> &vec)
-{
-    std::cout << "Error: fill_with_ones on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_ones(vector<int64_t> &vec)
-{
-    std::cout << "Error: fill_with_ones on device not implemented" << std::endl;
-}
-void linalg::device::fill_with_ones(vector<double> &vec)
-{
-    std::cout << "Error: fill_with_ones on device not implemented" << std::endl;
-}
+template void linalg::device::fill<uint32_t>(vector<uint32_t> &vec, uint32_t value);
+template void linalg::device::fill<int32_t>(vector<int32_t> &vec, int32_t value);
+template void linalg::device::fill<int64_t>(vector<int64_t> &vec, int64_t value);
+template void linalg::device::fill<double>(vector<double> &vec, double value);
 
 // Copy array
-void linalg::device::copy(vector<uint32_t> &dest, const vector<uint32_t> &src)
+template <typename T>
+void linalg::device::copy(vector<T> &dest, const vector<T> &src)
 {
     std::cout << "Error: copy on device not implemented" << std::endl;
 }
-void linalg::device::copy(vector<int32_t> &dest, const vector<int32_t> &src)
-{
-    std::cout << "Error: copy on device not implemented" << std::endl;
-}
-void linalg::device::copy(vector<int64_t> &dest, const vector<int64_t> &src)
-{
-    std::cout << "Error: copy on device not implemented" << std::endl;
-}
-void linalg::device::copy(vector<double> &dest, const vector<double> &src)
-{
-    std::cout << "Error: copy on device not implemented" << std::endl;
-}
+
+template void linalg::device::copy<uint32_t>(vector<uint32_t> &dest, const vector<uint32_t> &src);
+template void linalg::device::copy<int32_t>(vector<int32_t> &dest, const vector<int32_t> &src);
+template void linalg::device::copy<int64_t>(vector<int64_t> &dest, const vector<int64_t> &src);
+template void linalg::device::copy<double>(vector<double> &dest, const vector<double> &src);

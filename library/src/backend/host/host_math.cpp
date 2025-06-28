@@ -273,9 +273,10 @@ static double host_norm_inf(const double *array, int n)
 }
 
 //-------------------------------------------------------------------------------
-// fill array with zeros
+// fill array 
 //-------------------------------------------------------------------------------
-static void host_fill_with_zeros(uint32_t *x, size_t n)
+template<typename T>
+static void host_fill(T* x, size_t n, T value)
 {
     ROUTINE_TRACE("host_fill_with_zeros");
 
@@ -284,95 +285,7 @@ static void host_fill_with_zeros(uint32_t *x, size_t n)
 #endif
     for (size_t i = 0; i < n; i++)
     {
-        x[i] = 0;
-    }
-}
-static void host_fill_with_zeros(int32_t *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_zeros");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 0;
-    }
-}
-static void host_fill_with_zeros(int64_t *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_zeros");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 0;
-    }
-}
-static void host_fill_with_zeros(double *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_zeros");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 0.0;
-    }
-}
-
-//-------------------------------------------------------------------------------
-// fill array with ones
-//-------------------------------------------------------------------------------
-static void host_fill_with_ones(uint32_t *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_ones");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 1;
-    }
-}
-static void host_fill_with_ones(int32_t *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_ones");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 1;
-    }
-}
-static void host_fill_with_ones(int64_t *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_ones");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 1;
-    }
-}
-static void host_fill_with_ones(double *x, size_t n)
-{
-    ROUTINE_TRACE("host_fill_with_ones");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-    for (size_t i = 0; i < n; i++)
-    {
-        x[i] = 1.0;
+        x[i] = value;
     }
 }
 
@@ -1269,56 +1182,26 @@ double linalg::host::norm_inf(const vector<double>& array)
     return host_norm_inf(array.get_vec(), array.get_size());
 }
 
-// Fill array with zeros
-void linalg::host::fill_with_zeros(vector<uint32_t> &vec)
+// Fill array with value
+template<typename T>
+void linalg::host::fill(vector<T> &vec, T value)
 {
-    host_fill_with_zeros(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_zeros(vector<int32_t> &vec)
-{
-    host_fill_with_zeros(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_zeros(vector<int64_t> &vec)
-{
-    host_fill_with_zeros(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_zeros(vector<double> &vec)
-{
-    host_fill_with_zeros(vec.get_vec(), vec.get_size());
+    host_fill(vec.get_vec(), vec.get_size(), value);
 }
 
-// Fill array with ones
-void linalg::host::fill_with_ones(vector<uint32_t> &vec)
-{
-    host_fill_with_ones(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_ones(vector<int32_t> &vec)
-{
-    host_fill_with_ones(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_ones(vector<int64_t> &vec)
-{
-    host_fill_with_ones(vec.get_vec(), vec.get_size());
-}
-void linalg::host::fill_with_ones(vector<double> &vec)
-{
-    host_fill_with_ones(vec.get_vec(), vec.get_size());
-}
+template void linalg::host::fill<uint32_t>(vector<uint32_t> &vec, uint32_t value);
+template void linalg::host::fill<int32_t>(vector<int32_t> &vec, int32_t value);
+template void linalg::host::fill<int64_t>(vector<int64_t> &vec, int64_t value);
+template void linalg::host::fill<double>(vector<double> &vec, double value);
 
 // Copy array
-void linalg::host::copy(vector<uint32_t> &dest, const vector<uint32_t> &src)
+template <typename T>
+void linalg::host::copy(vector<T> &dest, const vector<T> &src)
 {
     host_copy(dest.get_vec(), src.get_vec(), src.get_size());
 }
-void linalg::host::copy(vector<int32_t> &dest, const vector<int32_t> &src)
-{
-    host_copy(dest.get_vec(), src.get_vec(), src.get_size());
-}
-void linalg::host::copy(vector<int64_t> &dest, const vector<int64_t> &src)
-{
-    host_copy(dest.get_vec(), src.get_vec(), src.get_size());
-}
-void linalg::host::copy(vector<double> &dest, const vector<double> &src)
-{
-    host_copy(dest.get_vec(), src.get_vec(), src.get_size());
-}
+
+template void linalg::host::copy<uint32_t>(vector<uint32_t> &dest, const vector<uint32_t> &src);
+template void linalg::host::copy<int32_t>(vector<int32_t> &dest, const vector<int32_t> &src);
+template void linalg::host::copy<int64_t>(vector<int64_t> &dest, const vector<int64_t> &src);
+template void linalg::host::copy<double>(vector<double> &dest, const vector<double> &src);

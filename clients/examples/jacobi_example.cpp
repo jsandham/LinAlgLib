@@ -29,6 +29,18 @@
 
 #include "linalg.h"
 
+#define RETURN_IF_NOT_ON_HOST(data)  \
+    if(data.is_on_host())          \
+    {                               \
+        std::cout << "Error: Inputs when using host backend must be on the host. " << #data << std::endl; \
+    }
+
+void func(const linalg::vector<double>& x, linalg::vector<double>& y)
+{
+    RETURN_IF_NOT_ON_HOST(x);
+    RETURN_IF_NOT_ON_HOST(y);
+}
+
 int main()
 {
     int m = 5;
@@ -53,6 +65,9 @@ int main()
     // Righthand side vector
     linalg::vector<double> b(A.get_m());
     b.ones();
+
+
+    func(x, b);
 
     linalg::jacobi_solver jacobi;
     jacobi.build(A);

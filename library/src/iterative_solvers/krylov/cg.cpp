@@ -224,3 +224,21 @@ int cg_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double
         return solve_precond(A, x, b, precond, control);
     }
 }
+
+void cg_solver::move_to_host()
+{
+    ROUTINE_TRACE("cg_solver::move_to_host");
+    
+    z.move_to_host();
+    p.move_to_host();
+    res.move_to_host();
+}
+
+void cg_solver::move_to_device()
+{
+    ROUTINE_TRACE("cg_solver::move_to_device");
+
+    z.move_to_device();
+    p.move_to_device();
+    res.move_to_device();
+}
