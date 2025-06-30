@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,51 +24,48 @@
 //
 //********************************************************************************
 
-#include <iostream>
+#ifndef HOST_VECTOR_H
+#define HOST_VECTOR_H
+
 #include <vector>
 
-#include "linalg.h"
-#include "utility.h"
+#include "../backend_vector.h"
 
-int main()
+namespace linalg
 {
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
+    namespace host
+    {
+        template<typename T>
+        class host_vector : public backend_vector<T>
+        {
+            private:
+                std::vector<T> hvec;
 
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    
-    x.move_to_device();
-    x.zeros();
-    x.move_to_host();
-    
-    x.zeros();
+            public:
+                host_vector();
+                host_vector(size_t size);
+                host_vector(size_t size, T val);
+                host_vector(const std::vector<T>& vec);
+                ~host_vector();
 
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
+                T& operator[](size_t index) override
+                {
+                    return hvec[index];
+                }
 
-    linalg::iter_control control;
+                const T& operator[](size_t index) const override
+                {
+                    return hvec[index];
+                }
 
-    // Jacobi preconditioner
-    linalg::jacobi_precond precond;
-    //linalg::ic_precond precond;
-    //linalg::ilu_precond precond;
-
-    precond.build(A);
-
-    linalg::cg_solver cg;
-    cg.build(A);
-
-    int iter = cg.solve(A, x, b, &precond, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
+                T* get_data() override;
+                const T* get_data() const override;
+                size_t get_size() const override;
+                void clear() override;
+                void resize(size_t size) override;
+                void resize(size_t size, T val) override;
+        };
+    }
 }
+
+#endif HOST_VECTOR_H

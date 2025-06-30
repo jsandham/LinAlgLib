@@ -32,10 +32,9 @@ namespace linalg
     namespace host
     {
         template<typename T>
-        class host_scalar
+        struct host_scalar
         {
-            public:
-                T hval;
+            T hval;
         };
     }
 }

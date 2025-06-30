@@ -204,9 +204,10 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hier
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    hierarchy.prolongations.resize(max_level);
-    hierarchy.restrictions.resize(max_level);
-    hierarchy.A_cs.resize(max_level + 1);
+    max_level = std::min(max_level, 20);
+    //hierarchy.prolongations.resize(max_level);
+    //hierarchy.restrictions.resize(max_level);
+    //hierarchy.A_cs.resize(max_level + 1);
 
     // Set original matrix at level 0 in the hierarchy
     hierarchy.A_cs[0].copy_from(mat_A);

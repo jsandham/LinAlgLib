@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,51 +24,27 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
+#include "cuda_kernels.h"
 
-#include "linalg.h"
-#include "utility.h"
-
-int main()
+template <uint32_t BLOCKSIZE, typename T>
+static __global__ void fill_kernel(T* data, size_t size, T val)
 {
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
+    int tid = threadIdx.x + BLOCKSIZE * blockIdx.x;
 
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    
-    x.move_to_device();
-    x.zeros();
-    x.move_to_host();
-    
-    x.zeros();
-
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
-
-    linalg::iter_control control;
-
-    // Jacobi preconditioner
-    linalg::jacobi_precond precond;
-    //linalg::ic_precond precond;
-    //linalg::ilu_precond precond;
-
-    precond.build(A);
-
-    linalg::cg_solver cg;
-    cg.build(A);
-
-    int iter = cg.solve(A, x, b, &precond, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
+    if(tid < size)
+    {
+        data[tid] = val;
+    }
 }
+
+
+template <typename T> 
+void launch_cuda_fill_kernel(T* data, size_t size, T val)
+{
+    fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
+}
+
+template void launch_cuda_fill_kernel<uint32_t>(uint32_t* data, size_t size, uint32_t val);
+template void launch_cuda_fill_kernel<int32_t>(int32_t* data, size_t size, int32_t val);
+template void launch_cuda_fill_kernel<int64_t>(int64_t* data, size_t size, int64_t val);
+template void launch_cuda_fill_kernel<double>(double* data, size_t size, double val);

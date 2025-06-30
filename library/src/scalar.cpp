@@ -60,7 +60,6 @@ scalar<T>::scalar()
 template <typename T>
 scalar<T>::scalar(T val)
 {
-    std::cout << "scalar<T>::scalar(T val)" << std::endl;
     this->on_host = true;
     hval = val;
 }
@@ -75,7 +74,6 @@ scalar<T>::~scalar()
 template <typename T>
 scalar<T>& scalar<T>::operator=(const scalar<T>& other) 
 {
-    std::cout << "scalar<T>& scalar<T>::operator=(const scalar<T>& other)" << std::endl;
     if (this != &other) 
     {
         hval = other.hval;
@@ -87,7 +85,6 @@ scalar<T>& scalar<T>::operator=(const scalar<T>& other)
 template <typename T>
 scalar<T>& scalar<T>::operator=(const T& other) 
 {
-    std::cout << "scalar<T>& scalar<T>::operator=(const scalar<T>& other)" << std::endl;
     hval = other;
     on_host = true;
     return *this;

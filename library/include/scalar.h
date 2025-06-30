@@ -111,7 +111,6 @@ scalar<T> operator*(scalar<T> lhs, const T& rhs)
 template <typename T>
 scalar<T> operator*(const T& lhs, scalar<T> rhs) 
 {
-    std::cout << "operator* lhs: " << lhs << " rhs: " << rhs << std::endl;
     rhs *= lhs;
     return rhs;
 }
@@ -126,7 +125,6 @@ scalar<T> operator+(scalar<T> lhs, const T& rhs)
 template <typename T>
 scalar<T> operator+(const T& lhs, scalar<T> rhs) 
 {
-    std::cout << "operator* lhs: " << lhs << " rhs: " << rhs << std::endl;
     rhs += lhs;
     return rhs;
 }

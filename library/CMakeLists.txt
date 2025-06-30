@@ -53,9 +53,11 @@ set(LINALGLIB_HEADERS_PUBLIC
 
 set(LINALGLIB_SOURCE
   src/backend/host/host_math.cpp
-  src/backend/device/device_math.cpp
   src/backend/host/host_scalar.cpp
+  src/backend/host/host_vector.cpp
+  src/backend/device/device_math.cpp
   src/backend/device/device_scalar.cpp
+  src/backend/device/device_vector.cpp
   src/linalg_math.cpp
   src/eigen_value_solvers/power_iteration.cpp
   src/iterative_solvers/amg/amg_aggregation.cpp
@@ -84,8 +86,7 @@ set(LINALGLIB_SOURCE
 )
 
 set(LINALGLIB_CUDA_SOURCE 
-  src/backend/device/device_math.cpp
-  src/backend/device/device_scalar.cpp)
+  src/backend/device/cuda/cuda_kernels.cu)
 
 # Provide an option for the user to enable CUDA
 option(ENABLE_CUDA "Enable CUDA compilation if NVIDIA CUDA Toolkit is available" ON)
@@ -102,7 +103,7 @@ if(ENABLE_CUDA)
         message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}.")
         enable_language(CUDA) # Now actually enable it
 
-         set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "Target CUDA architectures for project")
+        set(CMAKE_CUDA_ARCHITECTURES "75;80" CACHE STRING "Target CUDA architectures for project" FORCE)
 
         find_package(CUDAToolkit QUIET)
         if (CUDAToolkit_FOUND)
@@ -115,6 +116,8 @@ endif()
 if(BUILD_WITH_CUDA)
   add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC} ${LINALGLIB_CUDA_SOURCE})
 
+  set_target_properties(linalglib PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+  
   # Link necessary CUDA libraries for the CUDA-enabled library
   # CUDA::cudart is often implicitly linked by nvcc but explicit is clearer.
   target_link_libraries(linalglib PRIVATE CUDA::cudart)
@@ -140,15 +143,33 @@ endif()
 # Find MPI
 find_package(MPI)
 
+message("CMAKE_CXX_COMPILER_ID : ${CMAKE_CXX_COMPILER_ID}")
+message("CMAKE_CUDA_COMPILER_ID : ${CMAKE_CUDA_COMPILER_ID}")
+
 # Compiler options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  target_compile_options(linalglib PRIVATE
+      # Options for C++ files (MSVC)
+      $<$<COMPILE_LANGUAGE:CXX>:-W4>             # Enable warning level 4 for MSVC
+      $<$<COMPILE_LANGUAGE:CXX>:-wd4201>
+      $<$<COMPILE_LANGUAGE:CXX>:-wd4100>
+      $<$<COMPILE_LANGUAGE:CXX>:-wd4996>
+    )
   if (OPENMP_FOUND)
-    target_compile_options(linalglib PRIVATE -openmp:llvm -W4 -wd4201 -wd4100 -wd4996)
-  else()
-    target_compile_options(linalglib PRIVATE -W4 -wd4201 -wd4100 -wd4996)
+    target_compile_options(linalglib PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-openmp:llvm>)
   endif()
 else()
   target_compile_options(linalglib PRIVATE -Wall -Wpedantic)
+endif()
+
+if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+  target_compile_options(linalglib PRIVATE
+    # Options for CUDA files (NVCC)
+    $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3> # Pass /W3 to the host compiler (MSVC) for CUDA files
+    $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>       # Enable relocatable device code (important for shared libraries)
+    $<$<COMPILE_LANGUAGE:CUDA>:-G>              # Enable debug info for device code (for debugging)
+    $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>       # Include line information for Nsight debugging
+  )
 endif()
 
 # target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,51 +24,14 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
 
-#include "linalg.h"
-#include "utility.h"
+#ifndef CUDA_KERNELS_H
+#define CUDA_KERNELS_H
 
-int main()
-{
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
+#include <cuda_runtime.h>
 
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    
-    x.move_to_device();
-    x.zeros();
-    x.move_to_host();
-    
-    x.zeros();
+template <typename T> 
+void launch_cuda_fill_kernel(T* data, size_t size, T val);
 
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
+#endif
 
-    linalg::iter_control control;
-
-    // Jacobi preconditioner
-    linalg::jacobi_precond precond;
-    //linalg::ic_precond precond;
-    //linalg::ilu_precond precond;
-
-    precond.build(A);
-
-    linalg::cg_solver cg;
-    cg.build(A);
-
-    int iter = cg.solve(A, x, b, &precond, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
-}

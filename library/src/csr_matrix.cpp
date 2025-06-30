@@ -50,9 +50,13 @@ csr_matrix::csr_matrix(const std::vector<int>& csr_row_ptr,
                          int n, 
                          int nnz)
 {
-    this->csr_row_ptr = csr_row_ptr;
-    this->csr_col_ind = csr_col_ind;
-    this->csr_val = csr_val;
+    this->csr_row_ptr.resize(csr_row_ptr.size());
+    this->csr_col_ind.resize(csr_col_ind.size());
+    this->csr_val.resize(csr_val.size());
+
+    this->csr_row_ptr.copy_from(csr_row_ptr);// = csr_row_ptr;
+    this->csr_col_ind.copy_from(csr_col_ind);// = csr_col_ind;
+    this->csr_val.copy_from(csr_val);// = csr_val;
     this->m = m;
     this->n = n;
     this->nnz = nnz;
@@ -384,16 +388,21 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     // Convert to CSR format
     nnz = triplets.size();
+
     if (nnz == 0) 
     {
         // Handle empty matrix case: all dimensions valid but no entries
-        csr_row_ptr.assign(m + 1, 0);
+        // csr_row_ptr.assign(m + 1, 0);
+        csr_row_ptr.resize(m + 1);
+        csr_row_ptr.zeros();
         csr_col_ind.clear();
         csr_val.clear();
         return true;
     }
 
-    csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
+    // csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
+    csr_row_ptr.resize(m + 1);
+    csr_row_ptr.zeros(); // Initialize with zeros
     csr_col_ind.resize(nnz);
     csr_val.resize(nnz);
 

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,51 +24,30 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
+#ifndef BACKEND_VECTOR_H
+#define BACKEND_VECTOR_H
 
-#include "linalg.h"
-#include "utility.h"
-
-int main()
+namespace linalg
 {
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
+    template <typename T>
+    class backend_vector
+    {
+        public:
+            backend_vector() = default;
+            backend_vector(const backend_vector&) = delete;
+            backend_vector& operator=(const backend_vector&) = delete;
 
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    
-    x.move_to_device();
-    x.zeros();
-    x.move_to_host();
-    
-    x.zeros();
+            virtual T& operator[](size_t index) = 0;
+            virtual const T& operator[](size_t index) const = 0;
 
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
+            virtual ~backend_vector(){};
+            virtual T* get_data() = 0;
+            virtual const T* get_data() const = 0;
+            virtual size_t get_size() const = 0;
+            virtual void clear() = 0;
+            virtual void resize(size_t size) = 0;
+            virtual void resize(size_t size, T val) = 0;
 
-    linalg::iter_control control;
-
-    // Jacobi preconditioner
-    linalg::jacobi_precond precond;
-    //linalg::ic_precond precond;
-    //linalg::ilu_precond precond;
-
-    precond.build(A);
-
-    linalg::cg_solver cg;
-    cg.build(A);
-
-    int iter = cg.solve(A, x, b, &precond, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
+    };
 }
+#endif

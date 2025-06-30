@@ -29,12 +29,30 @@
 
 #include <vector>
 
+#include "../src/backend/backend_vector.h"
+
+
 /*! \file
  *  \brief vector.h provides vector class
  */
 
 namespace linalg
 {
+    template <typename T>
+    class backend_vector;
+
+    namespace host
+    {
+        template<typename T>
+        class host_vector;
+    }
+
+    namespace device
+    {
+        template <typename T>
+        class device_vector;
+    }
+
 /*! \brief A class for representing and manipulating vectors.
  *
  * \details
@@ -46,8 +64,12 @@ template<typename T>
 class vector
 {
 private:
+    host::host_vector<T>* hvec;
+    device::device_vector<T>* dvec;
+    backend_vector<T>* vec;
+
     /*! \brief The underlying `std::vector` storing the elements of the vector on the host. */
-    std::vector<T> hvec;
+    // std::vector<T> hvec;
 
     /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
     bool on_host;
@@ -79,13 +101,13 @@ public:
      * Prevents direct copying of `vector` objects to avoid shallow copies and
      * ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    //vector (const vector&) = delete;
+    vector (const vector&) = delete;
 
     /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `vector` to another to avoid shallow copies
      * and ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    //vector& operator= (const vector&) = delete;
+    vector& operator= (const vector&) = delete;
 
     /*! \brief Overload of the array subscript operator for non-constant access.
      * \param index The index of the element to access.
@@ -93,7 +115,7 @@ public:
      */
     T& operator[](size_t index)
     {
-        return hvec[index];
+        return *(vec->get_data() + index);//hvec[index];
     }
 
     /*! \brief Overload of the array subscript operator for constant access.
@@ -102,7 +124,7 @@ public:
      */
     const T& operator[](size_t index) const
     {
-        return hvec[index];
+        return vec->get_data()[index];//hvec[index];
     }
 
     /*! \brief Checks if the vector data is currently stored on the host (CPU).
@@ -125,6 +147,19 @@ public:
      */
     const T* get_vec() const;
 
+    /*! \brief Resizes the vector to the specified size.
+     * \details If the new size is smaller, elements beyond the new size are truncated.
+     * If the new size is larger, new elements are default-initialized.
+     * \param size The new desired size of the vector.
+     */
+    void resize(size_t size);
+
+    void resize(size_t size, T val);
+
+    void clear();
+
+    // void assign(size_t size, T val);
+
     /*! \brief Copies the contents of another `vector` into this object.
      *
      * This performs a deep copy, ensuring that all elements are duplicated.
@@ -137,19 +172,6 @@ public:
 
     /*! \brief Sets all elements of the vector to one. */
     void ones();
-
-    /*! \brief Resizes the vector to the specified size.
-     * \details If the new size is smaller, elements beyond the new size are truncated.
-     * If the new size is larger, new elements are default-initialized.
-     * \param size The new desired size of the vector.
-     */
-    void resize(size_t size);
-
-    void resize(size_t size, T val);
-
-    void clear();
-
-    void assign(size_t size, T val);
 
     /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available

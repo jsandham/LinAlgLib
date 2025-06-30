@@ -367,6 +367,8 @@ double linalg::norm_inf(const vector<double>& array)
 template<typename T>
 void linalg::fill(vector<T> &vec, T value)
 {
+    std::cout << "vec.is_on_host(): " << vec.is_on_host() << std::endl;
+
     switch(determine_backend(vec))
     {
         case backend::host:

@@ -28,6 +28,7 @@
 #define AMG_H
 
 #include <vector>
+#include <array>
 
 #include "amg_util.h"
 
@@ -63,7 +64,8 @@ struct hierarchy
     * operators between consecutive levels, where `prolongations[i]` maps from
     * level `i+1` to level `i`.
     */
-    std::vector<csr_matrix> prolongations;
+    //std::vector<csr_matrix> prolongations;
+    std::array<csr_matrix, 20> prolongations;
 
     /**
     * @brief Restriction matrices.
@@ -74,7 +76,8 @@ struct hierarchy
     * Typically, the restriction operator is related to the transpose of the
     * prolongation operator.
     */
-    std::vector<csr_matrix> restrictions;
+    // std::vector<csr_matrix> restrictions;
+    std::array<csr_matrix, 20> restrictions;
 
     /**
     * @brief Coarse level matrices.
@@ -84,7 +87,8 @@ struct hierarchy
     * hierarchy, with `A_cs[0]` being the original system matrix on the finest level.
     * The size of these matrices decreases as the level number increases.
     */
-    std::vector<csr_matrix> A_cs;
+    // std::vector<csr_matrix> A_cs;
+    std::array<csr_matrix, 21> A_cs;
 
     /**
     * @brief Number of levels in the hierarchy.

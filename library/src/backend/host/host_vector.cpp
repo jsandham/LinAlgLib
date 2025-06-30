@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2025 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,51 +24,67 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
+#include "host_vector.h"
 
-#include "linalg.h"
-#include "utility.h"
+using namespace linalg::host;
 
-int main()
+template <typename T>
+host_vector<T>::host_vector()
 {
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
 
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    
-    x.move_to_device();
-    x.zeros();
-    x.move_to_host();
-    
-    x.zeros();
-
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
-
-    linalg::iter_control control;
-
-    // Jacobi preconditioner
-    linalg::jacobi_precond precond;
-    //linalg::ic_precond precond;
-    //linalg::ilu_precond precond;
-
-    precond.build(A);
-
-    linalg::cg_solver cg;
-    cg.build(A);
-
-    int iter = cg.solve(A, x, b, &precond, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
 }
+template <typename T>
+host_vector<T>::host_vector(size_t size)
+{
+    hvec.resize(size);
+}
+template <typename T>
+host_vector<T>::host_vector(size_t size, T val)
+{
+    hvec.resize(size, val);
+}
+template <typename T>
+host_vector<T>::host_vector(const std::vector<T>& vec)
+{
+    hvec = vec;
+}
+template <typename T>
+host_vector<T>::~host_vector()
+{
+
+}
+template <typename T>
+T* host_vector<T>::get_data()
+{
+    return hvec.data();
+}
+template <typename T>
+const T* host_vector<T>::get_data() const
+{
+    return hvec.data();
+}
+template <typename T>
+size_t host_vector<T>::get_size() const
+{
+    return hvec.size();
+}
+template <typename T>
+void host_vector<T>::clear()
+{
+    hvec.clear();
+}
+template <typename T>
+void host_vector<T>::resize(size_t size)
+{
+    hvec.resize(size);
+}
+template <typename T>
+void host_vector<T>::resize(size_t size, T val)
+{
+    hvec.resize(size, val);
+}
+
+template class host_vector<uint32_t>;
+template class host_vector<int32_t>;
+template class host_vector<int64_t>;
+template class host_vector<double>;

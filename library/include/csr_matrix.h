@@ -117,6 +117,12 @@ public:
      */
     ~csr_matrix();
 
+    /*! \brief Deleted copy constructor.
+     * Prevents direct copying of `csr_matrix` objects to avoid shallow copies and
+     * ensure proper memory management. Use `copy_from` for explicit copying.
+     */
+    csr_matrix (const csr_matrix&) = delete;
+
     /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `csr_matrix` to another to avoid shallow copies
      * and ensure proper memory management. Use `copy_from` for explicit copying.

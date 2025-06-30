@@ -699,7 +699,7 @@
 
 namespace linalg
 {
-static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, vector<uint32_t> cfpoints)
+static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, vector<uint32_t> &cfpoints)
 {
     // Determine number of C points. The prolongation operator will have number 
     // of columns equal to the number of C points
@@ -899,9 +899,10 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    hierarchy.prolongations.resize(max_level);
-    hierarchy.restrictions.resize(max_level);
-    hierarchy.A_cs.resize(max_level + 1);
+    max_level = std::min(max_level, 20);
+    //hierarchy.prolongations.resize(max_level);
+    //hierarchy.restrictions.resize(max_level);
+    //hierarchy.A_cs.resize(max_level + 1);
 
     // Set original matrix at level 0 in the hierarchy
     hierarchy.A_cs[0].copy_from(A);
