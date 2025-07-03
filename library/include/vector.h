@@ -68,9 +68,6 @@ private:
     device::device_vector<T>* dvec;
     backend_vector<T>* vec;
 
-    /*! \brief The underlying `std::vector` storing the elements of the vector on the host. */
-    // std::vector<T> hvec;
-
     /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
     bool on_host;
 
@@ -115,7 +112,7 @@ public:
      */
     T& operator[](size_t index)
     {
-        return *(vec->get_data() + index);//hvec[index];
+        return *(vec->get_data() + index);
     }
 
     /*! \brief Overload of the array subscript operator for constant access.
@@ -124,7 +121,7 @@ public:
      */
     const T& operator[](size_t index) const
     {
-        return vec->get_data()[index];//hvec[index];
+        return vec->get_data()[index];
     }
 
     /*! \brief Checks if the vector data is currently stored on the host (CPU).

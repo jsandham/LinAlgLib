@@ -52,13 +52,13 @@ set(LINALGLIB_HEADERS_PUBLIC
 )
 
 set(LINALGLIB_SOURCE
+  src/linalg_math.cpp
   src/backend/host/host_math.cpp
   src/backend/host/host_scalar.cpp
   src/backend/host/host_vector.cpp
   src/backend/device/device_math.cpp
   src/backend/device/device_scalar.cpp
   src/backend/device/device_vector.cpp
-  src/linalg_math.cpp
   src/eigen_value_solvers/power_iteration.cpp
   src/iterative_solvers/amg/amg_aggregation.cpp
   src/iterative_solvers/amg/amg_strength.cpp
@@ -91,7 +91,7 @@ set(LINALGLIB_CUDA_SOURCE
 # Provide an option for the user to enable CUDA
 option(ENABLE_CUDA "Enable CUDA compilation if NVIDIA CUDA Toolkit is available" ON)
 
-set(BUILD_WITH_CUDA FALSE CACHE BOOL "Internal flag: Project is building with CUDA support" INTERNAL)
+set(BUILD_WITH_CUDA FALSE CACHE BOOL "Internal flag: Project is building with CUDA support" FORCE)
 
 # Conditionally enable the CUDA language
 if(ENABLE_CUDA)
@@ -108,7 +108,7 @@ if(ENABLE_CUDA)
         find_package(CUDAToolkit QUIET)
         if (CUDAToolkit_FOUND)
             message(STATUS "CUDA toolkit found: ${CUDAToolkit_FOUND}. Enabling CUDA support.")
-            set(BUILD_WITH_CUDA TRUE CACHE BOOL "Internal flag: Project is building with CUDA support" INTERNAL)
+            set(BUILD_WITH_CUDA TRUE CACHE BOOL "Internal flag: Project is building with CUDA support" FORCE)
         endif()
     endif()
 endif()

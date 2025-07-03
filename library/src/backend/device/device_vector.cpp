@@ -114,12 +114,12 @@ void device_vector<T>::resize(size_t size, T val)
         }
         else
         {
-
+            launch_cuda_fill_kernel(dvec, size, val);
         }
     }
 }
 
-template class device_vector<uint32_t>;
-template class device_vector<int32_t>;
-template class device_vector<int64_t>;
-template class device_vector<double>;
+template class linalg::device::device_vector<uint32_t>;
+template class linalg::device::device_vector<int32_t>;
+template class linalg::device::device_vector<int64_t>;
+template class linalg::device::device_vector<double>;

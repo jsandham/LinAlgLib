@@ -68,4 +68,4 @@ namespace linalg
     }
 }
 
-#endif HOST_VECTOR_H
+#endif

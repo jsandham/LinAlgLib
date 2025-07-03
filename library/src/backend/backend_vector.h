@@ -27,6 +27,8 @@
 #ifndef BACKEND_VECTOR_H
 #define BACKEND_VECTOR_H
 
+#include <cstddef>
+
 namespace linalg
 {
     template <typename T>

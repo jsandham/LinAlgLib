@@ -141,4 +141,4 @@ void scalar<T>::move_to_host()
     ROUTINE_TRACE("scalar<T>::move_to_host");
 }
 
-template class scalar<double>;
+template class linalg::scalar<double>;

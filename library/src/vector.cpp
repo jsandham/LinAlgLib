@@ -165,7 +165,7 @@ void vector<T>::move_to_host()
     this->on_host = true;
 }
 
-template class vector<uint32_t>;
-template class vector<int32_t>;
-template class vector<int64_t>;
-template class vector<double>;
+template class linalg::vector<uint32_t>;
+template class linalg::vector<int32_t>;
+template class linalg::vector<int64_t>;
+template class linalg::vector<double>;

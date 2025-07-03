@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <cstring>
+#include <cmath>
 #include <assert.h>
 
 #include "host_math.h"

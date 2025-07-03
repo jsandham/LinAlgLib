@@ -74,4 +74,4 @@ namespace linalg
     }
 }
 
-#endif DEVICE_VECTOR_H
+#endif

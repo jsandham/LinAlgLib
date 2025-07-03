@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <cmath>
 #include <assert.h>
 
 #include "../../trace.h"

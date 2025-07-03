@@ -24,6 +24,8 @@
 //
 //********************************************************************************
 
+#include <cstdint>
+
 #include "host_vector.h"
 
 using namespace linalg::host;
@@ -84,7 +86,7 @@ void host_vector<T>::resize(size_t size, T val)
     hvec.resize(size, val);
 }
 
-template class host_vector<uint32_t>;
-template class host_vector<int32_t>;
-template class host_vector<int64_t>;
-template class host_vector<double>;
+template class linalg::host::host_vector<uint32_t>;
+template class linalg::host::host_vector<int32_t>;
+template class linalg::host::host_vector<int64_t>;
+template class linalg::host::host_vector<double>;
