@@ -249,16 +249,54 @@ static __global__ void csrmv_vector_kernel(int m, int n, int nnz, const T* alpha
     }
 }
 
+
+
+
+
+template <uint32_t BLOCKSIZE, typename T>
+static __global__ void axpy_kernel(int size, T alpha, const T* x, T* y)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    if(gid < size)
+    {
+        y[gid] = y[gid] + alpha * x[gid];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+static __global__ void axpby_kernel(int size, T alpha, const T* x, T beta, T* y)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    if(gid < size)
+    {
+        y[gid] = alpha * x[gid] + beta * y[gid];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+static __global__ void axpbygz_kernel(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    if(gid < size)
+    {
+        z[gid] = alpha * x[gid] + beta * y[gid] + gamma * z[gid];
+    }
+}
+
 template <typename T> 
 void launch_cuda_fill_kernel(T* data, size_t size, T val)
 {
     fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
 }
-
-template void launch_cuda_fill_kernel<uint32_t>(uint32_t* data, size_t size, uint32_t val);
-template void launch_cuda_fill_kernel<int32_t>(int32_t* data, size_t size, int32_t val);
-template void launch_cuda_fill_kernel<int64_t>(int64_t* data, size_t size, int64_t val);
-template void launch_cuda_fill_kernel<double>(double* data, size_t size, double val);
 
 template <typename T>
 void launch_cuda_dot_product_kernel(int size, const T* x, const T* y, T* result)
@@ -273,11 +311,6 @@ void launch_cuda_dot_product_kernel(int size, const T* x, const T* y, T* result)
     CHECK_CUDA(cudaFree(workspace));
 }
 
-template void launch_cuda_dot_product_kernel<uint32_t>(int size, const uint32_t* x, const uint32_t* y, uint32_t* result);
-template void launch_cuda_dot_product_kernel<int32_t>(int size, const int32_t* x, const int32_t* y, int32_t* result);
-template void launch_cuda_dot_product_kernel<int64_t>(int size, const int64_t* x, const int64_t* y, int64_t* result);
-template void launch_cuda_dot_product_kernel<double>(int size, const double* x, const double* y, double* result);
-
 template <typename T>
 void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T* alpha, const int* csr_row_ptr, 
                             const int* csr_col_ind, const T* csr_val, const T* x, const T* beta, T* y)
@@ -285,5 +318,37 @@ void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T* alpha, const int* 
     csrmv_vector_kernel<256, 32><<<((m - 1) / 256 + 1), 256>>>(m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
 }
 
+template <typename T>
+void launch_cuda_axpy_kernel(int size, T alpha, const T* x, T* y)
+{
+    axpy_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, y);
+}
+
+template <typename T>
+void launch_cuda_axpby_kernel(int size, T alpha, const T* x, T beta, T* y)
+{
+    axpby_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y);
+}
+
+template <typename T>
+void launch_cuda_axpbygz_kernel(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
+{
+    axpbygz_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y, gamma, z);
+}
+
+template void launch_cuda_fill_kernel<uint32_t>(uint32_t* data, size_t size, uint32_t val);
+template void launch_cuda_fill_kernel<int32_t>(int32_t* data, size_t size, int32_t val);
+template void launch_cuda_fill_kernel<int64_t>(int64_t* data, size_t size, int64_t val);
+template void launch_cuda_fill_kernel<double>(double* data, size_t size, double val);
+
+template void launch_cuda_dot_product_kernel<uint32_t>(int size, const uint32_t* x, const uint32_t* y, uint32_t* result);
+template void launch_cuda_dot_product_kernel<int32_t>(int size, const int32_t* x, const int32_t* y, int32_t* result);
+template void launch_cuda_dot_product_kernel<int64_t>(int size, const int64_t* x, const int64_t* y, int64_t* result);
+template void launch_cuda_dot_product_kernel<double>(int size, const double* x, const double* y, double* result);
+
 template void launch_cuda_csrmv_kernel<double>(int m, int n, int nnz, const double* alpha, const int* csr_row_ptr, 
                             const int* csr_col_ind, const double* csr_val, const double* x, const double* beta, double* y);
+
+template void launch_cuda_axpy_kernel<double>(int size, double alpha, const double* x, double* y);
+template void launch_cuda_axpby_kernel<double>(int size, double alpha, const double* x, double beta, double* y);
+template void launch_cuda_axpbygz_kernel<double>(int size, double alpha, const double* x, double beta, const double* y, double gamma, double* z);

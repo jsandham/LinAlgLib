@@ -27,9 +27,10 @@
 #include "../../../include/iterative_solvers/classic/jacobi.h"
 #include "../../../include/linalg_math.h"
 
+#include <chrono>
 #include <iostream>
 #include <vector>
-#include <chrono>
+
 
 #include "../../trace.h"
 
@@ -40,41 +41,44 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void jacobi_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& xold, const vector<double>& b)
-{
-    ROUTINE_TRACE("jacobi_iteration");
-
-    const int* csr_row_ptr = A.get_row_ptr();
-    const int* csr_col_ind = A.get_col_ind();
-    const double* csr_val = A.get_val();
-
-    double* x_ptr = x.get_vec();
-    const double* x_old_ptr = xold.get_vec();
-    const double* b_ptr = b.get_vec();
-
-    for (int j = 0; j < A.get_m(); j++)
+    void jacobi_iteration(const csr_matrix&     A,
+                          vector<double>&       x,
+                          const vector<double>& xold,
+                          const vector<double>& b)
     {
-        double sigma = 0.0;
-        double ajj = 0.0; // diagonal entry a_jj
-        for (int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
+        ROUTINE_TRACE("jacobi_iteration");
+
+        const int*    csr_row_ptr = A.get_row_ptr();
+        const int*    csr_col_ind = A.get_col_ind();
+        const double* csr_val     = A.get_val();
+
+        double*       x_ptr     = x.get_vec();
+        const double* x_old_ptr = xold.get_vec();
+        const double* b_ptr     = b.get_vec();
+
+        for(int j = 0; j < A.get_m(); j++)
         {
-            if (csr_col_ind[k] != j)
+            double sigma = 0.0;
+            double ajj   = 0.0; // diagonal entry a_jj
+            for(int k = csr_row_ptr[j]; k < csr_row_ptr[j + 1]; k++)
             {
-                sigma = sigma + csr_val[k] * x_old_ptr[csr_col_ind[k]];
+                if(csr_col_ind[k] != j)
+                {
+                    sigma = sigma + csr_val[k] * x_old_ptr[csr_col_ind[k]];
+                }
+                else
+                {
+                    ajj = csr_val[k];
+                }
             }
-            else
-            {
-                ajj = csr_val[k];
-            }
+            x_ptr[j] = (b_ptr[j] - sigma) / ajj;
         }
-        x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
 }
-}
 
-jacobi_solver::jacobi_solver(){}
+jacobi_solver::jacobi_solver() {}
 
-jacobi_solver::~jacobi_solver(){}
+jacobi_solver::~jacobi_solver() {}
 
 void jacobi_solver::build(const csr_matrix& A)
 {
@@ -82,7 +86,10 @@ void jacobi_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
+int jacobi_solver::solve(const csr_matrix&     A,
+                         vector<double>&       x,
+                         const vector<double>& b,
+                         iter_control          control)
 {
     ROUTINE_TRACE("jacobi_solver::solve");
 
@@ -97,7 +104,7 @@ int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<do
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // Jacobi iteration
         jacobi_iteration(A, x, xold, b);
@@ -106,7 +113,7 @@ int jacobi_solver::solve(const csr_matrix& A, vector<double>& x, const vector<do
 
         double res_norm = norm_inf(res);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

@@ -195,12 +195,6 @@ private:
     /*! \brief Residual vector in the CG algorithm. */
     vector<double> res;
 
-    //scalar<double> old_gamma;
-    //scalar<double> gamma;
-    //scalar<double> alpha;
-    //scalar<double> neg_alpha;
-    //scalar<double> beta;
-
     /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
      * For CG, restarts are usually not needed for exact arithmetic but can

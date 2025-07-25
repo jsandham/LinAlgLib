@@ -58,6 +58,8 @@ backend determine_backend(const T& first, const Rest&... rest)
 // Compute y = alpha * x + y
 void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::axpy");
+
     switch(determine_backend(x, y))
     {
         case backend::host:
@@ -71,6 +73,8 @@ void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 
 void linalg::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::axpy");
+
     switch(determine_backend(alpha, x, y))
     {
         case backend::host:
@@ -85,6 +89,8 @@ void linalg::axpy(const scalar<double>& alpha, const vector<double>& x, vector<d
 // Compute y = alpha * x + beta * y
 void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::axpby");
+
     switch(determine_backend(x, y))
     {
         case backend::host:
@@ -97,6 +103,8 @@ void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<do
 }
 void linalg::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::axpby");
+
     switch(determine_backend(alpha, x, beta, y))
     {
         case backend::host:
@@ -111,6 +119,8 @@ void linalg::axpby(const scalar<double>& alpha, const vector<double>& x, const s
 // Compute z = alpha * x + beta * y + gamma * z
 void linalg::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
 {
+    ROUTINE_TRACE("linalg::axpbygz");
+
     switch(determine_backend(x, y, z))
     {
         case backend::host:
@@ -123,6 +133,8 @@ void linalg::axpbypgz(double alpha, const vector<double>& x, double beta, const 
 }
 void linalg::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
 {
+    ROUTINE_TRACE("linalg::axpbygz");
+
     switch(determine_backend(alpha, x, beta, y, gamma, z))
     {
         case backend::host:
@@ -137,6 +149,8 @@ void linalg::axpbypgz(const scalar<double>& alpha, const vector<double>& x, cons
 // Compute y = A * x
 void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y)
 {
+    ROUTINE_TRACE("linalg::matrix_vector_product");
+
     switch(determine_backend(A, x, y))
     {
         case backend::host:
@@ -151,6 +165,8 @@ void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x,
 // Compute y = alpha * A * x + beta * y
 void linalg::matrix_vector_product(double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>&y)
 {
+    ROUTINE_TRACE("linalg::matrix_vector_product");
+
     switch(determine_backend(A, x, y))
     {
         case backend::host:
@@ -165,6 +181,8 @@ void linalg::matrix_vector_product(double alpha, const csr_matrix& A, const vect
 // Compute C = A * B
 void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
+    ROUTINE_TRACE("linalg::matrix_matrix_product");
+
     switch(determine_backend(C, A, B))
     {
         case backend::host:
@@ -179,6 +197,8 @@ void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr
 // Compute C = A + B
 void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
+    ROUTINE_TRACE("linalg::matrix_matrix_addition");
+
     switch(determine_backend(C, A, B))
     {
         case backend::host:
@@ -193,6 +213,8 @@ void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const cs
 // Incomplete IC factorization
 void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
+    ROUTINE_TRACE("linalg::csric0");
+
     switch(determine_backend(LL))
     {
         case backend::host:
@@ -207,6 +229,8 @@ void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 // Incomplete LU factorization
 void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 {
+    ROUTINE_TRACE("linalg::csrilu0");
+
     switch(determine_backend(LU))
     {
         case backend::host:
@@ -221,6 +245,8 @@ void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 // Forward solve
 void linalg::forward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
 {
+    ROUTINE_TRACE("linalg::forward_solve");
+
     switch(determine_backend(A, b, x))
     {
         case backend::host:
@@ -235,6 +261,8 @@ void linalg::forward_solve(const csr_matrix& A, const vector<double>& b, vector<
 // Backward solve
 void linalg::backward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
 {
+    ROUTINE_TRACE("linalg::backward_solve");
+
     switch(determine_backend(A, b, x))
     {
         case backend::host:
@@ -249,6 +277,8 @@ void linalg::backward_solve(const csr_matrix& A, const vector<double>& b, vector
 // Transpose matrix
 void linalg::transpose_matrix(const csr_matrix &A, csr_matrix &transposeA)
 {
+    ROUTINE_TRACE("linalg::transpose_matrix");
+
     switch(determine_backend(A, transposeA))
     {
         case backend::host:
@@ -263,6 +293,8 @@ void linalg::transpose_matrix(const csr_matrix &A, csr_matrix &transposeA)
 // Dot product
 double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::dot_product");
+
     switch(determine_backend(x, y))
     {
         case backend::host:
@@ -279,6 +311,8 @@ double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 // Dot product
 void linalg::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
 {
+    ROUTINE_TRACE("linalg::dot_product");
+
     switch(determine_backend(x, y, result))
     {
         case backend::host:
@@ -293,6 +327,8 @@ void linalg::dot_product(const vector<double>& x, const vector<double>& y, scala
 // Compute residual
 void linalg::compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res)
 {
+    ROUTINE_TRACE("linalg::compute_residual");
+
     switch(determine_backend(A, x, b, res))
     {
         case backend::host:
@@ -307,6 +343,8 @@ void linalg::compute_residual(const csr_matrix& A, const vector<double>& x, cons
 // Exclusive scan
 void linalg::exclusize_scan(vector<double>& x)
 {
+    ROUTINE_TRACE("linalg::exclusive_scan");
+
     switch(determine_backend(x))
     {
         case backend::host:
@@ -321,6 +359,8 @@ void linalg::exclusize_scan(vector<double>& x)
 // Extract diagonal entries
 void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 {
+    ROUTINE_TRACE("linalg::diagonal");
+
     switch(determine_backend(A, d))
     {
         case backend::host:
@@ -335,6 +375,8 @@ void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 // Euclidean norm
 double linalg::norm_euclid(const vector<double>& array)
 {
+    ROUTINE_TRACE("linalg::norm_euclid");
+
     switch(determine_backend(array))
     {
         case backend::host:
@@ -350,6 +392,8 @@ double linalg::norm_euclid(const vector<double>& array)
 // Infinity norm
 double linalg::norm_inf(const vector<double>& array)
 {
+    ROUTINE_TRACE("linalg::norm_inf");
+
     switch(determine_backend(array))
     {
         case backend::host:
@@ -367,8 +411,8 @@ double linalg::norm_inf(const vector<double>& array)
 template<typename T>
 void linalg::fill(vector<T> &vec, T value)
 {
-    std::cout << "vec.is_on_host(): " << vec.is_on_host() << std::endl;
-
+    ROUTINE_TRACE("linalg::fill<T>");
+    
     switch(determine_backend(vec))
     {
         case backend::host:
@@ -389,6 +433,8 @@ template void linalg::fill<double>(vector<double> &vec, double value);
 template <typename T>
 void linalg::copy(vector<T> &dest, const vector<T> &src)
 {
+    ROUTINE_TRACE("linalg::copy<T>");
+
     switch(determine_backend(dest, src))
     {
         case backend::host:

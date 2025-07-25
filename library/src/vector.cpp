@@ -107,18 +107,21 @@ const T* vector<T>::get_vec() const
 template <typename T>
 void vector<T>::resize(size_t size)
 {
+    ROUTINE_TRACE("vector<T>::resize");
     vec->resize(size);
 }
 
 template <typename T>
 void vector<T>::resize(size_t size, T val)
 {
+    ROUTINE_TRACE("vector<T>::resize");
     vec->resize(size, val);
 }
 
 template <typename T>
 void vector<T>::clear()
 {
+    ROUTINE_TRACE("vector<T>::clear");
     vec->clear();
 }
 

@@ -37,7 +37,7 @@ namespace linalg
 {
     namespace host
     {
-        template<typename T>
+        template <typename T>
         class host_scalar;
     }
 
@@ -47,87 +47,87 @@ namespace linalg
         class device_scalar;
     }
 
-template<typename T>
-class scalar
-{
-private:
-    //host::host_scalar<T> hscalar;
-    //device::device_scalar<T> dscalar;
+    template <typename T>
+    class scalar
+    {
+    private:
+        //host::host_scalar<T> hscalar;
+        //device::device_scalar<T> dscalar;
 
-    T hval;
+        T hval;
 
-    bool on_host;
+        bool on_host;
 
-public:
-    scalar();
-    scalar(T val);
-    ~scalar();
+    public:
+        scalar();
+        scalar(T val);
+        ~scalar();
 
-    // scalar(const scalar& other);
-    // scalar (const scalar&) = delete;
+        // scalar(const scalar& other);
+        // scalar (const scalar&) = delete;
 
-    scalar& operator=(const scalar& other);
-    scalar& operator=(const T& other); 
+        scalar& operator=(const scalar& other);
+        scalar& operator=(const T& other);
 
-    //scalar operator/(scalar lhs, const scalar& rhs);
-    //scalar operator*(scalar lhs, const scalar& rhs);
+        //scalar operator/(scalar lhs, const scalar& rhs);
+        //scalar operator*(scalar lhs, const scalar& rhs);
 
-    scalar& operator*=(const T& rhs);
-    scalar& operator/=(const T& rhs);
+        scalar& operator*=(const T& rhs);
+        scalar& operator/=(const T& rhs);
 
+        bool is_on_host() const;
 
-    bool is_on_host() const;
+        T*       get_val();
+        const T* get_val() const;
 
-    T* get_val();
-    const T* get_val() const;
+        void copy_from(const scalar& x);
+        void move_to_device();
+        void move_to_host();
 
-    void copy_from(const scalar& x);
-    void move_to_device();
-    void move_to_host();
+        static const scalar<T>& one();
+        static const scalar<T>& zero();
 
-    static const scalar<T>& one();
-    static const scalar<T>& zero();
-
-    friend std::ostream& operator<<(std::ostream& os, const scalar& s) {
-        if (s.is_on_host()) {
-            os << *(s.get_val());
-        } 
-        else 
+        friend std::ostream& operator<<(std::ostream& os, const scalar& s)
         {
-            os << "[Device value not accessible]";
+            if(s.is_on_host())
+            {
+                os << *(s.get_val());
+            }
+            else
+            {
+                os << "[Device value not accessible]";
+            }
+            return os;
         }
-        return os;
+    };
+
+    template <typename T>
+    scalar<T> operator*(scalar<T> lhs, const T& rhs)
+    {
+        lhs *= rhs;
+        return lhs;
     }
-};
 
+    template <typename T>
+    scalar<T> operator*(const T& lhs, scalar<T> rhs)
+    {
+        rhs *= lhs;
+        return rhs;
+    }
 
-template <typename T>
-scalar<T> operator*(scalar<T> lhs, const T& rhs) 
-{
-    lhs *= rhs;
-    return lhs;
-}
+    template <typename T>
+    scalar<T> operator+(scalar<T> lhs, const T& rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
 
-template <typename T>
-scalar<T> operator*(const T& lhs, scalar<T> rhs) 
-{
-    rhs *= lhs;
-    return rhs;
-}
-
-template <typename T>
-scalar<T> operator+(scalar<T> lhs, const T& rhs) 
-{
-    lhs += rhs;
-    return lhs;
-}
-
-template <typename T>
-scalar<T> operator+(const T& lhs, scalar<T> rhs) 
-{
-    rhs += lhs;
-    return rhs;
-}
+    template <typename T>
+    scalar<T> operator+(const T& lhs, scalar<T> rhs)
+    {
+        rhs += lhs;
+        return rhs;
+    }
 
 }
 

@@ -31,10 +31,11 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include <chrono>
+
 
 #include "../../trace.h"
 
@@ -46,87 +47,89 @@
 
 namespace linalg
 {
-static bool construct_prolongation_using_unsmoothed_aggregation(const csr_matrix &A,
-                                                                const vector<int> &connections,
-                                                                const vector<int64_t> &aggregates,
-                                                                const vector<int64_t> &aggregate_root_nodes,
-                                                                csr_matrix &prolongation)
-{
-    ROUTINE_TRACE("construct_prolongation_using_unsmoothed_aggregation");
-
-    // Determine number of columns in the prolongation matrix. This will be
-    // the maximum aggregate plus one.
-    int64_t n = -1;
-    for (size_t i = 0; i < aggregates.get_size(); i++)
+    static bool construct_prolongation_using_unsmoothed_aggregation(
+        const csr_matrix&      A,
+        const vector<int>&     connections,
+        const vector<int64_t>& aggregates,
+        const vector<int64_t>& aggregate_root_nodes,
+        csr_matrix&            prolongation)
     {
-       if (n < aggregates[i])
-       {
-           n = aggregates[i];
-       }
-    }
-    n++;
+        ROUTINE_TRACE("construct_prolongation_using_unsmoothed_aggregation");
 
-    prolongation.resize(A.get_m(), (int)n, 0);
-
-    std::cout << "prolongation.n: " << prolongation.get_n() << " A.m: " << A.get_m() << "A.nnz: " << A.get_nnz() << std::endl;
-
-    int* csr_row_ptr_P = prolongation.get_row_ptr();
-
-    std::vector<int> table(prolongation.get_n(), -1);
-
-    // Determine number of non-zeros for P
-    int nnz = 0;
-    for (int i = 0; i < A.get_m(); i++)
-    {
-        int64_t aggregate = aggregates[i];
-
-        if (aggregate >= 0)
+        // Determine number of columns in the prolongation matrix. This will be
+        // the maximum aggregate plus one.
+        int64_t n = -1;
+        for(size_t i = 0; i < aggregates.get_size(); i++)
         {
-            csr_row_ptr_P[i + 1] = 1;
-            nnz++;
+            if(n < aggregates[i])
+            {
+                n = aggregates[i];
+            }
         }
-    }
+        n++;
 
-    // exclusive scan on prolongation row pointer array
-    csr_row_ptr_P[0] = 0;
-    for (int i = 0; i < prolongation.get_m(); i++)
-    {
-        csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
-    }
+        prolongation.resize(A.get_m(), (int)n, 0);
 
-    // std::cout << "prolongation.csr_row_ptr" << std::endl;
-    // for (int i = 0; i < prolongation.get_m() + 1; i++)
-    // {
-    // 	std::cout << csr_row_ptr_P[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
+        std::cout << "prolongation.n: " << prolongation.get_n() << " A.m: " << A.get_m()
+                  << "A.nnz: " << A.get_nnz() << std::endl;
 
-    assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
+        int* csr_row_ptr_P = prolongation.get_row_ptr();
 
-    prolongation.resize(prolongation.get_m(), prolongation.get_n(), nnz);
+        std::vector<int> table(prolongation.get_n(), -1);
 
-    int* csr_col_ind_P = prolongation.get_col_ind();
-    double* csr_val_P = prolongation.get_val();
-
-    // Fill P
-    for (int i = 0; i < A.get_m(); i++)
-    {
-        int64_t aggregate = aggregates[i];
-
-        if (aggregate >= 0)
+        // Determine number of non-zeros for P
+        int nnz = 0;
+        for(int i = 0; i < A.get_m(); i++)
         {
-            int start = csr_row_ptr_P[i];
+            int64_t aggregate = aggregates[i];
 
-            csr_col_ind_P[start] = (int)aggregate;
-            csr_val_P[start] = 1.0;
+            if(aggregate >= 0)
+            {
+                csr_row_ptr_P[i + 1] = 1;
+                nnz++;
+            }
         }
+
+        // exclusive scan on prolongation row pointer array
+        csr_row_ptr_P[0] = 0;
+        for(int i = 0; i < prolongation.get_m(); i++)
+        {
+            csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
+        }
+
+        // std::cout << "prolongation.csr_row_ptr" << std::endl;
+        // for (int i = 0; i < prolongation.get_m() + 1; i++)
+        // {
+        // 	std::cout << csr_row_ptr_P[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+
+        assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
+
+        prolongation.resize(prolongation.get_m(), prolongation.get_n(), nnz);
+
+        int*    csr_col_ind_P = prolongation.get_col_ind();
+        double* csr_val_P     = prolongation.get_val();
+
+        // Fill P
+        for(int i = 0; i < A.get_m(); i++)
+        {
+            int64_t aggregate = aggregates[i];
+
+            if(aggregate >= 0)
+            {
+                int start = csr_row_ptr_P[i];
+
+                csr_col_ind_P[start] = (int)aggregate;
+                csr_val_P[start]     = 1.0;
+            }
+        }
+
+        return true;
     }
-
-    return true;
-}
 }
 
-void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
+void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("uaamg_setup");
 
@@ -143,18 +146,18 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
     double eps = 0.001;
 
     int level = 0;
-    while (level < max_level)
+    while(level < max_level)
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix &A_fine = hierarchy.A_cs[level];
-        csr_matrix &A_coarse = hierarchy.A_cs[level + 1];
-        csr_matrix &P = hierarchy.prolongations[level];
-        csr_matrix &R = hierarchy.restrictions[level];
+        const csr_matrix& A_fine   = hierarchy.A_cs[level];
+        csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix&       P        = hierarchy.prolongations[level];
+        csr_matrix&       R        = hierarchy.restrictions[level];
 
         // A_fine.print_matrix("A_fine");
-        
-        vector<int> connections;
+
+        vector<int>     connections;
         vector<int64_t> aggregates;
         vector<int64_t> aggregate_root_nodes;
 
@@ -168,9 +171,10 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
         compute_aggregates_using_pmis(A_fine, connections, aggregates, aggregate_root_nodes);
 
         // Construct prolongation matrix using smoothed aggregation
-        construct_prolongation_using_unsmoothed_aggregation(A_fine, connections, aggregates, aggregate_root_nodes, P);
+        construct_prolongation_using_unsmoothed_aggregation(
+            A_fine, connections, aggregates, aggregate_root_nodes, P);
 
-        if (P.get_n() == 0)
+        if(P.get_n() == 0)
         {
             break;
         }
@@ -194,5 +198,6 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "Unsmoothed Aggregation amg setup time: " << ms_double.count() << "ms" << std::endl;
+    std::cout << "Unsmoothed Aggregation amg setup time: " << ms_double.count() << "ms"
+              << std::endl;
 }

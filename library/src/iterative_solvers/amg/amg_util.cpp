@@ -28,7 +28,10 @@
 
 #include "../../trace.h"
 
-void linalg::galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse)
+void linalg::galarkin_triple_product(const csr_matrix& R,
+                                     const csr_matrix& A,
+                                     const csr_matrix& P,
+                                     csr_matrix&       A_coarse)
 {
     ROUTINE_TRACE("galarkin_triple_product");
 
@@ -41,4 +44,3 @@ void linalg::galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, c
 
     //A_coarse.print_matrix("A coarse");
 }
-

@@ -11,8 +11,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions :
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -23,13 +23,15 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#include <iostream>
 #include "device_math.h"
+#include <iostream>
+
+#include "cuda/cuda_kernels.h"
 
 // Compute y = alpha * x + y
 void linalg::device::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
-    std::cout << "Error: axpy on device not implemented" << std::endl;
+    launch_cuda_axpy_kernel(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 // Compute y = alpha * x + y
@@ -41,35 +43,52 @@ void linalg::device::axpy(const scalar<double>& alpha, const vector<double>& x, 
 // Compute y = alpha * x + beta * y
 void linalg::device::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
-    std::cout << "Error: axpyby on device not implemented" << std::endl;
+    launch_cuda_axpby_kernel(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 // Compute y = alpha * x + beta * y
-void linalg::device::axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y)
+void linalg::device::axpby(const scalar<double>& alpha,
+                           const vector<double>& x,
+                           const scalar<double>& beta,
+                           vector<double>&       y)
 {
-    std::cout << "Error: axpyby on device not implemented" << std::endl;
+    std::cout << "Error: axpby on device not implemented" << std::endl;
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
-void linalg::device::axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z)
+void linalg::device::axpbypgz(double                alpha,
+                              const vector<double>& x,
+                              double                beta,
+                              const vector<double>& y,
+                              double                gamma,
+                              vector<double>&       z)
 {
-    std::cout << "Error: axpbypgz on device not implemented" << std::endl;
+    launch_cuda_axpbygz_kernel(
+        x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
-void linalg::device::axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z)
+void linalg::device::axpbypgz(const scalar<double>& alpha,
+                              const vector<double>& x,
+                              const scalar<double>& beta,
+                              const vector<double>& y,
+                              const scalar<double>& gamma,
+                              vector<double>&       z)
 {
-    std::cout << "Error: axpbypgz on device not implemented" << std::endl;
+    std::cout << "Error: axpbygz on device not implemented" << std::endl;
 }
 
 // Compute y = A * x
-void linalg::device::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y)
+void linalg::device::matrix_vector_product(const csr_matrix&     A,
+                                           const vector<double>& x,
+                                           vector<double>&       y)
 {
     std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
 }
 
 // Compute y = alpha * A * x + beta * y
-void linalg::device::matrix_vector_product(double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>&y)
+void linalg::device::matrix_vector_product(
+    double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
 {
     std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
 }
@@ -99,19 +118,25 @@ void linalg::device::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_
 }
 
 // Forward solve
-void linalg::device::forward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
+void linalg::device::forward_solve(const csr_matrix&     A,
+                                   const vector<double>& b,
+                                   vector<double>&       x,
+                                   bool                  unit_diag)
 {
     std::cout << "Error: forward_solve on device not implemented" << std::endl;
 }
 
 // Backward solve
-void linalg::device::backward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag)
+void linalg::device::backward_solve(const csr_matrix&     A,
+                                    const vector<double>& b,
+                                    vector<double>&       x,
+                                    bool                  unit_diag)
 {
     std::cout << "Error: backward_solve on device not implemented" << std::endl;
 }
 
 // Transpose matrix
-void linalg::device::transpose_matrix(const csr_matrix &A, csr_matrix &transposeA)
+void linalg::device::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 {
     std::cout << "Error: transpose_matrix on device not implemented" << std::endl;
 }
@@ -124,14 +149,19 @@ double linalg::device::dot_product(const vector<double>& x, const vector<double>
 }
 
 // Dot product
-void linalg::device::dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result)
+void linalg::device::dot_product(const vector<double>& x,
+                                 const vector<double>& y,
+                                 scalar<double>&       result)
 {
     std::cout << "Error: dot_product on device not implemented" << std::endl;
     *(result.get_val()) = 0.0;
 }
 
 // Compute residual
-void linalg::device::compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res)
+void linalg::device::compute_residual(const csr_matrix&     A,
+                                      const vector<double>& x,
+                                      const vector<double>& b,
+                                      vector<double>&       res)
 {
     std::cout << "Error: compute_residual on device not implemented" << std::endl;
 }
@@ -163,25 +193,25 @@ double linalg::device::norm_inf(const vector<double>& array)
 }
 
 // Fill array with value
-template<typename T>
-void linalg::device::fill(vector<T> &vec, T value)
+template <typename T>
+void linalg::device::fill(vector<T>& vec, T value)
 {
-    std::cout << "Error: fill on device not implemented" << std::endl;
+    launch_cuda_fill_kernel(vec.get_vec(), vec.get_size(), value);
 }
 
-template void linalg::device::fill<uint32_t>(vector<uint32_t> &vec, uint32_t value);
-template void linalg::device::fill<int32_t>(vector<int32_t> &vec, int32_t value);
-template void linalg::device::fill<int64_t>(vector<int64_t> &vec, int64_t value);
-template void linalg::device::fill<double>(vector<double> &vec, double value);
+template void linalg::device::fill<uint32_t>(vector<uint32_t>& vec, uint32_t value);
+template void linalg::device::fill<int32_t>(vector<int32_t>& vec, int32_t value);
+template void linalg::device::fill<int64_t>(vector<int64_t>& vec, int64_t value);
+template void linalg::device::fill<double>(vector<double>& vec, double value);
 
 // Copy array
 template <typename T>
-void linalg::device::copy(vector<T> &dest, const vector<T> &src)
+void linalg::device::copy(vector<T>& dest, const vector<T>& src)
 {
     std::cout << "Error: copy on device not implemented" << std::endl;
 }
 
-template void linalg::device::copy<uint32_t>(vector<uint32_t> &dest, const vector<uint32_t> &src);
-template void linalg::device::copy<int32_t>(vector<int32_t> &dest, const vector<int32_t> &src);
-template void linalg::device::copy<int64_t>(vector<int64_t> &dest, const vector<int64_t> &src);
-template void linalg::device::copy<double>(vector<double> &dest, const vector<double> &src);
+template void linalg::device::copy<uint32_t>(vector<uint32_t>& dest, const vector<uint32_t>& src);
+template void linalg::device::copy<int32_t>(vector<int32_t>& dest, const vector<int32_t>& src);
+template void linalg::device::copy<int64_t>(vector<int64_t>& dest, const vector<int64_t>& src);
+template void linalg::device::copy<double>(vector<double>& dest, const vector<double>& src);

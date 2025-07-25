@@ -27,11 +27,12 @@
 #include "../../../include/iterative_solvers/krylov/gmres.h"
 #include "../../../include/linalg_math.h"
 
-#include <iostream>
-#include <vector>
+#include <assert.h>
 #include <chrono>
 #include <cmath>
-#include <assert.h>
+#include <iostream>
+#include <vector>
+
 
 #include "../../trace.h"
 
@@ -43,21 +44,25 @@ using namespace linalg;
 //
 //****************************************************************************
 
-static void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, const double *x,
-                           double *y, int n)
+static void matrix_vector_product(const int*    csr_row_ptr,
+                                  const int*    csr_col_ind,
+                                  const double* csr_val,
+                                  const double* x,
+                                  double*       y,
+                                  int           n)
 {
     ROUTINE_TRACE("matrix_vector_product");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         int row_start = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
+        int row_end   = csr_row_ptr[i + 1];
 
         double s = 0.0;
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
             s += csr_val[j] * x[csr_col_ind[j]];
         }
@@ -66,15 +71,15 @@ static void matrix_vector_product(const int *csr_row_ptr, const int *csr_col_ind
     }
 }
 
-static double dot_product(const double *x, const double *y, int n)
+static double dot_product(const double* x, const double* y, int n)
 {
     ROUTINE_TRACE("dot_product");
 
     double dot_prod = 0.0;
 #if defined(_OPENMP)
-#pragma omp parallel for reduction(+: dot_prod)
+#pragma omp parallel for reduction(+ : dot_prod)
 #endif
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         dot_prod += x[i] * y[i];
     }
@@ -86,7 +91,16 @@ static double dot_product(const double *x, const double *y, int n)
 // Q : n x (restart + 1)
 // H : (restart + 1) x restart
 // where k = 1....restart
-static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, const preconditioner* precond, double* z, double* Q, double* H, int n, int k, int restart)
+static void arnoldi(const int*            csr_row_ptr,
+                    const int*            csr_col_ind,
+                    const double*         csr_val,
+                    const preconditioner* precond,
+                    double*               z,
+                    double*               Q,
+                    double*               H,
+                    int                   n,
+                    int                   k,
+                    int                   restart)
 {
     ROUTINE_TRACE("arnoldi");
 
@@ -107,7 +121,7 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
 
         for(int i = 0; i < n; i++)
         {
-            vec_z[i] = z[i];
+            vec_z[i]  = z[i];
             vec_qk[i] = qk[i];
         }
 
@@ -120,7 +134,7 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
         matrix_vector_product(csr_row_ptr, csr_col_ind, csr_val, qkm1, qk, n);
     }
 
-    for (int i = 0; i < k; i++)
+    for(int i = 0; i < k; i++)
     {
         const double* qi = &Q[i * n];
 
@@ -129,19 +143,19 @@ static void arnoldi(const int* csr_row_ptr, const int* csr_col_ind, const double
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(static, 1024)
 #endif
-        for (int j = 0; j < n; j++)
+        for(int j = 0; j < n; j++)
         {
             qk[j] = qk[j] - H[i + (k - 1) * (restart + 1)] * qi[j];
         }
     }
 
-    double vv = dot_product(qk, qk, n);
+    double vv                      = dot_product(qk, qk, n);
     H[k + (k - 1) * (restart + 1)] = std::sqrt(vv);
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(static, 1024)
 #endif
-    for (int j = 0; j < n; j++)
+    for(int j = 0; j < n; j++)
     {
         qk[j] = qk[j] / H[k + (k - 1) * (restart + 1)];
     }
@@ -154,7 +168,7 @@ static void apply_givens_rotation(double c, double s, double* H, int i, int k, i
     double temp1 = H[i + (k - 1) * (restart + 1)];
     double temp2 = H[i + 1 + (k - 1) * (restart + 1)];
 
-    H[i + (k - 1) * (restart + 1)] = c * temp1 + s * temp2;
+    H[i + (k - 1) * (restart + 1)]     = c * temp1 + s * temp2;
     H[i + 1 + (k - 1) * (restart + 1)] = -s * temp1 + c * temp2;
 }
 
@@ -164,7 +178,7 @@ static void compute_givens_rotation(double* c, double* s, const double* H, int k
 
     double xi = H[k - 1 + (k - 1) * (restart + 1)], xj = H[k + (k - 1) * (restart + 1)];
 
-    if (xi == 0.0)
+    if(xi == 0.0)
     {
         c[k - 1] = 0.0;
         s[k - 1] = 1.0;
@@ -177,20 +191,23 @@ static void compute_givens_rotation(double* c, double* s, const double* H, int k
     else if(std::abs(xi) > std::abs(xj))
     {
         double temp = xj / xi;
-        c[k - 1] = 1.0 / std::sqrt(1.0 + temp * temp);
-        s[k - 1] = temp * c[k - 1];
+        c[k - 1]    = 1.0 / std::sqrt(1.0 + temp * temp);
+        s[k - 1]    = temp * c[k - 1];
     }
     else
     {
         double temp = xi / xj;
-        s[k - 1] = 1.0 / std::sqrt(1.0 + temp * temp);
-        c[k - 1] = temp * s[k - 1];
+        s[k - 1]    = 1.0 / std::sqrt(1.0 + temp * temp);
+        c[k - 1]    = temp * s[k - 1];
     }
 }
 
-gmres_solver::gmres_solver() : restart(-1){}
+gmres_solver::gmres_solver()
+    : restart(-1)
+{
+}
 
-gmres_solver::~gmres_solver(){}
+gmres_solver::~gmres_solver() {}
 
 void gmres_solver::build(const csr_matrix& A, int restart)
 {
@@ -205,14 +222,17 @@ void gmres_solver::build(const csr_matrix& A, int restart)
     s.resize(restart);
 }
 
-int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
+int gmres_solver::solve_nonprecond(const csr_matrix&     A,
+                                   vector<double>&       x,
+                                   const vector<double>& b,
+                                   iter_control          control)
 {
     ROUTINE_TRACE("gmres_solver::solve_nonprecond");
 
     // res = b - A * x
     compute_residual(A, x, b, res);
 
-    double res_norm = norm_euclid(res);
+    double res_norm         = norm_euclid(res);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -221,7 +241,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
         return 0;
     }
 
-    for (int i = 0; i < A.get_m(); i++)
+    for(int i = 0; i < A.get_m(); i++)
     {
         Q[i] = res[i] / res_norm;
     }
@@ -234,22 +254,31 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
 
     // gmres
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         int k = 1;
         for(k = 1; k < restart + 1; k++)
         {
             // Arnoldi iteration
-            arnoldi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), nullptr, nullptr, Q.get_vec(), H.get_vec(), A.get_m(), k, restart);
+            arnoldi(A.get_row_ptr(),
+                    A.get_col_ind(),
+                    A.get_val(),
+                    nullptr,
+                    nullptr,
+                    Q.get_vec(),
+                    H.get_vec(),
+                    A.get_m(),
+                    k,
+                    restart);
 
             // Solve least squares problem H(1:k+1,1:k) * y = sqrt(r'*r) * eye(k+1,1)
             // since H is hessenberg, use givens rotations
-            
+
             // Apply previous cached givens rotations
             // Givens 2 by 2 rotation matrix:
             //  G =  [c s
             //       -s c]
-            for (int i = 0; i < k - 1; i++)
+            for(int i = 0; i < k - 1; i++)
             {
                 apply_givens_rotation(c[i], s[i], H.get_vec(), i, k, restart);
             }
@@ -261,7 +290,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
             apply_givens_rotation(c[k - 1], s[k - 1], H.get_vec(), k - 1, k, restart);
 
             // update residual vector
-            res[k] = -s[k - 1] * res[k - 1];
+            res[k]     = -s[k - 1] * res[k - 1];
             res[k - 1] = c[k - 1] * res[k - 1];
 
             if(control.residual_converges(std::abs(res[k]), initial_res_norm) || k == restart)
@@ -289,7 +318,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
         // std::cout << "" << std::endl;
 
         // backward solve
-        for (int i = k - 1; i >= 0; i--)
+        for(int i = k - 1; i >= 0; i--)
         {
             for(int j = i + 1; j < k; j++)
             {
@@ -300,9 +329,9 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
         }
 
         // update solution vector
-        for (int j = 0; j < k; j++)
+        for(int j = 0; j < k; j++)
         {
-            for (int i = 0; i < A.get_m(); i++)
+            for(int i = 0; i < A.get_m(); i++)
             {
                 x[i] = x[i] + Q[j * A.get_m() + i] * res[j];
             }
@@ -318,8 +347,8 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
         {
             break;
         }
-        
-        for (int i = 0; i < A.get_m(); i++)
+
+        for(int i = 0; i < A.get_m(); i++)
         {
             Q[i] = res[i] / res_norm;
         }
@@ -339,7 +368,11 @@ int gmres_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const
     return iter;
 }
 
-int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int gmres_solver::solve_precond(const csr_matrix&     A,
+                                vector<double>&       x,
+                                const vector<double>& b,
+                                const preconditioner* precond,
+                                iter_control          control)
 {
     ROUTINE_TRACE("gmres_solver::solve_precond");
 
@@ -351,7 +384,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
     // z = (M^-1) * res
     precond->solve(res, z);
 
-    double res_norm = norm_euclid(z);
+    double res_norm         = norm_euclid(z);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -360,7 +393,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
         return 0;
     }
 
-    for (int i = 0; i < A.get_m(); i++)
+    for(int i = 0; i < A.get_m(); i++)
     {
         Q[i] = z[i] / res_norm;
     }
@@ -373,22 +406,31 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
 
     // gmres
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         int k = 1;
         for(k = 1; k < restart + 1; k++)
         {
             // Arnoldi iteration
-            arnoldi(A.get_row_ptr(), A.get_col_ind(), A.get_val(), precond, z.get_vec(), Q.get_vec(), H.get_vec(), A.get_m(), k, restart);
+            arnoldi(A.get_row_ptr(),
+                    A.get_col_ind(),
+                    A.get_val(),
+                    precond,
+                    z.get_vec(),
+                    Q.get_vec(),
+                    H.get_vec(),
+                    A.get_m(),
+                    k,
+                    restart);
 
             // Solve least squares problem H(1:k+1,1:k) * y = sqrt(r'*r) * eye(k+1,1)
             // since H is hessenberg, use givens rotations
-            
+
             // Apply previous cached givens rotations
             // Givens 2 by 2 rotation matrix:
             //  G =  [c s
             //       -s c]
-            for (int i = 0; i < k - 1; i++)
+            for(int i = 0; i < k - 1; i++)
             {
                 apply_givens_rotation(c[i], s[i], H.get_vec(), i, k, restart);
             }
@@ -400,7 +442,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
             apply_givens_rotation(c[k - 1], s[k - 1], H.get_vec(), k - 1, k, restart);
 
             // update residual vector
-            res[k] = -s[k - 1] * res[k - 1];
+            res[k]     = -s[k - 1] * res[k - 1];
             res[k - 1] = c[k - 1] * res[k - 1];
 
             if(control.residual_converges(std::abs(res[k]), initial_res_norm) || k == restart)
@@ -428,7 +470,7 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
         // std::cout << "" << std::endl;
 
         // backward solve
-        for (int i = k - 1; i >= 0; i--)
+        for(int i = k - 1; i >= 0; i--)
         {
             for(int j = i + 1; j < k; j++)
             {
@@ -439,9 +481,9 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
         }
 
         // update solution vector
-        for (int j = 0; j < k; j++)
+        for(int j = 0; j < k; j++)
         {
-            for (int i = 0; i < A.get_m(); i++)
+            for(int i = 0; i < A.get_m(); i++)
             {
                 x[i] = x[i] + Q[j * A.get_m() + i] * res[j];
             }
@@ -460,8 +502,8 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
         {
             break;
         }
-        
-        for (int i = 0; i < A.get_m(); i++)
+
+        for(int i = 0; i < A.get_m(); i++)
         {
             Q[i] = z[i] / res_norm;
         }
@@ -481,7 +523,11 @@ int gmres_solver::solve_precond(const csr_matrix& A, vector<double>& x, const ve
     return iter;
 }
 
-int gmres_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int gmres_solver::solve(const csr_matrix&     A,
+                        vector<double>&       x,
+                        const vector<double>& b,
+                        const preconditioner* precond,
+                        iter_control          control)
 {
     ROUTINE_TRACE("gmres_solver::solve");
 

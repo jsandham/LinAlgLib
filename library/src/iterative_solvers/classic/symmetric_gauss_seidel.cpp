@@ -27,9 +27,10 @@
 #include "../../../include/iterative_solvers/classic/symmetric_gauss_seidel.h"
 #include "../../../include/linalg_math.h"
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 #include <vector>
+
 
 #include "../../trace.h"
 
@@ -40,82 +41,86 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void symm_gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b)
-{
-    ROUTINE_TRACE("symm_gauss_seidel_iteration");
-
-    const int* csr_row_ptr = A.get_row_ptr();
-    const int* csr_col_ind = A.get_col_ind();
-    const double* csr_val = A.get_val();
-
-    double* x_ptr = x.get_vec();
-    const double* b_ptr = b.get_vec();
-
-    // forward pass
-    for (int j = 0; j < A.get_m(); j++)
+    void
+        symm_gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b)
     {
-        double sigma = 0.0;
-        double ajj = 0.0; // diagonal entry a_jj
+        ROUTINE_TRACE("symm_gauss_seidel_iteration");
 
-        int row_start = csr_row_ptr[j];
-        int row_end = csr_row_ptr[j + 1];
-        
-        for (int k = row_start; k < row_end; k++)
+        const int*    csr_row_ptr = A.get_row_ptr();
+        const int*    csr_col_ind = A.get_col_ind();
+        const double* csr_val     = A.get_val();
+
+        double*       x_ptr = x.get_vec();
+        const double* b_ptr = b.get_vec();
+
+        // forward pass
+        for(int j = 0; j < A.get_m(); j++)
         {
-            int col = csr_col_ind[k];
-            double val = csr_val[k];
+            double sigma = 0.0;
+            double ajj   = 0.0; // diagonal entry a_jj
 
-            if (col != j)
+            int row_start = csr_row_ptr[j];
+            int row_end   = csr_row_ptr[j + 1];
+
+            for(int k = row_start; k < row_end; k++)
             {
-                sigma = sigma + val * x_ptr[col];
+                int    col = csr_col_ind[k];
+                double val = csr_val[k];
+
+                if(col != j)
+                {
+                    sigma = sigma + val * x_ptr[col];
+                }
+                else
+                {
+                    ajj = val;
+                }
             }
-            else
-            {
-                ajj = val;
-            }
+            x_ptr[j] = (b_ptr[j] - sigma) / ajj;
         }
-        x_ptr[j] = (b_ptr[j] - sigma) / ajj;
-    }
 
-    // backward pass
-    for (int j = A.get_m() - 1; j > -1; j--)
-    {
-        double sigma = 0.0;
-        double ajj = 0.0; // diagonal entry a_jj
-
-        int row_start = csr_row_ptr[j];
-        int row_end = csr_row_ptr[j + 1];
-        
-        for (int k = row_start; k < row_end; k++)
+        // backward pass
+        for(int j = A.get_m() - 1; j > -1; j--)
         {
-            int col = csr_col_ind[k];
-            double val = csr_val[k];
+            double sigma = 0.0;
+            double ajj   = 0.0; // diagonal entry a_jj
 
-            if (col != j)
+            int row_start = csr_row_ptr[j];
+            int row_end   = csr_row_ptr[j + 1];
+
+            for(int k = row_start; k < row_end; k++)
             {
-                sigma = sigma + val * x_ptr[col];
+                int    col = csr_col_ind[k];
+                double val = csr_val[k];
+
+                if(col != j)
+                {
+                    sigma = sigma + val * x_ptr[col];
+                }
+                else
+                {
+                    ajj = val;
+                }
             }
-            else
-            {
-                ajj = val;
-            }
+
+            x_ptr[j] = (b_ptr[j] - sigma) / ajj;
         }
-        
-        x_ptr[j] = (b_ptr[j] - sigma) / ajj;
     }
 }
-}
 
-sgs_solver::sgs_solver(){}
+sgs_solver::sgs_solver() {}
 
-sgs_solver::~sgs_solver(){}
+sgs_solver::~sgs_solver() {}
 
 void sgs_solver::build(const csr_matrix& A)
 {
     res.resize(A.get_m());
 }
 
-int sgs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
+int sgs_solver::solve(const csr_matrix&     A,
+                      vector<double>&       x,
+                      const vector<double>& b,
+                      iter_control          control)
 {
     ROUTINE_TRACE("sgs_solver::solve");
 
@@ -127,7 +132,7 @@ int sgs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<doubl
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // Symmetric Gauss-Seidel iteration
         symm_gauss_seidel_iteration(A, x, b);
@@ -136,7 +141,7 @@ int sgs_solver::solve(const csr_matrix& A, vector<double>& x, const vector<doubl
 
         double res_norm = norm_inf(res);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

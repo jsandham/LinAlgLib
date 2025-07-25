@@ -43,6 +43,7 @@ device_vector<T>::device_vector(size_t size)
     this->size = size;
     cudaMalloc((void**)&dvec, sizeof(T) * size);
 }
+
 template <typename T>
 device_vector<T>::device_vector(size_t size, T val)
 {
@@ -50,13 +51,14 @@ device_vector<T>::device_vector(size_t size, T val)
     cudaMalloc((void**)&dvec, sizeof(T) * size);
     if(val == static_cast<T>(0))
     {
-        cudaMemset(dvec, 0 , sizeof(T) * size);
+        cudaMemset(dvec, 0, sizeof(T) * size);
     }
     else
     {
         launch_cuda_fill_kernel(dvec, size, val);
     }
 }
+
 template <typename T>
 device_vector<T>::device_vector(const std::vector<T>& vec)
 {
@@ -64,6 +66,7 @@ device_vector<T>::device_vector(const std::vector<T>& vec)
     cudaMalloc((void**)&dvec, sizeof(T) * size);
     cudaMemcpy(dvec, vec.data(), sizeof(T) * size, cudaMemcpyHostToDevice);
 }
+
 template <typename T>
 device_vector<T>::~device_vector()
 {
@@ -88,12 +91,12 @@ size_t device_vector<T>::get_size() const
 template <typename T>
 void device_vector<T>::clear()
 {
-    //hvec.clear();
+    // hvec.clear();
 }
 template <typename T>
 void device_vector<T>::resize(size_t size)
 {
-    if(this-> size != size)
+    if(this->size != size)
     {
         cudaFree(dvec);
         this->size = size;

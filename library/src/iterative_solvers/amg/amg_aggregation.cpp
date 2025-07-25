@@ -39,192 +39,202 @@
 
 namespace linalg
 {
-static unsigned int hash1(unsigned int x)
-{
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = (x >> 16) ^ x;
-    return x / 2;
-}
-
-static void initialize_pmis_state(const csr_matrix &A, const vector<int> &connections, vector<int> &state, vector<int> &hash)
-{
-    ROUTINE_TRACE("initialize_pmis_state");
-
-    const int* csr_row_ptr_A = A.get_row_ptr();
-
-    for (int i = 0; i < A.get_m(); ++i)
+    static unsigned int hash1(unsigned int x)
     {
-        int s = -2;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x / 2;
+    }
 
-        int row_start = csr_row_ptr_A[i];
-        int row_end = csr_row_ptr_A[i + 1];
+    static void initialize_pmis_state(const csr_matrix&  A,
+                                      const vector<int>& connections,
+                                      vector<int>&       state,
+                                      vector<int>&       hash)
+    {
+        ROUTINE_TRACE("initialize_pmis_state");
 
-        for (int j = row_start; j < row_end; j++)
+        const int* csr_row_ptr_A = A.get_row_ptr();
+
+        for(int i = 0; i < A.get_m(); ++i)
         {
-            if (connections[j] == 1)
+            int s = -2;
+
+            int row_start = csr_row_ptr_A[i];
+            int row_end   = csr_row_ptr_A[i + 1];
+
+            for(int j = row_start; j < row_end; j++)
             {
-                s = 0;
-                break;
+                if(connections[j] == 1)
+                {
+                    s = 0;
+                    break;
+                }
             }
+
+            state[i] = s;
+            hash[i]  = hash1(i);
         }
-
-        state[i] = s;
-        hash[i] = hash1(i);
     }
-}
 
-struct pmis_node
-{
-    int state;
-    int hash;
-    int row;
-};
+    struct pmis_node
+    {
+        int state;
+        int hash;
+        int row;
+    };
 
-static pmis_node lexographical_max(const pmis_node *ti, const pmis_node *tj)
-{
-    // find lexographical maximum
-    if (tj->state > ti->state)
+    static pmis_node lexographical_max(const pmis_node* ti, const pmis_node* tj)
     {
-        return *tj;
-    }
-    else if (tj->state == ti->state)
-    {
-        if (tj->hash > ti->hash)
+        // find lexographical maximum
+        if(tj->state > ti->state)
         {
             return *tj;
         }
+        else if(tj->state == ti->state)
+        {
+            if(tj->hash > ti->hash)
+            {
+                return *tj;
+            }
+        }
+
+        return *ti;
     }
 
-    return *ti;
-}
-
-static void find_maximum_distance_two_node(const csr_matrix &A, const vector<int> &connections,
-                                           const vector<int> &state, const vector<int> &hash,
-                                           vector<int64_t> &aggregates, vector<int> &max_state,
-                                           bool &complete)
-{
-    ROUTINE_TRACE("find_maximum_distance_two_node");
-
-    const int* csr_row_ptr_A = A.get_row_ptr();
-    const int* csr_col_ind_A = A.get_col_ind();
-
-    // Find distance 1 maximum neighbour node
-    for (int i = 0; i < A.get_m(); i++)
+    static void find_maximum_distance_two_node(const csr_matrix&  A,
+                                               const vector<int>& connections,
+                                               const vector<int>& state,
+                                               const vector<int>& hash,
+                                               vector<int64_t>&   aggregates,
+                                               vector<int>&       max_state,
+                                               bool&              complete)
     {
-        pmis_node max_node;
-        max_node.state = state[i];
-        max_node.hash = hash[i];
-        max_node.row = i;
+        ROUTINE_TRACE("find_maximum_distance_two_node");
 
-        int row_start = csr_row_ptr_A[i];
-        int row_end = csr_row_ptr_A[i + 1];
+        const int* csr_row_ptr_A = A.get_row_ptr();
+        const int* csr_col_ind_A = A.get_col_ind();
 
-        for (int j = row_start; j < row_end; j++)
+        // Find distance 1 maximum neighbour node
+        for(int i = 0; i < A.get_m(); i++)
         {
-            if (connections[j] == 1)
+            pmis_node max_node;
+            max_node.state = state[i];
+            max_node.hash  = hash[i];
+            max_node.row   = i;
+
+            int row_start = csr_row_ptr_A[i];
+            int row_end   = csr_row_ptr_A[i + 1];
+
+            for(int j = row_start; j < row_end; j++)
             {
-                int col = csr_col_ind_A[j];
-
-                pmis_node node;
-                node.state = state[col];
-                node.hash = hash[col];
-                node.row = col;
-
-                max_node = lexographical_max(&max_node, &node);
-            }
-        }
-
-        // Find distance 2 maximum neighbour node
-        int row_start2 = csr_row_ptr_A[max_node.row];
-        int row_end2 = csr_row_ptr_A[max_node.row + 1];
-
-        for (int j = row_start2; j < row_end2; j++)
-        {
-            if (connections[j] == 1)
-            {
-                int col = csr_col_ind_A[j];
-
-                pmis_node node;
-                node.state = state[col];
-                node.hash = hash[col];
-                node.row = col;
-
-                max_node = lexographical_max(&max_node, &node);
-            }
-        }
-
-        if (state[i] == 0)
-        {
-            // If max node is current node, then make current node an aggregate root.
-            if (max_node.row == i)
-            {
-                max_state[i] = 1;
-                aggregates[i] = 1;
-            }
-            // If max node is not current node, but max node has a state of 1, then
-            // the max node must be an already existing aggregate root and therefore
-            // the current node is too close to an existing aggregate root for it to
-            // also be an aggregate root. We mark it with state -1 to indicate it
-            // cannot be an aggregate root.
-            else if (max_node.state == 1)
-            {
-                max_state[i] = -1;
-                aggregates[i] = 0;
-            }
-            // If max node is not current node, and also does not have a state of 1,
-            // then we must call this function again so we mark the work as not
-            // complete.
-            else
-            {
-                complete = false;
-            }
-        }
-    }
-}
-
-static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix &A, const vector<int> &connections,
-                                                        const vector<int> &state, vector<int64_t> &aggregates,
-                                                        vector<int64_t> &aggregate_root_nodes,
-                                                        vector<int> &max_state)
-{
-    ROUTINE_TRACE("add_unassigned_nodes_to_closest_aggregation");
-
-    const int* csr_row_ptr_A = A.get_row_ptr();
-    const int* csr_col_ind_A = A.get_col_ind();
-
-    for (int i = 0; i < A.get_m(); i++)
-    {
-        if (state[i] == -1)
-        {
-            int start = csr_row_ptr_A[i];
-            int end = csr_row_ptr_A[i + 1];
-
-            for (int j = start; j < end; j++)
-            {
-                if (connections[j] == 1)
+                if(connections[j] == 1)
                 {
                     int col = csr_col_ind_A[j];
 
-                    if (state[col] == 1)
-                    {
-                        aggregates[i] = aggregates[col];
-                        max_state[i] = 1;
-                        break;
-                    }
+                    pmis_node node;
+                    node.state = state[col];
+                    node.hash  = hash[col];
+                    node.row   = col;
+
+                    max_node = lexographical_max(&max_node, &node);
+                }
+            }
+
+            // Find distance 2 maximum neighbour node
+            int row_start2 = csr_row_ptr_A[max_node.row];
+            int row_end2   = csr_row_ptr_A[max_node.row + 1];
+
+            for(int j = row_start2; j < row_end2; j++)
+            {
+                if(connections[j] == 1)
+                {
+                    int col = csr_col_ind_A[j];
+
+                    pmis_node node;
+                    node.state = state[col];
+                    node.hash  = hash[col];
+                    node.row   = col;
+
+                    max_node = lexographical_max(&max_node, &node);
+                }
+            }
+
+            if(state[i] == 0)
+            {
+                // If max node is current node, then make current node an aggregate root.
+                if(max_node.row == i)
+                {
+                    max_state[i]  = 1;
+                    aggregates[i] = 1;
+                }
+                // If max node is not current node, but max node has a state of 1, then
+                // the max node must be an already existing aggregate root and therefore
+                // the current node is too close to an existing aggregate root for it to
+                // also be an aggregate root. We mark it with state -1 to indicate it
+                // cannot be an aggregate root.
+                else if(max_node.state == 1)
+                {
+                    max_state[i]  = -1;
+                    aggregates[i] = 0;
+                }
+                // If max node is not current node, and also does not have a state of 1,
+                // then we must call this function again so we mark the work as not
+                // complete.
+                else
+                {
+                    complete = false;
                 }
             }
         }
-        else if (state[i] == -2)
+    }
+
+    static void add_unassigned_nodes_to_closest_aggregation(const csr_matrix&  A,
+                                                            const vector<int>& connections,
+                                                            const vector<int>& state,
+                                                            vector<int64_t>&   aggregates,
+                                                            vector<int64_t>&   aggregate_root_nodes,
+                                                            vector<int>&       max_state)
+    {
+        ROUTINE_TRACE("add_unassigned_nodes_to_closest_aggregation");
+
+        const int* csr_row_ptr_A = A.get_row_ptr();
+        const int* csr_col_ind_A = A.get_col_ind();
+
+        for(int i = 0; i < A.get_m(); i++)
         {
-            aggregates[i] = -2;
+            if(state[i] == -1)
+            {
+                int start = csr_row_ptr_A[i];
+                int end   = csr_row_ptr_A[i + 1];
+
+                for(int j = start; j < end; j++)
+                {
+                    if(connections[j] == 1)
+                    {
+                        int col = csr_col_ind_A[j];
+
+                        if(state[col] == 1)
+                        {
+                            aggregates[i] = aggregates[col];
+                            max_state[i]  = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if(state[i] == -2)
+            {
+                aggregates[i] = -2;
+            }
         }
     }
 }
-}
 
-bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int> &connections,
-                                   vector<int64_t> &aggregates, vector<int64_t> &aggregate_root_nodes)
+bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
+                                           const vector<int>& connections,
+                                           vector<int64_t>&   aggregates,
+                                           vector<int64_t>&   aggregate_root_nodes)
 {
     ROUTINE_TRACE("compute_aggregates_using_pmis");
 
@@ -257,23 +267,24 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int
     // std::cout << "" << std::endl;
 
     int iter = 0;
-    while (iter < 20)
+    while(iter < 20)
     {
-        for (int i = 0; i < A.get_m(); i++)
+        for(int i = 0; i < A.get_m(); i++)
         {
             state[i] = max_state[i];
         }
 
         // Find maximum distance 2 node
         bool complete = true;
-        find_maximum_distance_two_node(A, connections, state, hash, aggregates, max_state, complete);
+        find_maximum_distance_two_node(
+            A, connections, state, hash, aggregates, max_state, complete);
 
-        if (complete)
+        if(complete)
         {
             break;
         }
 
-        if (iter > 20)
+        if(iter > 20)
         {
             std::cout << "Hit maximum iterations when determinig aggregates" << std::endl;
             break;
@@ -284,7 +295,7 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int
 
     aggregate_root_nodes.resize(A.get_m(), -1);
 
-    for (size_t i = 0; i < aggregates.get_size(); i++)
+    for(size_t i = 0; i < aggregates.get_size(); i++)
     {
         aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
     }
@@ -301,9 +312,9 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int
 
     // Exclusive sum
     int64_t sum = 0;
-    for (int i = 0; i < A.get_m(); i++)
+    for(int i = 0; i < A.get_m(); i++)
     {
-        int64_t temp = aggregates[i];
+        int64_t temp  = aggregates[i];
         aggregates[i] = sum;
         sum += temp;
     }
@@ -330,14 +341,15 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int
     std::cout << "" << std::endl;*/
 
     // Add any unassigned nodes to an existing aggregation
-    for (int k = 0; k < 2; k++)
+    for(int k = 0; k < 2; k++)
     {
-        for (int i = 0; i < A.get_m(); i++)
+        for(int i = 0; i < A.get_m(); i++)
         {
             state[i] = max_state[i];
         }
 
-        add_unassigned_nodes_to_closest_aggregation(A, connections, state, aggregates, aggregate_root_nodes, max_state);
+        add_unassigned_nodes_to_closest_aggregation(
+            A, connections, state, aggregates, aggregate_root_nodes, max_state);
     }
 
     // std::cout << "aggregates final" << std::endl;
@@ -365,7 +377,9 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix &A, const vector<int
 #define U_POINT 2 // Unassigned point
 #define FF_POINT 3 // Future F-point
 
-void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &ST, vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_first_pass(const csr_matrix& S,
+                                        const csr_matrix& ST,
+                                        vector<uint32_t>& cfpoints)
 {
     assert(S.get_m() == S.get_n());
     assert(ST.get_m() == ST.get_n());
@@ -400,7 +414,7 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 
     for(int i = 0; i < S.get_m(); i++)
     {
-        ptr[lambda[i] + 1]++;     
+        ptr[lambda[i] + 1]++;
     }
 
     // Exclusive scan
@@ -414,10 +428,10 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 
     for(int i = 0; i < S.get_m(); i++)
     {
-        int lam = lambda[i];
-        int index = ptr[lam] + count[lam];
+        int lam    = lambda[i];
+        int index  = ptr[lam] + count[lam];
         i2n[index] = i;
-        n2i[i] = index;
+        n2i[i]     = index;
         count[lam]++;
     }
 
@@ -437,12 +451,12 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 
             // Mark all neighbours of the C-point as future F-points
             int ST_row_start = csr_row_ptr_ST[current_node];
-            int ST_row_end = csr_row_ptr_ST[current_node + 1];
+            int ST_row_end   = csr_row_ptr_ST[current_node + 1];
 
             for(int j = ST_row_start; j < ST_row_end; j++)
             {
                 int ST_col_j = csr_col_ind_ST[j];
-                
+
                 if(cfpoints[ST_col_j] == U_POINT)
                 {
                     cfpoints[ST_col_j] = FF_POINT;
@@ -459,8 +473,8 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 
                     // Increment lambda value for all unassigned neighbours of F-point
                     int S_row_start = csr_row_ptr_S[ST_col_j];
-                    int S_row_end = csr_row_ptr_S[ST_col_j + 1];
-                    
+                    int S_row_end   = csr_row_ptr_S[ST_col_j + 1];
+
                     for(int k = S_row_start; k < S_row_end; k++)
                     {
                         int S_col_k = csr_col_ind_S[k];
@@ -473,7 +487,6 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
                             // count = [2, 1, 4, 1, 2]
                             // i2n = [1, 5, 6, 0, 4, 7, 9, 8, 2, 3]
                             // n2i = [3, 0, 8, 9, 4, 1, 2, 5, 7, 6]
-
 
                             // lambda = [2, 1, 4, 4, 2, 0, 1, 2, 3, 2]
                             // ptr = [0, 1, 2, 4, 1, 2, 0, 0, 0, 0, 0]
@@ -509,7 +522,8 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
                             count[lambda[S_col_k]]--;
                             count[lambda[S_col_k] + 1]++;
 
-                            ptr[lambda[S_col_k] + 1] = ptr[lambda[S_col_k]] + count[lambda[S_col_k]];
+                            ptr[lambda[S_col_k] + 1]
+                                = ptr[lambda[S_col_k]] + count[lambda[S_col_k]];
 
                             lambda[S_col_k]++;
                         }
@@ -518,7 +532,7 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
             }
 
             int S_row_start = csr_row_ptr_S[current_node];
-            int S_row_end = csr_row_ptr_S[current_node + 1];
+            int S_row_end   = csr_row_ptr_S[current_node + 1];
 
             for(int j = S_row_start; j < S_row_end; j++)
             {
@@ -545,7 +559,6 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
                     // // Decrement lambda_j
                     // lambda[j]--;
 
-
                     int old_pos = n2i[S_col_j];
                     int new_pos = ptr[lambda[S_col_j]];
 
@@ -566,9 +579,9 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
     }
 
     // All remaining unassigned nodes are marked as F-points
-    for (int i = 0; i < S.get_m(); i++) 
+    for(int i = 0; i < S.get_m(); i++)
     {
-        if (cfpoints[i] == U_POINT) 
+        if(cfpoints[i] == U_POINT)
         {
             cfpoints[i] = F_POINT;
         }
@@ -578,7 +591,7 @@ void linalg::compute_cfpoint_first_pass(const csr_matrix &S, const csr_matrix &S
 //-------------------------------------------------------------------------------
 // function for finding c-points and f-points (second pass)
 //-------------------------------------------------------------------------------
-void linalg::compute_cfpoint_second_pass(const csr_matrix &S, vector<uint32_t> &cfpoints)
+void linalg::compute_cfpoint_second_pass(const csr_matrix& S, vector<uint32_t>& cfpoints)
 {
     const int* csr_row_ptr_S = S.get_row_ptr();
     const int* csr_col_ind_S = S.get_col_ind();
@@ -588,7 +601,7 @@ void linalg::compute_cfpoint_second_pass(const csr_matrix &S, vector<uint32_t> &
         if(cfpoints[i] == F_POINT)
         {
             int S_row_start_i = csr_row_ptr_S[i];
-            int S_row_end_i = csr_row_ptr_S[i + 1];
+            int S_row_end_i   = csr_row_ptr_S[i + 1];
 
             int candidate_cpoint = -1;
 
@@ -599,7 +612,7 @@ void linalg::compute_cfpoint_second_pass(const csr_matrix &S, vector<uint32_t> &
                 if(cfpoints[S_col_j] == F_POINT)
                 {
                     int S_row_start_col_j = csr_row_ptr_S[S_col_j];
-                    int S_row_end_col_j = csr_row_ptr_S[S_col_j + 1];
+                    int S_row_end_col_j   = csr_row_ptr_S[S_col_j + 1];
 
                     int index1 = S_row_start_i;
                     int index2 = S_row_start_col_j;
@@ -634,19 +647,19 @@ void linalg::compute_cfpoint_second_pass(const csr_matrix &S, vector<uint32_t> &
 
                     if(!common_cpoint_found)
                     {
-                        if (candidate_cpoint < 0) 
+                        if(candidate_cpoint < 0)
                         {
                             // If no candidate cpoint has been marked yet, then mark S_col_j as candidate cpoint
-                            candidate_cpoint = S_col_j;
+                            candidate_cpoint  = S_col_j;
                             cfpoints[S_col_j] = C_POINT;
                         }
-                        else 
+                        else
                         {
                             // If a candidate cpoint was previosuly marked, move it back to being an fpoint
                             // and mark S_col_j as the new candidate cpoint
                             cfpoints[candidate_cpoint] = F_POINT;
-                            candidate_cpoint = S_col_j;
-                            cfpoints[S_col_j] = C_POINT;
+                            candidate_cpoint           = S_col_j;
+                            cfpoints[S_col_j]          = C_POINT;
                         }
                     }
                 }

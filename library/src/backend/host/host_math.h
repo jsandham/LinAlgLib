@@ -29,10 +29,11 @@
 
 #include <string>
 
+#include "csr_matrix.h"
 #include "linalg_export.h"
 #include "scalar.h"
 #include "vector.h"
-#include "csr_matrix.h"
+
 
 namespace linalg
 {
@@ -48,19 +49,36 @@ namespace linalg
         void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
 
         // Compute y = alpha * x + beta * y
-        void axpby(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, vector<double>& y);
+        void axpby(const scalar<double>& alpha,
+                   const vector<double>& x,
+                   const scalar<double>& beta,
+                   vector<double>&       y);
 
         // Compute z = alpha * x + beta * y + gamma * z
-        void axpbypgz(double alpha, const vector<double>& x, double beta, const vector<double>& y, double gamma, vector<double>& z);
+        void axpbypgz(double                alpha,
+                      const vector<double>& x,
+                      double                beta,
+                      const vector<double>& y,
+                      double                gamma,
+                      vector<double>&       z);
 
         // Compute z = alpha * x + beta * y + gamma * z
-        void axpbypgz(const scalar<double>& alpha, const vector<double>& x, const scalar<double>& beta, const vector<double>& y, const scalar<double>& gamma, vector<double>& z);
+        void axpbypgz(const scalar<double>& alpha,
+                      const vector<double>& x,
+                      const scalar<double>& beta,
+                      const vector<double>& y,
+                      const scalar<double>& gamma,
+                      vector<double>&       z);
 
         // Compute y = A * x
-        void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>&y);
+        void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
 
         // Compute y = alpha * A * x + beta * y
-        void matrix_vector_product(double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>&y);
+        void matrix_vector_product(double                alpha,
+                                   const csr_matrix&     A,
+                                   const vector<double>& x,
+                                   double                beta,
+                                   vector<double>&       y);
 
         // Compute C = A * B
         void matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
@@ -75,13 +93,19 @@ namespace linalg
         void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
 
         // Forward solve
-        void forward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag);
+        void forward_solve(const csr_matrix&     A,
+                           const vector<double>& b,
+                           vector<double>&       x,
+                           bool                  unit_diag);
 
         // Backward solve
-        void backward_solve(const csr_matrix& A, const vector<double>& b, vector<double>& x, bool unit_diag);
+        void backward_solve(const csr_matrix&     A,
+                            const vector<double>& b,
+                            vector<double>&       x,
+                            bool                  unit_diag);
 
         // Transpose matrix
-        void transpose_matrix(const csr_matrix &A, csr_matrix &transposeA);
+        void transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
 
         // Dot product
         double dot_product(const vector<double>& x, const vector<double>& y);
@@ -90,7 +114,10 @@ namespace linalg
         void dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result);
 
         // Compute residual
-        void compute_residual(const csr_matrix& A, const vector<double>& x, const vector<double>& b, vector<double>& res);
+        void compute_residual(const csr_matrix&     A,
+                              const vector<double>& x,
+                              const vector<double>& b,
+                              vector<double>&       res);
 
         // Exclusive scan
         void exclusize_scan(vector<double>& x);
@@ -105,12 +132,12 @@ namespace linalg
         double norm_inf(const vector<double>& array);
 
         // Fill array with value
-        template<typename T>
-        void fill(vector<T> &vec, T value);
+        template <typename T>
+        void fill(vector<T>& vec, T value);
 
         // Copy array
         template <typename T>
-        void copy(vector<T> &dest, const vector<T> &src);
+        void copy(vector<T>& dest, const vector<T>& src);
     }
 }
 

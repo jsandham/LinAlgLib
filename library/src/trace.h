@@ -31,9 +31,9 @@
 
 class trace
 {
-    public:
-        trace(const char* name);
-        ~trace();
+public:
+    trace(const char* name);
+    ~trace();
 };
 
 #define ROUTINE_TRACE(name) trace tracing_object(name);

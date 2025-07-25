@@ -127,6 +127,12 @@
  * }
  * \endcode
  */
-double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* eigenVec, const double tol, const int n, const int max_iter);
+double power_iteration(const int*    csr_row_ptr,
+                       const int*    csr_col_ind,
+                       const double* csr_val,
+                       double*       eigenVec,
+                       const double  tol,
+                       const int     n,
+                       const int     max_iter);
 
 #endif

@@ -168,7 +168,6 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3> # Pass /W3 to the host compiler (MSVC) for CUDA files
     $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>       # Enable relocatable device code (important for shared libraries)
     $<$<COMPILE_LANGUAGE:CUDA>:-G>              # Enable debug info for device code (for debugging)
-    $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>       # Include line information for Nsight debugging
   )
 endif()
 

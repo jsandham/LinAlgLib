@@ -2,8 +2,9 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
 #include <cmath>
+#include <iostream>
+
 
 #include "../trace.h"
 
@@ -14,7 +15,8 @@ bool iter_control::residual_converges(double residual_norm, double initial_resid
     ROUTINE_TRACE("residual_converges");
 
 #ifdef CONVERGENCE_LOGGING
-    std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
+    std::cout << "absolute residual: " << residual_norm
+              << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
 #endif
 
     assert(rel_tol > 0.0);
@@ -47,7 +49,7 @@ bool iter_control::residual_converges(double residual_norm, double initial_resid
 
     return false;
 }
-    
+
 bool iter_control::exceed_max_iter(int iter) const
 {
     assert(iter >= 0);

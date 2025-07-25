@@ -31,13 +31,14 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <iostream>
 #include <map>
 #include <unordered_set>
 #include <vector>
-#include <chrono>
+
 
 #include "../../trace.h"
 
@@ -664,236 +665,209 @@
 //               << level << std::endl;
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #define F_POINT 0 // F-point
 #define C_POINT 1 // C-point
 
 namespace linalg
 {
-static void direct_interpolation(const csr_matrix &A, const csr_matrix &S, csr_matrix &P, vector<uint32_t> &cfpoints)
-{
-    // Determine number of C points. The prolongation operator will have number 
-    // of columns equal to the number of C points
-    int c_point_count = 0;
-    for(int i = 0; i < A.get_m(); i++)
+    static void direct_interpolation(const csr_matrix& A,
+                                     const csr_matrix& S,
+                                     csr_matrix&       P,
+                                     vector<uint32_t>& cfpoints)
     {
-        if(cfpoints[i] == C_POINT)
+        // Determine number of C points. The prolongation operator will have number
+        // of columns equal to the number of C points
+        int c_point_count = 0;
+        for(int i = 0; i < A.get_m(); i++)
         {
-            c_point_count++;
-        }
-    }
-
-    P.resize(A.get_m(), c_point_count, 0);
-
-    const int* csr_row_ptr_A = A.get_row_ptr();
-    const int* csr_col_ind_A = A.get_col_ind();
-    const double* csr_val_A = A.get_val();
-
-    const int* csr_row_ptr_S = S.get_row_ptr();
-    const int* csr_col_ind_S = S.get_col_ind();
-    const double* csr_val_S = S.get_val();
-
-    int* csr_row_ptr_P = P.get_row_ptr();
-
-    // Fill prolongation row pointer array
-    csr_row_ptr_P[0] = 0;
-    for(int i = 0; i < P.get_m(); i++)
-    {
-        if(cfpoints[i] == C_POINT)
-        {
-            csr_row_ptr_P[i + 1] = 1;
-        }
-        else
-        {
-            assert(cfpoints[i] == F_POINT);
-
-            int S_row_start = csr_row_ptr_S[i];
-            int S_row_end = csr_row_ptr_S[i + 1];
-
-            for(int j = S_row_start; j < S_row_end; j++)
+            if(cfpoints[i] == C_POINT)
             {
-                int S_col_j = csr_col_ind_S[j];
+                c_point_count++;
+            }
+        }
 
-                if(cfpoints[S_col_j] == C_POINT)
+        P.resize(A.get_m(), c_point_count, 0);
+
+        const int*    csr_row_ptr_A = A.get_row_ptr();
+        const int*    csr_col_ind_A = A.get_col_ind();
+        const double* csr_val_A     = A.get_val();
+
+        const int*    csr_row_ptr_S = S.get_row_ptr();
+        const int*    csr_col_ind_S = S.get_col_ind();
+        const double* csr_val_S     = S.get_val();
+
+        int* csr_row_ptr_P = P.get_row_ptr();
+
+        // Fill prolongation row pointer array
+        csr_row_ptr_P[0] = 0;
+        for(int i = 0; i < P.get_m(); i++)
+        {
+            if(cfpoints[i] == C_POINT)
+            {
+                csr_row_ptr_P[i + 1] = 1;
+            }
+            else
+            {
+                assert(cfpoints[i] == F_POINT);
+
+                int S_row_start = csr_row_ptr_S[i];
+                int S_row_end   = csr_row_ptr_S[i + 1];
+
+                for(int j = S_row_start; j < S_row_end; j++)
                 {
-                    csr_row_ptr_P[i + 1]++;
+                    int S_col_j = csr_col_ind_S[j];
+
+                    if(cfpoints[S_col_j] == C_POINT)
+                    {
+                        csr_row_ptr_P[i + 1]++;
+                    }
                 }
             }
         }
-    }
 
-    // Exclusive scan on row pointer array
-    for(int i = 0; i < P.get_m(); i++)
-    {
-        csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
-    }
-
-    std::cout << "P.csr_row_ptr" << std::endl;
-    for(int i = 0; i < P.get_m() + 1; i++)
-    {
-        std::cout << csr_row_ptr_P[i] << " ";
-    }
-    std::cout << "" << std::endl;
-
-    // Allocate prolongation column indices and values arrays
-    P.resize(P.get_m(), P.get_n(), csr_row_ptr_P[P.get_m()]);
-    //P.nnz = P.csr_row_ptr[P.m];
-    //P.csr_col_ind.resize(P.nnz);
-    //P.csr_val.resize(P.nnz);
-
-    int* csr_col_ind_P = P.get_col_ind();
-    double* csr_val_P = P.get_val();
-
-    std::cout << "P.nnz: " << P.get_nnz() << std::endl;
-
-    std::vector<uint32_t> cfpoints_ind(A.get_m() + 1);
-
-    cfpoints_ind[0] = 0;
-    for(int i = 0; i < P.get_m(); i++)
-    {
-        cfpoints_ind[i + 1] = cfpoints[i];
-    }
-
-    // Exclusive scan on copy of cfpoints array
-    for(int i = 0; i < P.get_m(); i++)
-    {
-        cfpoints_ind[i + 1] += cfpoints_ind[i];
-    }
-
-    for(int i = 0; i < P.get_m(); i++)
-    {
-        int P_row_start = csr_row_ptr_P[i];
-        int P_row_end = csr_row_ptr_P[i + 1];
-
-        std::cout << "P_row_start: " << P_row_start << std::endl;
-
-        if(cfpoints[i] == C_POINT)
+        // Exclusive scan on row pointer array
+        for(int i = 0; i < P.get_m(); i++)
         {
-            assert((P_row_end - P_row_start) == 1);
-
-            csr_col_ind_P[P_row_start] = cfpoints_ind[i];
-            csr_val_P[P_row_start] = 1.0;
+            csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
         }
-        else
+
+        std::cout << "P.csr_row_ptr" << std::endl;
+        for(int i = 0; i < P.get_m() + 1; i++)
         {
-            double diag = 0.0;
-            double offdiag_pos_sum = 0.0;
-            double offdiag_neg_sum = 0.0;
-            
-            int A_row_start = csr_row_ptr_A[i];
-            int A_row_end = csr_row_ptr_A[i + 1];
+            std::cout << csr_row_ptr_P[i] << " ";
+        }
+        std::cout << "" << std::endl;
 
-            for(int j = A_row_start; j < A_row_end; j++)
+        // Allocate prolongation column indices and values arrays
+        P.resize(P.get_m(), P.get_n(), csr_row_ptr_P[P.get_m()]);
+        //P.nnz = P.csr_row_ptr[P.m];
+        //P.csr_col_ind.resize(P.nnz);
+        //P.csr_val.resize(P.nnz);
+
+        int*    csr_col_ind_P = P.get_col_ind();
+        double* csr_val_P     = P.get_val();
+
+        std::cout << "P.nnz: " << P.get_nnz() << std::endl;
+
+        std::vector<uint32_t> cfpoints_ind(A.get_m() + 1);
+
+        cfpoints_ind[0] = 0;
+        for(int i = 0; i < P.get_m(); i++)
+        {
+            cfpoints_ind[i + 1] = cfpoints[i];
+        }
+
+        // Exclusive scan on copy of cfpoints array
+        for(int i = 0; i < P.get_m(); i++)
+        {
+            cfpoints_ind[i + 1] += cfpoints_ind[i];
+        }
+
+        for(int i = 0; i < P.get_m(); i++)
+        {
+            int P_row_start = csr_row_ptr_P[i];
+            int P_row_end   = csr_row_ptr_P[i + 1];
+
+            std::cout << "P_row_start: " << P_row_start << std::endl;
+
+            if(cfpoints[i] == C_POINT)
             {
-                int A_col_j = csr_col_ind_A[j];
+                assert((P_row_end - P_row_start) == 1);
 
-                if(i == A_col_j)
+                csr_col_ind_P[P_row_start] = cfpoints_ind[i];
+                csr_val_P[P_row_start]     = 1.0;
+            }
+            else
+            {
+                double diag            = 0.0;
+                double offdiag_pos_sum = 0.0;
+                double offdiag_neg_sum = 0.0;
+
+                int A_row_start = csr_row_ptr_A[i];
+                int A_row_end   = csr_row_ptr_A[i + 1];
+
+                for(int j = A_row_start; j < A_row_end; j++)
                 {
-                    diag = csr_val_A[j];
-                }
-                else
-                {
-                    if(csr_val_A[j] < 0.0)
+                    int A_col_j = csr_col_ind_A[j];
+
+                    if(i == A_col_j)
                     {
-                        offdiag_neg_sum += csr_val_A[j];
+                        diag = csr_val_A[j];
                     }
                     else
                     {
-                        offdiag_pos_sum += csr_val_A[j];
+                        if(csr_val_A[j] < 0.0)
+                        {
+                            offdiag_neg_sum += csr_val_A[j];
+                        }
+                        else
+                        {
+                            offdiag_pos_sum += csr_val_A[j];
+                        }
                     }
                 }
-            }
 
-            double strong_offdiag_pos_sum = 0.0;
-            double strong_offdiag_neg_sum = 0.0;
+                double strong_offdiag_pos_sum = 0.0;
+                double strong_offdiag_neg_sum = 0.0;
 
-            int S_row_start = csr_row_ptr_S[i];
-            int S_row_end = csr_row_ptr_S[i + 1];
+                int S_row_start = csr_row_ptr_S[i];
+                int S_row_end   = csr_row_ptr_S[i + 1];
 
-            // S does not contain diagonal
-            for(int j = S_row_start; j < S_row_end; j++)
-            {
-                int A_col_j = csr_col_ind_A[j];
-
-                if(cfpoints[A_col_j] == C_POINT)
+                // S does not contain diagonal
+                for(int j = S_row_start; j < S_row_end; j++)
                 {
-                    if(csr_val_S[j] < 0.0)
+                    int A_col_j = csr_col_ind_A[j];
+
+                    if(cfpoints[A_col_j] == C_POINT)
                     {
-                        strong_offdiag_neg_sum += csr_val_S[j];
-                    }
-                    else
-                    {
-                        strong_offdiag_pos_sum += csr_val_S[j];
+                        if(csr_val_S[j] < 0.0)
+                        {
+                            strong_offdiag_neg_sum += csr_val_S[j];
+                        }
+                        else
+                        {
+                            strong_offdiag_pos_sum += csr_val_S[j];
+                        }
                     }
                 }
-            }
 
-            std::cout << "offdiag_pos_sum: " << offdiag_pos_sum 
-                      << " offdiag_neg_sum: " << offdiag_neg_sum 
-                      << " strong_offdiag_pos_sum: " << strong_offdiag_pos_sum 
-                      << " strong_offdiag_neg_sum: " << strong_offdiag_neg_sum << std::endl;
+                std::cout << "offdiag_pos_sum: " << offdiag_pos_sum
+                          << " offdiag_neg_sum: " << offdiag_neg_sum
+                          << " strong_offdiag_pos_sum: " << strong_offdiag_pos_sum
+                          << " strong_offdiag_neg_sum: " << strong_offdiag_neg_sum << std::endl;
 
-            double alpha = offdiag_neg_sum / strong_offdiag_neg_sum;
-            double beta  = offdiag_pos_sum / strong_offdiag_pos_sum;
+                double alpha = offdiag_neg_sum / strong_offdiag_neg_sum;
+                double beta  = offdiag_pos_sum / strong_offdiag_pos_sum;
 
-            for(int j = S_row_start; j < S_row_end; j++)
-            {
-                int S_col_j = csr_col_ind_S[j];
-
-                if(cfpoints[S_col_j] == C_POINT)
+                for(int j = S_row_start; j < S_row_end; j++)
                 {
-                    assert(P_row_start < P_row_end);
+                    int S_col_j = csr_col_ind_S[j];
 
-                    csr_col_ind_P[P_row_start] = cfpoints_ind[S_col_j];
-                    if(csr_val_S[j] < 0.0)
+                    if(cfpoints[S_col_j] == C_POINT)
                     {
-                        csr_val_P[P_row_start] = -alpha * csr_val_S[j] / diag; 
-                    }
-                    else
-                    {
-                        csr_val_P[P_row_start] = -beta * csr_val_S[j] / diag; 
-                    }
+                        assert(P_row_start < P_row_end);
 
-                    P_row_start++;
+                        csr_col_ind_P[P_row_start] = cfpoints_ind[S_col_j];
+                        if(csr_val_S[j] < 0.0)
+                        {
+                            csr_val_P[P_row_start] = -alpha * csr_val_S[j] / diag;
+                        }
+                        else
+                        {
+                            csr_val_P[P_row_start] = -beta * csr_val_S[j] / diag;
+                        }
+
+                        P_row_start++;
+                    }
                 }
-            }
 
-            assert(P_row_start == P_row_end);
+                assert(P_row_start == P_row_end);
+            }
         }
     }
 }
-}
 
-void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy)
+void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("rsamg_setup");
 
@@ -910,19 +884,19 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
     double theta = 0.2;
 
     int level = 0;
-    while (level < max_level)
+    while(level < max_level)
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix &A_fine = hierarchy.A_cs[level];
-        csr_matrix &A_coarse = hierarchy.A_cs[level + 1];
-        csr_matrix &P = hierarchy.prolongations[level];
-        csr_matrix &R = hierarchy.restrictions[level];
+        const csr_matrix& A_fine   = hierarchy.A_cs[level];
+        csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix&       P        = hierarchy.prolongations[level];
+        csr_matrix&       R        = hierarchy.restrictions[level];
 
         csr_matrix S;
         csr_matrix ST;
 
-        vector<int> connections(A_fine.get_nnz(), 0);
+        vector<int>      connections(A_fine.get_nnz(), 0);
         vector<uint32_t> cfpoints(A_fine.get_m(), 0);
 
         compute_classical_strong_connections(A_fine, theta, S, connections);
@@ -947,7 +921,7 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarch
 
         // P.print_matrix("Weight");
 
-        if (P.get_n() == 0)
+        if(P.get_n() == 0)
         {
             break;
         }

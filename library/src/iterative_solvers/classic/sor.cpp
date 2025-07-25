@@ -27,9 +27,10 @@
 #include "../../../include/iterative_solvers/classic/sor.h"
 #include "../../../include/linalg_math.h"
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 #include <vector>
+
 
 #include "../../trace.h"
 
@@ -40,55 +41,60 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void sor_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b, double omega)
-{
-    ROUTINE_TRACE("sor_iteration");
-
-    const int* csr_row_ptr = A.get_row_ptr();
-    const int* csr_col_ind = A.get_col_ind();
-    const double* csr_val = A.get_val();
-
-    double* x_ptr = x.get_vec();
-    const double* b_ptr = b.get_vec();
-
-    for (int j = 0; j < A.get_m(); j++)
+    void
+        sor_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b, double omega)
     {
-        double sigma = 0.0;
-        double ajj = 0.0; // diagonal entry a_jj
+        ROUTINE_TRACE("sor_iteration");
 
-        int row_start = csr_row_ptr[j];
-        int row_end = csr_row_ptr[j + 1];
+        const int*    csr_row_ptr = A.get_row_ptr();
+        const int*    csr_col_ind = A.get_col_ind();
+        const double* csr_val     = A.get_val();
 
-        for (int k = row_start; k < row_end; k++)
+        double*       x_ptr = x.get_vec();
+        const double* b_ptr = b.get_vec();
+
+        for(int j = 0; j < A.get_m(); j++)
         {
-            int col = csr_col_ind[k];
-            double val = csr_val[k];
+            double sigma = 0.0;
+            double ajj   = 0.0; // diagonal entry a_jj
 
-            if (col != j)
+            int row_start = csr_row_ptr[j];
+            int row_end   = csr_row_ptr[j + 1];
+
+            for(int k = row_start; k < row_end; k++)
             {
-                sigma = sigma + val * x_ptr[col];
+                int    col = csr_col_ind[k];
+                double val = csr_val[k];
+
+                if(col != j)
+                {
+                    sigma = sigma + val * x_ptr[col];
+                }
+                else
+                {
+                    ajj = val;
+                }
             }
-            else
-            {
-                ajj = val;
-            }
+
+            x_ptr[j] = x_ptr[j] + omega * ((b_ptr[j] - sigma) / ajj - x_ptr[j]);
         }
-    
-        x_ptr[j] = x_ptr[j] + omega * ((b_ptr[j] - sigma) / ajj - x_ptr[j]);
     }
 }
-}
 
-sor_solver::sor_solver(){}
+sor_solver::sor_solver() {}
 
-sor_solver::~sor_solver(){}
+sor_solver::~sor_solver() {}
 
 void sor_solver::build(const csr_matrix& A)
 {
     res.resize(A.get_m());
 }
 
-int sor_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double omega)
+int sor_solver::solve(const csr_matrix&     A,
+                      vector<double>&       x,
+                      const vector<double>& b,
+                      iter_control          control,
+                      double                omega)
 {
     ROUTINE_TRACE("sor_solver::solve");
 
@@ -100,7 +106,7 @@ int sor_solver::solve(const csr_matrix& A, vector<double>& x, const vector<doubl
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // SOR iteration
         sor_iteration(A, x, b, omega);
@@ -109,7 +115,7 @@ int sor_solver::solve(const csr_matrix& A, vector<double>& x, const vector<doubl
 
         double res_norm = norm_inf(res);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

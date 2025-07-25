@@ -199,26 +199,29 @@
 #include "csr_matrix.h"
 
 // classic Linear solvers
-#include "iterative_solvers/classic/jacobi.h"
 #include "iterative_solvers/classic/gauss_seidel.h"
-#include "iterative_solvers/classic/sor.h"
-#include "iterative_solvers/classic/symmetric_gauss_seidel.h"
-#include "iterative_solvers/classic/ssor.h"
+#include "iterative_solvers/classic/jacobi.h"
 #include "iterative_solvers/classic/richardson.h"
+#include "iterative_solvers/classic/sor.h"
+#include "iterative_solvers/classic/ssor.h"
+#include "iterative_solvers/classic/symmetric_gauss_seidel.h"
+
 
 // krylov Linear solvers
-#include "iterative_solvers/krylov/gmres.h"
-#include "iterative_solvers/krylov/cg.h"
 #include "iterative_solvers/krylov/bicgstab.h"
+#include "iterative_solvers/krylov/cg.h"
+#include "iterative_solvers/krylov/gmres.h"
+
 
 // Algrbraic multi-grid solvers
+#include "iterative_solvers/amg/amg.h"
 #include "iterative_solvers/amg/amg_aggregation.h"
 #include "iterative_solvers/amg/amg_strength.h"
-#include "iterative_solvers/amg/amg.h"
 #include "iterative_solvers/amg/rsamg.h"
 #include "iterative_solvers/amg/rsamg_old.h"
 #include "iterative_solvers/amg/saamg.h"
 #include "iterative_solvers/amg/uaamg.h"
+
 
 // Preconditioners
 #include "iterative_solvers/preconditioner/preconditioner.h"
@@ -226,7 +229,8 @@
 // Eigenvalues solvers
 #include "eigen_value_solvers/power_iteration.h"
 
-#include "linalg_math.h"
 #include "iterative_solvers/iter_control.h"
+#include "linalg_math.h"
+
 
 #endif

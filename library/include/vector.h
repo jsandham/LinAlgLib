@@ -31,7 +31,6 @@
 
 #include "../src/backend/backend_vector.h"
 
-
 /*! \file
  *  \brief vector.h provides vector class
  */
@@ -43,7 +42,7 @@ namespace linalg
 
     namespace host
     {
-        template<typename T>
+        template <typename T>
         class host_vector;
     }
 
@@ -53,135 +52,135 @@ namespace linalg
         class device_vector;
     }
 
-/*! \brief A class for representing and manipulating vectors.
+    /*! \brief A class for representing and manipulating vectors.
  *
  * \details
  * This class provides functionality for creating, storing, and performing
  * operations on vectors. It supports both host (CPU) and device (GPU) memory
  * management for efficient computation in different environments.
  */
-template<typename T>
-class vector
-{
-private:
-    host::host_vector<T>* hvec;
-    device::device_vector<T>* dvec;
-    backend_vector<T>* vec;
+    template <typename T>
+    class vector
+    {
+    private:
+        host::host_vector<T>*     hvec;
+        device::device_vector<T>* dvec;
+        backend_vector<T>*        vec;
 
-    /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
-    bool on_host;
+        /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes an empty vector with a size of 0.
      */
-    vector();
+        vector();
 
-    /*! \brief Constructor to create a vector of a specified size.
+        /*! \brief Constructor to create a vector of a specified size.
      * \param size The desired number of elements in the vector.
      */
-    vector(size_t size);
+        vector(size_t size);
 
-    vector(size_t size, T val);
+        vector(size_t size, T val);
 
-    /*! \brief Constructor to initialize a vector from a `std::vector<double>`.
+        /*! \brief Constructor to initialize a vector from a `std::vector<double>`.
      * \param vec A `std::vector<double>` whose elements will be copied into this vector.
      */
-    vector(const std::vector<T>& vec);
+        vector(const std::vector<T>& vec);
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the vector.
      */
-    ~vector();
+        ~vector();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `vector` objects to avoid shallow copies and
      * ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    vector (const vector&) = delete;
+        vector(const vector&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `vector` to another to avoid shallow copies
      * and ensure proper memory management. Use `copy_from` for explicit copying.
      */
-    vector& operator= (const vector&) = delete;
+        vector& operator=(const vector&) = delete;
 
-    /*! \brief Overload of the array subscript operator for non-constant access.
+        /*! \brief Overload of the array subscript operator for non-constant access.
      * \param index The index of the element to access.
      * \return A reference to the element at the specified index.
      */
-    T& operator[](size_t index)
-    {
-        return *(vec->get_data() + index);
-    }
+        T& operator[](size_t index)
+        {
+            return *(vec->get_data() + index);
+        }
 
-    /*! \brief Overload of the array subscript operator for constant access.
+        /*! \brief Overload of the array subscript operator for constant access.
      * \param index The index of the element to access.
      * \return A constant reference to the element at the specified index.
      */
-    const T& operator[](size_t index) const
-    {
-        return vec->get_data()[index];
-    }
+        const T& operator[](size_t index) const
+        {
+            return vec->get_data()[index];
+        }
 
-    /*! \brief Checks if the vector data is currently stored on the host (CPU).
+        /*! \brief Checks if the vector data is currently stored on the host (CPU).
      * \return `true` if the vector data is on the host, `false` otherwise (e.g., on a device).
      */
-    bool is_on_host() const;
+        bool is_on_host() const;
 
-    /*! \brief Returns the number of elements in the vector.
+        /*! \brief Returns the number of elements in the vector.
      * \return The size of the vector.
      */
-    size_t get_size() const;
+        size_t get_size() const;
 
-    /*! \brief Returns a non-constant pointer to the beginning of the vector's underlying data.
+        /*! \brief Returns a non-constant pointer to the beginning of the vector's underlying data.
      * \return A `double*` to the first element of the vector. This allows modification of the vector.
      */
-    T* get_vec();
+        T* get_vec();
 
-    /*! \brief Returns a constant pointer to the beginning of the vector's underlying data.
+        /*! \brief Returns a constant pointer to the beginning of the vector's underlying data.
      * \return A `const double*` to the first element of the vector. This prevents modification of the vector.
      */
-    const T* get_vec() const;
+        const T* get_vec() const;
 
-    /*! \brief Resizes the vector to the specified size.
+        /*! \brief Resizes the vector to the specified size.
      * \details If the new size is smaller, elements beyond the new size are truncated.
      * If the new size is larger, new elements are default-initialized.
      * \param size The new desired size of the vector.
      */
-    void resize(size_t size);
+        void resize(size_t size);
 
-    void resize(size_t size, T val);
+        void resize(size_t size, T val);
 
-    void clear();
+        void clear();
 
-    // void assign(size_t size, T val);
+        // void assign(size_t size, T val);
 
-    /*! \brief Copies the contents of another `vector` into this object.
+        /*! \brief Copies the contents of another `vector` into this object.
      *
      * This performs a deep copy, ensuring that all elements are duplicated.
      * \param x The source `vector` to copy from.
      */
-    void copy_from(const vector& x);
+        void copy_from(const vector& x);
 
-    /*! \brief Sets all elements of the vector to zero. */
-    void zeros();
+        /*! \brief Sets all elements of the vector to zero. */
+        void zeros();
 
-    /*! \brief Sets all elements of the vector to one. */
-    void ones();
+        /*! \brief Sets all elements of the vector to one. */
+        void ones();
 
-    /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
+        /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available
      * and `on_host` is true. After this call, `is_on_host()` will return `false`.
      */
-    void move_to_device();
+        void move_to_device();
 
-    /*! \brief Moves the vector data from device memory to host memory (e.g., CPU).
+        /*! \brief Moves the vector data from device memory to host memory (e.g., CPU).
      * \details This method handles the necessary memory transfers if data is on a device
      * and `on_host` is false. After this call, `is_on_host()` will return `true`.
      */
-    void move_to_host();
-};
+        void move_to_host();
+    };
 
 }
 #endif

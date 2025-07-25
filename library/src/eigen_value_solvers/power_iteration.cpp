@@ -30,30 +30,35 @@
 #include <random>
 #include <vector>
 
-double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* eigenVec, const double tol,
-                      const int n, const int max_iter)
+double power_iteration(const int*    csr_row_ptr,
+                       const int*    csr_col_ind,
+                       const double* csr_val,
+                       double*       eigenVec,
+                       const double  tol,
+                       const int     n,
+                       const int     max_iter)
 {
     std::vector<double> b;
     std::vector<double> temp;
     b.resize(n);
     temp.resize(n);
 
-    std::default_random_engine generator;
+    std::default_random_engine             generator;
     std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         double number = distribution(generator);
-        b[i] = 2.0 * number - 1.0;
+        b[i]          = 2.0 * number - 1.0;
     }
 
     double lambda = 0.0;
 
     // calculate A*b
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         double s = 0.0;
-        for (int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
+        for(int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
         {
             s += csr_val[j] * b[csr_col_ind[j]];
         }
@@ -63,20 +68,20 @@ double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const dou
 
     // residual resSqr = ||A*b - lambda*b||^2
     double resSqr = 0.0;
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
     }
 
     int iter = 0;
-    while (iter < max_iter && resSqr > tol)
+    while(iter < max_iter && resSqr > tol)
     {
 
         // calculate A*b
-        for (int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             double s = 0.0;
-            for (int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
+            for(int j = csr_row_ptr[i]; j < csr_row_ptr[i + 1]; j++)
             {
                 s += csr_val[j] * b[csr_col_ind[j]];
             }
@@ -86,7 +91,7 @@ double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const dou
 
         // calculate norm(A*b);
         double normAb = 0.0;
-        for (int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             normAb += temp[i] * temp[i];
         }
@@ -94,7 +99,7 @@ double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const dou
         // update eigenvalue
         double alpha1 = 0.0;
         double alpha2 = 0.0;
-        for (int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             alpha1 += b[i] * temp[i];
             alpha2 += b[i] * b[i];
@@ -102,18 +107,19 @@ double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const dou
 
         lambda = alpha1 / alpha2;
 
-        std::cout << "eigen value: " << lambda << " normAb: " << normAb << " res sqr: " << resSqr << std::endl;
+        std::cout << "eigen value: " << lambda << " normAb: " << normAb << " res sqr: " << resSqr
+                  << std::endl;
 
         // update b
         normAb = sqrt(normAb);
-        for (int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             b[i] = temp[i] / normAb;
         }
 
         // update resSqr
         resSqr = 0.0;
-        for (int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++)
         {
             resSqr += (temp[i] - lambda * b[i]) * ((temp[i] - lambda * b[i]));
         }
@@ -122,7 +128,7 @@ double power_iteration(const int* csr_row_ptr, const int* csr_col_ind, const dou
     }
 
     // fill in eigen vector
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
         eigenVec[i] = b[i];
     }

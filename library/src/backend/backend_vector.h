@@ -34,22 +34,21 @@ namespace linalg
     template <typename T>
     class backend_vector
     {
-        public:
-            backend_vector() = default;
-            backend_vector(const backend_vector&) = delete;
-            backend_vector& operator=(const backend_vector&) = delete;
+    public:
+        backend_vector()                                 = default;
+        backend_vector(const backend_vector&)            = delete;
+        backend_vector& operator=(const backend_vector&) = delete;
 
-            virtual T& operator[](size_t index) = 0;
-            virtual const T& operator[](size_t index) const = 0;
+        virtual T&       operator[](size_t index)       = 0;
+        virtual const T& operator[](size_t index) const = 0;
 
-            virtual ~backend_vector(){};
-            virtual T* get_data() = 0;
-            virtual const T* get_data() const = 0;
-            virtual size_t get_size() const = 0;
-            virtual void clear() = 0;
-            virtual void resize(size_t size) = 0;
-            virtual void resize(size_t size, T val) = 0;
-
+        virtual ~backend_vector() {};
+        virtual T*       get_data()                 = 0;
+        virtual const T* get_data() const           = 0;
+        virtual size_t   get_size() const           = 0;
+        virtual void     clear()                    = 0;
+        virtual void     resize(size_t size)        = 0;
+        virtual void     resize(size_t size, T val) = 0;
     };
 }
 #endif

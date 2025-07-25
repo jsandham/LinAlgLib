@@ -29,22 +29,22 @@
 
 #include "trace.h"
 
-#include "backend/host/host_scalar.h"
 #include "backend/device/device_scalar.h"
+#include "backend/host/host_scalar.h"
 
 #include <assert.h>
 
 using namespace linalg;
 
 template <typename T>
-const scalar<T>& scalar<T>::one() 
+const scalar<T>& scalar<T>::one()
 {
     static scalar<T> instance(static_cast<T>(1));
     return instance;
 }
 
 template <typename T>
-const scalar<T>& scalar<T>::zero() 
+const scalar<T>& scalar<T>::zero()
 {
     static scalar<T> instance(static_cast<T>(0));
     return instance;
@@ -54,51 +54,50 @@ template <typename T>
 scalar<T>::scalar()
 {
     this->on_host = true;
-    hval = 0;
+    hval          = 0;
 }
 
 template <typename T>
 scalar<T>::scalar(T val)
 {
     this->on_host = true;
-    hval = val;
+    hval          = val;
 }
 
 template <typename T>
 scalar<T>::~scalar()
 {
-
 }
 
 // Copy assignment
 template <typename T>
-scalar<T>& scalar<T>::operator=(const scalar<T>& other) 
+scalar<T>& scalar<T>::operator=(const scalar<T>& other)
 {
-    if (this != &other) 
+    if(this != &other)
     {
-        hval = other.hval;
+        hval    = other.hval;
         on_host = other.on_host;
     }
     return *this;
 }
 
 template <typename T>
-scalar<T>& scalar<T>::operator=(const T& other) 
+scalar<T>& scalar<T>::operator=(const T& other)
 {
-    hval = other;
+    hval    = other;
     on_host = true;
     return *this;
 }
 
 template <typename T>
-scalar<T>& scalar<T>::operator*=(const T& rhs) 
+scalar<T>& scalar<T>::operator*=(const T& rhs)
 {
     this->hval *= rhs;
     return *this;
 }
 
 template <typename T>
-scalar<T>& scalar<T>::operator/=(const T& rhs) 
+scalar<T>& scalar<T>::operator/=(const T& rhs)
 {
     this->hval /= rhs;
     return *this;
@@ -126,7 +125,6 @@ template <typename T>
 void scalar<T>::copy_from(const scalar& x)
 {
     ROUTINE_TRACE("scalar<T>::copy_from");
-    
 }
 
 template <typename T>

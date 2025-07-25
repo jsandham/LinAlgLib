@@ -27,10 +27,11 @@
 #include "../../../include/iterative_solvers/krylov/bicgstab.h"
 #include "../../../include/linalg_math.h"
 
+#include <assert.h>
+#include <chrono>
 #include <iostream>
 #include <vector>
-#include <chrono>
-#include <assert.h>
+
 
 #include "../../trace.h"
 
@@ -42,9 +43,12 @@ using namespace linalg;
 //
 //****************************************************************************
 
-bicgstab_solver::bicgstab_solver() : restart_iter(-1){}
+bicgstab_solver::bicgstab_solver()
+    : restart_iter(-1)
+{
+}
 
-bicgstab_solver::~bicgstab_solver(){}
+bicgstab_solver::~bicgstab_solver() {}
 
 void bicgstab_solver::build(const csr_matrix& A)
 {
@@ -57,15 +61,18 @@ void bicgstab_solver::build(const csr_matrix& A)
     q.resize(A.get_m());
 }
 
-int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
+int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
+                                      vector<double>&       x,
+                                      const vector<double>& b,
+                                      iter_control          control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve_nonprecond");
 
     // r = b - A * x and initial error
     compute_residual(A, x, b, r);
 
-    double initial_res_norm =norm_inf(r);
-   
+    double initial_res_norm = norm_inf(r);
+
     // r0 = r
     r0.copy_from(r);
 
@@ -77,12 +84,11 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // v = Ap
         A.multiply_by_vector(v, p);
 
-        // scalar<double> alpha = rho / dot_product(r0, v);
         double alpha = rho / dot_product(r0, v);
 
         // r = r - alpha * v
@@ -101,7 +107,6 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
             break;
         }
         double omega = omega1 / omega2;
-        //scalar<double> omega = omega1 / omega2;
 
         // x = x + alpha * p + omega * r
         axpbypgz(alpha, p, omega, r, 1.0, x);
@@ -111,14 +116,14 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
 
         double res_norm = norm_inf(r);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
 
         double rho_prev = rho;
-        rho = dot_product(r0, r);
-        double beta = (rho / rho_prev) * (alpha / omega);
+        rho             = dot_product(r0, r);
+        double beta     = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * v)
         // p = r - beta * omega * v + beta * p
@@ -135,7 +140,11 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, co
     return iter;
 }
 
-int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int bicgstab_solver::solve_precond(const csr_matrix&     A,
+                                   vector<double>&       x,
+                                   const vector<double>& b,
+                                   const preconditioner* precond,
+                                   iter_control          control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve_precond");
 
@@ -160,14 +169,13 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // q = A*z
         A.multiply_by_vector(q, z);
 
-        // scalar<double> alpha = rho / dot_product(r0, q);
         double alpha = rho / dot_product(r0, q);
-        
+
         // r = r - alpha * q
         axpy(-1.0 * alpha, q, r);
 
@@ -196,14 +204,14 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
 
         double res_norm = norm_inf(r);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
 
         double rho_prev = rho;
-        rho = dot_product(r0, r);
-        double beta = (rho / rho_prev) * (alpha / omega);
+        rho             = dot_product(r0, r);
+        double beta     = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * q)
         // p = r - beta * omega * q + beta * p
@@ -223,7 +231,11 @@ int bicgstab_solver::solve_precond(const csr_matrix& A, vector<double>& x, const
     return iter;
 }
 
-int bicgstab_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int bicgstab_solver::solve(const csr_matrix&     A,
+                           vector<double>&       x,
+                           const vector<double>& b,
+                           const preconditioner* precond,
+                           iter_control          control)
 {
     ROUTINE_TRACE("bicgstab_solver::solve");
 
@@ -240,7 +252,7 @@ int bicgstab_solver::solve(const csr_matrix& A, vector<double>& x, const vector<
 void bicgstab_solver::move_to_host()
 {
     ROUTINE_TRACE("bicgstab_solver::move_to_host");
-    
+
     r.move_to_host();
     r0.move_to_host();
     p.move_to_host();

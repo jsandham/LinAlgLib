@@ -29,43 +29,44 @@
 
 #include "trace.h"
 
-#include <iostream>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 #include <assert.h>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 using namespace linalg;
 
-csr_matrix::csr_matrix() : m(0), n(0), nnz(0), on_host(true)
+csr_matrix::csr_matrix()
+    : m(0)
+    , n(0)
+    , nnz(0)
+    , on_host(true)
 {
-
 }
 
-csr_matrix::csr_matrix(const std::vector<int>& csr_row_ptr, 
-                         const std::vector<int>& csr_col_ind, 
-                         const std::vector<double>& csr_val, 
-                         int m, 
-                         int n, 
-                         int nnz)
+csr_matrix::csr_matrix(const std::vector<int>&    csr_row_ptr,
+                       const std::vector<int>&    csr_col_ind,
+                       const std::vector<double>& csr_val,
+                       int                        m,
+                       int                        n,
+                       int                        nnz)
 {
     this->csr_row_ptr.resize(csr_row_ptr.size());
     this->csr_col_ind.resize(csr_col_ind.size());
     this->csr_val.resize(csr_val.size());
 
-    this->csr_row_ptr.copy_from(csr_row_ptr);// = csr_row_ptr;
-    this->csr_col_ind.copy_from(csr_col_ind);// = csr_col_ind;
-    this->csr_val.copy_from(csr_val);// = csr_val;
-    this->m = m;
-    this->n = n;
+    this->csr_row_ptr.copy_from(csr_row_ptr); // = csr_row_ptr;
+    this->csr_col_ind.copy_from(csr_col_ind); // = csr_col_ind;
+    this->csr_val.copy_from(csr_val); // = csr_val;
+    this->m   = m;
+    this->n   = n;
     this->nnz = nnz;
 
     this->on_host = true;
 }
-csr_matrix::~csr_matrix()
-{
-}
+csr_matrix::~csr_matrix() {}
 
 bool csr_matrix::is_on_host() const
 {
@@ -119,11 +120,12 @@ double* csr_matrix::get_val()
 
 void csr_matrix::resize(int m, int n, int nnz)
 {
+    ROUTINE_TRACE("csr_matrix::resize");
     this->csr_row_ptr.resize(m + 1);
     this->csr_col_ind.resize(nnz);
     this->csr_val.resize(nnz);
-    this->m = m;
-    this->n = n;
+    this->m   = m;
+    this->n   = n;
     this->nnz = nnz;
 }
 
@@ -131,8 +133,8 @@ void csr_matrix::copy_from(const csr_matrix& A)
 {
     ROUTINE_TRACE("csr_matrix::copy_from");
 
-    this->m = A.get_m();
-    this->n = A.get_n();
+    this->m   = A.get_m();
+    this->n   = A.get_n();
     this->nnz = A.get_nnz();
     this->csr_row_ptr.resize(A.get_m() + 1);
     this->csr_col_ind.resize(A.get_nnz());
@@ -146,6 +148,12 @@ void csr_matrix::copy_from(const csr_matrix& A)
 void csr_matrix::move_to_device()
 {
     ROUTINE_TRACE("csr_matrix::move_to_device");
+
+    // if(!is_device_available())
+    // {
+    //     std::cout << "Warning: Device not available. Keeping matrix on the host." << std::endl;
+    //     return;
+    // }
 
     csr_row_ptr.move_to_device();
     csr_col_ind.move_to_device();
@@ -197,15 +205,17 @@ void csr_matrix::transpose(csr_matrix& T) const
 }
 
 // Structure to hold triplet (COO) format data
-struct triplet 
+struct triplet
 {
-    int row;
-    int col;
+    int    row;
+    int    col;
     double value;
 
     // For sorting: primarily by row, then by column
-    bool operator<(const triplet& other) const {
-        if (row != other.row) {
+    bool operator<(const triplet& other) const
+    {
+        if(row != other.row)
+        {
             return row < other.row;
         }
         return col < other.col;
@@ -218,12 +228,13 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     if(!this->is_on_host())
     {
-        std::cout << "Matrix must be on the host in order to read from matrix market file" << std::endl;
+        std::cout << "Matrix must be on the host in order to read from matrix market file"
+                  << std::endl;
         return false;
     }
 
     std::ifstream file(filename);
-    if (!file.is_open()) 
+    if(!file.is_open())
     {
         std::cerr << "Error: Could not open file " << filename << std::endl;
         return false;
@@ -231,18 +242,18 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     std::string line;
     std::string header;
-    bool is_symmetric = false;
-    bool is_integer = false;
+    bool        is_symmetric = false;
+    bool        is_integer   = false;
 
     // Read header line
     std::getline(file, header);
     std::stringstream header_ss(header);
-    std::string token;
+    std::string       token;
     header_ss >> token; // %%MatrixMarket
 
     // Check object type (matrix)
     header_ss >> token;
-    if (token != "matrix") 
+    if(token != "matrix")
     {
         std::cerr << "Error: Not a matrix market file." << std::endl;
         return false;
@@ -250,7 +261,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     // Check format (array or coordinate)
     header_ss >> token;
-    if (token != "coordinate") 
+    if(token != "coordinate")
     {
         std::cerr << "Error: Only 'coordinate' format is supported (not 'array')." << std::endl;
         return false;
@@ -258,20 +269,21 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     // Check data type (real, integer, complex, pattern)
     header_ss >> token;
-    if (token == "real") 
+    if(token == "real")
     {
         is_integer = false;
-    } 
-    else if (token == "integer") 
+    }
+    else if(token == "integer")
     {
         is_integer = true;
-    } 
-    else if (token == "complex" || token == "pattern") 
+    }
+    else if(token == "complex" || token == "pattern")
     {
-        std::cerr << "Error: 'complex' and 'pattern' data types are not supported for values." << std::endl;
+        std::cerr << "Error: 'complex' and 'pattern' data types are not supported for values."
+                  << std::endl;
         return false;
-    } 
-    else 
+    }
+    else
     {
         std::cerr << "Error: Unknown data type in Matrix Market header: " << token << std::endl;
         return false;
@@ -279,78 +291,84 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     // Check symmetry (general, symmetric, Hermitian, skew-symmetric)
     header_ss >> token;
-    if (token == "general") 
+    if(token == "general")
     {
         is_symmetric = false;
-    } 
-    else if (token == "symmetric") 
+    }
+    else if(token == "symmetric")
     {
         is_symmetric = true;
-    } 
-    else if (token == "hermitian" || token == "skew-symmetric") 
+    }
+    else if(token == "hermitian" || token == "skew-symmetric")
     {
-        std::cerr << "Error: 'Hermitian' and 'skew-symmetric' matrices are not supported." << std::endl;
+        std::cerr << "Error: 'Hermitian' and 'skew-symmetric' matrices are not supported."
+                  << std::endl;
         return false;
-    } 
-    else 
+    }
+    else
     {
         std::cerr << "Error: Unknown symmetry type in Matrix Market header: " << token << std::endl;
         return false;
     }
 
     // Skip comment lines
-    while (std::getline(file, line) && line[0] == '%') 
+    while(std::getline(file, line) && line[0] == '%')
     {
         // Do nothing, just consume comments
     }
 
     // Read dimensions and number of non-zero elements
     std::stringstream ss(line);
-    int64_t nnz_coo; // Non-zeros as stated in the file (COO count)
-    if (!(ss >> m >> n >> nnz_coo)) 
+    int64_t           nnz_coo; // Non-zeros as stated in the file (COO count)
+    if(!(ss >> m >> n >> nnz_coo))
     {
         std::cerr << "Error: Failed to read matrix dimensions or number of non-zeros." << std::endl;
         return false;
     }
 
     std::vector<triplet> triplets;
-    triplets.reserve(is_symmetric ? nnz_coo * 2 : nnz_coo); // Reserve enough space for symmetric case
+    triplets.reserve(is_symmetric ? nnz_coo * 2
+                                  : nnz_coo); // Reserve enough space for symmetric case
 
     // Read non-zero elements
-    int r, c;
-    double val_double;
+    int     r, c;
+    double  val_double;
     int64_t val_long;
 
-    for (int64_t i = 0; i < nnz_coo; ++i) 
+    for(int64_t i = 0; i < nnz_coo; ++i)
     {
-        if (!(std::getline(file, line))) 
+        if(!(std::getline(file, line)))
         {
-            std::cerr << "Error: Unexpected end of file while reading elements (expected " << nnz_coo << " elements)." << std::endl;
+            std::cerr << "Error: Unexpected end of file while reading elements (expected "
+                      << nnz_coo << " elements)." << std::endl;
             return false;
         }
         std::stringstream element_ss(line);
 
-        if (is_integer) 
+        if(is_integer)
         {
-            if (!(element_ss >> r >> c >> val_long)) 
+            if(!(element_ss >> r >> c >> val_long))
             {
-                std::cerr << "Error: Failed to parse integer element at line " << i + 1 << "." << std::endl;
+                std::cerr << "Error: Failed to parse integer element at line " << i + 1 << "."
+                          << std::endl;
                 return false;
             }
-            triplets.push_back({r - 1, c - 1, static_cast<double>(val_long)}); // Matrix Market is 1-indexed
-        } 
+            triplets.push_back(
+                {r - 1, c - 1, static_cast<double>(val_long)}); // Matrix Market is 1-indexed
+        }
         else // real
         {
-            if (!(element_ss >> r >> c >> val_double)) 
+            if(!(element_ss >> r >> c >> val_double))
             {
-                std::cerr << "Error: Failed to parse real element at line " << i + 1 << "." << std::endl;
+                std::cerr << "Error: Failed to parse real element at line " << i + 1 << "."
+                          << std::endl;
                 return false;
             }
             triplets.push_back({r - 1, c - 1, val_double}); // Matrix Market is 1-indexed
         }
 
         // Handle symmetric case: add the (c, r) entry if r != c
-        if (is_symmetric && r - 1 != c - 1) 
+        if(is_symmetric && r - 1 != c - 1)
         {
             triplets.push_back({c - 1, r - 1, triplets.back().value});
         }
@@ -364,21 +382,21 @@ bool csr_matrix::read_mtx(const std::string& filename)
     // Remove duplicate entries (e.g., if a symmetric matrix had (i,j) and (j,i) explicitly listed,
     // or if (i,i) was explicitly listed and then added again by symmetric handling).
     // Also, sum values if multiple entries refer to the same (row, col)
-    if (!triplets.empty()) 
+    if(!triplets.empty())
     {
         std::vector<triplet> unique_triplets;
         unique_triplets.reserve(triplets.size());
         unique_triplets.push_back(triplets[0]);
 
-        for (size_t i = 1; i < triplets.size(); ++i) 
+        for(size_t i = 1; i < triplets.size(); ++i)
         {
-            if (triplets[i].row == unique_triplets.back().row &&
-                triplets[i].col == unique_triplets.back().col) 
+            if(triplets[i].row == unique_triplets.back().row
+               && triplets[i].col == unique_triplets.back().col)
             {
                 // If duplicate, sum values
                 unique_triplets.back().value += triplets[i].value;
-            } 
-            else 
+            }
+            else
             {
                 unique_triplets.push_back(triplets[i]);
             }
@@ -389,7 +407,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
     // Convert to CSR format
     nnz = triplets.size();
 
-    if (nnz == 0) 
+    if(nnz == 0)
     {
         // Handle empty matrix case: all dimensions valid but no entries
         // csr_row_ptr.assign(m + 1, 0);
@@ -406,17 +424,17 @@ bool csr_matrix::read_mtx(const std::string& filename)
     csr_col_ind.resize(nnz);
     csr_val.resize(nnz);
 
-    for (int64_t i = 0; i < nnz; ++i) 
+    for(int64_t i = 0; i < nnz; ++i)
     {
         const triplet& t = triplets[i];
-    
+
         csr_row_ptr[t.row + 1]++;
         csr_col_ind[i] = t.col;
-        csr_val[i] = t.value;
+        csr_val[i]     = t.value;
     }
 
     // Convert counts to cumulative sum (prefix sum) for row_ptr
-    for (int i = 0; i < m; ++i) 
+    for(int i = 0; i < m; ++i)
     {
         csr_row_ptr[i + 1] += csr_row_ptr[i];
     }
@@ -430,12 +448,14 @@ bool csr_matrix::write_mtx(const std::string& filename)
 
     if(!this->is_on_host())
     {
-        std::cout << "Matrix must be on the host in order to write to matrix market file" << std::endl;
+        std::cout << "Matrix must be on the host in order to write to matrix market file"
+                  << std::endl;
         return false;
     }
 
     std::ofstream file(filename);
-    if (!file.is_open()) {
+    if(!file.is_open())
+    {
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
         return false;
     }
@@ -447,15 +467,15 @@ bool csr_matrix::write_mtx(const std::string& filename)
 
     // Determine data type for the header
     std::string data_type_str;
-    if (std::is_floating_point<double>::value) 
+    if(std::is_floating_point<double>::value)
     {
         data_type_str = "real";
-    } 
-    else if (std::is_integral<double>::value) 
+    }
+    else if(std::is_integral<double>::value)
     {
         data_type_str = "integer";
-    } 
-    else 
+    }
+    else
     {
         std::cerr << "Error: Unsupported data type for Matrix Market file." << std::endl;
         return false;
@@ -467,15 +487,15 @@ bool csr_matrix::write_mtx(const std::string& filename)
     file << m << " " << n << " " << nnz << "\n";
 
     // Set precision for floating-point numbers if applicable
-    if (std::is_floating_point<double>::value) 
+    if(std::is_floating_point<double>::value)
     {
         file << std::fixed << std::setprecision(10); // Adjust precision as needed
     }
 
     // Write non-zero elements
-    for (int i = 0; i < m; ++i) 
+    for(int i = 0; i < m; ++i)
     {
-        for (int j_idx = csr_row_ptr[i]; j_idx < csr_row_ptr[i + 1]; ++j_idx) 
+        for(int j_idx = csr_row_ptr[i]; j_idx < csr_row_ptr[i + 1]; ++j_idx)
         {
             // Matrix Market uses 1-based indexing
             file << (i + 1) << " " << (csr_col_ind[j_idx] + 1) << " " << csr_val[j_idx] << "\n";
@@ -501,14 +521,14 @@ void csr_matrix::make_diagonally_dominant()
 
     // Return early is matrix has no diagonal
     int diagonal_count = 0;
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+        int end   = csr_row_ptr[i + 1];
 
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] == i)
+            if(csr_col_ind[j] == i)
             {
                 diagonal_count++;
                 break;
@@ -516,29 +536,29 @@ void csr_matrix::make_diagonally_dominant()
         }
     }
 
-    if (diagonal_count < m)
+    if(diagonal_count < m)
     {
         // Error?
     }
 
     // Make matrix diagonally dominant so that convergence is guaranteed
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+        int end   = csr_row_ptr[i + 1];
 
         double row_sum = 0;
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] != i)
+            if(csr_col_ind[j] != i)
             {
                 row_sum += std::abs(csr_val[j]);
             }
         }
 
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] == i)
+            if(csr_col_ind[j] == i)
             {
                 csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
                 break;
@@ -558,18 +578,18 @@ void csr_matrix::print_matrix(const std::string name) const
     }
 
     std::cout << name << std::endl;
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+        int end   = csr_row_ptr[i + 1];
 
         std::vector<double> temp(n, 0.0);
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
             temp[csr_col_ind[j]] = (csr_val.get_size() != 0) ? csr_val[j] : 1.0;
         }
 
-        for (int j = 0; j < n; j++)
+        for(int j = 0; j < n; j++)
         {
             std::cout << temp[j] << " ";
         }

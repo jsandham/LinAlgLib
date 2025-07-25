@@ -31,7 +31,7 @@ namespace linalg
 {
     namespace host
     {
-        template<typename T>
+        template <typename T>
         struct host_scalar
         {
             T hval;

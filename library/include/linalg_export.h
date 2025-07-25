@@ -27,17 +27,17 @@
 #define LINALGLIB_EXPORT_H
 
 #ifdef LINALGLIB_SHARED_LIB
-#    ifdef _WIN32
-#        ifdef LINALGLIB_EXPORT
-#            define LINALGLIB_API __declspec(dllexport)
-#        else
-#            define LINALGLIB_API __declspec(dllimport)
-#        endif
-#    else
-#        define LINALGLIB_API
-#    endif
+#ifdef _WIN32
+#ifdef LINALGLIB_EXPORT
+#define LINALGLIB_API __declspec(dllexport)
 #else
-#    define LINALGLIB_API
+#define LINALGLIB_API __declspec(dllimport)
+#endif
+#else
+#define LINALGLIB_API
+#endif
+#else
+#define LINALGLIB_API
 #endif
 
 #endif

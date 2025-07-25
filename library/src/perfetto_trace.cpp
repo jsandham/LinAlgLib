@@ -28,8 +28,8 @@
 
 #include <chrono>
 #include <fstream>
-#include <thread>
 #include <iostream>
+#include <thread>
 
 #include "trace.h"
 
@@ -37,45 +37,44 @@
 
 // The set of track event categories that the example is using.
 PERFETTO_DEFINE_CATEGORIES(
-    perfetto::Category("linalg")
-        .SetDescription("Rendering and graphics events"));
+    perfetto::Category("linalg").SetDescription("Rendering and graphics events"));
 
 class perfetto_trace
 {
-    private:
-        std::unique_ptr<perfetto::TracingSession> m_tracing_session;
-        std::string m_output_filename;
-        
-        perfetto_trace();
-        ~perfetto_trace();
+private:
+    std::unique_ptr<perfetto::TracingSession> m_tracing_session;
+    std::string                               m_output_filename;
 
-        std::unique_ptr<perfetto::TracingSession> start_tracing();
-        void stop_tracing(std::unique_ptr<perfetto::TracingSession> tracing_session);
+    perfetto_trace();
+    ~perfetto_trace();
 
-    public:
-        perfetto_trace(perfetto_trace const&)          = delete;
-        void operator=(perfetto_trace const&) = delete;
+    std::unique_ptr<perfetto::TracingSession> start_tracing();
+    void stop_tracing(std::unique_ptr<perfetto::TracingSession> tracing_session);
 
-        static perfetto_trace& get_instance()
-        {
-            static perfetto_trace instance;
-            return instance;
-        }
+public:
+    perfetto_trace(perfetto_trace const&) = delete;
+    void operator=(perfetto_trace const&) = delete;
 
-        void push(const char* name)
-        {
-            TRACE_EVENT_BEGIN("linalg", perfetto::StaticString{name});
-        }
+    static perfetto_trace& get_instance()
+    {
+        static perfetto_trace instance;
+        return instance;
+    }
 
-        void pop()
-        {
-            TRACE_EVENT_END("linalg");
-        }
+    void push(const char* name)
+    {
+        TRACE_EVENT_BEGIN("linalg", perfetto::StaticString{name});
+    }
+
+    void pop()
+    {
+        TRACE_EVENT_END("linalg");
+    }
 };
 
 PERFETTO_TRACK_EVENT_STATIC_STORAGE();
 
-static void initialize_perfetto() 
+static void initialize_perfetto()
 {
     perfetto::TracingInitArgs args;
     // The backends determine where trace events are recorded. For this example we
@@ -86,7 +85,7 @@ static void initialize_perfetto()
     perfetto::TrackEvent::Register();
 }
 
-std::unique_ptr<perfetto::TracingSession> perfetto_trace::start_tracing() 
+std::unique_ptr<perfetto::TracingSession> perfetto_trace::start_tracing()
 {
     // The trace config defines which types of data sources are enabled for
     // recording. In this example we just need the "track_event" data source,
@@ -101,7 +100,7 @@ std::unique_ptr<perfetto::TracingSession> perfetto_trace::start_tracing()
     return tracing_session;
 }
 
-void perfetto_trace::stop_tracing(std::unique_ptr<perfetto::TracingSession> tracing_session) 
+void perfetto_trace::stop_tracing(std::unique_ptr<perfetto::TracingSession> tracing_session)
 {
     // Make sure the last event is closed for this example.
     perfetto::TrackEvent::Flush();
@@ -115,9 +114,8 @@ void perfetto_trace::stop_tracing(std::unique_ptr<perfetto::TracingSession> trac
     output.open(m_output_filename.c_str(), std::ios::out | std::ios::binary);
     output.write(&trace_data[0], std::streamsize(trace_data.size()));
     output.close();
-    PERFETTO_LOG(
-        "Trace written in example.pftrace file. To read this trace in "
-        "text form, run `./tools/traceconv text example.pftrace`");
+    PERFETTO_LOG("Trace written in example.pftrace file. To read this trace in "
+                 "text form, run `./tools/traceconv text example.pftrace`");
 }
 
 perfetto_trace::perfetto_trace()

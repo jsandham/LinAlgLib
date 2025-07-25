@@ -24,8 +24,8 @@
 //
 //********************************************************************************
 #include "../../../include/iterative_solvers/preconditioner/preconditioner.h"
-#include "../../../include/linalg_math.h"
 #include "../../../include/iterative_solvers/amg/saamg.h"
+#include "../../../include/linalg_math.h"
 
 #include <iostream>
 #include <vector>
@@ -44,7 +44,7 @@ void jacobi_precond::build(const csr_matrix& A)
 void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // Solve M * x = rhs where M = D
-    for (int i = 0; i < rhs.get_size(); i++)
+    for(int i = 0; i < rhs.get_size(); i++)
     {
         x[i] = rhs[i] / diag[i];
     }
@@ -64,7 +64,10 @@ void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) c
     forward_solve(this->A, rhs, x, false);
 }
 
-SOR_precond::SOR_precond(double omega) : omega(omega) {}
+SOR_precond::SOR_precond(double omega)
+    : omega(omega)
+{
+}
 SOR_precond::~SOR_precond() {}
 
 void SOR_precond::build(const csr_matrix& A)
@@ -77,27 +80,27 @@ void SOR_precond::build(const csr_matrix& A)
 
 void SOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
-    const int* csr_row_ptr = this->A.get_row_ptr();
-    const int* csr_col_ind = this->A.get_col_ind();
-    const double* csr_val = this->A.get_val();
+    const int*    csr_row_ptr = this->A.get_row_ptr();
+    const int*    csr_col_ind = this->A.get_col_ind();
+    const double* csr_val     = this->A.get_val();
 
     // Solve M * x = rhs where M = (1 / omega) * (D + omega * L)
-    for (int i = 0; i < this->A.get_m(); i++)
+    for(int i = 0; i < this->A.get_m(); i++)
     {
         int row_start = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
+        int row_end   = csr_row_ptr[i + 1];
 
         double diag_val = 1.0;
 
         x[i] = rhs[i];
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
             int col = csr_col_ind[j];
-            if (col < i)
+            if(col < i)
             {
                 x[i] -= csr_val[j] * x[col];
             }
-            else if (col == i)
+            else if(col == i)
             {
                 diag_val = csr_val[j] / omega;
             }
@@ -133,30 +136,30 @@ void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<dou
     // So solve (D - E) * D^-1 * y = rhs followed by (D - F) * x = y
 
     // Let L = (D - E) * D^-1 and U = (D - F). This gives M = L * U and
-    // the error between A and M is A - M = A - L * U = -E * D^-1 * F which 
+    // the error between A and M is A - M = A - L * U = -E * D^-1 * F which
     // means that if A is diagonally dominant then this error will be small
-    // so when A is diagonally dominant, M is a good approximation of A. 
+    // so when A is diagonally dominant, M is a good approximation of A.
 
-    const int* csr_row_ptr = this->A.get_row_ptr();
-    const int* csr_col_ind = this->A.get_col_ind();
-    const double* csr_val = this->A.get_val();
+    const int*    csr_row_ptr = this->A.get_row_ptr();
+    const int*    csr_col_ind = this->A.get_col_ind();
+    const double* csr_val     = this->A.get_val();
 
     vector<double> y(this->A.get_m());
 
     // Solve (D - E) * D^-1 * y = rhs
     // (I - E * D^-1) * y = rhs
-    for (int i = 0; i < this->A.get_m(); i++)
+    for(int i = 0; i < this->A.get_m(); i++)
     {
         int row_start = csr_row_ptr[i];
-        int row_end = csr_row_ptr[i + 1];
+        int row_end   = csr_row_ptr[i + 1];
 
         double diag_val = 0.0;
 
         y[i] = rhs[i];
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
             int col = csr_col_ind[j];
-            if (col < i)
+            if(col < i)
             {
                 y[i] -= (csr_val[j] / diag[col]) * y[col];
             }
@@ -181,7 +184,7 @@ void ilu_precond::build(const csr_matrix& A)
     this->LU.copy_from(A);
 
     int structural_zero = -1;
-    int numeric_zero = -1;
+    int numeric_zero    = -1;
 
     // In place incomplete LU factorization
     csrilu0(LU, &structural_zero, &numeric_zero);
@@ -190,16 +193,15 @@ void ilu_precond::build(const csr_matrix& A)
 void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // L * U * x = rhs
-    // Let y = U * x 
+    // Let y = U * x
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LU, rhs, y, true); 
+    forward_solve(LU, rhs, y, true);
 
     // Solve U * x = y
-    backward_solve(LU, y, x, false); 
+    backward_solve(LU, y, x, false);
 }
-
 
 ic_precond::ic_precond() {}
 ic_precond::~ic_precond() {}
@@ -209,14 +211,14 @@ void ic_precond::build(const csr_matrix& A)
     this->LLT.copy_from(A);
 
     int structural_zero = -1;
-    int numeric_zero = -1;
+    int numeric_zero    = -1;
 
-    int m = LLT.get_m();
-    int n = LLT.get_n();
-    int nnz = LLT.get_nnz();
-    int* csr_row_ptr_LLT = LLT.get_row_ptr();
-    int* csr_col_ind_LLT = LLT.get_col_ind();
-    double* csr_val_LLT = LLT.get_val();
+    int     m               = LLT.get_m();
+    int     n               = LLT.get_n();
+    int     nnz             = LLT.get_nnz();
+    int*    csr_row_ptr_LLT = LLT.get_row_ptr();
+    int*    csr_col_ind_LLT = LLT.get_col_ind();
+    double* csr_val_LLT     = LLT.get_val();
 
     // In place incomplete Cholesky factorization
     csric0(LLT, &structural_zero, &numeric_zero);
@@ -225,7 +227,7 @@ void ic_precond::build(const csr_matrix& A)
     for(int row = 0; row < m; row++)
     {
         int start = csr_row_ptr_LLT[row];
-        int end = csr_row_ptr_LLT[row + 1];
+        int end   = csr_row_ptr_LLT[row + 1];
 
         for(int j = start; j < end; j++)
         {
@@ -236,10 +238,10 @@ void ic_precond::build(const csr_matrix& A)
                 double val = csr_val_LLT[j];
 
                 int start2 = csr_row_ptr_LLT[col];
-                int end2 = csr_row_ptr_LLT[col + 1];
+                int end2   = csr_row_ptr_LLT[col + 1];
 
                 for(int k = start2; k < end2; k++)
-                {   
+                {
                     if(csr_col_ind_LLT[k] == row)
                     {
                         csr_val_LLT[k] = val;
@@ -254,12 +256,12 @@ void ic_precond::build(const csr_matrix& A)
 void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
     // L * L^T * x = rhs
-    // Let y = L^T * x 
+    // Let y = L^T * x
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LLT, rhs, y, false); 
+    forward_solve(LLT, rhs, y, false);
 
     // Solve L^T * x = y
-    backward_solve(LLT, y, x, false); 
+    backward_solve(LLT, y, x, false);
 }

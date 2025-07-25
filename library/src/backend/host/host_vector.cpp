@@ -33,7 +33,6 @@ using namespace linalg::host;
 template <typename T>
 host_vector<T>::host_vector()
 {
-
 }
 template <typename T>
 host_vector<T>::host_vector(size_t size)
@@ -53,7 +52,6 @@ host_vector<T>::host_vector(const std::vector<T>& vec)
 template <typename T>
 host_vector<T>::~host_vector()
 {
-
 }
 template <typename T>
 T* host_vector<T>::get_data()

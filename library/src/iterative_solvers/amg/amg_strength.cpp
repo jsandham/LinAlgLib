@@ -26,20 +26,20 @@
 
 #include "../../../include/iterative_solvers/amg/amg_strength.h"
 #include "../../../include/linalg_math.h"
+#include <algorithm>
 #include <assert.h>
 #include <cmath>
-#include <algorithm>
 #include <iostream>
 
 #include "../../trace.h"
 
-void linalg::compute_strong_connections(const csr_matrix &A, double eps, vector<int> &connections)
+void linalg::compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections)
 {
     ROUTINE_TRACE("compute_strong_connections");
 
-    const int* csr_row_ptr_A = A.get_row_ptr();
-    const int* csr_col_ind_A = A.get_col_ind();
-    const double* csr_val_A = A.get_val();
+    const int*    csr_row_ptr_A = A.get_row_ptr();
+    const int*    csr_col_ind_A = A.get_col_ind();
+    const double* csr_val_A     = A.get_val();
 
     // Extract diagaonl
     vector<double> diag(A.get_m());
@@ -48,23 +48,25 @@ void linalg::compute_strong_connections(const csr_matrix &A, double eps, vector<
 
     // double eps2 = eps * eps;
 
-    for (int i = 0; i < A.get_m(); i++)
+    for(int i = 0; i < A.get_m(); i++)
     {
         // double eps_dia_i = eps2 * diag[i];
 
         int row_start = csr_row_ptr_A[i];
-        int row_end = csr_row_ptr_A[i + 1];
+        int row_end   = csr_row_ptr_A[i + 1];
 
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
-            int c = csr_col_ind_A[j];
+            int    c = csr_col_ind_A[j];
             double v = csr_val_A[j];
 
             assert(c >= 0);
             assert(c < A.get_m());
 
             // connections[j] = (c != i) && (v * v > eps_dia_i * diag[c]);
-            connections[j] = (c != i) && (std::abs(v) >= eps * std::sqrt(std::abs(diag[i]) * std::abs(diag[c])));
+            connections[j]
+                = (c != i)
+                  && (std::abs(v) >= eps * std::sqrt(std::abs(diag[i]) * std::abs(diag[c])));
         }
     }
 }
@@ -72,7 +74,10 @@ void linalg::compute_strong_connections(const csr_matrix &A, double eps, vector<
 //-------------------------------------------------------------------------------
 // -A[i,j] >= theta * max( -A[i,k] )   where k != i
 //-------------------------------------------------------------------------------
-void linalg::compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, vector<int> &connections)
+void linalg::compute_classical_strong_connections(const csr_matrix& A,
+                                                  double            theta,
+                                                  csr_matrix&       S,
+                                                  vector<int>&      connections)
 {
     //S.m = A.m;
     //S.n = A.n;
@@ -86,19 +91,19 @@ void linalg::compute_classical_strong_connections(const csr_matrix &A, double th
         csr_row_ptr_S[i] = 0;
     }
 
-    const int* csr_row_ptr_A = A.get_row_ptr();
-    const int* csr_col_ind_A = A.get_col_ind();
-    const double* csr_val_A = A.get_val();
+    const int*    csr_row_ptr_A = A.get_row_ptr();
+    const int*    csr_col_ind_A = A.get_col_ind();
+    const double* csr_val_A     = A.get_val();
 
     for(int i = 0; i < A.get_m(); i++)
     {
         int row_start = csr_row_ptr_A[i];
-        int row_end = csr_row_ptr_A[i + 1];
+        int row_end   = csr_row_ptr_A[i + 1];
 
         double max_value = std::numeric_limits<double>::lowest(); // smallest, most negative, double
         for(int j = row_start; j < row_end; j++)
         {
-            int col = csr_col_ind_A[j];
+            int    col = csr_col_ind_A[j];
             double val = csr_val_A[j];
 
             if(i != col)
@@ -110,7 +115,7 @@ void linalg::compute_classical_strong_connections(const csr_matrix &A, double th
         // Fill connections array
         for(int j = row_start; j < row_end; j++)
         {
-            int col = csr_col_ind_A[j];
+            int    col = csr_col_ind_A[j];
             double val = csr_val_A[j];
 
             if(-val >= theta * max_value && i != col)
@@ -132,13 +137,13 @@ void linalg::compute_classical_strong_connections(const csr_matrix &A, double th
     //S.csr_col_ind.resize(S.nnz);
     //S.csr_val.resize(S.nnz);
 
-    int* csr_col_ind_S = S.get_col_ind();
-    double* csr_val_S = S.get_val();
+    int*    csr_col_ind_S = S.get_col_ind();
+    double* csr_val_S     = S.get_val();
 
     for(int i = 0; i < A.get_m(); i++)
     {
         int row_start = csr_row_ptr_A[i];
-        int row_end = csr_row_ptr_A[i + 1];
+        int row_end   = csr_row_ptr_A[i + 1];
 
         int S_row_start = csr_row_ptr_S[i];
 
@@ -147,7 +152,7 @@ void linalg::compute_classical_strong_connections(const csr_matrix &A, double th
             if(connections[j] == 1)
             {
                 csr_col_ind_S[S_row_start] = csr_col_ind_A[j];
-                csr_val_S[S_row_start] = csr_val_A[j];
+                csr_val_S[S_row_start]     = csr_val_A[j];
                 S_row_start++;
             }
         }

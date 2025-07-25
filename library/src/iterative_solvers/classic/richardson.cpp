@@ -27,9 +27,10 @@
 #include "../../../include/iterative_solvers/classic/richardson.h"
 #include "../../../include/linalg_math.h"
 
+#include <chrono>
 #include <iostream>
 #include <vector>
-#include <chrono>
+
 
 #include "../../trace.h"
 
@@ -40,34 +41,41 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-void richardson_iteration(const csr_matrix& A, vector<double>& x, vector<double>& res, double theta)
-{
-    ROUTINE_TRACE("richardson_iteration");
+    void richardson_iteration(const csr_matrix& A,
+                              vector<double>&   x,
+                              vector<double>&   res,
+                              double            theta)
+    {
+        ROUTINE_TRACE("richardson_iteration");
 
-    double* x_ptr = x.get_vec();
-    double* res_ptr = res.get_vec();
+        double* x_ptr   = x.get_vec();
+        double* res_ptr = res.get_vec();
 
-    // update approximation
+        // update approximation
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(static, 1024)
 #endif
-    for (int j = 0; j < A.get_m(); j++)
-    {
-        x_ptr[j] = x_ptr[j] + theta * res_ptr[j];
+        for(int j = 0; j < A.get_m(); j++)
+        {
+            x_ptr[j] = x_ptr[j] + theta * res_ptr[j];
+        }
     }
 }
-}
 
-rich_solver::rich_solver(){}
+rich_solver::rich_solver() {}
 
-rich_solver::~rich_solver(){}
+rich_solver::~rich_solver() {}
 
 void rich_solver::build(const csr_matrix& A)
 {
     res.resize(A.get_m());
 }
 
-int rich_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double theta)
+int rich_solver::solve(const csr_matrix&     A,
+                       vector<double>&       x,
+                       const vector<double>& b,
+                       iter_control          control,
+                       double                theta)
 {
     ROUTINE_TRACE("rich_solver::solve");
 
@@ -79,15 +87,15 @@ int rich_solver::solve(const csr_matrix& A, vector<double>& x, const vector<doub
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         richardson_iteration(A, x, res, theta);
 
         compute_residual(A, x, b, res);
 
         double res_norm = norm_inf(res);
-        
-        if (control.residual_converges(res_norm, initial_res_norm))
+
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }

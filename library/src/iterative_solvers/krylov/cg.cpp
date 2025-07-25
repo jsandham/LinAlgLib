@@ -27,10 +27,11 @@
 #include "../../../include/iterative_solvers/krylov/cg.h"
 #include "../../../include/linalg_math.h"
 
+#include <assert.h>
+#include <chrono>
 #include <iostream>
 #include <vector>
-#include <chrono>
-#include <assert.h>
+
 
 #include "../../trace.h"
 
@@ -42,9 +43,12 @@ using namespace linalg;
 //
 //****************************************************************************
 
-cg_solver::cg_solver() : restart_iter(-1){}
+cg_solver::cg_solver()
+    : restart_iter(-1)
+{
+}
 
-cg_solver::~cg_solver(){}
+cg_solver::~cg_solver() {}
 
 void cg_solver::build(const csr_matrix& A)
 {
@@ -53,11 +57,14 @@ void cg_solver::build(const csr_matrix& A)
     res.resize(A.get_m());
 }
 
-int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control)
+int cg_solver::solve_nonprecond(const csr_matrix&     A,
+                                vector<double>&       x,
+                                const vector<double>& b,
+                                iter_control          control)
 {
     ROUTINE_TRACE("cg_solver::solve_nonprecond");
 
-    double gamma = 0.0;
+    double gamma            = 0.0;
     double initial_res_norm = 0.0;
 
     // start algorithm
@@ -76,10 +83,10 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
-        if (iter > 0 && iter % restart_iter == 0)
+        if(iter > 0 && iter % restart_iter == 0)
         {
             // res = b - A * x
             compute_residual(A, x, b, res);
@@ -92,7 +99,7 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
 
         // z = A * p and alpha = (r, r) / (A * p, p)
         A.multiply_by_vector(z, p);
-        scalar<double> alpha = gamma / dot_product(z, p);
+        double alpha = gamma / dot_product(z, p);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -102,18 +109,18 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
 
         double res_norm = norm_inf(res);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
 
         // find beta
         double old_gamma = gamma;
-        gamma = dot_product(res, res);
-        scalar<double> beta = gamma / old_gamma;
+        gamma            = dot_product(res, res);
+        double beta      = gamma / old_gamma;
 
         // update p = res + beta * p
-        axpby(scalar<double>::one(), res, beta, p);
+        axpby(1.0, res, beta, p);
 
         iter++;
     }
@@ -126,20 +133,24 @@ int cg_solver::solve_nonprecond(const csr_matrix& A, vector<double>& x, const ve
     return iter;
 }
 
-int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int cg_solver::solve_precond(const csr_matrix&     A,
+                             vector<double>&       x,
+                             const vector<double>& b,
+                             const preconditioner* precond,
+                             iter_control          control)
 {
     ROUTINE_TRACE("cg_solver::solve_precond");
 
     assert(precond != nullptr);
 
-    double gamma = 0.0;
+    double gamma            = 0.0;
     double initial_res_norm = 0.0;
 
     // start algorithm
     {
         // res = b - A * x
         compute_residual(A, x, b, res);
-        
+
         initial_res_norm = norm_inf(res);
 
         // z = (M^-1) * res
@@ -154,10 +165,10 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
     auto t1 = std::chrono::high_resolution_clock::now();
 
     int iter = 0;
-    while (!control.exceed_max_iter(iter))
+    while(!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
-        if (restart_iter != -1 && iter > 0 && iter % restart_iter == 0)
+        if(restart_iter != -1 && iter > 0 && iter % restart_iter == 0)
         {
             // res = b - A * x
             compute_residual(A, x, b, res);
@@ -173,8 +184,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
 
         // z = A * p and alpha = (z, r) / (Ap, p)
         A.multiply_by_vector(z, p);
-        scalar<double> alpha = gamma / dot_product(z, p);
-        // scalar<double> neg_alpha = -1.0 * alpha;
+        double alpha = gamma / dot_product(z, p);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -184,7 +194,7 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
 
         double res_norm = norm_inf(res);
 
-        if (control.residual_converges(res_norm, initial_res_norm))
+        if(control.residual_converges(res_norm, initial_res_norm))
         {
             break;
         }
@@ -194,11 +204,11 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
 
         // find beta
         double old_gamma = gamma;
-        gamma = dot_product(z, res);
-        scalar<double> beta = gamma / old_gamma;
+        gamma            = dot_product(z, res);
+        double beta      = gamma / old_gamma;
 
         // update p = z + beta * p
-        axpby(scalar<double>::one(), z, beta, p);
+        axpby(1.0, z, beta, p);
 
         iter++;
     }
@@ -206,12 +216,17 @@ int cg_solver::solve_precond(const csr_matrix& A, vector<double>& x, const vecto
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "Preconditioned Conjugate Gradient time: " << ms_double.count() << "ms" << std::endl;
+    std::cout << "Preconditioned Conjugate Gradient time: " << ms_double.count() << "ms"
+              << std::endl;
 
     return iter;
 }
 
-int cg_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner* precond, iter_control control)
+int cg_solver::solve(const csr_matrix&     A,
+                     vector<double>&       x,
+                     const vector<double>& b,
+                     const preconditioner* precond,
+                     iter_control          control)
 {
     ROUTINE_TRACE("cg_solver::solve");
 
@@ -228,7 +243,7 @@ int cg_solver::solve(const csr_matrix& A, vector<double>& x, const vector<double
 void cg_solver::move_to_host()
 {
     ROUTINE_TRACE("cg_solver::move_to_host");
-    
+
     z.move_to_host();
     p.move_to_host();
     res.move_to_host();

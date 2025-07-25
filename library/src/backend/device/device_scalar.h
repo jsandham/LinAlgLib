@@ -31,12 +31,12 @@ namespace linalg
 {
     namespace device
     {
-        template<typename T>
+        template <typename T>
         struct device_scalar
         {
             int* dval;
         };
-    }
-}
+    } // namespace device
+} // namespace linalg
 
 #endif DEVICE_SCALAR_H

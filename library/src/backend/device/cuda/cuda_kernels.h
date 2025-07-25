@@ -27,15 +27,18 @@
 #ifndef CUDA_KERNELS_H
 #define CUDA_KERNELS_H
 
-template <typename T> 
-void launch_cuda_fill_kernel(T* data, size_t size, T val);
+template <typename T> void launch_cuda_fill_kernel(T *data, size_t size, T val);
+
+template <typename T> void launch_cuda_dot_product_kernel(int size, const T *x, const T *y, T *result);
 
 template <typename T>
-void launch_cuda_dot_product_kernel(int size, const T* x, const T* y, T* result);
+void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T *alpha, const int *csr_row_ptr, const int *csr_col_ind,
+                              const T *csr_val, const T *x, const T *beta, T *y);
 
-template <typename T>
-void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T* alpha, const int* csr_row_ptr, 
-                            const int* csr_col_ind, const T* csr_val, const T* x, const T* beta, T* y);
+template <typename T> void launch_cuda_axpy_kernel(int size, T alpha, const T *x, T *y);
+
+template <typename T> void launch_cuda_axpby_kernel(int size, T alpha, const T *x, T beta, T *y);
+
+template <typename T> void launch_cuda_axpbygz_kernel(int size, T alpha, const T *x, T beta, const T *y, T gamma, T *z);
 
 #endif
-
