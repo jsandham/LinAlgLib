@@ -25,9 +25,12 @@
 //********************************************************************************
 
 #include "../include/csr_matrix.h"
-#include "../include/linalg_math.h"
+
+#include "backend/device/device_math.h"
+#include "backend/host/host_math.h"
 
 #include "trace.h"
+#include "utility.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -149,15 +152,17 @@ void csr_matrix::move_to_device()
 {
     ROUTINE_TRACE("csr_matrix::move_to_device");
 
-    // if(!is_device_available())
-    // {
-    //     std::cout << "Warning: Device not available. Keeping matrix on the host." << std::endl;
-    //     return;
-    // }
+    if(!is_device_available())
+    {
+        std::cout << "Warning: Device not available. Keeping matrix on the host." << std::endl;
+        return;
+    }
 
     csr_row_ptr.move_to_device();
     csr_col_ind.move_to_device();
     csr_val.move_to_device();
+
+    on_host = false;
 }
 
 void csr_matrix::move_to_host()
@@ -167,41 +172,130 @@ void csr_matrix::move_to_host()
     csr_row_ptr.move_to_host();
     csr_col_ind.move_to_host();
     csr_val.move_to_host();
+
+    on_host = true;
 }
 
 void csr_matrix::extract_diagonal(vector<double>& diag) const
 {
     ROUTINE_TRACE("csr_matrix::extract_diagonal");
 
-    diagonal(*this, diag);
+    backend b = determine_backend(*this, diag);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout << "Error: parameters to csr_matrix::diagonal must all be on host or "
+                     "all be on device"
+                  << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::diagonal(*this, diag);
+    }
+    else
+    {
+        return device::diagonal(*this, diag);
+    }
 }
 
 void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector");
 
-    matrix_vector_product(*this, x, y);
+    backend b = determine_backend(*this, x, y);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout << "Error: parameters to csr_matrix::multiply_by_vector must all be on host or "
+                     "all be on device"
+                  << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::matrix_vector_product(*this, x, y);
+    }
+    else
+    {
+        return device::matrix_vector_product(*this, x, y);
+    }
 }
 
 void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
 
-    matrix_vector_product(1.0, *this, x, 1.0, y);
+    backend b = determine_backend(*this, x, y);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout
+            << "Error: parameters to csr_matrix::multiply_by_vector_and_add must all be on host or "
+               "all be on device"
+            << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::matrix_vector_product(1.0, *this, x, 1.0, y);
+    }
+    else
+    {
+        return device::matrix_vector_product(1.0, *this, x, 1.0, y);
+    }
 }
 
 void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
 
-    matrix_matrix_product(C, *this, B);
+    backend b = determine_backend(*this, B, C);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout
+            << "Error: parameters to csr_matrix::matrix_matrix_product must all be on host or "
+               "all be on device"
+            << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::matrix_matrix_product(C, *this, B);
+    }
+    else
+    {
+        return device::matrix_matrix_product(C, *this, B);
+    }
 }
 
 void csr_matrix::transpose(csr_matrix& T) const
 {
     ROUTINE_TRACE("csr_matrix::transpose_matrix");
 
-    transpose_matrix(*this, T);
+    backend b = determine_backend(*this, T);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout << "Error: parameters to csr_matrix::transpose_matrix must all be on host or "
+                     "all be on device"
+                  << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::transpose_matrix(*this, T);
+    }
+    else
+    {
+        return device::transpose_matrix(*this, T);
+    }
 }
 
 // Structure to hold triplet (COO) format data

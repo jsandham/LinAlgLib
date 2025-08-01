@@ -32,7 +32,7 @@ namespace linalg
     namespace device
     {
         template <typename T>
-        struct device_scalar
+        class device_scalar
         {
             int* dval;
         };

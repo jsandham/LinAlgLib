@@ -34,25 +34,10 @@ void linalg::device::axpy(double alpha, const vector<double>& x, vector<double>&
     launch_cuda_axpy_kernel(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
-// Compute y = alpha * x + y
-void linalg::device::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
-{
-    std::cout << "Error: axpy on device not implemented" << std::endl;
-}
-
 // Compute y = alpha * x + beta * y
 void linalg::device::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
     launch_cuda_axpby_kernel(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
-}
-
-// Compute y = alpha * x + beta * y
-void linalg::device::axpby(const scalar<double>& alpha,
-                           const vector<double>& x,
-                           const scalar<double>& beta,
-                           vector<double>&       y)
-{
-    std::cout << "Error: axpby on device not implemented" << std::endl;
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
@@ -67,30 +52,37 @@ void linalg::device::axpbypgz(double                alpha,
         x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
-// Compute z = alpha * x + beta * y + gamma * z
-void linalg::device::axpbypgz(const scalar<double>& alpha,
-                              const vector<double>& x,
-                              const scalar<double>& beta,
-                              const vector<double>& y,
-                              const scalar<double>& gamma,
-                              vector<double>&       z)
-{
-    std::cout << "Error: axpbygz on device not implemented" << std::endl;
-}
-
 // Compute y = A * x
 void linalg::device::matrix_vector_product(const csr_matrix&     A,
                                            const vector<double>& x,
                                            vector<double>&       y)
 {
-    std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
+    launch_cuda_csrmv_kernel(A.get_m(),
+                             A.get_n(),
+                             A.get_nnz(),
+                             1.0,
+                             A.get_row_ptr(),
+                             A.get_col_ind(),
+                             A.get_val(),
+                             x.get_vec(),
+                             0.0,
+                             y.get_vec());
 }
 
 // Compute y = alpha * A * x + beta * y
 void linalg::device::matrix_vector_product(
     double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
 {
-    std::cout << "Error: matrix_vector_product on device not implemented" << std::endl;
+    launch_cuda_csrmv_kernel(A.get_m(),
+                             A.get_n(),
+                             A.get_nnz(),
+                             alpha,
+                             A.get_row_ptr(),
+                             A.get_col_ind(),
+                             A.get_val(),
+                             x.get_vec(),
+                             beta,
+                             y.get_vec());
 }
 
 // Compute C = A * B
@@ -144,17 +136,10 @@ void linalg::device::transpose_matrix(const csr_matrix& A, csr_matrix& transpose
 // Dot product
 double linalg::device::dot_product(const vector<double>& x, const vector<double>& y)
 {
-    std::cout << "Error: dot_product on device not implemented" << std::endl;
-    return 0.0;
-}
+    double result = 0.0;
+    launch_cuda_dot_product_kernel(x.get_size(), x.get_vec(), y.get_vec(), &result);
 
-// Dot product
-void linalg::device::dot_product(const vector<double>& x,
-                                 const vector<double>& y,
-                                 scalar<double>&       result)
-{
-    std::cout << "Error: dot_product on device not implemented" << std::endl;
-    *(result.get_val()) = 0.0;
+    return result;
 }
 
 // Compute residual
@@ -163,7 +148,15 @@ void linalg::device::compute_residual(const csr_matrix&     A,
                                       const vector<double>& b,
                                       vector<double>&       res)
 {
-    std::cout << "Error: compute_residual on device not implemented" << std::endl;
+    launch_cuda_compute_residual_kernel(A.get_m(),
+                                        A.get_n(),
+                                        A.get_nnz(),
+                                        A.get_row_ptr(),
+                                        A.get_col_ind(),
+                                        A.get_val(),
+                                        x.get_vec(),
+                                        b.get_vec(),
+                                        res.get_vec());
 }
 
 // Exclusive scan
@@ -175,7 +168,13 @@ void linalg::device::exclusize_scan(vector<double>& x)
 // Extract diagonal entries
 void linalg::device::diagonal(const csr_matrix& A, vector<double>& d)
 {
-    std::cout << "Error: diagonal on device not implemented" << std::endl;
+    launch_cuda_extract_diagonal_kernel(A.get_m(),
+                                        A.get_n(),
+                                        A.get_nnz(),
+                                        A.get_row_ptr(),
+                                        A.get_col_ind(),
+                                        A.get_val(),
+                                        d.get_vec());
 }
 
 // Euclidean norm

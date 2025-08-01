@@ -24,19 +24,38 @@
 //
 //********************************************************************************
 
-#ifndef HOST_SCALAR_H
-#define HOST_SCALAR_H
+#ifndef UTILITY_H
+#define UTILITY_H
 
-namespace linalg
+inline constexpr bool is_device_available()
 {
-    namespace host
+#ifdef LINALGLIB_HAS_CUDA
+    return true;
+#else
+    return false;
+#endif
+}
+
+enum class backend
+{
+    host,
+    device,
+    invalid
+};
+
+template <typename T, typename... Rest>
+inline backend determine_backend(const T& first, const Rest&... rest)
+{
+    bool first_is_on_host    = first.is_on_host();
+    bool rest_equal_to_first = ((rest.is_on_host() == first_is_on_host) && ...);
+    if(rest_equal_to_first)
     {
-        template <typename T>
-        class host_scalar
-        {
-            T hval;
-        };
+        return first_is_on_host ? backend::host : backend::device;
+    }
+    else
+    {
+        return backend::invalid;
     }
 }
 
-#endif HOST_SCALAR_H
+#endif

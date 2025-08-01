@@ -31,9 +31,7 @@
 
 #include "csr_matrix.h"
 #include "linalg_export.h"
-#include "scalar.h"
 #include "vector.h"
-
 
 /*! \file
  *  \brief linalg_math.h provides linear algebra APIs
@@ -50,8 +48,6 @@ namespace linalg
      * it contains the result of the DAXPY operation.
      */
     LINALGLIB_API void axpy(double alpha, const vector<double>& x, vector<double>& y);
-    LINALGLIB_API void
-        axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y);
 
     /**
      * @brief Computes the DAXPBY operation: \f$y = \alpha \cdot x + \beta \cdot y\f$.
@@ -63,10 +59,6 @@ namespace linalg
      * it contains the result of the DAXPBY operation.
      */
     LINALGLIB_API void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
-    LINALGLIB_API void axpby(const scalar<double>& alpha,
-                             const vector<double>& x,
-                             const scalar<double>& beta,
-                             vector<double>&       y);
 
     /**
      * @brief Computes the DAXPBYPGZ operation: \f$z = \alpha \cdot x + \beta \cdot y + \gamma \cdot z\f$.
@@ -84,12 +76,6 @@ namespace linalg
                                 double                beta,
                                 const vector<double>& y,
                                 double                gamma,
-                                vector<double>&       z);
-    LINALGLIB_API void axpbypgz(const scalar<double>& alpha,
-                                const vector<double>& x,
-                                const scalar<double>& beta,
-                                const vector<double>& y,
-                                const scalar<double>& gamma,
                                 vector<double>&       z);
 
     /**
@@ -227,8 +213,6 @@ namespace linalg
      * @return The double-precision floating-point result of the dot product.
      */
     LINALGLIB_API double dot_product(const vector<double>& x, const vector<double>& y);
-    LINALGLIB_API void
-        dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result);
 
     /**
      * @brief Computes the residual vector for a linear system: \f$res = b - A \cdot x\f$.

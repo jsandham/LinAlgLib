@@ -31,88 +31,92 @@
 
 #include "csr_matrix.h"
 #include "linalg_export.h"
-#include "scalar.h"
 #include "vector.h"
-
 
 namespace linalg
 {
-namespace device
-{
-// Compute y = alpha * x + y
-void axpy(double alpha, const vector<double> &x, vector<double> &y);
+    namespace device
+    {
+        // Compute y = alpha * x + y
+        void axpy(double alpha, const vector<double>& x, vector<double>& y);
 
-// Compute y = alpha * x + y
-void axpy(const scalar<double> &alpha, const vector<double> &x, vector<double> &y);
+        // Compute y = alpha * x + beta * y
+        void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
 
-// Compute y = alpha * x + beta * y
-void axpby(double alpha, const vector<double> &x, double beta, vector<double> &y);
+        // Compute z = alpha * x + beta * y + gamma * z
+        void axpbypgz(double                alpha,
+                      const vector<double>& x,
+                      double                beta,
+                      const vector<double>& y,
+                      double                gamma,
+                      vector<double>&       z);
 
-// Compute y = alpha * x + beta * y
-void axpby(const scalar<double> &alpha, const vector<double> &x, const scalar<double> &beta, vector<double> &y);
+        // Compute y = A * x
+        void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
 
-// Compute z = alpha * x + beta * y + gamma * z
-void axpbypgz(double alpha, const vector<double> &x, double beta, const vector<double> &y, double gamma,
-              vector<double> &z);
+        // Compute y = alpha * A * x + beta * y
+        void matrix_vector_product(double                alpha,
+                                   const csr_matrix&     A,
+                                   const vector<double>& x,
+                                   double                beta,
+                                   vector<double>&       y);
 
-// Compute z = alpha * x + beta * y + gamma * z
-void axpbypgz(const scalar<double> &alpha, const vector<double> &x, const scalar<double> &beta, const vector<double> &y,
-              const scalar<double> &gamma, vector<double> &z);
+        // Compute C = A * B
+        void matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-// Compute y = A * x
-void matrix_vector_product(const csr_matrix &A, const vector<double> &x, vector<double> &y);
+        // Compute C = A + B
+        void matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-// Compute y = alpha * A * x + beta * y
-void matrix_vector_product(double alpha, const csr_matrix &A, const vector<double> &x, double beta, vector<double> &y);
+        // Incomplete IC factorization
+        void csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
 
-// Compute C = A * B
-void matrix_matrix_product(csr_matrix &C, const csr_matrix &A, const csr_matrix &B);
+        // Incomplete LU factorization
+        void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
 
-// Compute C = A + B
-void matrix_matrix_addition(csr_matrix &C, const csr_matrix &A, const csr_matrix &B);
+        // Forward solve
+        void forward_solve(const csr_matrix&     A,
+                           const vector<double>& b,
+                           vector<double>&       x,
+                           bool                  unit_diag);
 
-// Incomplete IC factorization
-void csric0(csr_matrix &LL, int *structural_zero, int *numeric_zero);
+        // Backward solve
+        void backward_solve(const csr_matrix&     A,
+                            const vector<double>& b,
+                            vector<double>&       x,
+                            bool                  unit_diag);
 
-// Incomplete LU factorization
-void csrilu0(csr_matrix &LU, int *structural_zero, int *numeric_zero);
+        // Transpose matrix
+        void transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
 
-// Forward solve
-void forward_solve(const csr_matrix &A, const vector<double> &b, vector<double> &x, bool unit_diag);
+        // Dot product
+        double dot_product(const vector<double>& x, const vector<double>& y);
 
-// Backward solve
-void backward_solve(const csr_matrix &A, const vector<double> &b, vector<double> &x, bool unit_diag);
+        // Compute residual
+        void compute_residual(const csr_matrix&     A,
+                              const vector<double>& x,
+                              const vector<double>& b,
+                              vector<double>&       res);
 
-// Transpose matrix
-void transpose_matrix(const csr_matrix &A, csr_matrix &transposeA);
+        // Exclusive scan
+        void exclusize_scan(vector<double>& x);
 
-// Dot product
-double dot_product(const vector<double> &x, const vector<double> &y);
+        // Extract diagonal entries
+        void diagonal(const csr_matrix& A, vector<double>& d);
 
-// Dot product
-void dot_product(const vector<double> &x, const vector<double> &y, scalar<double> &result);
+        // Euclidean norm
+        double norm_euclid(const vector<double>& array);
 
-// Compute residual
-void compute_residual(const csr_matrix &A, const vector<double> &x, const vector<double> &b, vector<double> &res);
+        // Infinity norm
+        double norm_inf(const vector<double>& array);
 
-// Exclusive scan
-void exclusize_scan(vector<double> &x);
+        // Fill array with value
+        template <typename T>
+        void fill(vector<T>& vec, T value);
 
-// Extract diagonal entries
-void diagonal(const csr_matrix &A, vector<double> &d);
-
-// Euclidean norm
-double norm_euclid(const vector<double> &array);
-
-// Infinity norm
-double norm_inf(const vector<double> &array);
-
-// Fill array with value
-template <typename T> void fill(vector<T> &vec, T value);
-
-// Copy array
-template <typename T> void copy(vector<T> &dest, const vector<T> &src);
-} // namespace device
+        // Copy array
+        template <typename T>
+        void copy(vector<T>& dest, const vector<T>& src);
+    } // namespace device
 } // namespace linalg
 
 #endif

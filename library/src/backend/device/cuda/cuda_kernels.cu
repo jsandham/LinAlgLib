@@ -30,11 +30,36 @@
 
 #define FULL_MASK 0xffffffff
 
-#define CHECK_CUDA(status)                                                   \
-if(status != cudaSuccess)                                                    \
-{                                                                            \
-    std::cout << "Error: Cuda call returned status " << status << std::endl; \
-}
+#define CHECK_CUDA(call)                                                     \
+    do {                                                                     \
+        cudaError_t err = (call);                                            \
+        if (err != cudaSuccess) {                                            \
+            std::cerr << "CUDA API Error: " << cudaGetErrorString(err)       \
+                      << " at " << __FILE__ << ":" << __LINE__               \
+                      << " in function " << __func__ << std::endl;           \
+            /*exit(EXIT_FAILURE);*/                                          \
+        }                                                                    \
+    } while (0)
+
+
+#define CHECK_CUDA_LAUNCH_ERROR()                                            \
+    do {                                                                     \
+        cudaError_t err = cudaGetLastError();                                \
+        if (err != cudaSuccess) {                                            \
+            std::cerr << "CUDA Runtime Error: " << cudaGetErrorString(err)   \
+                      << " at " << __FILE__ << ":" << __LINE__               \
+                      << " in function " << __func__ << std::endl;           \
+            /*exit(EXIT_FAILURE);*/                                          \
+        }                                                                    \
+        cudaDeviceSynchronize();                                             \
+        err = cudaGetLastError();                                            \
+        if (err != cudaSuccess) {                                            \
+            std::cerr << "CUDA Device Synchronization Error: " << cudaGetErrorString(err) \
+            << " at " << __FILE__ << ":" << __LINE__                         \
+            << " in function " << __func__ << std::endl;                     \
+        }                                                                    \
+        /* exit(EXIT_FAILURE); */                                            \
+    } while (0)
 
 template <uint32_t BLOCKSIZE, typename T>
 static __global__ void fill_kernel(T* data, size_t size, T val)
@@ -172,7 +197,7 @@ static __global__ void dot_product_kernel_part1(int size, const T* x, const T* y
     int index = gid;
     while(index < size)
     {
-        val = x[index] * y[index];
+        val += x[index] * y[index];
 
         index += BLOCKSIZE * gridDim.x;
     }
@@ -190,7 +215,7 @@ static __global__ void dot_product_kernel_part1(int size, const T* x, const T* y
 }
 
 template <uint32_t BLOCKSIZE, typename T>
-static __global__ void dot_product_kernel_part2(const T* workspace, T* res)
+static __global__ void dot_product_kernel_part2(T* workspace)
 {
     int tid = threadIdx.x;
 
@@ -204,13 +229,13 @@ static __global__ void dot_product_kernel_part2(const T* workspace, T* res)
 
     if(tid == 0)
     {
-        *res = workspace[0];
+        workspace[0] = shared[0];
     }
 }
 
 template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
-static __global__ void csrmv_vector_kernel(int m, int n, int nnz, const T* alpha, const int* csr_row_ptr, const int* csr_col_ind, 
-    const T* csr_val, const T* x, const T* beta, T* y)
+static __global__ void csrmv_vector_kernel(int m, int n, int nnz, const T alpha, const int* csr_row_ptr, const int* csr_col_ind, 
+    const T* csr_val, const T* x, const T beta, T* y)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;
@@ -237,19 +262,81 @@ static __global__ void csrmv_vector_kernel(int m, int n, int nnz, const T* alpha
 
         if(lid == 0)
         {
-            if(*beta == static_cast<T>(0))
+            if(beta == static_cast<T>(0))
             {
-                y[row] = *alpha * sum;
+                y[row] = alpha * sum;
             }
             else
             {
-                y[row] = *alpha * sum + *beta * y[row];
+                y[row] = alpha * sum + beta * y[row];
             }
         }
     }
 }
 
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
+static __global__ void extract_diagonal_kernel(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, 
+    const T* csr_val, T* diag)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
 
+    int lid = tid & WARPSIZE - 1;
+    //int wid = tid / WARPSIZE;
+
+    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
+    {
+        int row_start = csr_row_ptr[row];
+    //     int row_end = csr_row_ptr[row + 1];
+
+    //     for(int j = row_start + lid; j < row_end; j += WARPSIZE)
+    //     {
+    //         int col = csr_col_ind[j];
+    //         T val = csr_val[j];
+
+    //         if(col == row)
+    //         {
+    //             diag[row] = val;
+    //             break;
+    //         }
+    //     }
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
+static __global__ void compute_residual_kernel(int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, 
+    const T* csr_val, const T* x, const T* b, T* res)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    int lid = tid & WARPSIZE - 1;
+    //int wid = tid / WARPSIZE;
+
+    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
+    {
+        int row_start = csr_row_ptr[row];
+        int row_end = csr_row_ptr[row + 1];
+
+        T sum = static_cast<T>(0);
+        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
+        {
+            int col = csr_col_ind[j];
+            T val = csr_val[j];
+
+            sum += x[col] * val;
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum, lid);
+
+        if(lid == 0)
+        {
+            res[row] = b[row] - sum;
+        }
+    }
+}
 
 
 
@@ -296,44 +383,85 @@ template <typename T>
 void launch_cuda_fill_kernel(T* data, size_t size, T val)
 {
     fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
+
+    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 template <typename T>
 void launch_cuda_dot_product_kernel(int size, const T* x, const T* y, T* result)
 {
     T* workspace = nullptr;
+    CHECK_CUDA(cudaDeviceSynchronize());
     CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(T) * 256));
 
     dot_product_kernel_part1<256><<<256, 256>>>(size, x, y, workspace);
+    CHECK_CUDA_LAUNCH_ERROR();
 
-    dot_product_kernel_part2<256><<<1, 256>>>(workspace, result);
+    dot_product_kernel_part2<256><<<1, 256>>>(workspace);
+    CHECK_CUDA_LAUNCH_ERROR();
 
+    CHECK_CUDA(cudaMemcpy(result, workspace, sizeof(T), cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaFree(workspace));
 }
 
 template <typename T>
-void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T* alpha, const int* csr_row_ptr, 
-                            const int* csr_col_ind, const T* csr_val, const T* x, const T* beta, T* y)
+void launch_cuda_csrmv_kernel(int m, int n, int nnz, const T alpha, const int* csr_row_ptr, 
+                            const int* csr_col_ind, const T* csr_val, const T* x, const T beta, T* y)
 {
-    csrmv_vector_kernel<256, 32><<<((m - 1) / 256 + 1), 256>>>(m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    CHECK_CUDA_LAUNCH_ERROR();
 }
+
+template <typename T>
+void launch_cuda_extract_diagonal_kernel(int        m,
+                                        int        n,
+                                        int        nnz,
+                                        const int* csr_row_ptr,
+                                        const int* csr_col_ind,
+                                        const T*   csr_val,
+                                        T*         diag)
+{
+    extract_diagonal_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m, n, nnz, csr_row_ptr, csr_col_ind, csr_val, diag);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+template <typename T>
+void launch_cuda_compute_residual_kernel(int        m,
+                                         int        n,
+                                         int        nnz,
+                                         const int* csr_row_ptr,
+                                         const int* csr_col_ind,
+                                         const T*   csr_val,
+                                         const T*   x,
+                                         const T*   b,
+                                         T*         res)
+{
+    compute_residual_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m, n, nnz, csr_row_ptr, csr_col_ind, csr_val, x, b, res);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+
+
 
 template <typename T>
 void launch_cuda_axpy_kernel(int size, T alpha, const T* x, T* y)
 {
     axpy_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, y);
+    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 template <typename T>
 void launch_cuda_axpby_kernel(int size, T alpha, const T* x, T beta, T* y)
 {
     axpby_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y);
+    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 template <typename T>
 void launch_cuda_axpbygz_kernel(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
 {
     axpbygz_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y, gamma, z);
+    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 template void launch_cuda_fill_kernel<uint32_t>(uint32_t* data, size_t size, uint32_t val);
@@ -346,8 +474,14 @@ template void launch_cuda_dot_product_kernel<int32_t>(int size, const int32_t* x
 template void launch_cuda_dot_product_kernel<int64_t>(int size, const int64_t* x, const int64_t* y, int64_t* result);
 template void launch_cuda_dot_product_kernel<double>(int size, const double* x, const double* y, double* result);
 
-template void launch_cuda_csrmv_kernel<double>(int m, int n, int nnz, const double* alpha, const int* csr_row_ptr, 
-                            const int* csr_col_ind, const double* csr_val, const double* x, const double* beta, double* y);
+template void launch_cuda_csrmv_kernel<double>(int m, int n, int nnz, const double alpha, const int* csr_row_ptr, 
+                            const int* csr_col_ind, const double* csr_val, const double* x, const double beta, double* y);
+
+template void launch_cuda_extract_diagonal_kernel<double>(int m, int n, int nnz, const int* csr_row_ptr, 
+                            const int* csr_col_ind, const double* csr_val, double* diag);
+
+template void launch_cuda_compute_residual_kernel<double>(int m, int n, int nnz, const int* csr_row_ptr, 
+                            const int* csr_col_ind, const double* csr_val, const double* x, const double* b, double* res);
 
 template void launch_cuda_axpy_kernel<double>(int size, double alpha, const double* x, double* y);
 template void launch_cuda_axpby_kernel<double>(int size, double alpha, const double* x, double beta, double* y);

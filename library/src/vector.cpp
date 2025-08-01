@@ -25,13 +25,16 @@
 //********************************************************************************
 
 #include "../include/vector.h"
-#include "../include/linalg_math.h"
+
+#include "backend/device/device_math.h"
+#include "backend/host/host_math.h"
 
 #include "trace.h"
+#include "utility.h"
 
 #include "backend/backend_vector.h"
-#include "backend/host/host_vector.h"
 #include "backend/device/device_vector.h"
+#include "backend/host/host_vector.h"
 
 #include <assert.h>
 
@@ -40,36 +43,36 @@ using namespace linalg;
 template <typename T>
 vector<T>::vector()
 {
-    this->hvec = new host::host_vector<T>();
-    this->dvec = new device::device_vector<T>();
-    this->vec = hvec;
+    this->hvec    = new host::host_vector<T>();
+    this->dvec    = new device::device_vector<T>();
+    this->vec     = hvec;
     this->on_host = true;
 }
 
 template <typename T>
 vector<T>::vector(size_t size)
 {
-    this->hvec = new host::host_vector<T>(size);
-    this->dvec = new device::device_vector<T>(size);
-    this->vec = hvec;
+    this->hvec    = new host::host_vector<T>(size);
+    this->dvec    = new device::device_vector<T>(size);
+    this->vec     = hvec;
     this->on_host = true;
 }
 
 template <typename T>
 vector<T>::vector(size_t size, T val)
 {
-    this->hvec = new host::host_vector<T>(size, val);
-    this->dvec = new device::device_vector<T>(size, val);
-    this->vec = hvec;
+    this->hvec    = new host::host_vector<T>(size, val);
+    this->dvec    = new device::device_vector<T>(size, val);
+    this->vec     = hvec;
     this->on_host = true;
 }
 
 template <typename T>
 vector<T>::vector(const std::vector<T>& v)
 {
-    this->hvec = new host::host_vector<T>(v);
-    this->dvec = new device::device_vector<T>(v);
-    this->vec = hvec;
+    this->hvec    = new host::host_vector<T>(v);
+    this->dvec    = new device::device_vector<T>(v);
+    this->vec     = hvec;
     this->on_host = true;
 }
 
@@ -135,37 +138,95 @@ template <typename T>
 void vector<T>::copy_from(const vector& x)
 {
     ROUTINE_TRACE("vector<T>::copy_from");
-    copy<T>(*this, x);
+
+    backend b = determine_backend(*this, x);
+
+    if(b != backend::host && b != backend::device)
+    {
+        std::cout << "Error: parameters to vector<T>::copy_from must all be on host or "
+                     "all be on device"
+                  << std::endl;
+        return;
+    }
+
+    if(this->is_on_host())
+    {
+        return host::copy(*this, x);
+    }
+    else
+    {
+        return device::copy(*this, x);
+    }
 }
 
 template <typename T>
 void vector<T>::zeros()
 {
     ROUTINE_TRACE("vector<T>::zeros");
-    fill<T>(*this, (T)0);
+
+    if(this->is_on_host())
+    {
+        return host::fill<T>(*this, static_cast<T>(0));
+    }
+    else
+    {
+        return device::fill<T>(*this, static_cast<T>(0));
+    }
 }
-    
+
 template <typename T>
 void vector<T>::ones()
 {
     ROUTINE_TRACE("vector<T>::ones");
-    fill<T>(*this, (T)1);
+
+    if(this->is_on_host())
+    {
+        return host::fill<T>(*this, static_cast<T>(1));
+    }
+    else
+    {
+        return device::fill<T>(*this, static_cast<T>(1));
+    }
 }
 
 template <typename T>
 void vector<T>::move_to_device()
 {
     ROUTINE_TRACE("vector<T>::move_to_device");
-    this->vec = this->dvec;
+
+    if(!is_device_available())
+    {
+        std::cout << "Warning: Device not available. Keeping vector on the host." << std::endl;
+        return;
+    }
+
+    size_t old_size = this->vec->get_size();
+
+    this->vec     = this->dvec;
     this->on_host = false;
+
+    if(old_size != this->vec->get_size())
+    {
+        this->vec->resize(old_size);
+    }
+    // need to copy data from old vector to current vector
 }
 
 template <typename T>
 void vector<T>::move_to_host()
 {
     ROUTINE_TRACE("vector<T>::move_to_host");
-    this->vec = this->hvec;
+
+    size_t old_size = this->vec->get_size();
+
+    this->vec     = this->hvec;
     this->on_host = true;
+
+    if(old_size != this->vec->get_size())
+    {
+        this->vec->resize(old_size);
+    }
+    // need to copy data from old vector to current vector
 }
 
 template class linalg::vector<uint32_t>;

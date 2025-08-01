@@ -27,9 +27,9 @@
 #include "test_functions.h"
 #include "utility.h"
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
-#include <chrono>
 
 #include "linalg.h"
 
@@ -37,13 +37,50 @@ using namespace linalg;
 
 bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
-
     scalar<double> a(3.0);
     scalar<double> b = -1.0 * a;
 
     std::cout << "a: " << a << " b: " << b << std::endl;
 
+    csr_matrix mat_D;
+    mat_D.read_mtx(arg.filename);
 
+    vector<double> vec_1(mat_D.get_m());
+    vec_1.zeros();
+
+    vector<double> vec_2(mat_D.get_m());
+    vec_2.zeros();
+
+    vector<double> vec_3(mat_D.get_m());
+    vec_3.zeros();
+
+    mat_D.move_to_device();
+    vec_1.move_to_device();
+    vec_2.move_to_device();
+
+    vec_1.ones();
+    vec_2.ones();
+    double result = dot_product(vec_1, vec_2);
+    std::cout << "result: " << result << std::endl;
+
+    vec_1.zeros();
+    vec_2.ones();
+
+    mat_D.multiply_by_vector(vec_2, vec_1);
+    mat_D.extract_diagonal(vec_2);
+    diagonal(mat_D, vec_2);
+    compute_residual(mat_D, vec_1, vec_2, vec_3);
+    compute_residual(mat_D, vec_1, vec_2, vec_3);
+    compute_residual(mat_D, vec_1, vec_2, vec_3);
+    compute_residual(mat_D, vec_1, vec_2, vec_3);
+
+    vec_1.ones();
+    vec_2.ones();
+    result = dot_product(vec_1, vec_2);
+    result = dot_product(vec_1, vec_2);
+    result = dot_product(vec_1, vec_2);
+    result = dot_product(vec_1, vec_2);
+    std::cout << "result: " << result << std::endl;
 
     csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
@@ -64,44 +101,44 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     mat_A.multiply_by_vector(vec_b, vec_e);
 
-    cg_solver cg;
+    cg_solver       cg;
     bicgstab_solver bicgstab;
-    gmres_solver gmres;
+    gmres_solver    gmres;
 
     switch(solver_type)
     {
-        case KrylovSolver::CG:
-            cg.build(mat_A);
-            break;
-        case KrylovSolver::BICGSTAB:
-            bicgstab.build(mat_A);
-            break;
-        case KrylovSolver::GMRES:
-            gmres.build(mat_A, 100);
-            break;
+    case KrylovSolver::CG:
+        cg.build(mat_A);
+        break;
+    case KrylovSolver::BICGSTAB:
+        bicgstab.build(mat_A);
+        break;
+    case KrylovSolver::GMRES:
+        gmres.build(mat_A, 100);
+        break;
     }
 
     linalg::preconditioner* p = nullptr;
     switch(arg.precond)
     {
-        case Testing::preconditioner::Jacobi:
-            p = new jacobi_precond;
-            break;
-        case Testing::preconditioner::GaussSeidel:
-            p = new gauss_seidel_precond;
-            break;
-        case Testing::preconditioner::SOR:
-            p = new SOR_precond(0.3);
-            break;
-        case Testing::preconditioner::SymmGaussSeidel:
-            p = new symmetric_gauss_seidel_precond;
-            break;
-        case Testing::preconditioner::ILU:
-            p = new ilu_precond;
-            break;
-        case Testing::preconditioner::IC:
-            p = new ic_precond;
-            break;
+    case Testing::preconditioner::Jacobi:
+        p = new jacobi_precond;
+        break;
+    case Testing::preconditioner::GaussSeidel:
+        p = new gauss_seidel_precond;
+        break;
+    case Testing::preconditioner::SOR:
+        p = new SOR_precond(0.3);
+        break;
+    case Testing::preconditioner::SymmGaussSeidel:
+        p = new symmetric_gauss_seidel_precond;
+        break;
+    case Testing::preconditioner::ILU:
+        p = new ilu_precond;
+        break;
+    case Testing::preconditioner::IC:
+        p = new ic_precond;
+        break;
     }
 
     if(p != nullptr)
@@ -119,15 +156,15 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     switch(solver_type)
     {
-        case KrylovSolver::CG:
-            iter = cg.solve(mat_A, vec_x, vec_b, p, control);
-            break;
-        case KrylovSolver::BICGSTAB:
-            iter = bicgstab.solve(mat_A, vec_x, vec_b, p, control);
-            break;
-        case KrylovSolver::GMRES:
-            iter = gmres.solve(mat_A, vec_x, vec_b, p, control);
-            break;
+    case KrylovSolver::CG:
+        iter = cg.solve(mat_A, vec_x, vec_b, p, control);
+        break;
+    case KrylovSolver::BICGSTAB:
+        iter = bicgstab.solve(mat_A, vec_x, vec_b, p, control);
+        break;
+    case KrylovSolver::GMRES:
+        iter = gmres.solve(mat_A, vec_x, vec_b, p, control);
+        break;
     }
 
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -144,5 +181,6 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     int norm_type = (solver_type == KrylovSolver::GMRES) ? 1 : 0;
 
-    return check_solution(mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
+    return check_solution(
+        mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }
