@@ -31,7 +31,13 @@ template <typename T>
 void launch_cuda_fill_kernel(T* data, size_t size, T val);
 
 template <typename T>
+void launch_cuda_copy_kernel(T* dest, const T* src, size_t size);
+
+template <typename T>
 void launch_cuda_dot_product_kernel(int size, const T* x, const T* y, T* result);
+
+template <typename T>
+void launch_cuda_norm_inf_kernel(int size, const T* array, T* norm);
 
 template <typename T>
 void launch_cuda_csrmv_kernel(int        m,
@@ -72,6 +78,9 @@ template <typename T>
 void launch_cuda_axpby_kernel(int size, T alpha, const T* x, T beta, T* y);
 
 template <typename T>
-void launch_cuda_axpbygz_kernel(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z);
+void launch_cuda_axpbypgz_kernel(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z);
+
+template <typename T>
+void launch_cuda_jacobi_solve_kernel(int size, const T* rhs, const T* diag, T* x);
 
 #endif

@@ -122,6 +122,16 @@ void device_vector<T>::resize(size_t size, T val)
     }
 }
 
+void linalg::device::copy_h2d(void* dest, const void* src, size_t size_in_bytes)
+{
+    cudaMemcpy(dest, src, size_in_bytes, cudaMemcpyHostToDevice);
+}
+
+void linalg::device::copy_d2h(void* dest, const void* src, size_t size_in_bytes)
+{
+    cudaMemcpy(dest, src, size_in_bytes, cudaMemcpyDeviceToHost);
+}
+
 template class linalg::device::device_vector<uint32_t>;
 template class linalg::device::device_vector<int32_t>;
 template class linalg::device::device_vector<int64_t>;

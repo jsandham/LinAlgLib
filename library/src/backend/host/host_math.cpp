@@ -31,10 +31,8 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 #include "host_math.h"
-
 
 namespace linalg
 {
@@ -226,9 +224,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // exclusive scan
     //-------------------------------------------------------------------------------
-    static void host_exclusize_scan(double* x, int n)
+    static void host_exclusive_scan(double* x, int n)
     {
-        ROUTINE_TRACE("host_exclusize_scan");
+        ROUTINE_TRACE("host_exclusive_scan");
 
         if(n > 0)
         {
@@ -353,6 +351,22 @@ namespace linalg
         for(size_t i = 0; i < n; i++)
         {
             dest[i] = src[i];
+        }
+    }
+
+    //-------------------------------------------------------------------------------
+    // jacobi solve
+    //-------------------------------------------------------------------------------
+    static void host_jacobi_solve(const double* rhs, const double* diag, double* x, size_t n)
+    {
+        ROUTINE_TRACE("host_jacobi_solve");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(size_t i = 0; i < n; i++)
+        {
+            x[i] = rhs[i] / diag[i];
         }
     }
 
@@ -1378,11 +1392,11 @@ void linalg::host::compute_residual(const csr_matrix&     A,
 }
 
 // Exclusive scan
-void linalg::host::exclusize_scan(vector<double>& x)
+void linalg::host::exclusive_scan(vector<double>& x)
 {
     ROUTINE_TRACE("linalg::host::exclusive_scan");
 
-    host_exclusize_scan(x.get_vec(), x.get_size());
+    host_exclusive_scan(x.get_vec(), x.get_size());
 }
 
 // Extract diagonal entries
@@ -1435,3 +1449,13 @@ template void linalg::host::copy<uint32_t>(vector<uint32_t>& dest, const vector<
 template void linalg::host::copy<int32_t>(vector<int32_t>& dest, const vector<int32_t>& src);
 template void linalg::host::copy<int64_t>(vector<int64_t>& dest, const vector<int64_t>& src);
 template void linalg::host::copy<double>(vector<double>& dest, const vector<double>& src);
+
+// Jacobi solve
+void linalg::host::jacobi_solve(const vector<double>& rhs,
+                                const vector<double>& diag,
+                                vector<double>&       x)
+{
+    ROUTINE_TRACE("linalg::host::jacobi_solve");
+
+    host_jacobi_solve(rhs.get_vec(), diag.get_vec(), x.get_vec(), x.get_size());
+}

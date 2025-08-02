@@ -26,14 +26,13 @@
 
 #include "../include/vector.h"
 
-#include "backend/device/device_math.h"
-#include "backend/host/host_math.h"
-
 #include "trace.h"
 #include "utility.h"
 
 #include "backend/backend_vector.h"
+#include "backend/device/device_math.h"
 #include "backend/device/device_vector.h"
+#include "backend/host/host_math.h"
 #include "backend/host/host_vector.h"
 
 #include <assert.h>
@@ -200,6 +199,12 @@ void vector<T>::move_to_device()
         return;
     }
 
+    if(!this->is_on_host())
+    {
+        std::cout << "Warning: Vector data is already on the device. Doing nothing" << std::endl;
+        return;
+    }
+
     size_t old_size = this->vec->get_size();
 
     this->vec     = this->dvec;
@@ -209,13 +214,22 @@ void vector<T>::move_to_device()
     {
         this->vec->resize(old_size);
     }
+
     // need to copy data from old vector to current vector
+    device::copy_h2d(
+        this->dvec->get_data(), this->hvec->get_data(), sizeof(T) * this->hvec->get_size());
 }
 
 template <typename T>
 void vector<T>::move_to_host()
 {
     ROUTINE_TRACE("vector<T>::move_to_host");
+
+    if(this->is_on_host())
+    {
+        std::cout << "Warning: Vector data is already on the host. Doing nothing" << std::endl;
+        return;
+    }
 
     size_t old_size = this->vec->get_size();
 
@@ -226,7 +240,10 @@ void vector<T>::move_to_host()
     {
         this->vec->resize(old_size);
     }
+
     // need to copy data from old vector to current vector
+    device::copy_d2h(
+        this->hvec->get_data(), this->dvec->get_data(), sizeof(T) * this->dvec->get_size());
 }
 
 template class linalg::vector<uint32_t>;

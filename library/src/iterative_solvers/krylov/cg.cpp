@@ -32,7 +32,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -64,6 +63,8 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
 {
     ROUTINE_TRACE("cg_solver::solve_nonprecond");
 
+    std::cout << "AAAA" << std::endl;
+
     double gamma            = 0.0;
     double initial_res_norm = 0.0;
 
@@ -72,12 +73,18 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
         // res = b - A * x
         compute_residual(A, x, b, res);
 
+        std::cout << "BBBB" << std::endl;
+
         initial_res_norm = norm_inf(res);
+
+        std::cout << "CCCC" << std::endl;
 
         // p = res
         p.copy_from(res);
 
         gamma = dot_product(res, res);
+
+        std::cout << "DDDD" << std::endl;
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();

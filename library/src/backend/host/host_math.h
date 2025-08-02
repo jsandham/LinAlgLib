@@ -34,7 +34,6 @@
 #include "scalar.h"
 #include "vector.h"
 
-
 namespace linalg
 {
     namespace host
@@ -120,7 +119,7 @@ namespace linalg
                               vector<double>&       res);
 
         // Exclusive scan
-        void exclusize_scan(vector<double>& x);
+        void exclusive_scan(vector<double>& x);
 
         // Extract diagonal entries
         void diagonal(const csr_matrix& A, vector<double>& d);
@@ -138,6 +137,9 @@ namespace linalg
         // Copy array
         template <typename T>
         void copy(vector<T>& dest, const vector<T>& src);
+
+        // Jacobi solve
+        void jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
     }
 }
 

@@ -71,6 +71,9 @@ namespace linalg
             void     resize(size_t size) override;
             void     resize(size_t size, T val) override;
         };
+
+        void copy_h2d(void* dest, const void* src, size_t size_in_bytes);
+        void copy_d2h(void* dest, const void* src, size_t size_in_bytes);
     } // namespace device
 } // namespace linalg
 

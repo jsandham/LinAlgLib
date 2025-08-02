@@ -28,15 +28,19 @@
 
 #include "cuda/cuda_kernels.h"
 
+#include "../../trace.h"
+
 // Compute y = alpha * x + y
 void linalg::device::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::device::axpy");
     launch_cuda_axpy_kernel(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 // Compute y = alpha * x + beta * y
 void linalg::device::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::device::axpby");
     launch_cuda_axpby_kernel(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
@@ -48,7 +52,8 @@ void linalg::device::axpbypgz(double                alpha,
                               double                gamma,
                               vector<double>&       z)
 {
-    launch_cuda_axpbygz_kernel(
+    ROUTINE_TRACE("linalg::device::axpbypgz");
+    launch_cuda_axpbypgz_kernel(
         x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
@@ -57,6 +62,7 @@ void linalg::device::matrix_vector_product(const csr_matrix&     A,
                                            const vector<double>& x,
                                            vector<double>&       y)
 {
+    ROUTINE_TRACE("linalg::device::multiply_by_vector");
     launch_cuda_csrmv_kernel(A.get_m(),
                              A.get_n(),
                              A.get_nnz(),
@@ -73,6 +79,7 @@ void linalg::device::matrix_vector_product(const csr_matrix&     A,
 void linalg::device::matrix_vector_product(
     double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::device::multiply_by_vector");
     launch_cuda_csrmv_kernel(A.get_m(),
                              A.get_n(),
                              A.get_nnz(),
@@ -136,6 +143,7 @@ void linalg::device::transpose_matrix(const csr_matrix& A, csr_matrix& transpose
 // Dot product
 double linalg::device::dot_product(const vector<double>& x, const vector<double>& y)
 {
+    ROUTINE_TRACE("linalg::device::dot_product");
     double result = 0.0;
     launch_cuda_dot_product_kernel(x.get_size(), x.get_vec(), y.get_vec(), &result);
 
@@ -148,6 +156,7 @@ void linalg::device::compute_residual(const csr_matrix&     A,
                                       const vector<double>& b,
                                       vector<double>&       res)
 {
+    ROUTINE_TRACE("linalg::device::compute_residual");
     launch_cuda_compute_residual_kernel(A.get_m(),
                                         A.get_n(),
                                         A.get_nnz(),
@@ -160,14 +169,15 @@ void linalg::device::compute_residual(const csr_matrix&     A,
 }
 
 // Exclusive scan
-void linalg::device::exclusize_scan(vector<double>& x)
+void linalg::device::exclusive_scan(vector<double>& x)
 {
-    std::cout << "Error: exclusize_scan on device not implemented" << std::endl;
+    std::cout << "Error: exclusive_scan on device not implemented" << std::endl;
 }
 
 // Extract diagonal entries
 void linalg::device::diagonal(const csr_matrix& A, vector<double>& d)
 {
+    ROUTINE_TRACE("linalg::device::diagonal");
     launch_cuda_extract_diagonal_kernel(A.get_m(),
                                         A.get_n(),
                                         A.get_nnz(),
@@ -180,21 +190,51 @@ void linalg::device::diagonal(const csr_matrix& A, vector<double>& d)
 // Euclidean norm
 double linalg::device::norm_euclid(const vector<double>& array)
 {
-    std::cout << "Error: norm_euclid on device not implemented" << std::endl;
-    return 0.0;
+    ROUTINE_TRACE("linalg::device::norm_euclid");
+    return std::sqrt(dot_product(array, array));
 }
 
 // Infinity norm
 double linalg::device::norm_inf(const vector<double>& array)
 {
-    std::cout << "Error: norm_inf on device not implemented" << std::endl;
-    return 0.0;
+    ROUTINE_TRACE("linalg::device::norm_inf");
+    double norm = 0.0;
+    launch_cuda_norm_inf_kernel(array.get_size(), array.get_vec(), &norm);
+    return norm;
 }
 
 // Fill array with value
 template <typename T>
 void linalg::device::fill(vector<T>& vec, T value)
 {
+    ROUTINE_TRACE("linalg::device::fill");
+    //in host_math.cpp fill calls host_fill...should this fill call device_fill??
+    //device_fill can then call either CUDA or HIP fill...
+
+    // Also should most of these "math functions" be removed and we can call host_fill
+    // or device_fill directly from the vector.cpp methods? Or at least the non math ones like
+    // fill and copy?
+
+    // Maybe copy, fill, device memory allocation and free should be moved to device_memory.cpp??
+    //void device_allocate(void** ptr, size_t size_in_bytes);
+    //void device_free(void* ptr);
+    //void copy_h2d(void* dest, const void* src, size_t size_in_bytes);
+    //void copy_d2h(void* dest, const void* src, size_t size_in_bytes);
+    //template <typename T>
+    //void device_fill(T* data, size_t size, T val);
+    //
+    // or maybe make them all templated:
+    // template <typename T>
+    // void device_allocate(T** ptr, size_t size);
+    // template <typename T>
+    // void device_free(T* ptr); // if we pass with T** ptr, we could set to NULL after free'ing...
+    // template <typename T>
+    // void copy_h2d(T* dest, const T* src, size_t size);
+    // template <typename T>
+    // void copy_d2h(T* dest, const T* src, size_t size);
+    // template <typename T>
+    // void device_fill(T* data, size_t size, T val);
+
     launch_cuda_fill_kernel(vec.get_vec(), vec.get_size(), value);
 }
 
@@ -207,10 +247,20 @@ template void linalg::device::fill<double>(vector<double>& vec, double value);
 template <typename T>
 void linalg::device::copy(vector<T>& dest, const vector<T>& src)
 {
-    std::cout << "Error: copy on device not implemented" << std::endl;
+    ROUTINE_TRACE("linalg::device::copy");
+    launch_cuda_copy_kernel(dest.get_vec(), src.get_vec(), src.get_size());
 }
 
 template void linalg::device::copy<uint32_t>(vector<uint32_t>& dest, const vector<uint32_t>& src);
 template void linalg::device::copy<int32_t>(vector<int32_t>& dest, const vector<int32_t>& src);
 template void linalg::device::copy<int64_t>(vector<int64_t>& dest, const vector<int64_t>& src);
 template void linalg::device::copy<double>(vector<double>& dest, const vector<double>& src);
+
+// Jacobi solve
+void linalg::device::jacobi_solve(const vector<double>& rhs,
+                                  const vector<double>& diag,
+                                  vector<double>&       x)
+{
+    ROUTINE_TRACE("linalg::device::jacobi_solve");
+    launch_cuda_jacobi_solve_kernel(rhs.get_size(), rhs.get_vec(), diag.get_vec(), x.get_vec());
+}

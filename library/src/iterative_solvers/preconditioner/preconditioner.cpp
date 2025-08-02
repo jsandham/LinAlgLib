@@ -43,11 +43,37 @@ void jacobi_precond::build(const csr_matrix& A)
 
 void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
+    // bool moved_to_host = !rhs.is_on_host();
+    // if(moved_to_host)
+    // {
+    //     rhs.move_to_host();
+    //     x.move_to_host();
+    //     diag.move_to_host();
+    // }
+
     // Solve M * x = rhs where M = D
-    for(int i = 0; i < rhs.get_size(); i++)
-    {
-        x[i] = rhs[i] / diag[i];
-    }
+    jacobi_solve(rhs, diag, x);
+    //for(int i = 0; i < rhs.get_size(); i++)
+    //{
+    //    x[i] = rhs[i] / diag[i];
+    //}
+
+    // if(moved_to_host)
+    // {
+    //     rhs.move_to_device();
+    //     x.move_to_device();
+    //     diag.move_to_device();
+    // }
+}
+
+void jacobi_precond::move_to_device()
+{
+    diag.move_to_device();
+}
+
+void jacobi_precond::move_to_host()
+{
+    diag.move_to_host();
 }
 
 gauss_seidel_precond::gauss_seidel_precond() {}
@@ -63,6 +89,10 @@ void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) c
     // Solve M * x = rhs where M = L + D
     forward_solve(this->A, rhs, x, false);
 }
+
+void gauss_seidel_precond::move_to_device() {}
+
+void gauss_seidel_precond::move_to_host() {}
 
 SOR_precond::SOR_precond(double omega)
     : omega(omega)
@@ -108,6 +138,10 @@ void SOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
         x[i] /= diag_val;
     }
 }
+
+void SOR_precond::move_to_device() {}
+
+void SOR_precond::move_to_host() {}
 
 symmetric_gauss_seidel_precond::symmetric_gauss_seidel_precond() {}
 symmetric_gauss_seidel_precond::~symmetric_gauss_seidel_precond() {}
@@ -176,6 +210,10 @@ void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<dou
     backward_solve(this->A, y, x, false);
 }
 
+void symmetric_gauss_seidel_precond::move_to_device() {}
+
+void symmetric_gauss_seidel_precond::move_to_host() {}
+
 ilu_precond::ilu_precond() {}
 ilu_precond::~ilu_precond() {}
 
@@ -202,6 +240,10 @@ void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
     // Solve U * x = y
     backward_solve(LU, y, x, false);
 }
+
+void ilu_precond::move_to_device() {}
+
+void ilu_precond::move_to_host() {}
 
 ic_precond::ic_precond() {}
 ic_precond::~ic_precond() {}
@@ -265,3 +307,7 @@ void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
     // Solve L^T * x = y
     backward_solve(LLT, y, x, false);
 }
+
+void ic_precond::move_to_device() {}
+
+void ic_precond::move_to_host() {}

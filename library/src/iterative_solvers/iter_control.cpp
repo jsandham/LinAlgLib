@@ -5,7 +5,6 @@
 #include <cmath>
 #include <iostream>
 
-
 #include "../trace.h"
 
 using namespace linalg;

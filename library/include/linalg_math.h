@@ -239,7 +239,7 @@ namespace linalg
      * @param x The input/output vector. On input, it contains the original values; on output,
      * it contains the exclusive scan results.
      */
-    LINALGLIB_API void exclusize_scan(vector<double>& x);
+    LINALGLIB_API void exclusive_scan(vector<double>& x);
 
     /**
      * @brief Extracts the diagonal entries of a CSR matrix.
@@ -293,6 +293,9 @@ namespace linalg
      */
     template <typename T>
     LINALGLIB_API void copy(vector<T>& dest, const vector<T>& src);
+
+    LINALGLIB_API void
+        jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 }
 
 #endif

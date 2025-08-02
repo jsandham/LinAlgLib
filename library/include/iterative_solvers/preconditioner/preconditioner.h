@@ -29,8 +29,8 @@
 
 #include <vector>
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 #include "../amg/amg.h"
 
@@ -40,7 +40,7 @@
 
 namespace linalg
 {
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers
  * \brief Abstract base class for preconditioners.
  *
  * \details
@@ -50,29 +50,32 @@ namespace linalg
  * system into one that is easier to solve. Derived classes implement specific
  * preconditioning techniques.
  */
-class preconditioner
-{
-public:
-    /*! \brief Default constructor. */
-    preconditioner(){};
-    /*! \brief Virtual destructor. */
-    virtual ~preconditioner(){};
+    class preconditioner
+    {
+    public:
+        /*! \brief Default constructor. */
+        preconditioner() {};
+        /*! \brief Virtual destructor. */
+        virtual ~preconditioner() {};
 
-    /*! \brief Builds the preconditioner based on the sparse matrix.
+        /*! \brief Builds the preconditioner based on the sparse matrix.
     *
     * \param A The input matrix for which the preconditioner is to be built.
     */
-    virtual void build(const csr_matrix& A) = 0;
+        virtual void build(const csr_matrix& A) = 0;
 
-    /*! \brief Solves the preconditioning system M*x = rhs.
+        /*! \brief Solves the preconditioning system M*x = rhs.
     *
     * \param rhs Right-hand side vector of the preconditioning system.
     * \param x Output vector containing the solution of the preconditioning system.
     */
-    virtual void solve(const vector<double>& rhs, vector<double>& x) const = 0;
-};
+        virtual void solve(const vector<double>& rhs, vector<double>& x) const = 0;
 
-/*! \ingroup iterative_solvers
+        virtual void move_to_device() = 0;
+        virtual void move_to_host()   = 0;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Jacobi preconditioner.
  *
  * \details
@@ -81,27 +84,27 @@ public:
  * diagonal of the original matrix A. The solve operation involves a simple
  * element-wise division by the diagonal entries.
  */
-class jacobi_precond : public preconditioner
-{
-private:
-    /*! \brief Stores the inverse of the diagonal elements of the matrix. */
-    vector<double> diag;
+    class jacobi_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores the inverse of the diagonal elements of the matrix. */
+        vector<double> diag;
 
-public:
-    /*! \brief Constructs a new `jacobi_precond` object. */
-    jacobi_precond();
-    /*! \brief Destroys the `jacobi_precond` object. */
-    ~jacobi_precond();
+    public:
+        /*! \brief Constructs a new `jacobi_precond` object. */
+        jacobi_precond();
+        /*! \brief Destroys the `jacobi_precond` object. */
+        ~jacobi_precond();
 
-    /*! \brief Builds the Jacobi preconditioner.
+        /*! \brief Builds the Jacobi preconditioner.
      *
      * This method computes and stores the inverse of the diagonal elements
      * of the input matrix `A`.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$.
      *
      * This method applies the Jacobi preconditioning by performing an
      * element-wise division of the right-hand side vector `rhs` by the
@@ -110,10 +113,13 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
 
-/*! \ingroup iterative_solvers
+        void move_to_device() override;
+        void move_to_host() override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Gauss-Seidel preconditioner.
  *
  * \details
@@ -122,32 +128,32 @@ public:
  * the diagonal) as the preconditioning matrix M. The solve operation involves
  * a forward substitution.
  */
-class gauss_seidel_precond : public preconditioner
-{
-private:
-    /*! \brief Stores a copy of the matrix A.
+    class gauss_seidel_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores a copy of the matrix A.
      * \details The Gauss-Seidel preconditioner requires access to the
      * lower triangular part of the original matrix during the solve phase.
      */
-    csr_matrix A;
+        csr_matrix A;
 
-public:
-    /*! \brief Constructs a new `gauss_seidel_precond` object. */
-    gauss_seidel_precond();
+    public:
+        /*! \brief Constructs a new `gauss_seidel_precond` object. */
+        gauss_seidel_precond();
 
-    /*! \brief Destroys the `gauss_seidel_precond` object. */
-    ~gauss_seidel_precond();
+        /*! \brief Destroys the `gauss_seidel_precond` object. */
+        ~gauss_seidel_precond();
 
-    /*! \brief Builds the Gauss-Seidel preconditioner.
+        /*! \brief Builds the Gauss-Seidel preconditioner.
      *
      * This method essentially stores a copy of the input matrix `A`, as
      * the Gauss-Seidel solve operation requires the lower triangular
      * part of the original matrix.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using forward substitution.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using forward substitution.
      *
      * This method applies the Gauss-Seidel preconditioning by performing
      * a forward substitution using the lower triangular part of the matrix `A`.
@@ -155,10 +161,13 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
 
-/*! \ingroup iterative_solvers
+        void move_to_device() override;
+        void move_to_host() override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Successive Over-Relaxation (SOR) preconditioner.
  *
  * \details
@@ -167,45 +176,48 @@ public:
  * (\f$\omega\f$) to potentially accelerate convergence. The preconditioning matrix
  * M is related to the lower triangular part of A scaled by omega.
  */
-class SOR_precond : public preconditioner
-{
-private:
-    /*! \brief Stores a copy of the original matrix A. */
-    csr_matrix A;
-    /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
-    double omega;
-    /*! \brief Stores the diagonal elements of the matrix A, often used in the SOR solve process. */
-    vector<double> diag;
+    class SOR_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores a copy of the original matrix A. */
+        csr_matrix A;
+        /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
+        double omega;
+        /*! \brief Stores the diagonal elements of the matrix A, often used in the SOR solve process. */
+        vector<double> diag;
 
-public:
-    /*! \brief Constructs a new `SOR_precond` object with a specified relaxation parameter.
+    public:
+        /*! \brief Constructs a new `SOR_precond` object with a specified relaxation parameter.
      * \param omega The relaxation parameter for the SOR method.
      */
-    SOR_precond(double omega);
+        SOR_precond(double omega);
 
-    /*! \brief Destroys the `SOR_precond` object. */
-    ~SOR_precond();
+        /*! \brief Destroys the `SOR_precond` object. */
+        ~SOR_precond();
 
-    /*! \brief Builds the SOR preconditioner.
+        /*! \brief Builds the SOR preconditioner.
      *
      * This method typically involves storing the input matrix `A` and
      * potentially pre-calculating values like the inverse diagonal elements
      * that are used in the SOR solve.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the SOR method.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the SOR method.
      *
      * This method applies the SOR preconditioning iteration to solve for `x`.
      *
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
 
-/*! \ingroup iterative_solvers
+        void move_to_device() override;
+        void move_to_host() override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Symmetric Gauss-Seidel preconditioner.
  *
  * \details
@@ -213,30 +225,30 @@ public:
  * SGS applies a forward Gauss-Seidel sweep followed by a backward
  * Gauss-Seidel sweep as the preconditioning operation.
  */
-class symmetric_gauss_seidel_precond : public preconditioner
-{
-private:
-    /*! \brief Stores a copy of the original matrix A. */
-    csr_matrix A;
-    /*! \brief Stores the diagonal elements of the matrix A, used in the SGS solve process. */
-    vector<double> diag;
+    class symmetric_gauss_seidel_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores a copy of the original matrix A. */
+        csr_matrix A;
+        /*! \brief Stores the diagonal elements of the matrix A, used in the SGS solve process. */
+        vector<double> diag;
 
-public:
-    /*! \brief Constructs a new `symmetric_gauss_seidel_precond` object. */
-    symmetric_gauss_seidel_precond();
+    public:
+        /*! \brief Constructs a new `symmetric_gauss_seidel_precond` object. */
+        symmetric_gauss_seidel_precond();
 
-    /*! \brief Destroys the `symmetric_gauss_seidel_precond` object. */
-    ~symmetric_gauss_seidel_precond();
+        /*! \brief Destroys the `symmetric_gauss_seidel_precond` object. */
+        ~symmetric_gauss_seidel_precond();
 
-    /*! \brief Builds the Symmetric Gauss-Seidel preconditioner.
+        /*! \brief Builds the Symmetric Gauss-Seidel preconditioner.
      *
      * This method typically involves storing the input matrix `A` and
      * pre-calculating the diagonal elements needed for the SGS sweeps.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using Symmetric Gauss-Seidel.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using Symmetric Gauss-Seidel.
      *
      * This method applies a forward Gauss-Seidel sweep followed by a
      * backward Gauss-Seidel sweep to compute the preconditioned result `x`.
@@ -244,10 +256,13 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
 
-/*! \ingroup iterative_solvers
+        void move_to_device() override;
+        void move_to_host() override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Incomplete LU (ILU) preconditioner.
  *
  * \details
@@ -258,33 +273,33 @@ public:
  * a backward solve with U. The specific ILU variant (e.g., ILU(0), ILUT)
  * is determined by the implementation of the build method.
  */
-class ilu_precond : public preconditioner
-{
-private:
-    /*! \brief Stores the approximate LU factorization of the matrix A.
+    class ilu_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores the approximate LU factorization of the matrix A.
      * \details This `csr_matrix` will typically store the non-zero elements
      * of both L (lower triangular) and U (upper triangular) factors,
      * potentially in a merged format.
      */
-    csr_matrix LU;
+        csr_matrix LU;
 
-public:
-    /*! \brief Constructs a new `ilu_precond` object. */
-    ilu_precond();
+    public:
+        /*! \brief Constructs a new `ilu_precond` object. */
+        ilu_precond();
 
-    /*! \brief Destroys the `ilu_precond` object. */
-    ~ilu_precond();
+        /*! \brief Destroys the `ilu_precond` object. */
+        ~ilu_precond();
 
-    /*! \brief Builds the Incomplete LU (ILU) preconditioner.
+        /*! \brief Builds the Incomplete LU (ILU) preconditioner.
      *
      * This method computes the approximate LU factorization of the input matrix `A`.
      * The specific ILU variant (e.g., ILU(0), ILUT with a drop tolerance)
      * is determined by the internal implementation of this method.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the ILU factors.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the ILU factors.
      *
      * This method performs a forward solve with the L factor, followed by a
      * backward solve with the U factor to compute the preconditioned result `x`.
@@ -292,10 +307,13 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
 
-/*! \ingroup iterative_solvers
+        void move_to_device() override;
+        void move_to_host() override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Incomplete Cholesky (IC) preconditioner.
  *
  * \details
@@ -306,23 +324,23 @@ public:
  * and a backward solve with \f$L^T\f$. The specific IC variant (e.g., IC(0), ICT)
  * is determined by the implementation of the build method.
  */
-class ic_precond : public preconditioner
-{
-private:
-    /*! \brief Stores the approximate Cholesky factor L (and implicitly L^T) of the matrix A.
+    class ic_precond : public preconditioner
+    {
+    private:
+        /*! \brief Stores the approximate Cholesky factor L (and implicitly L^T) of the matrix A.
      * \details For a symmetric positive definite matrix, the `LLT` matrix
      * will store the lower triangular factor L.
      */
-    csr_matrix LLT;
+        csr_matrix LLT;
 
-public:
-    /*! \brief Constructs a new `ic_precond` object. */
-    ic_precond();
+    public:
+        /*! \brief Constructs a new `ic_precond` object. */
+        ic_precond();
 
-    /*! \brief Destroys the `ic_precond` object. */
-    ~ic_precond();
+        /*! \brief Destroys the `ic_precond` object. */
+        ~ic_precond();
 
-    /*! \brief Builds the Incomplete Cholesky (IC) preconditioner.
+        /*! \brief Builds the Incomplete Cholesky (IC) preconditioner.
      *
      * This method computes the approximate Cholesky factorization of the
      * input symmetric positive definite matrix `A`. The specific IC variant
@@ -330,9 +348,9 @@ public:
      * internal implementation of this method.
      * \param A The input symmetric positive definite matrix for which the preconditioner is to be built.
      */
-    void build(const csr_matrix& A) override;
+        void build(const csr_matrix& A) override;
 
-    /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the IC factors.
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the IC factors.
      *
      * This method performs a forward solve with the L factor, followed by a
      * backward solve with the \f$L^T\f$ factor to compute the preconditioned result `x`.
@@ -340,8 +358,11 @@ public:
      * \param rhs The right-hand side vector.
      * \param x The output vector, which will contain the preconditioned result.
      */
-    void solve(const vector<double>& rhs, vector<double>& x) const override;
-};
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
+
+        void move_to_device() override;
+        void move_to_host() override;
+    };
 }
 
 #endif

@@ -143,8 +143,8 @@ endif()
 # Find MPI
 find_package(MPI)
 
-message("CMAKE_CXX_COMPILER_ID : ${CMAKE_CXX_COMPILER_ID}")
-message("CMAKE_CUDA_COMPILER_ID : ${CMAKE_CUDA_COMPILER_ID}")
+message(STATUS "CMAKE_CXX_COMPILER_ID : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CMAKE_CUDA_COMPILER_ID : ${CMAKE_CUDA_COMPILER_ID}")
 
 # Compiler options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -171,8 +171,9 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
   )
 endif()
 
-# target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
-target_compile_definitions(linalglib PRIVATE -DCONVERGENCE_LOGGING)
+target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
+#target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
+#target_compile_definitions(linalglib PRIVATE -DCONVERGENCE_LOGGING)
 
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>
