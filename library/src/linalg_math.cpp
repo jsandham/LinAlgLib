@@ -499,68 +499,6 @@ double linalg::norm_inf(const vector<double>& array)
     }
 }
 
-// Fill array with value
-template <typename T>
-void linalg::fill(vector<T>& vec, T value)
-{
-    ROUTINE_TRACE("linalg::fill<T>");
-
-    backend bend = determine_backend(vec);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::fill<T> must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(vec.is_on_host())
-    {
-        return host::fill(vec, value);
-    }
-    else
-    {
-        return device::fill(vec, value);
-    }
-}
-
-template void linalg::fill<uint32_t>(vector<uint32_t>& vec, uint32_t value);
-template void linalg::fill<int32_t>(vector<int32_t>& vec, int32_t value);
-template void linalg::fill<int64_t>(vector<int64_t>& vec, int64_t value);
-template void linalg::fill<double>(vector<double>& vec, double value);
-
-// Copy array
-template <typename T>
-void linalg::copy(vector<T>& dest, const vector<T>& src)
-{
-    ROUTINE_TRACE("linalg::copy<T>");
-
-    backend bend = determine_backend(dest, src);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::copy must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(dest.is_on_host())
-    {
-        return host::copy(dest, src);
-    }
-    else
-    {
-        return device::copy(dest, src);
-    }
-}
-
-template void linalg::copy<uint32_t>(vector<uint32_t>& dest, const vector<uint32_t>& src);
-template void linalg::copy<int32_t>(vector<int32_t>& dest, const vector<int32_t>& src);
-template void linalg::copy<int64_t>(vector<int64_t>& dest, const vector<int64_t>& src);
-template void linalg::copy<double>(vector<double>& dest, const vector<double>& src);
-
 // Jacobi solve
 void linalg::jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x)
 {

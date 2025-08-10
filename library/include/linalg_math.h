@@ -269,31 +269,6 @@ namespace linalg
      */
     LINALGLIB_API double norm_inf(const vector<double>& array);
 
-    /**
-     * @brief Fills a vector with a specified value.
-     *
-     * This function assigns the given value to every element in the input vector.
-     *
-     * @tparam T Type of the elements in the vector.
-     * @param vec Reference to the vector to fill.
-     * @param value The value to assign to each element of the vector.
-     */
-    template <typename T>
-    LINALGLIB_API void fill(vector<T>& vec, T value);
-
-    /**
-     * @brief Copies the contents of one vector into another.
-     *
-     * This function assigns the contents of the source vector to the destination vector.
-     * The destination vector will be resized to match the source vector's size.
-     *
-     * @tparam T Type of the elements in the vector.
-     * @param dest Reference to the destination vector that will receive the copied elements.
-     * @param src Constant reference to the source vector from which elements will be copied.
-     */
-    template <typename T>
-    LINALGLIB_API void copy(vector<T>& dest, const vector<T>& src);
-
     LINALGLIB_API void
         jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 }

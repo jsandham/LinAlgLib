@@ -23,10 +23,12 @@ bool iter_control::residual_converges(double residual_norm, double initial_resid
 
     if(std::isnan(residual_norm))
     {
+        std::cout << "Error: NaN detected in residual norm" << std::endl;
         return false;
     }
     if(std::isnan(initial_residual_norm))
     {
+        std::cout << "Error: NaN detected in initial residual norm" << std::endl;
         return false;
     }
 

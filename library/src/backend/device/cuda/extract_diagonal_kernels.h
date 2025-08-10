@@ -24,54 +24,44 @@
 //
 //********************************************************************************
 
-#ifndef DEVICE_VECTOR_H
-#define DEVICE_VECTOR_H
+#ifndef EXTRACT_DIAGONAL_KERNELS_H
+#define EXTRACT_DIAGONAL_KERNELS_H
 
-#include <iostream>
-#include <vector>
+#include "common.h"
 
-#include "../backend_vector.h"
-
-namespace linalg
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
+__global__ void extract_diagonal_kernel(int m,
+                                               int n,
+                                               int nnz,
+                                               const int* __restrict__ csr_row_ptr,
+                                               const int* __restrict__ csr_col_ind,
+                                               const T* __restrict__ csr_val,
+                                               T* __restrict__ diag)
 {
-    namespace device
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    int lid = tid & WARPSIZE - 1;
+    //int wid = tid / WARPSIZE;
+
+    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
     {
-        template <typename T>
-        class device_vector : public backend_vector<T>
+        int row_start = csr_row_ptr[row];
+        int row_end   = csr_row_ptr[row + 1];
+
+        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
         {
-        private:
-            size_t size;
-            T*     dvec;
+            int col = csr_col_ind[j];
+            T   val = csr_val[j];
 
-            T temp;
-
-        public:
-            device_vector();
-            device_vector(size_t size);
-            device_vector(size_t size, T val);
-            device_vector(const std::vector<T>& vec);
-            ~device_vector();
-
-            T& operator[](size_t index) override
+            if(col == row)
             {
-                std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
-                return temp;
+                diag[row] = val;
+                break;
             }
-
-            const T& operator[](size_t index) const override
-            {
-                std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
-                return temp;
-            }
-
-            T*       get_data() override;
-            const T* get_data() const override;
-            size_t   get_size() const override;
-            void     clear() override;
-            void     resize(size_t size) override;
-            void     resize(size_t size, T val) override;
-        };
-    } // namespace device
-} // namespace linalg
+        }
+    }
+}
 
 #endif

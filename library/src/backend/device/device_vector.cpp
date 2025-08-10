@@ -25,9 +25,7 @@
 //********************************************************************************
 
 #include "device_vector.h"
-#include "cuda/cuda_kernels.h"
-
-#include <cuda_runtime.h>
+#include "device_memory.h"
 
 using namespace linalg::device;
 
@@ -41,37 +39,30 @@ template <typename T>
 device_vector<T>::device_vector(size_t size)
 {
     this->size = size;
-    cudaMalloc((void**)&dvec, sizeof(T) * size);
+    device::allocate(&dvec, size);
 }
 
 template <typename T>
 device_vector<T>::device_vector(size_t size, T val)
 {
     this->size = size;
-    cudaMalloc((void**)&dvec, sizeof(T) * size);
-    if(val == static_cast<T>(0))
-    {
-        cudaMemset(dvec, 0, sizeof(T) * size);
-    }
-    else
-    {
-        launch_cuda_fill_kernel(dvec, size, val);
-    }
+    device::allocate(&dvec, size);
+    device::fill(dvec, size, val);
 }
 
 template <typename T>
 device_vector<T>::device_vector(const std::vector<T>& vec)
 {
     size = vec.size();
-    cudaMalloc((void**)&dvec, sizeof(T) * size);
-    cudaMemcpy(dvec, vec.data(), sizeof(T) * size, cudaMemcpyHostToDevice);
+    device::allocate(&dvec, size);
+    device::copy_h2d(dvec, vec.data(), size);
 }
 
 template <typename T>
 device_vector<T>::~device_vector()
 {
     size = 0;
-    cudaFree(dvec);
+    device::free(dvec);
 }
 template <typename T>
 T* device_vector<T>::get_data()
@@ -98,9 +89,9 @@ void device_vector<T>::resize(size_t size)
 {
     if(this->size != size)
     {
-        cudaFree(dvec);
+        device::free(dvec);
         this->size = size;
-        cudaMalloc((void**)&dvec, sizeof(T) * size);
+        device::allocate(&dvec, size);
     }
 }
 template <typename T>
@@ -108,28 +99,11 @@ void device_vector<T>::resize(size_t size, T val)
 {
     if(this->size != size)
     {
-        cudaFree(dvec);
+        device::free(dvec);
         this->size = size;
-        cudaMalloc((void**)&dvec, sizeof(T) * size);
-        if(val = static_cast<T>(0))
-        {
-            cudaMemset(dvec, 0, sizeof(T) * size);
-        }
-        else
-        {
-            launch_cuda_fill_kernel(dvec, size, val);
-        }
+        device::allocate(&dvec, size);
+        device::fill(dvec, size, val);
     }
-}
-
-void linalg::device::copy_h2d(void* dest, const void* src, size_t size_in_bytes)
-{
-    cudaMemcpy(dest, src, size_in_bytes, cudaMemcpyHostToDevice);
-}
-
-void linalg::device::copy_d2h(void* dest, const void* src, size_t size_in_bytes)
-{
-    cudaMemcpy(dest, src, size_in_bytes, cudaMemcpyDeviceToHost);
 }
 
 template class linalg::device::device_vector<uint32_t>;

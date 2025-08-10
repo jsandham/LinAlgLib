@@ -30,10 +30,11 @@
 #include "utility.h"
 
 #include "backend/backend_vector.h"
-#include "backend/device/device_math.h"
+#include "backend/device/device_memory.h"
 #include "backend/device/device_vector.h"
-#include "backend/host/host_math.h"
+#include "backend/host/host_memory.h"
 #include "backend/host/host_vector.h"
+
 
 #include <assert.h>
 
@@ -150,11 +151,11 @@ void vector<T>::copy_from(const vector& x)
 
     if(this->is_on_host())
     {
-        return host::copy(*this, x);
+        return host::copy_h2h(this->hvec->get_data(), x.get_vec(), x.get_size());
     }
     else
     {
-        return device::copy(*this, x);
+        return device::copy_d2d(this->dvec->get_data(), x.get_vec(), x.get_size());
     }
 }
 
@@ -165,11 +166,11 @@ void vector<T>::zeros()
 
     if(this->is_on_host())
     {
-        return host::fill<T>(*this, static_cast<T>(0));
+        return host::fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(0));
     }
     else
     {
-        return device::fill<T>(*this, static_cast<T>(0));
+        return device::fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(0));
     }
 }
 
@@ -180,11 +181,11 @@ void vector<T>::ones()
 
     if(this->is_on_host())
     {
-        return host::fill<T>(*this, static_cast<T>(1));
+        return host::fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(1));
     }
     else
     {
-        return device::fill<T>(*this, static_cast<T>(1));
+        return device::fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(1));
     }
 }
 
@@ -216,8 +217,7 @@ void vector<T>::move_to_device()
     }
 
     // need to copy data from old vector to current vector
-    device::copy_h2d(
-        this->dvec->get_data(), this->hvec->get_data(), sizeof(T) * this->hvec->get_size());
+    device::copy_h2d(this->dvec->get_data(), this->hvec->get_data(), this->hvec->get_size());
 }
 
 template <typename T>
@@ -242,8 +242,7 @@ void vector<T>::move_to_host()
     }
 
     // need to copy data from old vector to current vector
-    device::copy_d2h(
-        this->hvec->get_data(), this->dvec->get_data(), sizeof(T) * this->dvec->get_size());
+    device::copy_d2h(this->hvec->get_data(), this->dvec->get_data(), this->dvec->get_size());
 }
 
 template class linalg::vector<uint32_t>;

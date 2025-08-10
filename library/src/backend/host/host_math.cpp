@@ -286,75 +286,6 @@ namespace linalg
     }
 
     //-------------------------------------------------------------------------------
-    // fill array
-    //-------------------------------------------------------------------------------
-    template <typename T>
-    static void host_fill(T* x, size_t n, T value)
-    {
-        ROUTINE_TRACE("host_fill_with_zeros");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(size_t i = 0; i < n; i++)
-        {
-            x[i] = value;
-        }
-    }
-
-    //-------------------------------------------------------------------------------
-    // copy array
-    //-------------------------------------------------------------------------------
-    static void host_copy(uint32_t* dest, const uint32_t* src, size_t n)
-    {
-        ROUTINE_TRACE("host_copy");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(size_t i = 0; i < n; i++)
-        {
-            dest[i] = src[i];
-        }
-    }
-    static void host_copy(int32_t* dest, const int32_t* src, size_t n)
-    {
-        ROUTINE_TRACE("host_copy");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(size_t i = 0; i < n; i++)
-        {
-            dest[i] = src[i];
-        }
-    }
-    static void host_copy(int64_t* dest, const int64_t* src, size_t n)
-    {
-        ROUTINE_TRACE("host_copy");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(size_t i = 0; i < n; i++)
-        {
-            dest[i] = src[i];
-        }
-    }
-    static void host_copy(double* dest, const double* src, size_t n)
-    {
-        ROUTINE_TRACE("host_copy");
-
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(size_t i = 0; i < n; i++)
-        {
-            dest[i] = src[i];
-        }
-    }
-
-    //-------------------------------------------------------------------------------
     // jacobi solve
     //-------------------------------------------------------------------------------
     static void host_jacobi_solve(const double* rhs, const double* diag, double* x, size_t n)
@@ -1422,33 +1353,6 @@ double linalg::host::norm_inf(const vector<double>& array)
 
     return host_norm_inf(array.get_vec(), array.get_size());
 }
-
-// Fill array with value
-template <typename T>
-void linalg::host::fill(vector<T>& vec, T value)
-{
-    ROUTINE_TRACE("linalg::host::fill<T>");
-
-    host_fill(vec.get_vec(), vec.get_size(), value);
-}
-
-template void linalg::host::fill<uint32_t>(vector<uint32_t>& vec, uint32_t value);
-template void linalg::host::fill<int32_t>(vector<int32_t>& vec, int32_t value);
-template void linalg::host::fill<int64_t>(vector<int64_t>& vec, int64_t value);
-template void linalg::host::fill<double>(vector<double>& vec, double value);
-
-// Copy array
-template <typename T>
-void linalg::host::copy(vector<T>& dest, const vector<T>& src)
-{
-    ROUTINE_TRACE("linalg::host::copy<T>");
-    host_copy(dest.get_vec(), src.get_vec(), src.get_size());
-}
-
-template void linalg::host::copy<uint32_t>(vector<uint32_t>& dest, const vector<uint32_t>& src);
-template void linalg::host::copy<int32_t>(vector<int32_t>& dest, const vector<int32_t>& src);
-template void linalg::host::copy<int64_t>(vector<int64_t>& dest, const vector<int64_t>& src);
-template void linalg::host::copy<double>(vector<double>& dest, const vector<double>& src);
 
 // Jacobi solve
 void linalg::host::jacobi_solve(const vector<double>& rhs,

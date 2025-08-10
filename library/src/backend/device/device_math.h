@@ -109,14 +109,6 @@ namespace linalg
         // Infinity norm
         double norm_inf(const vector<double>& array);
 
-        // Fill array with value
-        template <typename T>
-        void fill(vector<T>& vec, T value);
-
-        // Copy array
-        template <typename T>
-        void copy(vector<T>& dest, const vector<T>& src);
-
         // Jacobi solve
         void jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 

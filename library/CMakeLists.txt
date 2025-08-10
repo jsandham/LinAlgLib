@@ -56,6 +56,7 @@ set(LINALGLIB_SOURCE
   src/backend/host/host_math.cpp
   src/backend/host/host_scalar.cpp
   src/backend/host/host_vector.cpp
+  src/backend/host/host_memory.cpp
   src/backend/device/device_math.cpp
   src/backend/device/device_scalar.cpp
   src/backend/device/device_vector.cpp
@@ -86,6 +87,8 @@ set(LINALGLIB_SOURCE
 )
 
 set(LINALGLIB_CUDA_SOURCE 
+  src/backend/device/cuda/device_math_cuda_impl.cu
+  src/backend/device/cuda/device_memory_cuda_impl.cu
   src/backend/device/cuda/cuda_kernels.cu)
 
 # Provide an option for the user to enable CUDA
