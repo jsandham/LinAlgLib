@@ -31,108 +31,83 @@
 
 #include "csr_matrix.h"
 #include "linalg_export.h"
-#include "scalar.h"
 #include "vector.h"
 
 namespace linalg
 {
-    namespace host
-    {
-        // Compute y = alpha * x + y
-        void axpy(double alpha, const vector<double>& x, vector<double>& y);
+    // Compute y = alpha * x + y
+    void host_axpy(double alpha, const vector<double>& x, vector<double>& y);
 
-        // Compute y = alpha * x + y
-        void axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y);
+    // Compute y = alpha * x + beta * y
+    void host_axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
 
-        // Compute y = alpha * x + beta * y
-        void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
+    // Compute z = alpha * x + beta * y + gamma * z
+    void host_axpbypgz(double                alpha,
+                       const vector<double>& x,
+                       double                beta,
+                       const vector<double>& y,
+                       double                gamma,
+                       vector<double>&       z);
 
-        // Compute y = alpha * x + beta * y
-        void axpby(const scalar<double>& alpha,
-                   const vector<double>& x,
-                   const scalar<double>& beta,
-                   vector<double>&       y);
+    // Compute y = A * x
+    void
+        host_matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
 
-        // Compute z = alpha * x + beta * y + gamma * z
-        void axpbypgz(double                alpha,
-                      const vector<double>& x,
-                      double                beta,
-                      const vector<double>& y,
-                      double                gamma,
-                      vector<double>&       z);
+    // Compute y = alpha * A * x + beta * y
+    void host_matrix_vector_product(
+        double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y);
 
-        // Compute z = alpha * x + beta * y + gamma * z
-        void axpbypgz(const scalar<double>& alpha,
-                      const vector<double>& x,
-                      const scalar<double>& beta,
-                      const vector<double>& y,
-                      const scalar<double>& gamma,
-                      vector<double>&       z);
+    // Compute C = A * B
+    void host_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-        // Compute y = A * x
-        void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
+    // Compute C = A + B
+    void host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-        // Compute y = alpha * A * x + beta * y
-        void matrix_vector_product(double                alpha,
-                                   const csr_matrix&     A,
-                                   const vector<double>& x,
-                                   double                beta,
-                                   vector<double>&       y);
+    // Incomplete IC factorization
+    void host_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
 
-        // Compute C = A * B
-        void matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
+    // Incomplete LU factorization
+    void host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
 
-        // Compute C = A + B
-        void matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
-
-        // Incomplete IC factorization
-        void csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
-
-        // Incomplete LU factorization
-        void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
-
-        // Forward solve
-        void forward_solve(const csr_matrix&     A,
-                           const vector<double>& b,
-                           vector<double>&       x,
-                           bool                  unit_diag);
-
-        // Backward solve
-        void backward_solve(const csr_matrix&     A,
+    // Forward solve
+    void host_forward_solve(const csr_matrix&     A,
                             const vector<double>& b,
                             vector<double>&       x,
                             bool                  unit_diag);
 
-        // Transpose matrix
-        void transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
+    // Backward solve
+    void host_backward_solve(const csr_matrix&     A,
+                             const vector<double>& b,
+                             vector<double>&       x,
+                             bool                  unit_diag);
 
-        // Dot product
-        double dot_product(const vector<double>& x, const vector<double>& y);
+    // Transpose matrix
+    void host_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
 
-        // Dot product
-        void dot_product(const vector<double>& x, const vector<double>& y, scalar<double>& result);
+    // Dot product
+    double host_dot_product(const vector<double>& x, const vector<double>& y);
 
-        // Compute residual
-        void compute_residual(const csr_matrix&     A,
-                              const vector<double>& x,
-                              const vector<double>& b,
-                              vector<double>&       res);
+    // Compute residual
+    void host_compute_residual(const csr_matrix&     A,
+                               const vector<double>& x,
+                               const vector<double>& b,
+                               vector<double>&       res);
 
-        // Exclusive scan
-        void exclusive_scan(vector<double>& x);
+    // Exclusive scan
+    void host_exclusive_scan(vector<double>& x);
 
-        // Extract diagonal entries
-        void diagonal(const csr_matrix& A, vector<double>& d);
+    // Extract diagonal entries
+    void host_diagonal(const csr_matrix& A, vector<double>& d);
 
-        // Euclidean norm
-        double norm_euclid(const vector<double>& array);
+    // Euclidean norm
+    double host_norm_euclid(const vector<double>& array);
 
-        // Infinity norm
-        double norm_inf(const vector<double>& array);
+    // Infinity norm
+    double host_norm_inf(const vector<double>& array);
 
-        // Jacobi solve
-        void jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
-    }
+    // Jacobi solve
+    void
+        host_jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 }
 
 #endif

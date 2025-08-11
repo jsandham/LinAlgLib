@@ -192,11 +192,11 @@ void csr_matrix::extract_diagonal(vector<double>& diag) const
 
     if(this->is_on_host())
     {
-        return host::diagonal(*this, diag);
+        return host_diagonal(*this, diag);
     }
     else
     {
-        return device::diagonal(*this, diag);
+        return device_diagonal(*this, diag);
     }
 }
 
@@ -216,11 +216,11 @@ void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) 
 
     if(this->is_on_host())
     {
-        return host::matrix_vector_product(*this, x, y);
+        return host_matrix_vector_product(*this, x, y);
     }
     else
     {
-        return device::matrix_vector_product(*this, x, y);
+        return device_matrix_vector_product(*this, x, y);
     }
 }
 
@@ -241,11 +241,11 @@ void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<doub
 
     if(this->is_on_host())
     {
-        return host::matrix_vector_product(1.0, *this, x, 1.0, y);
+        return host_matrix_vector_product(1.0, *this, x, 1.0, y);
     }
     else
     {
-        return device::matrix_vector_product(1.0, *this, x, 1.0, y);
+        return device_matrix_vector_product(1.0, *this, x, 1.0, y);
     }
 }
 
@@ -266,11 +266,11 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 
     if(this->is_on_host())
     {
-        return host::matrix_matrix_product(C, *this, B);
+        return host_matrix_matrix_product(C, *this, B);
     }
     else
     {
-        return device::matrix_matrix_product(C, *this, B);
+        return device_matrix_matrix_product(C, *this, B);
     }
 }
 
@@ -290,11 +290,11 @@ void csr_matrix::transpose(csr_matrix& T) const
 
     if(this->is_on_host())
     {
-        return host::transpose_matrix(*this, T);
+        return host_transpose_matrix(*this, T);
     }
     else
     {
-        return device::transpose_matrix(*this, T);
+        return device_transpose_matrix(*this, T);
     }
 }
 

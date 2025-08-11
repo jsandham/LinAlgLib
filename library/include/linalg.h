@@ -189,9 +189,6 @@
  * - **Smoothing:** Smoothing operations (often a few iterations of a basic iterative method like Gauss-Seidel or Jacobi) are applied on each grid level to reduce high-frequency errors.
  */
 
-// Scalar
-#include "scalar.h"
-
 // Vector
 #include "vector.h"
 
@@ -206,12 +203,10 @@
 #include "iterative_solvers/classic/ssor.h"
 #include "iterative_solvers/classic/symmetric_gauss_seidel.h"
 
-
 // krylov Linear solvers
 #include "iterative_solvers/krylov/bicgstab.h"
 #include "iterative_solvers/krylov/cg.h"
 #include "iterative_solvers/krylov/gmres.h"
-
 
 // Algrbraic multi-grid solvers
 #include "iterative_solvers/amg/amg.h"
@@ -222,7 +217,6 @@
 #include "iterative_solvers/amg/saamg.h"
 #include "iterative_solvers/amg/uaamg.h"
 
-
 // Preconditioners
 #include "iterative_solvers/preconditioner/preconditioner.h"
 
@@ -231,6 +225,5 @@
 
 #include "iterative_solvers/iter_control.h"
 #include "linalg_math.h"
-
 
 #endif

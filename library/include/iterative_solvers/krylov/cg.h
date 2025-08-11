@@ -32,9 +32,9 @@
 #include "../iter_control.h"
 #include "../preconditioner/preconditioner.h"
 
-#include "../../scalar.h"
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
+
 
 /*! \file
  *  \brief cg.h provides interface for conjugate gradient solvers
@@ -42,7 +42,7 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Conjugate Gradient (CG) method.
+    /*! \brief A solver class implementing the Conjugate Gradient (CG) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, **symmetric positive definite (SPD)**
@@ -185,53 +185,53 @@ namespace linalg
  * }
  * \endcode
  */
-class cg_solver
-{
-private:
-    /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{r}\f$. */
-    vector<double> z;
-    /*! \brief Search direction vector. */
-    vector<double> p;
-    /*! \brief Residual vector in the CG algorithm. */
-    vector<double> res;
+    class cg_solver
+    {
+    private:
+        /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{r}\f$. */
+        vector<double> z;
+        /*! \brief Search direction vector. */
+        vector<double> p;
+        /*! \brief Residual vector in the CG algorithm. */
+        vector<double> res;
 
-    /*! \brief Number of iterations after which the solver should restart.
+        /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
      * For CG, restarts are usually not needed for exact arithmetic but can
      * be beneficial for large problems or in the presence of floating-point errors.
      */
-    int restart_iter;
+        int restart_iter;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `cg_solver` object.
      */
-    cg_solver();
+        cg_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `cg_solver` object.
      */
-    ~cg_solver();
+        ~cg_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `cg_solver` objects to ensure proper memory management.
      */
-    cg_solver (const cg_solver&) = delete;
+        cg_solver(const cg_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `cg_solver` object to another to ensure proper memory management.
      */
-    cg_solver& operator= (const cg_solver&) = delete;
+        cg_solver& operator=(const cg_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the Conjugate Gradient solver.
+        /*! \brief Builds necessary data structures for the Conjugate Gradient solver.
      * \details
      * For CG, this typically involves allocating and resizing the internal
      * work vectors (`z`, `p`, `res`) to match the dimensions of the matrix `A`.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned Conjugate Gradient method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned Conjugate Gradient method.
      *
      * This method implements the CG algorithm without any explicit preconditioning.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -249,9 +249,12 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values might indicate issues like a non-positive definite matrix or division by zero.
      */
-    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
+        int solve_nonprecond(const csr_matrix&     A,
+                             vector<double>&       x,
+                             const vector<double>& b,
+                             iter_control          control);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned Conjugate Gradient method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned Conjugate Gradient method.
      *
      * This method implements the CG algorithm with the provided preconditioner.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -272,9 +275,13 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values might indicate issues with the matrix, preconditioner, or numerical stability.
      */
-    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+        int solve_precond(const csr_matrix&     A,
+                          vector<double>&       x,
+                          const vector<double>& b,
+                          const preconditioner* precond,
+                          iter_control          control);
 
-    /*! \brief Generic solve method for the Conjugate Gradient solver (delegates to non-preconditioned or preconditioned).
+        /*! \brief Generic solve method for the Conjugate Gradient solver (delegates to non-preconditioned or preconditioned).
      *
      * This method acts as a convenience wrapper. If `precond` is `nullptr`, it calls
      * `solve_nonprecond`. Otherwise, it calls `solve_precond`.
@@ -289,18 +296,22 @@ public:
      * including convergence tolerance and maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  const preconditioner* precond,
+                  iter_control          control);
 
-    /**
+        /**
      * @brief Moves data from device memory to host memory.
      */
-    void move_to_host();
+        void move_to_host();
 
-    /**
+        /**
      * @brief Moves data from host memory to device memory.
      */
-    void move_to_device();
-};
+        void move_to_device();
+    };
 }
 
 #endif

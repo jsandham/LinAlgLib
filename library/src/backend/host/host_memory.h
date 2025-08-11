@@ -29,15 +29,12 @@
 
 namespace linalg
 {
-    namespace host
-    {    
     template <typename T>
     void copy_h2h(T* dest, const T* src, size_t size);
-    
-    template <typename T>
-    void fill(T* data, size_t size, T val);
 
-    } // namespace host
+    template <typename T>
+    void host_fill(T* data, size_t size, T val);
+
 } // namespace linalg
 
 #endif HOST_MEMORY_H

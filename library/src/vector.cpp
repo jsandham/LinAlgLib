@@ -35,7 +35,6 @@
 #include "backend/host/host_memory.h"
 #include "backend/host/host_vector.h"
 
-
 #include <assert.h>
 
 using namespace linalg;
@@ -43,8 +42,8 @@ using namespace linalg;
 template <typename T>
 vector<T>::vector()
 {
-    this->hvec    = new host::host_vector<T>();
-    this->dvec    = new device::device_vector<T>();
+    this->hvec    = new host_vector<T>();
+    this->dvec    = new device_vector<T>();
     this->vec     = hvec;
     this->on_host = true;
 }
@@ -52,8 +51,8 @@ vector<T>::vector()
 template <typename T>
 vector<T>::vector(size_t size)
 {
-    this->hvec    = new host::host_vector<T>(size);
-    this->dvec    = new device::device_vector<T>(size);
+    this->hvec    = new host_vector<T>(size);
+    this->dvec    = new device_vector<T>(size);
     this->vec     = hvec;
     this->on_host = true;
 }
@@ -61,8 +60,8 @@ vector<T>::vector(size_t size)
 template <typename T>
 vector<T>::vector(size_t size, T val)
 {
-    this->hvec    = new host::host_vector<T>(size, val);
-    this->dvec    = new device::device_vector<T>(size, val);
+    this->hvec    = new host_vector<T>(size, val);
+    this->dvec    = new device_vector<T>(size, val);
     this->vec     = hvec;
     this->on_host = true;
 }
@@ -70,8 +69,8 @@ vector<T>::vector(size_t size, T val)
 template <typename T>
 vector<T>::vector(const std::vector<T>& v)
 {
-    this->hvec    = new host::host_vector<T>(v);
-    this->dvec    = new device::device_vector<T>(v);
+    this->hvec    = new host_vector<T>(v);
+    this->dvec    = new device_vector<T>(v);
     this->vec     = hvec;
     this->on_host = true;
 }
@@ -151,11 +150,11 @@ void vector<T>::copy_from(const vector& x)
 
     if(this->is_on_host())
     {
-        return host::copy_h2h(this->hvec->get_data(), x.get_vec(), x.get_size());
+        return copy_h2h(this->hvec->get_data(), x.get_vec(), x.get_size());
     }
     else
     {
-        return device::copy_d2d(this->dvec->get_data(), x.get_vec(), x.get_size());
+        return copy_d2d(this->dvec->get_data(), x.get_vec(), x.get_size());
     }
 }
 
@@ -166,11 +165,11 @@ void vector<T>::zeros()
 
     if(this->is_on_host())
     {
-        return host::fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(0));
+        return host_fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(0));
     }
     else
     {
-        return device::fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(0));
+        return device_fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(0));
     }
 }
 
@@ -181,11 +180,11 @@ void vector<T>::ones()
 
     if(this->is_on_host())
     {
-        return host::fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(1));
+        return host_fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(1));
     }
     else
     {
-        return device::fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(1));
+        return device_fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(1));
     }
 }
 
@@ -217,7 +216,7 @@ void vector<T>::move_to_device()
     }
 
     // need to copy data from old vector to current vector
-    device::copy_h2d(this->dvec->get_data(), this->hvec->get_data(), this->hvec->get_size());
+    copy_h2d(this->dvec->get_data(), this->hvec->get_data(), this->hvec->get_size());
 }
 
 template <typename T>
@@ -242,7 +241,7 @@ void vector<T>::move_to_host()
     }
 
     // need to copy data from old vector to current vector
-    device::copy_d2h(this->hvec->get_data(), this->dvec->get_data(), this->dvec->get_size());
+    copy_d2h(this->hvec->get_data(), this->dvec->get_data(), this->dvec->get_size());
 }
 
 template class linalg::vector<uint32_t>;

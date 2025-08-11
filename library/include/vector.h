@@ -40,17 +40,11 @@ namespace linalg
     template <typename T>
     class backend_vector;
 
-    namespace host
-    {
-        template <typename T>
-        class host_vector;
-    }
+    template <typename T>
+    class host_vector;
 
-    namespace device
-    {
-        template <typename T>
-        class device_vector;
-    }
+    template <typename T>
+    class device_vector;
 
     /*! \brief A class for representing and manipulating vectors.
  *
@@ -63,9 +57,9 @@ namespace linalg
     class vector
     {
     private:
-        host::host_vector<T>*     hvec;
-        device::device_vector<T>* dvec;
-        backend_vector<T>*        vec;
+        host_vector<T>*    hvec;
+        device_vector<T>*  dvec;
+        backend_vector<T>* vec;
 
         /*! \brief Flag indicating if the vector data is currently on the host (CPU) or device (GPU). */
         bool on_host;

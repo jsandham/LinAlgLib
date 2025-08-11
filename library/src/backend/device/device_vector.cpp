@@ -27,7 +27,7 @@
 #include "device_vector.h"
 #include "device_memory.h"
 
-using namespace linalg::device;
+using namespace linalg;
 
 template <typename T>
 device_vector<T>::device_vector()
@@ -39,30 +39,30 @@ template <typename T>
 device_vector<T>::device_vector(size_t size)
 {
     this->size = size;
-    device::allocate(&dvec, size);
+    device_allocate(&dvec, size);
 }
 
 template <typename T>
 device_vector<T>::device_vector(size_t size, T val)
 {
     this->size = size;
-    device::allocate(&dvec, size);
-    device::fill(dvec, size, val);
+    device_allocate(&dvec, size);
+    device_fill(dvec, size, val);
 }
 
 template <typename T>
 device_vector<T>::device_vector(const std::vector<T>& vec)
 {
     size = vec.size();
-    device::allocate(&dvec, size);
-    device::copy_h2d(dvec, vec.data(), size);
+    device_allocate(&dvec, size);
+    copy_h2d(dvec, vec.data(), size);
 }
 
 template <typename T>
 device_vector<T>::~device_vector()
 {
     size = 0;
-    device::free(dvec);
+    device_free(dvec);
 }
 template <typename T>
 T* device_vector<T>::get_data()
@@ -89,9 +89,9 @@ void device_vector<T>::resize(size_t size)
 {
     if(this->size != size)
     {
-        device::free(dvec);
+        device_free(dvec);
         this->size = size;
-        device::allocate(&dvec, size);
+        device_allocate(&dvec, size);
     }
 }
 template <typename T>
@@ -99,14 +99,14 @@ void device_vector<T>::resize(size_t size, T val)
 {
     if(this->size != size)
     {
-        device::free(dvec);
+        device_free(dvec);
         this->size = size;
-        device::allocate(&dvec, size);
-        device::fill(dvec, size, val);
+        device_allocate(&dvec, size);
+        device_fill(dvec, size, val);
     }
 }
 
-template class linalg::device::device_vector<uint32_t>;
-template class linalg::device::device_vector<int32_t>;
-template class linalg::device::device_vector<int64_t>;
-template class linalg::device::device_vector<double>;
+template class linalg::device_vector<uint32_t>;
+template class linalg::device_vector<int32_t>;
+template class linalg::device_vector<int64_t>;
+template class linalg::device_vector<double>;

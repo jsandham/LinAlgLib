@@ -45,7 +45,6 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/iterative_solvers/krylov/gmres.h
   include/iterative_solvers/krylov/cg.h
   include/iterative_solvers/preconditioner/preconditioner.h
-  include/scalar.h
   include/vector.h
   include/csr_matrix.h
   include/linalg.h
@@ -54,11 +53,9 @@ set(LINALGLIB_HEADERS_PUBLIC
 set(LINALGLIB_SOURCE
   src/linalg_math.cpp
   src/backend/host/host_math.cpp
-  src/backend/host/host_scalar.cpp
   src/backend/host/host_vector.cpp
   src/backend/host/host_memory.cpp
   src/backend/device/device_math.cpp
-  src/backend/device/device_scalar.cpp
   src/backend/device/device_vector.cpp
   src/eigen_value_solvers/power_iteration.cpp
   src/iterative_solvers/amg/amg_aggregation.cpp
@@ -80,7 +77,6 @@ set(LINALGLIB_SOURCE
   src/iterative_solvers/krylov/cg.cpp
   src/iterative_solvers/preconditioner/preconditioner.cpp
   src/iterative_solvers/iter_control.cpp
-  src/scalar.cpp
   src/vector.cpp
   src/csr_matrix.cpp
   src/perfetto_trace.cpp

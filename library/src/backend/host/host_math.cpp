@@ -39,9 +39,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * x + y
     //-------------------------------------------------------------------------------
-    static void host_axpy(int n, double alpha, const double* x, double* y)
+    static void host_axpy_impl(int n, double alpha, const double* x, double* y)
     {
-        ROUTINE_TRACE("host_axpy");
+        ROUTINE_TRACE("host_axpy_impl");
 
         if(alpha == 1.0)
         {
@@ -68,9 +68,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * x + beta * y
     //-------------------------------------------------------------------------------
-    static void host_axpby(int n, double alpha, const double* x, double beta, double* y)
+    static void host_axpby_impl(int n, double alpha, const double* x, double beta, double* y)
     {
-        ROUTINE_TRACE("host_axpby");
+        ROUTINE_TRACE("host_axpby_impl");
 
         if(alpha == 1.0)
         {
@@ -127,10 +127,10 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute z = alpha * x + beta * y + gamma * z
     //-------------------------------------------------------------------------------
-    static void host_axpbypgz(
+    static void host_axpbypgz_impl(
         int n, double alpha, const double* x, double beta, const double* y, double gamma, double* z)
     {
-        ROUTINE_TRACE("host_axpbypgz");
+        ROUTINE_TRACE("host_axpbypgz_impl");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -144,14 +144,14 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // sparse matrix-vector product y = A*x
     //-------------------------------------------------------------------------------
-    static void host_matrix_vector_product(const int*    csr_row_ptr,
-                                           const int*    csr_col_ind,
-                                           const double* csr_val,
-                                           const double* x,
-                                           double*       y,
-                                           int           n)
+    static void host_matrix_vector_product_impl(const int*    csr_row_ptr,
+                                                const int*    csr_col_ind,
+                                                const double* csr_val,
+                                                const double* x,
+                                                double*       y,
+                                                int           n)
     {
-        ROUTINE_TRACE("host_matrix_vector_product");
+        ROUTINE_TRACE("host_matrix_vector_product_impl");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -174,9 +174,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // dot product z = x*y
     //-------------------------------------------------------------------------------
-    static double host_dot_product(const double* x, const double* y, int n)
+    static double host_dot_product_impl(const double* x, const double* y, int n)
     {
-        ROUTINE_TRACE("host_dot_product");
+        ROUTINE_TRACE("host_dot_product_impl");
 
         double dot_prod = 0.0;
 #if defined(_OPENMP)
@@ -193,15 +193,15 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute residual res = b - A * x
     //-------------------------------------------------------------------------------
-    static void host_compute_residual(const int*    csr_row_ptr,
-                                      const int*    csr_col_ind,
-                                      const double* csr_val,
-                                      const double* x,
-                                      const double* b,
-                                      double*       res,
-                                      int           n)
+    static void host_compute_residual_impl(const int*    csr_row_ptr,
+                                           const int*    csr_col_ind,
+                                           const double* csr_val,
+                                           const double* x,
+                                           const double* b,
+                                           double*       res,
+                                           int           n)
     {
-        ROUTINE_TRACE("host_compute_residual");
+        ROUTINE_TRACE("host_compute_residual_impl");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -224,9 +224,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // exclusive scan
     //-------------------------------------------------------------------------------
-    static void host_exclusive_scan(double* x, int n)
+    static void host_exclusive_scan_impl(double* x, int n)
     {
-        ROUTINE_TRACE("host_exclusive_scan");
+        ROUTINE_TRACE("host_exclusive_scan_impl");
 
         if(n > 0)
         {
@@ -242,10 +242,10 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // diagonal d = diag(A)
     //-------------------------------------------------------------------------------
-    static void host_diagonal(
+    static void host_diagonal_impl(
         const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* d, int n)
     {
-        ROUTINE_TRACE("host_diagonal");
+        ROUTINE_TRACE("host_diagonal_impl");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -269,9 +269,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // infinity norm
     //-------------------------------------------------------------------------------
-    static double host_norm_inf(const double* array, int n)
+    static double host_norm_inf_impl(const double* array, int n)
     {
-        ROUTINE_TRACE("host_norm_inf");
+        ROUTINE_TRACE("host_norm_inf_impl");
 
         double norm = 0.0;
 #if defined(_OPENMP)
@@ -288,9 +288,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // jacobi solve
     //-------------------------------------------------------------------------------
-    static void host_jacobi_solve(const double* rhs, const double* diag, double* x, size_t n)
+    static void host_jacobi_solve_impl(const double* rhs, const double* diag, double* x, size_t n)
     {
-        ROUTINE_TRACE("host_jacobi_solve");
+        ROUTINE_TRACE("host_jacobi_solve_impl");
 
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
@@ -304,16 +304,16 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * A * x + beta * y
     //-------------------------------------------------------------------------------
-    static void host_csrmv(int           m,
-                           int           n,
-                           int           nnz,
-                           double        alpha,
-                           const int*    csr_row_ptr,
-                           const int*    csr_col_ind,
-                           const double* csr_val,
-                           const double* x,
-                           double        beta,
-                           double*       y)
+    static void host_csrmv_impl(int           m,
+                                int           n,
+                                int           nnz,
+                                double        alpha,
+                                const int*    csr_row_ptr,
+                                const int*    csr_col_ind,
+                                const double* csr_val,
+                                const double* x,
+                                double        beta,
+                                double*       y)
     {
         ROUTINE_TRACE("host_csrmv");
 
@@ -345,22 +345,22 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute C = alpha * A * B + beta * D
     //-------------------------------------------------------------------------------
-    static void host_csrgemm_nnz(int        m,
-                                 int        n,
-                                 int        k,
-                                 int        nnz_A,
-                                 int        nnz_B,
-                                 int        nnz_D,
-                                 double     alpha,
-                                 const int* csr_row_ptr_A,
-                                 const int* csr_col_ind_A,
-                                 const int* csr_row_ptr_B,
-                                 const int* csr_col_ind_B,
-                                 double     beta,
-                                 const int* csr_row_ptr_D,
-                                 const int* csr_col_ind_D,
-                                 int*       csr_row_ptr_C,
-                                 int*       nnz_C)
+    static void host_csrgemm_nnz_impl(int        m,
+                                      int        n,
+                                      int        k,
+                                      int        nnz_A,
+                                      int        nnz_B,
+                                      int        nnz_D,
+                                      double     alpha,
+                                      const int* csr_row_ptr_A,
+                                      const int* csr_col_ind_A,
+                                      const int* csr_row_ptr_B,
+                                      const int* csr_col_ind_B,
+                                      double     beta,
+                                      const int* csr_row_ptr_D,
+                                      const int* csr_col_ind_D,
+                                      int*       csr_row_ptr_C,
+                                      int*       nnz_C)
     {
         ROUTINE_TRACE("host_csrgemm_nnz");
 
@@ -422,28 +422,28 @@ namespace linalg
         *nnz_C = csr_row_ptr_C[m];
     }
 
-    static void host_csrgemm(int           m,
-                             int           n,
-                             int           k,
-                             int           nnz_A,
-                             int           nnz_B,
-                             int           nnz_D,
-                             double        alpha,
-                             const int*    csr_row_ptr_A,
-                             const int*    csr_col_ind_A,
-                             const double* csr_val_A,
-                             const int*    csr_row_ptr_B,
-                             const int*    csr_col_ind_B,
-                             const double* csr_val_B,
-                             double        beta,
-                             const int*    csr_row_ptr_D,
-                             const int*    csr_col_ind_D,
-                             const double* csr_val_D,
-                             const int*    csr_row_ptr_C,
-                             int*          csr_col_ind_C,
-                             double*       csr_val_C)
+    static void host_csrgemm_impl(int           m,
+                                  int           n,
+                                  int           k,
+                                  int           nnz_A,
+                                  int           nnz_B,
+                                  int           nnz_D,
+                                  double        alpha,
+                                  const int*    csr_row_ptr_A,
+                                  const int*    csr_col_ind_A,
+                                  const double* csr_val_A,
+                                  const int*    csr_row_ptr_B,
+                                  const int*    csr_col_ind_B,
+                                  const double* csr_val_B,
+                                  double        beta,
+                                  const int*    csr_row_ptr_D,
+                                  const int*    csr_col_ind_D,
+                                  const double* csr_val_D,
+                                  const int*    csr_row_ptr_C,
+                                  int*          csr_col_ind_C,
+                                  double*       csr_val_C)
     {
-        ROUTINE_TRACE("host_csrgemm");
+        ROUTINE_TRACE("host_csrgemm_impl");
 
         std::vector<int> nnzs(n, -1);
 
@@ -547,20 +547,20 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute C = alpha * A + beta * B
     //-------------------------------------------------------------------------------
-    static void host_csrgeam_nnz(int        m,
-                                 int        n,
-                                 int        nnz_A,
-                                 int        nnz_B,
-                                 double     alpha,
-                                 const int* csr_row_ptr_A,
-                                 const int* csr_col_ind_A,
-                                 double     beta,
-                                 const int* csr_row_ptr_B,
-                                 const int* csr_col_ind_B,
-                                 int*       csr_row_ptr_C,
-                                 int*       nnz_C)
+    static void host_csrgeam_nnz_impl(int        m,
+                                      int        n,
+                                      int        nnz_A,
+                                      int        nnz_B,
+                                      double     alpha,
+                                      const int* csr_row_ptr_A,
+                                      const int* csr_col_ind_A,
+                                      double     beta,
+                                      const int* csr_row_ptr_B,
+                                      const int* csr_col_ind_B,
+                                      int*       csr_row_ptr_C,
+                                      int*       nnz_C)
     {
-        ROUTINE_TRACE("host_csrgeam_nnz");
+        ROUTINE_TRACE("host_csrgeam_nnz_impl");
 
         csr_row_ptr_C[0] = 0;
 
@@ -603,23 +603,23 @@ namespace linalg
         *nnz_C = csr_row_ptr_C[m];
     }
 
-    static void host_csrgeam(int           m,
-                             int           n,
-                             int           nnz_A,
-                             int           nnz_B,
-                             double        alpha,
-                             const int*    csr_row_ptr_A,
-                             const int*    csr_col_ind_A,
-                             const double* csr_val_A,
-                             double        beta,
-                             const int*    csr_row_ptr_B,
-                             const int*    csr_col_ind_B,
-                             const double* csr_val_B,
-                             const int*    csr_row_ptr_C,
-                             int*          csr_col_ind_C,
-                             double*       csr_val_C)
+    static void host_csrgeam_impl(int           m,
+                                  int           n,
+                                  int           nnz_A,
+                                  int           nnz_B,
+                                  double        alpha,
+                                  const int*    csr_row_ptr_A,
+                                  const int*    csr_col_ind_A,
+                                  const double* csr_val_A,
+                                  double        beta,
+                                  const int*    csr_row_ptr_B,
+                                  const int*    csr_col_ind_B,
+                                  const double* csr_val_B,
+                                  const int*    csr_row_ptr_C,
+                                  int*          csr_col_ind_C,
+                                  double*       csr_val_C)
     {
-        ROUTINE_TRACE("host_csrgeam");
+        ROUTINE_TRACE("host_csrgeam_impl");
 
         for(int i = 0; i < m; i++)
         {
@@ -723,16 +723,16 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute incomplete LU factorization inplace
     //-------------------------------------------------------------------------------
-    static void host_csrilu0(int        m,
-                             int        n,
-                             int        nnz,
-                             const int* csr_row_ptr,
-                             const int* csr_col_ind,
-                             double*    csr_val,
-                             int*       structural_zero,
-                             int*       numeric_zero)
+    static void host_csrilu0_impl(int        m,
+                                  int        n,
+                                  int        nnz,
+                                  const int* csr_row_ptr,
+                                  const int* csr_col_ind,
+                                  double*    csr_val,
+                                  int*       structural_zero,
+                                  int*       numeric_zero)
     {
-        ROUTINE_TRACE("host_csrilu0");
+        ROUTINE_TRACE("host_csrilu0_impl");
 
         std::vector<int> diag_ptr(m, -1);
 
@@ -793,16 +793,16 @@ namespace linalg
     //----------------------------------------------------------------------------------------
     // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
     //----------------------------------------------------------------------------------------
-    static void host_csric0(int        m,
-                            int        n,
-                            int        nnz,
-                            const int* csr_row_ptr,
-                            const int* csr_col_ind,
-                            double*    csr_val,
-                            int*       structural_zero,
-                            int*       numeric_zero)
+    static void host_csric0_impl(int        m,
+                                 int        n,
+                                 int        nnz,
+                                 const int* csr_row_ptr,
+                                 const int* csr_col_ind,
+                                 double*    csr_val,
+                                 int*       structural_zero,
+                                 int*       numeric_zero)
     {
-        ROUTINE_TRACE("host_csric0");
+        ROUTINE_TRACE("host_csric0_impl");
 
         std::vector<int> diag_ptr(m, -1);
 
@@ -872,15 +872,15 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // solve Lx = b where L is a lower triangular sparse matrix
     //-------------------------------------------------------------------------------
-    static void host_forward_solve(const int*    csr_row_ptr,
-                                   const int*    csr_col_ind,
-                                   const double* csr_val,
-                                   const double* b,
-                                   double*       x,
-                                   int           n,
-                                   bool          unit_diag)
+    static void host_forward_solve_impl(const int*    csr_row_ptr,
+                                        const int*    csr_col_ind,
+                                        const double* csr_val,
+                                        const double* b,
+                                        double*       x,
+                                        int           n,
+                                        bool          unit_diag)
     {
-        ROUTINE_TRACE("host_forward_solve");
+        ROUTINE_TRACE("host_forward_solve_impl");
 
         for(int i = 0; i < n; i++)
         {
@@ -922,15 +922,15 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // solve Ux = b where U is a upper triangular sparse matrix
     //-------------------------------------------------------------------------------
-    static void host_backward_solve(const int*    csr_row_ptr,
-                                    const int*    csr_col_ind,
-                                    const double* csr_val,
-                                    const double* b,
-                                    double*       x,
-                                    int           n,
-                                    bool          unit_diag)
+    static void host_backward_solve_impl(const int*    csr_row_ptr,
+                                         const int*    csr_col_ind,
+                                         const double* csr_val,
+                                         const double* b,
+                                         double*       x,
+                                         int           n,
+                                         bool          unit_diag)
     {
-        ROUTINE_TRACE("host_backward_solve");
+        ROUTINE_TRACE("host_backward_solve_impl");
 
         for(int i = n - 1; i >= 0; i--)
         {
@@ -960,105 +960,67 @@ namespace linalg
 }
 
 // Compute y = alpha * x + y
-void linalg::host::axpy(double alpha, const vector<double>& x, vector<double>& y)
+void linalg::host_axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
-    ROUTINE_TRACE("linalg::host::axpy");
+    ROUTINE_TRACE("linalg::host_axpy");
 
-    host_axpy(x.get_size(), alpha, x.get_vec(), y.get_vec());
-}
-
-// Compute y = alpha * x + y
-void linalg::host::axpy(const scalar<double>& alpha, const vector<double>& x, vector<double>& y)
-{
-    ROUTINE_TRACE("linalg::host::axpy");
-
-    host_axpy(x.get_size(), *alpha.get_val(), x.get_vec(), y.get_vec());
+    host_axpy_impl(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 // Compute y = alpha * x + beta * y
-void linalg::host::axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
+void linalg::host_axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
-    ROUTINE_TRACE("linalg::host::axpby");
+    ROUTINE_TRACE("linalg::host_axpby");
 
-    host_axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
-}
-
-// Compute y = alpha * x + beta * y
-void linalg::host::axpby(const scalar<double>& alpha,
-                         const vector<double>& x,
-                         const scalar<double>& beta,
-                         vector<double>&       y)
-{
-    ROUTINE_TRACE("linalg::host::axpby");
-
-    host_axpby(x.get_size(), *alpha.get_val(), x.get_vec(), *beta.get_val(), y.get_vec());
+    host_axpby_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
-void linalg::host::axpbypgz(double                alpha,
-                            const vector<double>& x,
-                            double                beta,
-                            const vector<double>& y,
-                            double                gamma,
-                            vector<double>&       z)
+void linalg::host_axpbypgz(double                alpha,
+                           const vector<double>& x,
+                           double                beta,
+                           const vector<double>& y,
+                           double                gamma,
+                           vector<double>&       z)
 {
-    ROUTINE_TRACE("linalg::host::axpbypgz");
+    ROUTINE_TRACE("linalg::host_axpbypgz");
 
-    host_axpbypgz(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
-}
-
-// Compute z = alpha * x + beta * y + gamma * z
-void linalg::host::axpbypgz(const scalar<double>& alpha,
-                            const vector<double>& x,
-                            const scalar<double>& beta,
-                            const vector<double>& y,
-                            const scalar<double>& gamma,
-                            vector<double>&       z)
-{
-    ROUTINE_TRACE("linalg::host::axpbypgz");
-
-    host_axpbypgz(x.get_size(),
-                  *alpha.get_val(),
-                  x.get_vec(),
-                  *beta.get_val(),
-                  y.get_vec(),
-                  *gamma.get_val(),
-                  z.get_vec());
+    host_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
 // Compute y = A * x
-void linalg::host::matrix_vector_product(const csr_matrix&     A,
-                                         const vector<double>& x,
-                                         vector<double>&       y)
+void linalg::host_matrix_vector_product(const csr_matrix&     A,
+                                        const vector<double>& x,
+                                        vector<double>&       y)
 {
-    ROUTINE_TRACE("linalg::host::matrix_vector_product");
+    ROUTINE_TRACE("linalg::host_matrix_vector_product");
 
-    host_matrix_vector_product(
+    host_matrix_vector_product_impl(
         A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), y.get_vec(), A.get_m());
 }
 
 // Compute y = alpha * A * x + beta * y
-void linalg::host::matrix_vector_product(
+void linalg::host_matrix_vector_product(
     double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
 {
-    ROUTINE_TRACE("linalg::host::matrix_vector_product");
+    ROUTINE_TRACE("linalg::host_matrix_vector_product");
 
-    host_csrmv(A.get_m(),
-               A.get_n(),
-               A.get_nnz(),
-               alpha,
-               A.get_row_ptr(),
-               A.get_col_ind(),
-               A.get_val(),
-               x.get_vec(),
-               beta,
-               y.get_vec());
+    host_csrmv_impl(A.get_m(),
+                    A.get_n(),
+                    A.get_nnz(),
+                    alpha,
+                    A.get_row_ptr(),
+                    A.get_col_ind(),
+                    A.get_val(),
+                    x.get_vec(),
+                    beta,
+                    y.get_vec());
 }
 
 // Compute C = A * B
-void linalg::host::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
+void linalg::host_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    ROUTINE_TRACE("linalg::host::matrix_matrix_product");
+    ROUTINE_TRACE("linalg::host_matrix_matrix_product");
 
     // Compute C = A * B
     double alpha = 1.0;
@@ -1068,51 +1030,51 @@ void linalg::host::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, con
     C.resize(A.get_m(), B.get_n(), 0);
 
     int nnz_C;
-    host_csrgemm_nnz(A.get_m(),
-                     B.get_n(),
-                     A.get_n(),
-                     A.get_nnz(),
-                     B.get_nnz(),
-                     0,
-                     alpha,
-                     A.get_row_ptr(),
-                     A.get_col_ind(),
-                     B.get_row_ptr(),
-                     B.get_col_ind(),
-                     beta,
-                     nullptr,
-                     nullptr,
-                     C.get_row_ptr(),
-                     &nnz_C);
+    host_csrgemm_nnz_impl(A.get_m(),
+                          B.get_n(),
+                          A.get_n(),
+                          A.get_nnz(),
+                          B.get_nnz(),
+                          0,
+                          alpha,
+                          A.get_row_ptr(),
+                          A.get_col_ind(),
+                          B.get_row_ptr(),
+                          B.get_col_ind(),
+                          beta,
+                          nullptr,
+                          nullptr,
+                          C.get_row_ptr(),
+                          &nnz_C);
 
     C.resize(A.get_m(), B.get_n(), nnz_C);
 
-    host_csrgemm(A.get_m(),
-                 B.get_n(),
-                 A.get_n(),
-                 A.get_nnz(),
-                 B.get_nnz(),
-                 0,
-                 alpha,
-                 A.get_row_ptr(),
-                 A.get_col_ind(),
-                 A.get_val(),
-                 B.get_row_ptr(),
-                 B.get_col_ind(),
-                 B.get_val(),
-                 beta,
-                 nullptr,
-                 nullptr,
-                 nullptr,
-                 C.get_row_ptr(),
-                 C.get_col_ind(),
-                 C.get_val());
+    host_csrgemm_impl(A.get_m(),
+                      B.get_n(),
+                      A.get_n(),
+                      A.get_nnz(),
+                      B.get_nnz(),
+                      0,
+                      alpha,
+                      A.get_row_ptr(),
+                      A.get_col_ind(),
+                      A.get_val(),
+                      B.get_row_ptr(),
+                      B.get_col_ind(),
+                      B.get_val(),
+                      beta,
+                      nullptr,
+                      nullptr,
+                      nullptr,
+                      C.get_row_ptr(),
+                      C.get_col_ind(),
+                      C.get_val());
 }
 
 // Compute C = A + B
-void linalg::host::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
+void linalg::host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    ROUTINE_TRACE("linalg::host::matrix_matrix_addition");
+    ROUTINE_TRACE("linalg::host_matrix_matrix_addition");
 
     // Compute C = A + B
     double alpha = 1.0;
@@ -1122,106 +1084,106 @@ void linalg::host::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, co
     C.resize(A.get_m(), B.get_n(), 0);
 
     int nnz_C;
-    host_csrgeam_nnz(A.get_m(),
-                     B.get_n(),
-                     A.get_nnz(),
-                     B.get_nnz(),
-                     alpha,
-                     A.get_row_ptr(),
-                     A.get_col_ind(),
-                     beta,
-                     B.get_row_ptr(),
-                     B.get_col_ind(),
-                     C.get_row_ptr(),
-                     &nnz_C);
+    host_csrgeam_nnz_impl(A.get_m(),
+                          B.get_n(),
+                          A.get_nnz(),
+                          B.get_nnz(),
+                          alpha,
+                          A.get_row_ptr(),
+                          A.get_col_ind(),
+                          beta,
+                          B.get_row_ptr(),
+                          B.get_col_ind(),
+                          C.get_row_ptr(),
+                          &nnz_C);
 
     C.resize(A.get_m(), B.get_n(), nnz_C);
 
-    host_csrgeam(A.get_m(),
-                 B.get_n(),
-                 A.get_nnz(),
-                 B.get_nnz(),
-                 alpha,
-                 A.get_row_ptr(),
-                 A.get_col_ind(),
-                 A.get_val(),
-                 beta,
-                 B.get_row_ptr(),
-                 B.get_col_ind(),
-                 B.get_val(),
-                 C.get_row_ptr(),
-                 C.get_col_ind(),
-                 C.get_val());
+    host_csrgeam_impl(A.get_m(),
+                      B.get_n(),
+                      A.get_nnz(),
+                      B.get_nnz(),
+                      alpha,
+                      A.get_row_ptr(),
+                      A.get_col_ind(),
+                      A.get_val(),
+                      beta,
+                      B.get_row_ptr(),
+                      B.get_col_ind(),
+                      B.get_val(),
+                      C.get_row_ptr(),
+                      C.get_col_ind(),
+                      C.get_val());
 }
 
 // Incomplete IC factorization
-void linalg::host::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
+void linalg::host_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
-    ROUTINE_TRACE("linalg::host::csric0");
+    ROUTINE_TRACE("linalg::host_csric0");
 
-    host_csric0(LL.get_m(),
-                LL.get_n(),
-                LL.get_nnz(),
-                LL.get_row_ptr(),
-                LL.get_col_ind(),
-                LL.get_val(),
-                structural_zero,
-                numeric_zero);
+    host_csric0_impl(LL.get_m(),
+                     LL.get_n(),
+                     LL.get_nnz(),
+                     LL.get_row_ptr(),
+                     LL.get_col_ind(),
+                     LL.get_val(),
+                     structural_zero,
+                     numeric_zero);
 }
 
 // Incomplete LU factorization
-void linalg::host::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
+void linalg::host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 {
-    ROUTINE_TRACE("linalg::host::csrilu0");
+    ROUTINE_TRACE("linalg::host_csrilu0");
 
-    host_csrilu0(LU.get_m(),
-                 LU.get_n(),
-                 LU.get_nnz(),
-                 LU.get_row_ptr(),
-                 LU.get_col_ind(),
-                 LU.get_val(),
-                 structural_zero,
-                 numeric_zero);
+    host_csrilu0_impl(LU.get_m(),
+                      LU.get_n(),
+                      LU.get_nnz(),
+                      LU.get_row_ptr(),
+                      LU.get_col_ind(),
+                      LU.get_val(),
+                      structural_zero,
+                      numeric_zero);
 }
 
 // Forward solve
-void linalg::host::forward_solve(const csr_matrix&     A,
+void linalg::host_forward_solve(const csr_matrix&     A,
+                                const vector<double>& b,
+                                vector<double>&       x,
+                                bool                  unit_diag)
+{
+    ROUTINE_TRACE("linalg::host_forward_solve");
+
+    host_forward_solve_impl(A.get_row_ptr(),
+                            A.get_col_ind(),
+                            A.get_val(),
+                            b.get_vec(),
+                            x.get_vec(),
+                            A.get_m(),
+                            unit_diag);
+}
+
+// Backward solve
+void linalg::host_backward_solve(const csr_matrix&     A,
                                  const vector<double>& b,
                                  vector<double>&       x,
                                  bool                  unit_diag)
 {
-    ROUTINE_TRACE("linalg::host::forward_solve");
+    ROUTINE_TRACE("linalg::host_backward_solve");
 
-    host_forward_solve(A.get_row_ptr(),
-                       A.get_col_ind(),
-                       A.get_val(),
-                       b.get_vec(),
-                       x.get_vec(),
-                       A.get_m(),
-                       unit_diag);
-}
-
-// Backward solve
-void linalg::host::backward_solve(const csr_matrix&     A,
-                                  const vector<double>& b,
-                                  vector<double>&       x,
-                                  bool                  unit_diag)
-{
-    ROUTINE_TRACE("linalg::host::backward_solve");
-
-    host_backward_solve(A.get_row_ptr(),
-                        A.get_col_ind(),
-                        A.get_val(),
-                        b.get_vec(),
-                        x.get_vec(),
-                        A.get_m(),
-                        unit_diag);
+    host_backward_solve_impl(A.get_row_ptr(),
+                             A.get_col_ind(),
+                             A.get_val(),
+                             b.get_vec(),
+                             x.get_vec(),
+                             A.get_m(),
+                             unit_diag);
 }
 
 // Transpose matrix
-void linalg::host::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
+void linalg::host_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 {
-    ROUTINE_TRACE("linalg::host::transpose_matrix");
+    ROUTINE_TRACE("linalg::host_transpose_matrix");
 
     transposeA.resize(A.get_n(), A.get_m(), A.get_nnz());
 
@@ -1288,78 +1250,68 @@ void linalg::host::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 }
 
 // Dot product
-double linalg::host::dot_product(const vector<double>& x, const vector<double>& y)
+double linalg::host_dot_product(const vector<double>& x, const vector<double>& y)
 {
-    ROUTINE_TRACE("linalg::host::dot_product");
+    ROUTINE_TRACE("linalg::host_dot_product");
 
-    return host_dot_product(x.get_vec(), y.get_vec(), x.get_size());
-}
-
-// Dot product
-void linalg::host::dot_product(const vector<double>& x,
-                               const vector<double>& y,
-                               scalar<double>&       result)
-{
-    ROUTINE_TRACE("linalg::host::dot_product");
-
-    *(result.get_val()) = host_dot_product(x.get_vec(), y.get_vec(), x.get_size());
+    return host_dot_product_impl(x.get_vec(), y.get_vec(), x.get_size());
 }
 
 // Compute residual
-void linalg::host::compute_residual(const csr_matrix&     A,
-                                    const vector<double>& x,
-                                    const vector<double>& b,
-                                    vector<double>&       res)
+void linalg::host_compute_residual(const csr_matrix&     A,
+                                   const vector<double>& x,
+                                   const vector<double>& b,
+                                   vector<double>&       res)
 {
-    ROUTINE_TRACE("linalg::host::compute_residual");
+    ROUTINE_TRACE("linalg::host_compute_residual");
 
-    host_compute_residual(A.get_row_ptr(),
-                          A.get_col_ind(),
-                          A.get_val(),
-                          x.get_vec(),
-                          b.get_vec(),
-                          res.get_vec(),
-                          A.get_m());
+    host_compute_residual_impl(A.get_row_ptr(),
+                               A.get_col_ind(),
+                               A.get_val(),
+                               x.get_vec(),
+                               b.get_vec(),
+                               res.get_vec(),
+                               A.get_m());
 }
 
 // Exclusive scan
-void linalg::host::exclusive_scan(vector<double>& x)
+void linalg::host_exclusive_scan(vector<double>& x)
 {
-    ROUTINE_TRACE("linalg::host::exclusive_scan");
+    ROUTINE_TRACE("linalg::host_exclusive_scan");
 
-    host_exclusive_scan(x.get_vec(), x.get_size());
+    host_exclusive_scan_impl(x.get_vec(), x.get_size());
 }
 
 // Extract diagonal entries
-void linalg::host::diagonal(const csr_matrix& A, vector<double>& d)
+void linalg::host_diagonal(const csr_matrix& A, vector<double>& d)
 {
-    ROUTINE_TRACE("linalg::host::diagonal");
+    ROUTINE_TRACE("linalg::host_diagonal");
 
-    host_diagonal(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
+    host_diagonal_impl(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }
 
 // Euclidean norm
-double linalg::host::norm_euclid(const vector<double>& array)
+double linalg::host_norm_euclid(const vector<double>& array)
 {
-    ROUTINE_TRACE("linalg::host::norm_euclid");
+    ROUTINE_TRACE("linalg::host_norm_euclid");
 
-    return std::sqrt(dot_product(array, array));
+    return std::sqrt(host_dot_product(array, array));
 }
 
 // Infinity norm
-double linalg::host::norm_inf(const vector<double>& array)
+double linalg::host_norm_inf(const vector<double>& array)
 {
-    ROUTINE_TRACE("linalg::host::norm_inf");
+    ROUTINE_TRACE("linalg::host_norm_inf");
 
-    return host_norm_inf(array.get_vec(), array.get_size());
+    return host_norm_inf_impl(array.get_vec(), array.get_size());
 }
 
 // Jacobi solve
-void linalg::host::jacobi_solve(const vector<double>& rhs,
-                                const vector<double>& diag,
-                                vector<double>&       x)
+void linalg::host_jacobi_solve(const vector<double>& rhs,
+                               const vector<double>& diag,
+                               vector<double>&       x)
 {
-    ROUTINE_TRACE("linalg::host::jacobi_solve");
+    ROUTINE_TRACE("linalg::host_jacobi_solve");
 
-    host_jacobi_solve(rhs.get_vec(), diag.get_vec(), x.get_vec(), x.get_size());
+    host_jacobi_solve_impl(rhs.get_vec(), diag.get_vec(), x.get_vec(), x.get_size());
 }

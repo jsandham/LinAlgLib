@@ -29,27 +29,23 @@
 
 namespace linalg
 {
-    namespace device
-    {
     template <typename T>
-    void allocate(T** ptr, size_t size);
-    
+    void device_allocate(T** ptr, size_t size);
+
     template <typename T>
-    void free(T* ptr); // if we pass with T** ptr, we could set to NULL after free'ing...
-    
+    void device_free(T* ptr); // if we pass with T** ptr, we could set to NULL after free'ing...
+
     template <typename T>
     void copy_h2d(T* dest, const T* src, size_t size);
-    
+
     template <typename T>
     void copy_d2h(T* dest, const T* src, size_t size);
-    
+
     template <typename T>
     void copy_d2d(T* dest, const T* src, size_t size);
-    
-    template <typename T>
-    void fill(T* data, size_t size, T val);
 
-    } // namespace device
+    template <typename T>
+    void device_fill(T* data, size_t size, T val);
 } // namespace linalg
 
 #endif DEVICE_MEMORY_H

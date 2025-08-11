@@ -35,84 +35,82 @@
 
 namespace linalg
 {
-    namespace device
-    {
-        // Compute y = alpha * x + y
-        void axpy(double alpha, const vector<double>& x, vector<double>& y);
+    // Compute y = alpha * x + y
+    void device_axpy(double alpha, const vector<double>& x, vector<double>& y);
 
-        // Compute y = alpha * x + beta * y
-        void axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
+    // Compute y = alpha * x + beta * y
+    void device_axpby(double alpha, const vector<double>& x, double beta, vector<double>& y);
 
-        // Compute z = alpha * x + beta * y + gamma * z
-        void axpbypgz(double                alpha,
-                      const vector<double>& x,
-                      double                beta,
-                      const vector<double>& y,
-                      double                gamma,
-                      vector<double>&       z);
+    // Compute z = alpha * x + beta * y + gamma * z
+    void device_axpbypgz(double                alpha,
+                         const vector<double>& x,
+                         double                beta,
+                         const vector<double>& y,
+                         double                gamma,
+                         vector<double>&       z);
 
-        // Compute y = A * x
-        void matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
+    // Compute y = A * x
+    void device_matrix_vector_product(const csr_matrix&     A,
+                                      const vector<double>& x,
+                                      vector<double>&       y);
 
-        // Compute y = alpha * A * x + beta * y
-        void matrix_vector_product(double                alpha,
-                                   const csr_matrix&     A,
-                                   const vector<double>& x,
-                                   double                beta,
-                                   vector<double>&       y);
+    // Compute y = alpha * A * x + beta * y
+    void device_matrix_vector_product(
+        double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y);
 
-        // Compute C = A * B
-        void matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
+    // Compute C = A * B
+    void device_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-        // Compute C = A + B
-        void matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
+    // Compute C = A + B
+    void device_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
 
-        // Incomplete IC factorization
-        void csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
+    // Incomplete IC factorization
+    void device_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
 
-        // Incomplete LU factorization
-        void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
+    // Incomplete LU factorization
+    void device_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
 
-        // Forward solve
-        void forward_solve(const csr_matrix&     A,
-                           const vector<double>& b,
-                           vector<double>&       x,
-                           bool                  unit_diag);
-
-        // Backward solve
-        void backward_solve(const csr_matrix&     A,
-                            const vector<double>& b,
-                            vector<double>&       x,
-                            bool                  unit_diag);
-
-        // Transpose matrix
-        void transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
-
-        // Dot product
-        double dot_product(const vector<double>& x, const vector<double>& y);
-
-        // Compute residual
-        void compute_residual(const csr_matrix&     A,
-                              const vector<double>& x,
+    // Forward solve
+    void device_forward_solve(const csr_matrix&     A,
                               const vector<double>& b,
-                              vector<double>&       res);
+                              vector<double>&       x,
+                              bool                  unit_diag);
 
-        // Exclusive scan
-        void exclusive_scan(vector<double>& x);
+    // Backward solve
+    void device_backward_solve(const csr_matrix&     A,
+                               const vector<double>& b,
+                               vector<double>&       x,
+                               bool                  unit_diag);
 
-        // Extract diagonal entries
-        void diagonal(const csr_matrix& A, vector<double>& d);
+    // Transpose matrix
+    void device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
 
-        // Euclidean norm
-        double norm_euclid(const vector<double>& array);
+    // Dot product
+    double device_dot_product(const vector<double>& x, const vector<double>& y);
 
-        // Infinity norm
-        double norm_inf(const vector<double>& array);
+    // Compute residual
+    void device_compute_residual(const csr_matrix&     A,
+                                 const vector<double>& x,
+                                 const vector<double>& b,
+                                 vector<double>&       res);
 
-        // Jacobi solve
-        void jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
+    // Exclusive scan
+    void device_exclusive_scan(vector<double>& x);
 
-    } // namespace device
+    // Extract diagonal entries
+    void device_diagonal(const csr_matrix& A, vector<double>& d);
+
+    // Euclidean norm
+    double device_norm_euclid(const vector<double>& array);
+
+    // Infinity norm
+    double device_norm_inf(const vector<double>& array);
+
+    // Jacobi solve
+    void device_jacobi_solve(const vector<double>& rhs,
+                             const vector<double>& diag,
+                             vector<double>&       x);
+
 } // namespace linalg
 
 #endif

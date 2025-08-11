@@ -51,11 +51,11 @@ void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 
     if(x.is_on_host())
     {
-        return host::axpy(alpha, x, y);
+        return host_axpy(alpha, x, y);
     }
     else
     {
-        return device::axpy(alpha, x, y);
+        return device_axpy(alpha, x, y);
     }
 }
 
@@ -76,11 +76,11 @@ void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<do
 
     if(x.is_on_host())
     {
-        return host::axpby(alpha, x, beta, y);
+        return host_axpby(alpha, x, beta, y);
     }
     else
     {
-        return device::axpby(alpha, x, beta, y);
+        return device_axpby(alpha, x, beta, y);
     }
 }
 
@@ -106,11 +106,11 @@ void linalg::axpbypgz(double                alpha,
 
     if(x.is_on_host())
     {
-        return host::axpbypgz(alpha, x, beta, y, gamma, z);
+        return host_axpbypgz(alpha, x, beta, y, gamma, z);
     }
     else
     {
-        return device::axpbypgz(alpha, x, beta, y, gamma, z);
+        return device_axpbypgz(alpha, x, beta, y, gamma, z);
     }
 }
 
@@ -131,11 +131,11 @@ void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x,
 
     if(A.is_on_host())
     {
-        return host::matrix_vector_product(A, x, y);
+        return host_matrix_vector_product(A, x, y);
     }
     else
     {
-        return device::matrix_vector_product(A, x, y);
+        return device_matrix_vector_product(A, x, y);
     }
 }
 
@@ -157,11 +157,11 @@ void linalg::matrix_vector_product(
 
     if(A.is_on_host())
     {
-        return host::matrix_vector_product(alpha, A, x, beta, y);
+        return host_matrix_vector_product(alpha, A, x, beta, y);
     }
     else
     {
-        return device::matrix_vector_product(alpha, A, x, beta, y);
+        return device_matrix_vector_product(alpha, A, x, beta, y);
     }
 }
 
@@ -182,11 +182,11 @@ void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr
 
     if(C.is_on_host())
     {
-        return host::matrix_matrix_product(C, A, B);
+        return host_matrix_matrix_product(C, A, B);
     }
     else
     {
-        return device::matrix_matrix_product(C, A, B);
+        return device_matrix_matrix_product(C, A, B);
     }
 }
 
@@ -207,11 +207,11 @@ void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const cs
 
     if(C.is_on_host())
     {
-        return host::matrix_matrix_addition(C, A, B);
+        return host_matrix_matrix_addition(C, A, B);
     }
     else
     {
-        return device::matrix_matrix_addition(C, A, B);
+        return device_matrix_matrix_addition(C, A, B);
     }
 }
 
@@ -232,11 +232,11 @@ void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 
     if(LL.is_on_host())
     {
-        return host::csric0(LL, structural_zero, numeric_zero);
+        return host_csric0(LL, structural_zero, numeric_zero);
     }
     else
     {
-        return device::csric0(LL, structural_zero, numeric_zero);
+        return device_csric0(LL, structural_zero, numeric_zero);
     }
 }
 
@@ -257,11 +257,11 @@ void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 
     if(LU.is_on_host())
     {
-        return host::csrilu0(LU, structural_zero, numeric_zero);
+        return host_csrilu0(LU, structural_zero, numeric_zero);
     }
     else
     {
-        return device::csrilu0(LU, structural_zero, numeric_zero);
+        return device_csrilu0(LU, structural_zero, numeric_zero);
     }
 }
 
@@ -285,11 +285,11 @@ void linalg::forward_solve(const csr_matrix&     A,
 
     if(A.is_on_host())
     {
-        return host::forward_solve(A, b, x, unit_diag);
+        return host_forward_solve(A, b, x, unit_diag);
     }
     else
     {
-        return device::forward_solve(A, b, x, unit_diag);
+        return device_forward_solve(A, b, x, unit_diag);
     }
 }
 
@@ -313,11 +313,11 @@ void linalg::backward_solve(const csr_matrix&     A,
 
     if(A.is_on_host())
     {
-        return host::backward_solve(A, b, x, unit_diag);
+        return host_backward_solve(A, b, x, unit_diag);
     }
     else
     {
-        return device::backward_solve(A, b, x, unit_diag);
+        return device_backward_solve(A, b, x, unit_diag);
     }
 }
 
@@ -338,11 +338,11 @@ void linalg::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 
     if(A.is_on_host())
     {
-        return host::transpose_matrix(A, transposeA);
+        return host_transpose_matrix(A, transposeA);
     }
     else
     {
-        return device::transpose_matrix(A, transposeA);
+        return device_transpose_matrix(A, transposeA);
     }
 }
 
@@ -363,11 +363,11 @@ double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 
     if(x.is_on_host())
     {
-        return host::dot_product(x, y);
+        return host_dot_product(x, y);
     }
     else
     {
-        return device::dot_product(x, y);
+        return device_dot_product(x, y);
     }
 }
 
@@ -391,11 +391,11 @@ void linalg::compute_residual(const csr_matrix&     A,
 
     if(A.is_on_host())
     {
-        return host::compute_residual(A, x, b, res);
+        return host_compute_residual(A, x, b, res);
     }
     else
     {
-        return device::compute_residual(A, x, b, res);
+        return device_compute_residual(A, x, b, res);
     }
 }
 
@@ -416,11 +416,11 @@ void linalg::exclusive_scan(vector<double>& x)
 
     if(x.is_on_host())
     {
-        return host::exclusive_scan(x);
+        return host_exclusive_scan(x);
     }
     else
     {
-        return device::exclusive_scan(x);
+        return device_exclusive_scan(x);
     }
 }
 
@@ -441,11 +441,11 @@ void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 
     if(A.is_on_host())
     {
-        return host::diagonal(A, d);
+        return host_diagonal(A, d);
     }
     else
     {
-        return device::diagonal(A, d);
+        return device_diagonal(A, d);
     }
 }
 
@@ -466,11 +466,11 @@ double linalg::norm_euclid(const vector<double>& array)
 
     if(array.is_on_host())
     {
-        return host::norm_euclid(array);
+        return host_norm_euclid(array);
     }
     else
     {
-        return device::norm_euclid(array);
+        return device_norm_euclid(array);
     }
 }
 
@@ -491,11 +491,11 @@ double linalg::norm_inf(const vector<double>& array)
 
     if(array.is_on_host())
     {
-        return host::norm_inf(array);
+        return host_norm_inf(array);
     }
     else
     {
-        return device::norm_inf(array);
+        return device_norm_inf(array);
     }
 }
 
@@ -516,10 +516,10 @@ void linalg::jacobi_solve(const vector<double>& rhs, const vector<double>& diag,
 
     if(rhs.is_on_host())
     {
-        return host::jacobi_solve(rhs, diag, x);
+        return host_jacobi_solve(rhs, diag, x);
     }
     else
     {
-        return device::jacobi_solve(rhs, diag, x);
+        return device_jacobi_solve(rhs, diag, x);
     }
 }

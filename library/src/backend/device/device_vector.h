@@ -34,44 +34,41 @@
 
 namespace linalg
 {
-    namespace device
+    template <typename T>
+    class device_vector : public backend_vector<T>
     {
-        template <typename T>
-        class device_vector : public backend_vector<T>
+    private:
+        size_t size;
+        T*     dvec;
+
+        T temp;
+
+    public:
+        device_vector();
+        device_vector(size_t size);
+        device_vector(size_t size, T val);
+        device_vector(const std::vector<T>& vec);
+        ~device_vector();
+
+        T& operator[](size_t index) override
         {
-        private:
-            size_t size;
-            T*     dvec;
+            std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
+            return temp;
+        }
 
-            T temp;
+        const T& operator[](size_t index) const override
+        {
+            std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
+            return temp;
+        }
 
-        public:
-            device_vector();
-            device_vector(size_t size);
-            device_vector(size_t size, T val);
-            device_vector(const std::vector<T>& vec);
-            ~device_vector();
-
-            T& operator[](size_t index) override
-            {
-                std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
-                return temp;
-            }
-
-            const T& operator[](size_t index) const override
-            {
-                std::cout << "Error: operator[] not implemented for device vectors." << std::endl;
-                return temp;
-            }
-
-            T*       get_data() override;
-            const T* get_data() const override;
-            size_t   get_size() const override;
-            void     clear() override;
-            void     resize(size_t size) override;
-            void     resize(size_t size, T val) override;
-        };
-    } // namespace device
+        T*       get_data() override;
+        const T* get_data() const override;
+        size_t   get_size() const override;
+        void     clear() override;
+        void     resize(size_t size) override;
+        void     resize(size_t size, T val) override;
+    };
 } // namespace linalg
 
 #endif

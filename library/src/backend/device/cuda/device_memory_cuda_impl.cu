@@ -32,37 +32,37 @@
 #include "cuda_kernels.h"
 
 template <typename T>
-void linalg::device::allocate(T** ptr, size_t size)
+void linalg::device_allocate(T** ptr, size_t size)
 {
     CHECK_CUDA(cudaMalloc((void**)ptr, sizeof(T) * size));
 }
 
 template <typename T>
-void linalg::device::free(T* ptr)
+void linalg::device_free(T* ptr)
 {
     CHECK_CUDA(cudaFree(ptr));
 }
 
 template <typename T>
-void linalg::device::copy_h2d(T* dest, const T* src, size_t size)
+void linalg::copy_h2d(T* dest, const T* src, size_t size)
 {
     CHECK_CUDA(cudaMemcpy(dest, src, sizeof(T) * size, cudaMemcpyHostToDevice));
 }
 
 template <typename T>
-void linalg::device::copy_d2h(T* dest, const T* src, size_t size)
+void linalg::copy_d2h(T* dest, const T* src, size_t size)
 {
     CHECK_CUDA(cudaMemcpy(dest, src, sizeof(T) * size, cudaMemcpyDeviceToHost));
 }
 
 template <typename T>
-void linalg::device::copy_d2d(T* dest, const T* src, size_t size)
+void linalg::copy_d2d(T* dest, const T* src, size_t size)
 {
     CHECK_CUDA(cudaMemcpy(dest, src, sizeof(T) * size, cudaMemcpyDeviceToDevice));
 }
 
 template <typename T>
-void linalg::device::fill(T* data, size_t size, T val)
+void linalg::device_fill(T* data, size_t size, T val)
 {
     if(val == static_cast<T>(0))
     {
@@ -74,32 +74,32 @@ void linalg::device::fill(T* data, size_t size, T val)
     }
 }
 
-template void linalg::device::allocate<uint32_t>(uint32_t** ptr, size_t size);
-template void linalg::device::allocate<int32_t>(int32_t** ptr, size_t size);
-template void linalg::device::allocate<int64_t>(int64_t** ptr, size_t size);
-template void linalg::device::allocate<double>(double** ptr, size_t size);
+template void linalg::device_allocate<uint32_t>(uint32_t** ptr, size_t size);
+template void linalg::device_allocate<int32_t>(int32_t** ptr, size_t size);
+template void linalg::device_allocate<int64_t>(int64_t** ptr, size_t size);
+template void linalg::device_allocate<double>(double** ptr, size_t size);
 
-template void linalg::device::free<uint32_t>(uint32_t* ptr);
-template void linalg::device::free<int32_t>(int32_t* ptr);
-template void linalg::device::free<int64_t>(int64_t* ptr);
-template void linalg::device::free<double>(double* ptr);
+template void linalg::device_free<uint32_t>(uint32_t* ptr);
+template void linalg::device_free<int32_t>(int32_t* ptr);
+template void linalg::device_free<int64_t>(int64_t* ptr);
+template void linalg::device_free<double>(double* ptr);
 
-template void linalg::device::copy_h2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
-template void linalg::device::copy_h2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
-template void linalg::device::copy_h2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
-template void linalg::device::copy_h2d<double>(double* dest, const double* src, size_t size);
+template void linalg::copy_h2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
+template void linalg::copy_h2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
+template void linalg::copy_h2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::copy_h2d<double>(double* dest, const double* src, size_t size);
 
-template void linalg::device::copy_d2h<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
-template void linalg::device::copy_d2h<int32_t>(int32_t* dest, const int32_t* src, size_t size);
-template void linalg::device::copy_d2h<int64_t>(int64_t* dest, const int64_t* src, size_t size);
-template void linalg::device::copy_d2h<double>(double* dest, const double* src, size_t size);
+template void linalg::copy_d2h<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
+template void linalg::copy_d2h<int32_t>(int32_t* dest, const int32_t* src, size_t size);
+template void linalg::copy_d2h<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::copy_d2h<double>(double* dest, const double* src, size_t size);
 
-template void linalg::device::copy_d2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
-template void linalg::device::copy_d2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
-template void linalg::device::copy_d2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
-template void linalg::device::copy_d2d<double>(double* dest, const double* src, size_t size);
+template void linalg::copy_d2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
+template void linalg::copy_d2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
+template void linalg::copy_d2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::copy_d2d<double>(double* dest, const double* src, size_t size);
 
-template void linalg::device::fill<uint32_t>(uint32_t* data, size_t size, uint32_t val);
-template void linalg::device::fill<int32_t>(int32_t* data, size_t size, int32_t val);
-template void linalg::device::fill<int64_t>(int64_t* data, size_t size, int64_t val);
-template void linalg::device::fill<double>(double* data, size_t size, double val);
+template void linalg::device_fill<uint32_t>(uint32_t* data, size_t size, uint32_t val);
+template void linalg::device_fill<int32_t>(int32_t* data, size_t size, int32_t val);
+template void linalg::device_fill<int64_t>(int64_t* data, size_t size, int64_t val);
+template void linalg::device_fill<double>(double* data, size_t size, double val);

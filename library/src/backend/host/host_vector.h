@@ -33,40 +33,36 @@
 
 namespace linalg
 {
-    namespace host
+    template <typename T>
+    class host_vector : public backend_vector<T>
     {
-        template <typename T>
-        class host_vector : public backend_vector<T>
+    private:
+        std::vector<T> hvec;
+
+    public:
+        host_vector();
+        host_vector(size_t size);
+        host_vector(size_t size, T val);
+        host_vector(const std::vector<T>& vec);
+        ~host_vector();
+
+        T& operator[](size_t index) override
         {
-        private:
-            std::vector<T> hvec;
+            return hvec[index];
+        }
 
-        public:
-            host_vector();
-            host_vector(size_t size);
-            host_vector(size_t size, T val);
-            host_vector(const std::vector<T>& vec);
-            ~host_vector();
+        const T& operator[](size_t index) const override
+        {
+            return hvec[index];
+        }
 
-            T& operator[](size_t index) override
-            {
-                return hvec[index];
-            }
-
-            const T& operator[](size_t index) const override
-            {
-                return hvec[index];
-            }
-
-            T*       get_data() override;
-            const T* get_data() const override;
-            size_t   get_size() const override;
-            void     clear() override;
-            void     resize(size_t size) override;
-            void     resize(size_t size, T val) override;
-        };
-    }
-
+        T*       get_data() override;
+        const T* get_data() const override;
+        size_t   get_size() const override;
+        void     clear() override;
+        void     resize(size_t size) override;
+        void     resize(size_t size, T val) override;
+    };
 }
 
 #endif

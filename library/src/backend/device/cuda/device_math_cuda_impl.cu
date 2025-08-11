@@ -40,7 +40,7 @@
 
 #include "../../../trace.h"
 
-void linalg::device_axpy(int size, double alpha, const double* x, double* y)
+void linalg::device_axpy_impl(int size, double alpha, const double* x, double* y)
 {
     ROUTINE_TRACE("launch_cuda_axpy_kernel");
     axpy_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, y);
@@ -50,7 +50,7 @@ void linalg::device_axpy(int size, double alpha, const double* x, double* y)
 //-------------------------------------------------------------------------------
 // Compute y = alpha * x + beta * y
 //-------------------------------------------------------------------------------
-void linalg::device_axpby(int size, double alpha, const double* x, double beta, double* y)
+void linalg::device_axpby_impl(int size, double alpha, const double* x, double beta, double* y)
 {
     ROUTINE_TRACE("launch_cuda_axpby_kernel");
     axpby_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y);
@@ -60,7 +60,7 @@ void linalg::device_axpby(int size, double alpha, const double* x, double beta, 
 //-------------------------------------------------------------------------------
 // Compute z = alpha * x + beta * y + gamma * z
 //-------------------------------------------------------------------------------
-void linalg::device_axpbypgz(
+void linalg::device_axpbypgz_impl(
     int size, double alpha, const double* x, double beta, const double* y, double gamma, double* z)
 {
     ROUTINE_TRACE("launch_cuda_axpbypgz_kernel");
@@ -71,7 +71,7 @@ void linalg::device_axpbypgz(
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
-void linalg::device_matrix_vector_product(int m, int n, int nnz, const int*    csr_row_ptr,
+void linalg::device_matrix_vector_product_impl(int m, int n, int nnz, const int*    csr_row_ptr,
                                           const int*    csr_col_ind,
                                           const double* csr_val,
                                           const double* x,
@@ -87,7 +87,7 @@ void linalg::device_matrix_vector_product(int m, int n, int nnz, const int*    c
 //-------------------------------------------------------------------------------
 // dot product z = x*y
 //-------------------------------------------------------------------------------
-double linalg::device_dot_product(const double* x, const double* y, int size)
+double linalg::device_dot_product_impl(const double* x, const double* y, int size)
 {
     ROUTINE_TRACE("launch_cuda_dot_product_kernel");
     double* workspace = nullptr;
@@ -109,7 +109,7 @@ double linalg::device_dot_product(const double* x, const double* y, int size)
 //-------------------------------------------------------------------------------
 // Compute residual res = b - A * x
 //-------------------------------------------------------------------------------
-void linalg::device_compute_residual(int           m,
+void linalg::device_compute_residual_impl(int           m,
                                      int           n,
                                      int           nnz,
                                      const int*    csr_row_ptr,
@@ -128,12 +128,12 @@ void linalg::device_compute_residual(int           m,
 //-------------------------------------------------------------------------------
 // exclusive scan
 //-------------------------------------------------------------------------------
-void linalg::device_exclusive_scan(double* x, int n) {}
+void linalg::device_exclusive_scan_impl(double* x, int n) {}
 
 //-------------------------------------------------------------------------------
 // diagonal d = diag(A)
 //-------------------------------------------------------------------------------
-void linalg::device_extract_diagonal(int           m,
+void linalg::device_extract_diagonal_impl(int           m,
                                      int           n,
                                      int           nnz,
                                      const int*    csr_row_ptr,
@@ -150,7 +150,7 @@ void linalg::device_extract_diagonal(int           m,
 //-------------------------------------------------------------------------------
 // infinity norm
 //-------------------------------------------------------------------------------
-double linalg::device_norm_inf(const double* array, int size)
+double linalg::device_norm_inf_impl(const double* array, int size)
 {
     ROUTINE_TRACE("launch_cuda_norm_inf_kernel");
     double* workspace = nullptr;
@@ -172,7 +172,7 @@ double linalg::device_norm_inf(const double* array, int size)
 //-------------------------------------------------------------------------------
 // jacobi solve
 //-------------------------------------------------------------------------------
-void linalg::device_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
+void linalg::device_jacobi_solve_impl(const double* rhs, const double* diag, double* x, size_t size)
 {
     ROUTINE_TRACE("launch_cuda_jacobi_solve_kernel");
     jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
@@ -182,7 +182,7 @@ void linalg::device_jacobi_solve(const double* rhs, const double* diag, double* 
 //-------------------------------------------------------------------------------
 // Compute y = alpha * A * x + beta * y
 //-------------------------------------------------------------------------------
-void linalg::device_csrmv(int           m,
+void linalg::device_csrmv_impl(int           m,
                           int           n,
                           int           nnz,
                           double        alpha,
@@ -203,7 +203,7 @@ void linalg::device_csrmv(int           m,
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A * B + beta * D
 //-------------------------------------------------------------------------------
-void linalg::device_csrgemm_nnz(int        m,
+void linalg::device_csrgemm_nnz_impl(int        m,
                                 int        n,
                                 int        k,
                                 int        nnz_A,
@@ -222,7 +222,7 @@ void linalg::device_csrgemm_nnz(int        m,
 {
 }
 
-void linalg::device_csrgemm(int           m,
+void linalg::device_csrgemm_impl(int           m,
                             int           n,
                             int           k,
                             int           nnz_A,
@@ -248,7 +248,7 @@ void linalg::device_csrgemm(int           m,
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A + beta * B
 //-------------------------------------------------------------------------------
-void linalg::device_csrgeam_nnz(int        m,
+void linalg::device_csrgeam_nnz_impl(int        m,
                                 int        n,
                                 int        nnz_A,
                                 int        nnz_B,
@@ -263,7 +263,7 @@ void linalg::device_csrgeam_nnz(int        m,
 {
 }
 
-void linalg::device_csrgeam(int           m,
+void linalg::device_csrgeam_impl(int           m,
                             int           n,
                             int           nnz_A,
                             int           nnz_B,
@@ -284,7 +284,7 @@ void linalg::device_csrgeam(int           m,
 //-------------------------------------------------------------------------------
 // Compute incomplete LU factorization inplace
 //-------------------------------------------------------------------------------
-void linalg::device_csrilu0(int        m,
+void linalg::device_csrilu0_impl(int        m,
                             int        n,
                             int        nnz,
                             const int* csr_row_ptr,
@@ -298,7 +298,7 @@ void linalg::device_csrilu0(int        m,
 //----------------------------------------------------------------------------------------
 // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
 //----------------------------------------------------------------------------------------
-void linalg::device_csric0(int        m,
+void linalg::device_csric0_impl(int        m,
                            int        n,
                            int        nnz,
                            const int* csr_row_ptr,
@@ -312,7 +312,7 @@ void linalg::device_csric0(int        m,
 //-------------------------------------------------------------------------------
 // solve Lx = b where L is a lower triangular sparse matrix
 //-------------------------------------------------------------------------------
-void linalg::device_forward_solve(const int*    csr_row_ptr,
+void linalg::device_forward_solve_impl(const int*    csr_row_ptr,
                                   const int*    csr_col_ind,
                                   const double* csr_val,
                                   const double* b,
@@ -325,7 +325,7 @@ void linalg::device_forward_solve(const int*    csr_row_ptr,
 //-------------------------------------------------------------------------------
 // solve Ux = b where U is a upper triangular sparse matrix
 //-------------------------------------------------------------------------------
-void linalg::device_backward_solve(const int*    csr_row_ptr,
+void linalg::device_backward_solve_impl(const int*    csr_row_ptr,
                                    const int*    csr_col_ind,
                                    const double* csr_val,
                                    const double* b,

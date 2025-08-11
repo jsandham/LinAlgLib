@@ -37,11 +37,6 @@ using namespace linalg;
 
 bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
-    scalar<double> a(3.0);
-    scalar<double> b = -1.0 * a;
-
-    std::cout << "a: " << a << " b: " << b << std::endl;
-
     csr_matrix mat_D;
     mat_D.read_mtx(arg.filename);
 
