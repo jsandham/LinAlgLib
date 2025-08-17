@@ -239,7 +239,7 @@ namespace linalg
      * @param x The input/output vector. On input, it contains the original values; on output,
      * it contains the exclusive scan results.
      */
-    LINALGLIB_API void exclusive_scan(vector<double>& x);
+    LINALGLIB_API void exclusive_scan(vector<int64_t>& x);
 
     /**
      * @brief Extracts the diagonal entries of a CSR matrix.

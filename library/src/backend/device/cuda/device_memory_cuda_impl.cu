@@ -28,8 +28,8 @@
 #include <cuda_runtime.h>
 
 #include "../device_memory.h"
-#include "common.h"
-#include "cuda_kernels.h"
+#include "common.cuh"
+#include "cuda_kernels.cuh"
 
 template <typename T>
 void linalg::device_allocate(T** ptr, size_t size)

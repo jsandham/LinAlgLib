@@ -24,27 +24,22 @@
 //
 //********************************************************************************
 
-#include <algorithm>
-#include <cmath>
-#include <cuda_runtime.h>
-#include <iostream>
+#ifndef DEVICE_AMG_STRENGTH_H
+#define DEVICE_AMG_STRENGTH_H
 
-#include "common.cuh"
+#include "csr_matrix.h"
+#include "vector.h"
 
-#include "cuda_kernels.cuh"
-
-#include "../../../trace.h"
-
-template <typename T>
-void launch_cuda_fill_kernel(T* data, size_t size, T val)
+namespace linalg
 {
-    ROUTINE_TRACE("launch_cuda_fill_kernel");
-    fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
+    void device_compute_strong_connections(const csr_matrix& A,
+                                           double            eps,
+                                           vector<int>&      connections);
 
-    CHECK_CUDA_LAUNCH_ERROR();
+    void device_compute_classical_strong_connections(const csr_matrix& A,
+                                                     double            theta,
+                                                     csr_matrix&       S,
+                                                     vector<int>&      connections);
 }
 
-template void launch_cuda_fill_kernel<uint32_t>(uint32_t* data, size_t size, uint32_t val);
-template void launch_cuda_fill_kernel<int32_t>(int32_t* data, size_t size, int32_t val);
-template void launch_cuda_fill_kernel<int64_t>(int64_t* data, size_t size, int64_t val);
-template void launch_cuda_fill_kernel<double>(double* data, size_t size, double val);
+#endif

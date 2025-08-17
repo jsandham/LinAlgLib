@@ -23,59 +23,24 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef JACOBI_SOLVE_KERNELS_H
+#define JACOBI_SOLVE_KERNELS_H
 
-#include "common.h"
-
-#ifndef FIND_MINMAX_KERNELS_H
-#define FIND_MINMAX_KERNELS_H
+#include "common.cuh"
 
 template <uint32_t BLOCKSIZE, typename T>
-__global__ void find_max_kernel_part1(int size, const T* __restrict__ x, T* __restrict__ workspace)
+__global__ void jacobi_solve_kernel(int size,
+                                    const T* __restrict__ rhs,
+                                    const T* __restrict__ diag,
+                                    T* __restrict__ x)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;
     int gid = tid + BLOCKSIZE * bid;
 
-    __shared__ T shared[BLOCKSIZE];
-
-    T val = static_cast<T>(0);
-
-    int index = gid;
-    while(index < size)
+    if(gid < size)
     {
-        val = linalg::max(linalg::abs(val), linalg::abs(x[index]));
-
-        index += BLOCKSIZE * gridDim.x;
-    }
-
-    shared[tid] = val;
-
-    __syncthreads();
-
-    block_reduction_max<BLOCKSIZE>(shared, tid);
-
-    if(tid == 0)
-    {
-        workspace[bid] = shared[0];
-    }
-}
-
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void find_max_kernel_part2(T* __restrict__ workspace)
-{
-    int tid = threadIdx.x;
-
-    __shared__ T shared[BLOCKSIZE];
-
-    shared[tid] = workspace[tid];
-
-    __syncthreads();
-
-    block_reduction_max<BLOCKSIZE>(shared, tid);
-
-    if(tid == 0)
-    {
-        workspace[0] = shared[0];
+        x[gid] = rhs[gid] / diag[gid];
     }
 }
 

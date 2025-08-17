@@ -224,17 +224,18 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // exclusive scan
     //-------------------------------------------------------------------------------
-    static void host_exclusive_scan_impl(double* x, int n)
+    static void host_exclusive_scan_impl(int64_t* x, int n)
     {
         ROUTINE_TRACE("host_exclusive_scan_impl");
 
         if(n > 0)
         {
-            x[0] = 0;
-
-            for(int i = 0; i < n - 1; i++)
+            int64_t sum = 0;
+            for(int i = 0; i < n; i++)
             {
-                x[i + 1] += x[i];
+                int64_t temp = x[i];
+                x[i]         = sum;
+                sum += temp;
             }
         }
     }
@@ -1275,7 +1276,7 @@ void linalg::host_compute_residual(const csr_matrix&     A,
 }
 
 // Exclusive scan
-void linalg::host_exclusive_scan(vector<double>& x)
+void linalg::host_exclusive_scan(vector<int64_t>& x)
 {
     ROUTINE_TRACE("linalg::host_exclusive_scan");
 

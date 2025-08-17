@@ -23,49 +23,61 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef COMPUTE_RESIDUAL_KERNELS_H
-#define COMPUTE_RESIDUAL_KERNELS_H
+#ifndef DOT_PRODUCT_KERNELS_H
+#define DOT_PRODUCT_KERNELS_H
 
-#include "common.h"
+#include "common.cuh"
 
-template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
-__global__ void compute_residual_kernel(int m,
-                                               int n,
-                                               int nnz,
-                                               const int* __restrict__ csr_row_ptr,
-                                               const int* __restrict__ csr_col_ind,
-                                               const T* __restrict__ csr_val,
-                                               const T* __restrict__ x,
-                                               const T* __restrict__ b,
-                                               T* __restrict__ res)
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void dot_product_kernel_part1(int size,
+                                         const T* __restrict__ x,
+                                         const T* __restrict__ y,
+                                         T* __restrict__ workspace)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;
     int gid = tid + BLOCKSIZE * bid;
 
-    int lid = tid & WARPSIZE - 1;
-    //int wid = tid / WARPSIZE;
+    __shared__ T shared[BLOCKSIZE];
 
-    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
+    T val = static_cast<T>(0);
+
+    int index = gid;
+    while(index < size)
     {
-        int row_start = csr_row_ptr[row];
-        int row_end   = csr_row_ptr[row + 1];
+        val += x[index] * y[index];
 
-        T sum = static_cast<T>(0);
-        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
-        {
-            int col = csr_col_ind[j];
-            T   val = csr_val[j];
+        index += BLOCKSIZE * gridDim.x;
+    }
 
-            sum += x[col] * val;
-        }
+    shared[tid] = val;
 
-        warp_reduction_sum<WARPSIZE>(&sum, lid);
+    __syncthreads();
 
-        if(lid == 0)
-        {
-            res[row] = b[row] - sum;
-        }
+    block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[bid] = shared[0];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void dot_product_kernel_part2(T* __restrict__ workspace)
+{
+    int tid = threadIdx.x;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    shared[tid] = workspace[tid];
+
+    __syncthreads();
+
+    block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[0] = shared[0];
     }
 }
 

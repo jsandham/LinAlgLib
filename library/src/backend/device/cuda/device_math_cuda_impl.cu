@@ -30,19 +30,22 @@
 
 #include "../device_math_impl.h"
 
-#include "axpby_kernels.h"
-#include "compute_residual_kernels.h"
-#include "csrmv_kernels.h"
-#include "dot_product_kernels.h"
-#include "extract_diagonal_kernels.h"
-#include "find_minmax_kernels.h"
-#include "jacobi_solve_kernels.h"
+#include "axpby_kernels.cuh"
+#include "compute_residual_kernels.cuh"
+#include "csrmv_kernels.cuh"
+#include "dot_product_kernels.cuh"
+#include "extract_diagonal_kernels.cuh"
+#include "find_minmax_kernels.cuh"
+#include "jacobi_solve_kernels.cuh"
 
 #include "../../../trace.h"
 
+//-------------------------------------------------------------------------------
+// Compute y = alpha * x + y
+//-------------------------------------------------------------------------------
 void linalg::device_axpy_impl(int size, double alpha, const double* x, double* y)
 {
-    ROUTINE_TRACE("launch_cuda_axpy_kernel");
+    ROUTINE_TRACE("linalg::device_axpy_impl");
     axpy_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, y);
     CHECK_CUDA_LAUNCH_ERROR();
 }
@@ -52,7 +55,7 @@ void linalg::device_axpy_impl(int size, double alpha, const double* x, double* y
 //-------------------------------------------------------------------------------
 void linalg::device_axpby_impl(int size, double alpha, const double* x, double beta, double* y)
 {
-    ROUTINE_TRACE("launch_cuda_axpby_kernel");
+    ROUTINE_TRACE("linalg::device_axpby_impl");
     axpby_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y);
     CHECK_CUDA_LAUNCH_ERROR();
 }
@@ -63,7 +66,7 @@ void linalg::device_axpby_impl(int size, double alpha, const double* x, double b
 void linalg::device_axpbypgz_impl(
     int size, double alpha, const double* x, double beta, const double* y, double gamma, double* z)
 {
-    ROUTINE_TRACE("launch_cuda_axpbypgz_kernel");
+    ROUTINE_TRACE("linalg::device_axpbypgz_impl");
     axpbypgz_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y, gamma, z);
     CHECK_CUDA_LAUNCH_ERROR();
 }
@@ -77,7 +80,7 @@ void linalg::device_matrix_vector_product_impl(int m, int n, int nnz, const int*
                                           const double* x,
                                           double*       y)
 {
-    ROUTINE_TRACE("launch_cuda_csrmv_kernel");
+    ROUTINE_TRACE("linalg::device_matrix_vector_product_impl");
 
     csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
         m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
@@ -89,7 +92,7 @@ void linalg::device_matrix_vector_product_impl(int m, int n, int nnz, const int*
 //-------------------------------------------------------------------------------
 double linalg::device_dot_product_impl(const double* x, const double* y, int size)
 {
-    ROUTINE_TRACE("launch_cuda_dot_product_kernel");
+    ROUTINE_TRACE("linalg::device_dot_product_impl");
     double* workspace = nullptr;
     CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(double) * 256));
 
@@ -119,7 +122,7 @@ void linalg::device_compute_residual_impl(int           m,
                                      const double* b,
                                      double*       res)
 {
-    ROUTINE_TRACE("launch_cuda_compute_residual_kernel");
+    ROUTINE_TRACE("linalg::device_compute_residual_impl");
     compute_residual_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
         m, n, nnz, csr_row_ptr, csr_col_ind, csr_val, x, b, res);
     CHECK_CUDA_LAUNCH_ERROR();
@@ -128,7 +131,7 @@ void linalg::device_compute_residual_impl(int           m,
 //-------------------------------------------------------------------------------
 // exclusive scan
 //-------------------------------------------------------------------------------
-void linalg::device_exclusive_scan_impl(double* x, int n) {}
+void linalg::device_exclusive_scan_impl(int64_t* x, int n) {}
 
 //-------------------------------------------------------------------------------
 // diagonal d = diag(A)
@@ -141,7 +144,7 @@ void linalg::device_extract_diagonal_impl(int           m,
                                      const double* csr_val,
                                      double*       d)
 {
-    ROUTINE_TRACE("launch_cuda_extract_diagonal_kernel");
+    ROUTINE_TRACE("linalg::device_extract_diagonal_impl");
     extract_diagonal_kernel<256, 4>
         <<<((m - 1) / (256 / 4) + 1), 256>>>(m, n, nnz, csr_row_ptr, csr_col_ind, csr_val, d);
     CHECK_CUDA_LAUNCH_ERROR();
@@ -152,7 +155,7 @@ void linalg::device_extract_diagonal_impl(int           m,
 //-------------------------------------------------------------------------------
 double linalg::device_norm_inf_impl(const double* array, int size)
 {
-    ROUTINE_TRACE("launch_cuda_norm_inf_kernel");
+    ROUTINE_TRACE("linalg::device_norm_inf_impl");
     double* workspace = nullptr;
     CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(double) * 256));
 
@@ -174,7 +177,7 @@ double linalg::device_norm_inf_impl(const double* array, int size)
 //-------------------------------------------------------------------------------
 void linalg::device_jacobi_solve_impl(const double* rhs, const double* diag, double* x, size_t size)
 {
-    ROUTINE_TRACE("launch_cuda_jacobi_solve_kernel");
+    ROUTINE_TRACE("linalg::device_jacobi_solve_impl");
     jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
     CHECK_CUDA_LAUNCH_ERROR();
 }
@@ -193,7 +196,7 @@ void linalg::device_csrmv_impl(int           m,
                           double        beta,
                           double*       y)
 {
-    ROUTINE_TRACE("launch_cuda_csrmv_kernel");
+    ROUTINE_TRACE("linalg::device_csrmv_impl");
 
     csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
         m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);

@@ -166,7 +166,7 @@ void linalg::device_compute_residual(const csr_matrix&     A,
 }
 
 // Exclusive scan
-void linalg::device_exclusive_scan(vector<double>& x)
+void linalg::device_exclusive_scan(vector<int64_t>& x)
 {
     std::cout << "Error: exclusive_scan on device not implemented" << std::endl;
 }

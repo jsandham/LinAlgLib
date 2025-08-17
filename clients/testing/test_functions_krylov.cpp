@@ -91,6 +91,11 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     norm = norm_inf(vec_1);
     std::cout << "norm: " << norm << std::endl;
 
+    // vec_1.move_to_host();
+    // result = dot_product(vec_1, vec_2);
+
+    // std::cout << "AAAA result: " << result << std::endl;
+
     csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 

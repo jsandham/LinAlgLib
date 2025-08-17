@@ -52,9 +52,13 @@ set(LINALGLIB_HEADERS_PUBLIC
 
 set(LINALGLIB_SOURCE
   src/linalg_math.cpp
+  src/backend/host/host_amg_aggregation.cpp
+  src/backend/host/host_amg_strength.cpp
   src/backend/host/host_math.cpp
   src/backend/host/host_vector.cpp
   src/backend/host/host_memory.cpp
+  src/backend/device/device_amg_aggregation.cpp
+  src/backend/device/device_amg_strength.cpp
   src/backend/device/device_math.cpp
   src/backend/device/device_vector.cpp
   src/eigen_value_solvers/power_iteration.cpp
@@ -83,6 +87,8 @@ set(LINALGLIB_SOURCE
 )
 
 set(LINALGLIB_CUDA_SOURCE 
+  src/backend/device/cuda/device_amg_aggregation_cuda_impl.cu
+  src/backend/device/cuda/device_amg_strength_cuda_impl.cu
   src/backend/device/cuda/device_math_cuda_impl.cu
   src/backend/device/cuda/device_memory_cuda_impl.cu
   src/backend/device/cuda/cuda_kernels.cu)

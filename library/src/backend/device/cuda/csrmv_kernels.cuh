@@ -27,7 +27,7 @@
 #ifndef CSRMV_KERNELS_H
 #define CSRMV_KERNELS_H
 
-#include "common.h"
+#include "common.cuh"
 
 template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
 __global__ void csrmv_vector_kernel(int     m,

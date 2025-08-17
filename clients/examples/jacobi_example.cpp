@@ -29,10 +29,11 @@
 
 #include "linalg.h"
 
-#define RETURN_IF_NOT_ON_HOST(data)  \
-    if(data.is_on_host())          \
-    {                               \
-        std::cout << "Error: Inputs when using host backend must be on the host. " << #data << std::endl; \
+#define RETURN_IF_NOT_ON_HOST(data)                                                         \
+    if(data.is_on_host())                                                                   \
+    {                                                                                       \
+        std::cout << "Error: Inputs when using host backend must be on the host. " << #data \
+                  << std::endl;                                                             \
     }
 
 void func(const linalg::vector<double>& x, linalg::vector<double>& y)
@@ -43,8 +44,8 @@ void func(const linalg::vector<double>& x, linalg::vector<double>& y)
 
 int main()
 {
-    int m = 5;
-    int n = 5;
+    int m   = 5;
+    int n   = 5;
     int nnz = 15;
 
     //  4 -1  0  0 -1
@@ -52,9 +53,10 @@ int main()
     //  0 -1  4 -1  0
     //  0  0 -1  4 -1
     // -1  0  0 -1  4
-    std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
-    std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
-    std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
+    std::vector<int>    csr_row_ptr = {0, 3, 6, 9, 12, 15};
+    std::vector<int>    csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
+    std::vector<double> csr_val
+        = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
 
     linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
@@ -66,7 +68,6 @@ int main()
     linalg::vector<double> b(A.get_m());
     b.ones();
 
-
     func(x, b);
 
     linalg::jacobi_solver jacobi;
@@ -74,8 +75,8 @@ int main()
 
     linalg::iter_control control;
     control.max_iter = 1000;
-    control.rel_tol = 1e-08;
-    control.abs_tol = 1e-08;
+    control.rel_tol  = 1e-08;
+    control.abs_tol  = 1e-08;
 
     int iter = jacobi.solve(A, x, b, control);
 
@@ -83,7 +84,7 @@ int main()
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (int i = 0; i < x.get_size(); i++)
+    for(int i = 0; i < x.get_size(); i++)
     {
         std::cout << x[i] << " ";
     }

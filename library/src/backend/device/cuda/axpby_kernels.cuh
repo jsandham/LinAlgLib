@@ -23,61 +23,54 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef DOT_PRODUCT_KERNELS_H
-#define DOT_PRODUCT_KERNELS_H
 
-#include "common.h"
+#ifndef AXPBY_KERNELS_H
+#define AXPBY_KERNELS_H
+
+#include "common.cuh"
 
 template <uint32_t BLOCKSIZE, typename T>
-__global__ void dot_product_kernel_part1(int size,
-                                         const T* __restrict__ x,
-                                         const T* __restrict__ y,
-                                         T* __restrict__ workspace)
+__global__ void axpy_kernel(int size, T alpha, const T* __restrict__ x, T* __restrict__ y)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;
     int gid = tid + BLOCKSIZE * bid;
 
-    __shared__ T shared[BLOCKSIZE];
-
-    T val = static_cast<T>(0);
-
-    int index = gid;
-    while(index < size)
+    if(gid < size)
     {
-        val += x[index] * y[index];
-
-        index += BLOCKSIZE * gridDim.x;
-    }
-
-    shared[tid] = val;
-
-    __syncthreads();
-
-    block_reduction_sum<BLOCKSIZE>(shared, tid);
-
-    if(tid == 0)
-    {
-        workspace[bid] = shared[0];
+        y[gid] = y[gid] + alpha * x[gid];
     }
 }
 
 template <uint32_t BLOCKSIZE, typename T>
-__global__ void dot_product_kernel_part2(T* __restrict__ workspace)
+__global__ void axpby_kernel(int size, T alpha, const T* __restrict__ x, T beta, T* __restrict__ y)
 {
     int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
 
-    __shared__ T shared[BLOCKSIZE];
-
-    shared[tid] = workspace[tid];
-
-    __syncthreads();
-
-    block_reduction_sum<BLOCKSIZE>(shared, tid);
-
-    if(tid == 0)
+    if(gid < size)
     {
-        workspace[0] = shared[0];
+        y[gid] = alpha * x[gid] + beta * y[gid];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void axpbypgz_kernel(int size,
+                                T   alpha,
+                                const T* __restrict__ x,
+                                T beta,
+                                const T* __restrict__ y,
+                                T gamma,
+                                T* __restrict__ z)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    if(gid < size)
+    {
+        z[gid] = alpha * x[gid] + beta * y[gid] + gamma * z[gid];
     }
 }
 

@@ -53,7 +53,7 @@ namespace linalg
                                         const double* x,
                                         const double* b,
                                         double*       res);
-    void   device_exclusive_scan_impl(double* x, int n);
+    void   device_exclusive_scan_impl(int64_t* x, int n);
     void   device_extract_diagonal_impl(int           m,
                                         int           n,
                                         int           nnz,

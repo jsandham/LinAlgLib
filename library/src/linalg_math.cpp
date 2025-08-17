@@ -39,24 +39,7 @@ void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
     ROUTINE_TRACE("linalg::axpy");
 
-    backend bend = determine_backend(x, y);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::axpy must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        return host_axpy(alpha, x, y);
-    }
-    else
-    {
-        return device_axpy(alpha, x, y);
-    }
+    backend_dispatch("linalg::axpy", host_axpy, device_axpy, alpha, x, y);
 }
 
 // Compute y = alpha * x + beta * y
@@ -64,24 +47,7 @@ void linalg::axpby(double alpha, const vector<double>& x, double beta, vector<do
 {
     ROUTINE_TRACE("linalg::axpby");
 
-    backend bend = determine_backend(x, y);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::axpby must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        return host_axpby(alpha, x, beta, y);
-    }
-    else
-    {
-        return device_axpby(alpha, x, beta, y);
-    }
+    backend_dispatch("linalg::axpby", host_axpby, device_axpby, alpha, x, beta, y);
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
@@ -94,24 +60,8 @@ void linalg::axpbypgz(double                alpha,
 {
     ROUTINE_TRACE("linalg::axpbypgz");
 
-    backend bend = determine_backend(x, y, z);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::axpbypgz must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        return host_axpbypgz(alpha, x, beta, y, gamma, z);
-    }
-    else
-    {
-        return device_axpbypgz(alpha, x, beta, y, gamma, z);
-    }
+    backend_dispatch(
+        "linalg::axpbypgz", host_axpbypgz, device_axpbypgz, alpha, x, beta, y, gamma, z);
 }
 
 // Compute y = A * x
@@ -119,24 +69,14 @@ void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x,
 {
     ROUTINE_TRACE("linalg::matrix_vector_product");
 
-    backend bend = determine_backend(A, x, y);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::matrix_vector_product must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
+    auto host_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
         return host_matrix_vector_product(A, x, y);
-    }
-    else
-    {
+    };
+    auto device_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
         return device_matrix_vector_product(A, x, y);
-    }
+    };
+
+    backend_dispatch("linalg::matrix_vector_product", host_function, device_function, A, x, y);
 }
 
 // Compute y = alpha * A * x + beta * y
@@ -145,24 +85,21 @@ void linalg::matrix_vector_product(
 {
     ROUTINE_TRACE("linalg::matrix_vector_product");
 
-    backend bend = determine_backend(A, x, y);
+    auto host_function
+        = [](double                alpha,
+             const csr_matrix&     A,
+             const vector<double>& x,
+             double                beta,
+             vector<double>&       y) { return host_matrix_vector_product(alpha, A, x, beta, y); };
+    auto device_function
+        = [](double                alpha,
+             const csr_matrix&     A,
+             const vector<double>& x,
+             double                beta,
+             vector<double>& y) { return device_matrix_vector_product(alpha, A, x, beta, y); };
 
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::matrix_vector_product must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_matrix_vector_product(alpha, A, x, beta, y);
-    }
-    else
-    {
-        return device_matrix_vector_product(alpha, A, x, beta, y);
-    }
+    backend_dispatch(
+        "linalg::matrix_vector_product", host_function, device_function, alpha, A, x, beta, y);
 }
 
 // Compute C = A * B
@@ -170,24 +107,12 @@ void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr
 {
     ROUTINE_TRACE("linalg::matrix_matrix_product");
 
-    backend bend = determine_backend(C, A, B);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::matrix_matrix_product must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(C.is_on_host())
-    {
-        return host_matrix_matrix_product(C, A, B);
-    }
-    else
-    {
-        return device_matrix_matrix_product(C, A, B);
-    }
+    backend_dispatch("linalg::matrix_matrix_product",
+                     host_matrix_matrix_product,
+                     device_matrix_matrix_product,
+                     C,
+                     A,
+                     B);
 }
 
 // Compute C = A + B
@@ -195,24 +120,12 @@ void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const cs
 {
     ROUTINE_TRACE("linalg::matrix_matrix_addition");
 
-    backend bend = determine_backend(C, A, B);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::matrix_matrix_addition must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(C.is_on_host())
-    {
-        return host_matrix_matrix_addition(C, A, B);
-    }
-    else
-    {
-        return device_matrix_matrix_addition(C, A, B);
-    }
+    backend_dispatch("linalg::matrix_matrix_addition",
+                     host_matrix_matrix_addition,
+                     device_matrix_matrix_addition,
+                     C,
+                     A,
+                     B);
 }
 
 // Incomplete IC factorization
@@ -220,24 +133,8 @@ void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
     ROUTINE_TRACE("linalg::csric0");
 
-    backend bend = determine_backend(LL);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::csric0 must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(LL.is_on_host())
-    {
-        return host_csric0(LL, structural_zero, numeric_zero);
-    }
-    else
-    {
-        return device_csric0(LL, structural_zero, numeric_zero);
-    }
+    backend_dispatch(
+        "linalg::csric0", host_csric0, device_csric0, LL, structural_zero, numeric_zero);
 }
 
 // Incomplete LU factorization
@@ -245,24 +142,8 @@ void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 {
     ROUTINE_TRACE("linalg::csrilu0");
 
-    backend bend = determine_backend(LU);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::csrilu0 must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(LU.is_on_host())
-    {
-        return host_csrilu0(LU, structural_zero, numeric_zero);
-    }
-    else
-    {
-        return device_csrilu0(LU, structural_zero, numeric_zero);
-    }
+    backend_dispatch(
+        "linalg::csrilu0", host_csrilu0, device_csrilu0, LU, structural_zero, numeric_zero);
 }
 
 // Forward solve
@@ -273,24 +154,8 @@ void linalg::forward_solve(const csr_matrix&     A,
 {
     ROUTINE_TRACE("linalg::forward_solve");
 
-    backend bend = determine_backend(A, b, x);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::forward_solve must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_forward_solve(A, b, x, unit_diag);
-    }
-    else
-    {
-        return device_forward_solve(A, b, x, unit_diag);
-    }
+    backend_dispatch(
+        "linalg::forward_solve", host_forward_solve, device_forward_solve, A, b, x, unit_diag);
 }
 
 // Backward solve
@@ -301,24 +166,8 @@ void linalg::backward_solve(const csr_matrix&     A,
 {
     ROUTINE_TRACE("linalg::backward_solve");
 
-    backend bend = determine_backend(A, b, x);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::backward_solve must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_backward_solve(A, b, x, unit_diag);
-    }
-    else
-    {
-        return device_backward_solve(A, b, x, unit_diag);
-    }
+    backend_dispatch(
+        "linalg::backward_solve", host_backward_solve, device_backward_solve, A, b, x, unit_diag);
 }
 
 // Transpose matrix
@@ -326,24 +175,8 @@ void linalg::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 {
     ROUTINE_TRACE("linalg::transpose_matrix");
 
-    backend bend = determine_backend(A, transposeA);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::transpose_matrix must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_transpose_matrix(A, transposeA);
-    }
-    else
-    {
-        return device_transpose_matrix(A, transposeA);
-    }
+    backend_dispatch(
+        "linalg::transpose_matrix", host_transpose_matrix, device_transpose_matrix, A, transposeA);
 }
 
 // Dot product
@@ -351,24 +184,7 @@ double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 {
     ROUTINE_TRACE("linalg::dot_product");
 
-    backend bend = determine_backend(x, y);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::dot_product must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return 0.0;
-    }
-
-    if(x.is_on_host())
-    {
-        return host_dot_product(x, y);
-    }
-    else
-    {
-        return device_dot_product(x, y);
-    }
+    return backend_dispatch("linalg::dot_product", host_dot_product, device_dot_product, x, y);
 }
 
 // Compute residual
@@ -379,49 +195,16 @@ void linalg::compute_residual(const csr_matrix&     A,
 {
     ROUTINE_TRACE("linalg::compute_residual");
 
-    backend bend = determine_backend(A, x, b, res);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::compute_residual must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_compute_residual(A, x, b, res);
-    }
-    else
-    {
-        return device_compute_residual(A, x, b, res);
-    }
+    backend_dispatch(
+        "linalg::compute_residual", host_compute_residual, device_compute_residual, A, x, b, res);
 }
 
 // Exclusive scan
-void linalg::exclusive_scan(vector<double>& x)
+void linalg::exclusive_scan(vector<int64_t>& x)
 {
     ROUTINE_TRACE("linalg::exclusive_scan");
 
-    backend bend = determine_backend(x);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::exclusive_scan must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(x.is_on_host())
-    {
-        return host_exclusive_scan(x);
-    }
-    else
-    {
-        return device_exclusive_scan(x);
-    }
+    backend_dispatch("linalg::exclusive_scan", host_exclusive_scan, device_exclusive_scan, x);
 }
 
 // Extract diagonal entries
@@ -429,24 +212,7 @@ void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 {
     ROUTINE_TRACE("linalg::diagonal");
 
-    backend bend = determine_backend(A, d);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::diagonal must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(A.is_on_host())
-    {
-        return host_diagonal(A, d);
-    }
-    else
-    {
-        return device_diagonal(A, d);
-    }
+    backend_dispatch("linalg::diagonal", host_diagonal, device_diagonal, A, d);
 }
 
 // Euclidean norm
@@ -454,24 +220,7 @@ double linalg::norm_euclid(const vector<double>& array)
 {
     ROUTINE_TRACE("linalg::norm_euclid");
 
-    backend bend = determine_backend(array);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::norm_euclid must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return 0.0;
-    }
-
-    if(array.is_on_host())
-    {
-        return host_norm_euclid(array);
-    }
-    else
-    {
-        return device_norm_euclid(array);
-    }
+    return backend_dispatch("linalg::norm_euclid", host_norm_euclid, device_norm_euclid, array);
 }
 
 // Infinity norm
@@ -479,24 +228,7 @@ double linalg::norm_inf(const vector<double>& array)
 {
     ROUTINE_TRACE("linalg::norm_inf");
 
-    backend bend = determine_backend(array);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::norm_inf must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return 0.0;
-    }
-
-    if(array.is_on_host())
-    {
-        return host_norm_inf(array);
-    }
-    else
-    {
-        return device_norm_inf(array);
-    }
+    return backend_dispatch("linalg::norm_inf", host_norm_inf, device_norm_inf, array);
 }
 
 // Jacobi solve
@@ -504,22 +236,6 @@ void linalg::jacobi_solve(const vector<double>& rhs, const vector<double>& diag,
 {
     ROUTINE_TRACE("linalg::jacobi_solve");
 
-    backend bend = determine_backend(rhs, diag, x);
-
-    if(bend != backend::host && bend != backend::device)
-    {
-        std::cout << "Error: parameters to linalg::jacobi_solve must all be on host or "
-                     "all be on device"
-                  << std::endl;
-        return;
-    }
-
-    if(rhs.is_on_host())
-    {
-        return host_jacobi_solve(rhs, diag, x);
-    }
-    else
-    {
-        return device_jacobi_solve(rhs, diag, x);
-    }
+    return backend_dispatch(
+        "linalg::jacobi_solve", host_jacobi_solve, device_jacobi_solve, rhs, diag, x);
 }

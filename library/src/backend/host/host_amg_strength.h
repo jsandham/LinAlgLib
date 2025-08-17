@@ -24,44 +24,20 @@
 //
 //********************************************************************************
 
-#ifndef EXTRACT_DIAGONAL_KERNELS_H
-#define EXTRACT_DIAGONAL_KERNELS_H
+#ifndef HOST_AMG_STRENGTH_H
+#define HOST_AMG_STRENGTH_H
 
-#include "common.h"
+#include "csr_matrix.h"
+#include "vector.h"
 
-template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
-__global__ void extract_diagonal_kernel(int m,
-                                               int n,
-                                               int nnz,
-                                               const int* __restrict__ csr_row_ptr,
-                                               const int* __restrict__ csr_col_ind,
-                                               const T* __restrict__ csr_val,
-                                               T* __restrict__ diag)
+namespace linalg
 {
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int gid = tid + BLOCKSIZE * bid;
+    void host_compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections);
 
-    int lid = tid & WARPSIZE - 1;
-    //int wid = tid / WARPSIZE;
-
-    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
-    {
-        int row_start = csr_row_ptr[row];
-        int row_end   = csr_row_ptr[row + 1];
-
-        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
-        {
-            int col = csr_col_ind[j];
-            T   val = csr_val[j];
-
-            if(col == row)
-            {
-                diag[row] = val;
-                break;
-            }
-        }
-    }
+    void host_compute_classical_strong_connections(const csr_matrix& A,
+                                                   double            theta,
+                                                   csr_matrix&       S,
+                                                   vector<int>&      connections);
 }
 
 #endif

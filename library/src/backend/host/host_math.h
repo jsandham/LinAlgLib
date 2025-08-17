@@ -94,7 +94,7 @@ namespace linalg
                                vector<double>&       res);
 
     // Exclusive scan
-    void host_exclusive_scan(vector<double>& x);
+    void host_exclusive_scan(vector<int64_t>& x);
 
     // Extract diagonal entries
     void host_diagonal(const csr_matrix& A, vector<double>& d);

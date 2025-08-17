@@ -24,53 +24,43 @@
 //
 //********************************************************************************
 
-#ifndef AXPBY_KERNELS_H
-#define AXPBY_KERNELS_H
+#ifndef EXTRACT_DIAGONAL_KERNELS_H
+#define EXTRACT_DIAGONAL_KERNELS_H
 
-#include "common.h"
+#include "common.cuh"
 
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void axpy_kernel(int size, T alpha, const T* __restrict__ x, T* __restrict__ y)
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
+__global__ void extract_diagonal_kernel(int m,
+                                               int n,
+                                               int nnz,
+                                               const int* __restrict__ csr_row_ptr,
+                                               const int* __restrict__ csr_col_ind,
+                                               const T* __restrict__ csr_val,
+                                               T* __restrict__ diag)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;
     int gid = tid + BLOCKSIZE * bid;
 
-    if(gid < size)
+    int lid = tid & WARPSIZE - 1;
+    //int wid = tid / WARPSIZE;
+
+    for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
     {
-        y[gid] = y[gid] + alpha * x[gid];
-    }
-}
+        int row_start = csr_row_ptr[row];
+        int row_end   = csr_row_ptr[row + 1];
 
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void axpby_kernel(int size, T alpha, const T* __restrict__ x, T beta, T* __restrict__ y)
-{
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int gid = tid + BLOCKSIZE * bid;
+        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
+        {
+            int col = csr_col_ind[j];
+            T   val = csr_val[j];
 
-    if(gid < size)
-    {
-        y[gid] = alpha * x[gid] + beta * y[gid];
-    }
-}
-
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void axpbypgz_kernel(int size,
-                                T   alpha,
-                                const T* __restrict__ x,
-                                T beta,
-                                const T* __restrict__ y,
-                                T gamma,
-                                T* __restrict__ z)
-{
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int gid = tid + BLOCKSIZE * bid;
-
-    if(gid < size)
-    {
-        z[gid] = alpha * x[gid] + beta * y[gid] + gamma * z[gid];
+            if(col == row)
+            {
+                diag[row] = val;
+                break;
+            }
+        }
     }
 }
 

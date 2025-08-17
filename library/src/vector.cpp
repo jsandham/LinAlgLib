@@ -244,6 +244,25 @@ void vector<T>::move_to_host()
     copy_d2h(this->hvec->get_data(), this->dvec->get_data(), this->dvec->get_size());
 }
 
+template <typename T>
+void vector<T>::print_vector(const std::string name) const
+{
+    ROUTINE_TRACE("vector::print_vector");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to print to console" << std::endl;
+        return;
+    }
+
+    std::cout << name << std::endl;
+    for(int i = 0; i < this->get_size(); i++)
+    {
+        std::cout << (*this->vec)[i] << " ";
+    }
+    std::cout << "" << std::endl;
+}
+
 template class linalg::vector<uint32_t>;
 template class linalg::vector<int32_t>;
 template class linalg::vector<int64_t>;

@@ -27,6 +27,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <string>
 #include <vector>
 
 #include "../src/backend/backend_vector.h"
@@ -174,6 +175,8 @@ namespace linalg
      * and `on_host` is false. After this call, `is_on_host()` will return `true`.
      */
         void move_to_host();
+
+        void print_vector(const std::string name) const;
     };
 
 }
