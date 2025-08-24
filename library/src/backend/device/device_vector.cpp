@@ -24,8 +24,10 @@
 //
 //********************************************************************************
 
-#include "device_vector.h"
+#include <cstdint>
+
 #include "device_memory.h"
+#include "device_vector.h"
 
 using namespace linalg;
 

@@ -36,6 +36,7 @@
 #include "backend/host/host_vector.h"
 
 #include <assert.h>
+#include <cstdint>
 
 using namespace linalg;
 

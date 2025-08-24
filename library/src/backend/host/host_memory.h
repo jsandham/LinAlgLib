@@ -27,6 +27,8 @@
 #ifndef HOST_MEMORY_H
 #define HOST_MEMORY_H
 
+#include <cstddef>
+
 namespace linalg
 {
     template <typename T>

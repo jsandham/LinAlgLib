@@ -27,6 +27,8 @@
 #ifndef HOST_AMG_AGGREGATION_H
 #define HOST_AMG_AGGREGATION_H
 
+#include <cstdint>
+
 #include "csr_matrix.h"
 #include "vector.h"
 

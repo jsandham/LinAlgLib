@@ -27,6 +27,8 @@
 #ifndef DEVICE_MEMORY_H
 #define DEVICE_MEMORY_H
 
+#include <cstddef>
+
 namespace linalg
 {
     template <typename T>

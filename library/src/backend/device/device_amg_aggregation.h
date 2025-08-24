@@ -27,6 +27,7 @@
 #ifndef DEVICE_AMG_AGGREGATION_H
 #define DEVICE_AMG_AGGREGATION_H
 
+#include <cstdint>
 #include <string>
 
 #include "csr_matrix.h"
