@@ -24,6 +24,7 @@
 //
 //********************************************************************************
 #include "device_memory.h"
+#include <cstdint>
 #include <iostream>
 
 #include "../../trace.h"

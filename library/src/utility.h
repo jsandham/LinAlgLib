@@ -27,6 +27,7 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <iostream>
 #include <string>
 #include <type_traits> // For std::false_type and std::true_type
 #include <utility> // For std::declval and std::void_t
