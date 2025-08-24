@@ -27,22 +27,47 @@
 #include "device_memory.h"
 #include <iostream>
 
-#include "device_math_impl.h"
-
 #include "../../trace.h"
+#include "../../utility.h"
+
+#if defined(LINALGLIB_HAS_CUDA)
+#include "cuda/cuda_math.h"
+#endif
 
 // Compute y = alpha * x + y
 void linalg::device_axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
     ROUTINE_TRACE("linalg::device_axpy");
-    device_axpy_impl(x.get_size(), alpha, x.get_vec(), y.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_axpy(x.get_size(), alpha, x.get_vec(), y.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    //device_axpy_impl(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 // Compute y = alpha * x + beta * y
 void linalg::device_axpby(double alpha, const vector<double>& x, double beta, vector<double>& y)
 {
     ROUTINE_TRACE("linalg::device_axpby");
-    device_axpby_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_axpby(x.get_size(), alpha, x.get_vec(), beta, y.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+    //device_axpby_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
@@ -54,7 +79,19 @@ void linalg::device_axpbypgz(double                alpha,
                              vector<double>&       z)
 {
     ROUTINE_TRACE("linalg::device_axpbypgz");
-    device_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(
+            cuda_axpbypgz(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+    //device_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
 // Compute y = A * x
@@ -63,16 +100,36 @@ void linalg::device_matrix_vector_product(const csr_matrix&     A,
                                           vector<double>&       y)
 {
     ROUTINE_TRACE("linalg::device_multiply_by_vector");
-    device_csrmv_impl(A.get_m(),
-                      A.get_n(),
-                      A.get_nnz(),
-                      1.0,
-                      A.get_row_ptr(),
-                      A.get_col_ind(),
-                      A.get_val(),
-                      x.get_vec(),
-                      0.0,
-                      y.get_vec());
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_csrmv(A.get_m(),
+                             A.get_n(),
+                             A.get_nnz(),
+                             1.0,
+                             A.get_row_ptr(),
+                             A.get_col_ind(),
+                             A.get_val(),
+                             x.get_vec(),
+                             0.0,
+                             y.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_csrmv_impl(A.get_m(),
+    //                   A.get_n(),
+    //                   A.get_nnz(),
+    //                   1.0,
+    //                   A.get_row_ptr(),
+    //                   A.get_col_ind(),
+    //                   A.get_val(),
+    //                   x.get_vec(),
+    //                   0.0,
+    //                   y.get_vec());
 }
 
 // Compute y = alpha * A * x + beta * y
@@ -80,16 +137,37 @@ void linalg::device_matrix_vector_product(
     double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
 {
     ROUTINE_TRACE("linalg::device_multiply_by_vector");
-    device_csrmv_impl(A.get_m(),
-                      A.get_n(),
-                      A.get_nnz(),
-                      alpha,
-                      A.get_row_ptr(),
-                      A.get_col_ind(),
-                      A.get_val(),
-                      x.get_vec(),
-                      beta,
-                      y.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_csrmv(A.get_m(),
+                             A.get_n(),
+                             A.get_nnz(),
+                             alpha,
+                             A.get_row_ptr(),
+                             A.get_col_ind(),
+                             A.get_val(),
+                             x.get_vec(),
+                             beta,
+                             y.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_csrmv_impl(A.get_m(),
+    //                   A.get_n(),
+    //                   A.get_nnz(),
+    //                   alpha,
+    //                   A.get_row_ptr(),
+    //                   A.get_col_ind(),
+    //                   A.get_val(),
+    //                   x.get_vec(),
+    //                   beta,
+    //                   y.get_vec());
 }
 
 // Compute C = A * B
@@ -144,7 +222,19 @@ void linalg::device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA
 double linalg::device_dot_product(const vector<double>& x, const vector<double>& y)
 {
     ROUTINE_TRACE("linalg::device_dot_product");
-    return device_dot_product_impl(x.get_vec(), y.get_vec(), x.get_size());
+
+    if constexpr(is_cuda_available())
+    {
+        return RETURN_CALL_CUDA(cuda_dot_product(x.get_vec(), y.get_vec(), x.get_size()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return 0.0;
+    }
+
+    //return device_dot_product_impl(x.get_vec(), y.get_vec(), x.get_size());
 }
 
 // Compute residual
@@ -154,15 +244,25 @@ void linalg::device_compute_residual(const csr_matrix&     A,
                                      vector<double>&       res)
 {
     ROUTINE_TRACE("linalg::device_compute_residual");
-    device_compute_residual_impl(A.get_m(),
-                                 A.get_n(),
-                                 A.get_nnz(),
-                                 A.get_row_ptr(),
-                                 A.get_col_ind(),
-                                 A.get_val(),
-                                 x.get_vec(),
-                                 b.get_vec(),
-                                 res.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_compute_residual(A.get_m(),
+                                        A.get_n(),
+                                        A.get_nnz(),
+                                        A.get_row_ptr(),
+                                        A.get_col_ind(),
+                                        A.get_val(),
+                                        x.get_vec(),
+                                        b.get_vec(),
+                                        res.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
 }
 
 // Exclusive scan
@@ -175,19 +275,38 @@ void linalg::device_exclusive_scan(vector<int64_t>& x)
 void linalg::device_diagonal(const csr_matrix& A, vector<double>& d)
 {
     ROUTINE_TRACE("linalg::device_diagonal");
-    device_extract_diagonal_impl(A.get_m(),
-                                 A.get_n(),
-                                 A.get_nnz(),
-                                 A.get_row_ptr(),
-                                 A.get_col_ind(),
-                                 A.get_val(),
-                                 d.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_extract_diagonal(A.get_m(),
+                                        A.get_n(),
+                                        A.get_nnz(),
+                                        A.get_row_ptr(),
+                                        A.get_col_ind(),
+                                        A.get_val(),
+                                        d.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_extract_diagonal_impl(A.get_m(),
+    //                              A.get_n(),
+    //                              A.get_nnz(),
+    //                              A.get_row_ptr(),
+    //                              A.get_col_ind(),
+    //                              A.get_val(),
+    //                              d.get_vec());
 }
 
 // Euclidean norm
 double linalg::device_norm_euclid(const vector<double>& array)
 {
     ROUTINE_TRACE("linalg::device_norm_euclid");
+
     return std::sqrt(device_dot_product(array, array));
 }
 
@@ -195,7 +314,18 @@ double linalg::device_norm_euclid(const vector<double>& array)
 double linalg::device_norm_inf(const vector<double>& array)
 {
     ROUTINE_TRACE("linalg::device_norm_inf");
-    return device_norm_inf_impl(array.get_vec(), array.get_size());
+
+    if constexpr(is_cuda_available())
+    {
+        return RETURN_CALL_CUDA(cuda_norm_inf(array.get_vec(), array.get_size()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return 0.0;
+    }
+    // return device_norm_inf_impl(array.get_vec(), array.get_size());
 }
 
 // Jacobi solve
@@ -204,5 +334,15 @@ void linalg::device_jacobi_solve(const vector<double>& rhs,
                                  vector<double>&       x)
 {
     ROUTINE_TRACE("linalg::device_jacobi_solve");
-    device_jacobi_solve_impl(rhs.get_vec(), diag.get_vec(), x.get_vec(), rhs.get_size());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_jacobi_solve(rhs.get_vec(), diag.get_vec(), x.get_vec(), rhs.get_size()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
 }

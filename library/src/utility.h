@@ -40,6 +40,27 @@ inline constexpr bool is_device_available()
 #endif
 }
 
+inline constexpr bool is_cuda_available()
+{
+#ifdef LINALGLIB_HAS_CUDA
+    return true;
+#else
+    return false;
+#endif
+}
+
+#ifdef LINALGLIB_HAS_CUDA
+#define CALL_CUDA(func) func
+#else
+#define CALL_CUDA(func)
+#endif
+
+#ifdef LINALGLIB_HAS_CUDA
+#define RETURN_CALL_CUDA(func) func
+#else
+#define RETURN_CALL_CUDA(func) 0;
+#endif
+
 enum class backend
 {
     host,

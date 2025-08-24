@@ -24,9 +24,14 @@
 //
 //********************************************************************************
 #include "device_amg_strength.h"
-#include "device_amg_strength_impl.h"
+#include <iostream>
 
 #include "../../trace.h"
+#include "../../utility.h"
+
+#if defined(LINALGLIB_HAS_CUDA)
+#include "cuda/cuda_amg_strength.h"
+#endif
 
 void linalg::device_compute_strong_connections(const csr_matrix& A,
                                                double            eps,
@@ -34,18 +39,40 @@ void linalg::device_compute_strong_connections(const csr_matrix& A,
 {
     ROUTINE_TRACE("linalg::device_compute_strong_connections");
 
-    // Extract diagaonl
-    //vector<double> diag(A.get_m());
-    //A.extract_diagonal(diag);
+    if constexpr(is_cuda_available())
+    {
+        // Extract diagaonl
+        //vector<double> diag(A.get_m());
+        //A.extract_diagonal(diag);
 
-    device_compute_strong_connections_impl(A.get_m(),
-                                           A.get_n(),
-                                           A.get_nnz(),
-                                           A.get_row_ptr(),
-                                           A.get_col_ind(),
-                                           A.get_val(),
-                                           eps,
-                                           connections.get_vec());
+        CALL_CUDA(cuda_compute_strong_connections(A.get_m(),
+                                                  A.get_n(),
+                                                  A.get_nnz(),
+                                                  A.get_row_ptr(),
+                                                  A.get_col_ind(),
+                                                  A.get_val(),
+                                                  eps,
+                                                  connections.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // // Extract diagaonl
+    // //vector<double> diag(A.get_m());
+    // //A.extract_diagonal(diag);
+
+    // device_compute_strong_connections_impl(A.get_m(),
+    //                                        A.get_n(),
+    //                                        A.get_nnz(),
+    //                                        A.get_row_ptr(),
+    //                                        A.get_col_ind(),
+    //                                        A.get_val(),
+    //                                        eps,
+    //                                        connections.get_vec());
 }
 
 void linalg::device_compute_classical_strong_connections(const csr_matrix& A,
@@ -54,15 +81,37 @@ void linalg::device_compute_classical_strong_connections(const csr_matrix& A,
                                                          vector<int>&      connections)
 {
     ROUTINE_TRACE("linalg::device_compute_classical_strong_connections");
-    device_compute_classical_strong_connections_impl(A.get_m(),
-                                                     A.get_n(),
-                                                     A.get_nnz(),
-                                                     A.get_row_ptr(),
-                                                     A.get_col_ind(),
-                                                     A.get_val(),
-                                                     theta,
-                                                     S.get_row_ptr(),
-                                                     S.get_col_ind(),
-                                                     S.get_val(),
-                                                     connections.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_compute_classical_strong_connections(A.get_m(),
+                                                            A.get_n(),
+                                                            A.get_nnz(),
+                                                            A.get_row_ptr(),
+                                                            A.get_col_ind(),
+                                                            A.get_val(),
+                                                            theta,
+                                                            S.get_row_ptr(),
+                                                            S.get_col_ind(),
+                                                            S.get_val(),
+                                                            connections.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_compute_classical_strong_connections_impl(A.get_m(),
+    //                                                  A.get_n(),
+    //                                                  A.get_nnz(),
+    //                                                  A.get_row_ptr(),
+    //                                                  A.get_col_ind(),
+    //                                                  A.get_val(),
+    //                                                  theta,
+    //                                                  S.get_row_ptr(),
+    //                                                  S.get_col_ind(),
+    //                                                  S.get_val(),
+    //                                                  connections.get_vec());
 }

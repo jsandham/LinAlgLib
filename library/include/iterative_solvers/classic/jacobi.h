@@ -31,8 +31,9 @@
 
 #include "../iter_control.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
+
 
 /*! \file
  *  \brief jacobi.h provides interface for jacobi solver
@@ -40,7 +41,7 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Jacobi iterative method.
+    /*! \brief A solver class implementing the Jacobi iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form
@@ -156,50 +157,50 @@ namespace linalg
  * }
  * \endcode
  */
-class jacobi_solver
-{
-private:
-    /*! \brief Internal vector to store the residual during the solve process. */
-    vector<double> res;
-    /*! \brief Internal vector to store the solution from the previous iteration.
+    class jacobi_solver
+    {
+    private:
+        /*! \brief Internal vector to store the residual during the solve process. */
+        vector<double> res;
+        /*! \brief Internal vector to store the solution from the previous iteration.
      * \details This is crucial for the Jacobi method, as it uses values from the
      * entirely previous iteration to compute the current one.
      */
-    vector<double> xold;
+        vector<double> xold;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `jacobi_solver` object.
      */
-    jacobi_solver();
+        jacobi_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `jacobi_solver` object.
      */
-    ~jacobi_solver();
+        ~jacobi_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `jacobi_solver` objects to avoid shallow copies and
      * ensure proper memory management.
      */
-    jacobi_solver (const jacobi_solver&) = delete;
+        jacobi_solver(const jacobi_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `jacobi_solver` object to another to avoid shallow copies
      * and ensure proper memory management.
      */
-    jacobi_solver& operator= (const jacobi_solver&) = delete;
+        jacobi_solver& operator=(const jacobi_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the Jacobi solver.
+        /*! \brief Builds necessary data structures for the Jacobi solver.
      * \details
      * This method typically involves pre-processing the input matrix `A` to
      * extract or compute values needed for the Jacobi iterations, such as
      * the inverse of the diagonal elements.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Jacobi method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Jacobi method.
      *
      * This method iteratively updates the solution vector `x` until the convergence
      * criteria specified by `control` are met or the maximum number of iterations
@@ -215,8 +216,11 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., singular diagonal element).
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  iter_control          control);
+    };
 }
 
 #endif

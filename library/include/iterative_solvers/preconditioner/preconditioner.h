@@ -73,6 +73,8 @@ namespace linalg
 
         virtual void move_to_device() = 0;
         virtual void move_to_host()   = 0;
+
+        virtual bool is_on_host() const = 0;
     };
 
     /*! \ingroup iterative_solvers
@@ -89,6 +91,9 @@ namespace linalg
     private:
         /*! \brief Stores the inverse of the diagonal elements of the matrix. */
         vector<double> diag;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `jacobi_precond` object. */
@@ -117,6 +122,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 
     /*! \ingroup iterative_solvers
@@ -136,6 +143,9 @@ namespace linalg
      * lower triangular part of the original matrix during the solve phase.
      */
         csr_matrix A;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `gauss_seidel_precond` object. */
@@ -165,6 +175,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 
     /*! \ingroup iterative_solvers
@@ -185,6 +197,9 @@ namespace linalg
         double omega;
         /*! \brief Stores the diagonal elements of the matrix A, often used in the SOR solve process. */
         vector<double> diag;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `SOR_precond` object with a specified relaxation parameter.
@@ -215,6 +230,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 
     /*! \ingroup iterative_solvers
@@ -232,6 +249,9 @@ namespace linalg
         csr_matrix A;
         /*! \brief Stores the diagonal elements of the matrix A, used in the SGS solve process. */
         vector<double> diag;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `symmetric_gauss_seidel_precond` object. */
@@ -260,6 +280,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 
     /*! \ingroup iterative_solvers
@@ -282,6 +304,9 @@ namespace linalg
      * potentially in a merged format.
      */
         csr_matrix LU;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `ilu_precond` object. */
@@ -311,6 +336,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 
     /*! \ingroup iterative_solvers
@@ -332,6 +359,9 @@ namespace linalg
      * will store the lower triangular factor L.
      */
         csr_matrix LLT;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
 
     public:
         /*! \brief Constructs a new `ic_precond` object. */
@@ -362,6 +392,8 @@ namespace linalg
 
         void move_to_device() override;
         void move_to_host() override;
+
+        bool is_on_host() const override;
     };
 }
 

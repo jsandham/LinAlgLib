@@ -32,8 +32,8 @@
 #include "../iter_control.h"
 #include "../preconditioner/preconditioner.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
 
 /*! \file
  *  \brief bicgstab.h provides interface for stabilized bi-conjugate gradient solver
@@ -41,7 +41,7 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Bi-Conjugate Gradient Stabilized (BiCGSTAB) method.
+    /*! \brief A solver class implementing the Bi-Conjugate Gradient Stabilized (BiCGSTAB) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, non-symmetric systems of linear
@@ -197,61 +197,64 @@ namespace linalg
  * }
  * \endcode
  */
-class bicgstab_solver
-{
-private:
-    /*! \brief Residual vector in the BiCGSTAB algorithm. */
-    vector<double> r;
-    /*! \brief Initial residual vector, used for biorthogonality. */
-    vector<double> r0;
-    /*! \brief Search direction vector. */
-    vector<double> p;
-    /*! \brief Vector for \f$A \cdot \mathbf{p}\f$ or \f$A \cdot \mathbf{z}\f$ terms. */
-    vector<double> v;
-    /*! \brief Vector for \f$A \cdot \mathbf{s}\f$ terms. */
-    vector<double> t;
-    /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{p}\f$. */
-    vector<double> z;
-    /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{s}\f$. */
-    vector<double> q;
+    class bicgstab_solver
+    {
+    private:
+        /*! \brief Residual vector in the BiCGSTAB algorithm. */
+        vector<double> r;
+        /*! \brief Initial residual vector, used for biorthogonality. */
+        vector<double> r0;
+        /*! \brief Search direction vector. */
+        vector<double> p;
+        /*! \brief Vector for \f$A \cdot \mathbf{p}\f$ or \f$A \cdot \mathbf{z}\f$ terms. */
+        vector<double> v;
+        /*! \brief Vector for \f$A \cdot \mathbf{s}\f$ terms. */
+        vector<double> t;
+        /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{p}\f$. */
+        vector<double> z;
+        /*! \brief Intermediate vector for preconditioning: \f$M^{-1} \mathbf{s}\f$. */
+        vector<double> q;
 
-    /*! \brief Number of iterations after which the solver should restart.
+        /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
      * Restarts can help to avoid potential breakdowns or loss of orthogonality.
      */
-    int restart_iter;
+        int restart_iter;
 
-public:
-    /*! \brief Default constructor.
+        /*! \brief Flag indicating if the solver data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
+
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `bicgstab_solver` object.
      */
-    bicgstab_solver();
+        bicgstab_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `bicgstab_solver` object.
      */
-    ~bicgstab_solver();
+        ~bicgstab_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `bicgstab_solver` objects to ensure proper memory management.
      */
-    bicgstab_solver (const bicgstab_solver&) = delete;
+        bicgstab_solver(const bicgstab_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `bicgstab_solver` object to another to ensure proper memory management.
      */
-    bicgstab_solver& operator= (const bicgstab_solver&) = delete;
+        bicgstab_solver& operator=(const bicgstab_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the BiCGSTAB solver.
+        /*! \brief Builds necessary data structures for the BiCGSTAB solver.
      * \details
      * For BiCGSTAB, this typically involves allocating and resizing the internal
      * work vectors (`r`, `r0`, `p`, `v`, `t`, `z`, `q`) to match the dimensions
      * of the matrix `A`.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned BiCGSTAB method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned BiCGSTAB method.
      *
      * This method implements the BiCGSTAB algorithm without any explicit preconditioning.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -267,9 +270,12 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns (e.g., division by zero due to loss of orthogonality).
      */
-    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
+        int solve_nonprecond(const csr_matrix&     A,
+                             vector<double>&       x,
+                             const vector<double>& b,
+                             iter_control          control);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned BiCGSTAB method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned BiCGSTAB method.
      *
      * This method implements the BiCGSTAB algorithm with the provided preconditioner.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -287,9 +293,13 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns or issues with the preconditioner.
      */
-    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+        int solve_precond(const csr_matrix&     A,
+                          vector<double>&       x,
+                          const vector<double>& b,
+                          const preconditioner* precond,
+                          iter_control          control);
 
-    /*! \brief Generic solve method for the BiCGSTAB solver (delegates to non-preconditioned or preconditioned).
+        /*! \brief Generic solve method for the BiCGSTAB solver (delegates to non-preconditioned or preconditioned).
      *
      * This method acts as a convenience wrapper. If `precond` is `nullptr`, it calls
      * `solve_nonprecond`. Otherwise, it calls `solve_precond`.
@@ -302,18 +312,27 @@ public:
      * including convergence tolerance and maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  const preconditioner* precond,
+                  iter_control          control);
 
-    /**
+        /**
      * @brief Moves data from device memory to host memory.
      */
-    void move_to_host();
+        void move_to_host();
 
-    /**
+        /**
      * @brief Moves data from host memory to device memory.
      */
-    void move_to_device();
-};
+        void move_to_device();
+
+        /*! \brief Checks if the solver data is currently stored on the host (CPU).
+     * \return `true` if the solver data is on the host, `false` otherwise (e.g., on a device).
+     */
+        bool is_on_host() const;
+    };
 }
 
 #endif

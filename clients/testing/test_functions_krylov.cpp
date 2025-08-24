@@ -37,59 +37,59 @@ using namespace linalg;
 
 bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
-    csr_matrix mat_D;
-    mat_D.read_mtx(arg.filename);
+    // csr_matrix mat_D;
+    // mat_D.read_mtx(arg.filename);
 
-    vector<double> vec_1(mat_D.get_m());
-    vec_1.zeros();
+    // vector<double> vec_1(mat_D.get_m());
+    // vec_1.zeros();
 
-    vector<double> vec_2(mat_D.get_m());
-    vec_2.zeros();
+    // vector<double> vec_2(mat_D.get_m());
+    // vec_2.zeros();
 
-    vector<double> vec_3(mat_D.get_m());
-    vec_3.zeros();
+    // vector<double> vec_3(mat_D.get_m());
+    // vec_3.zeros();
 
-    mat_D.move_to_device();
-    vec_1.move_to_device();
-    vec_2.move_to_device();
-    vec_3.move_to_device();
+    // mat_D.move_to_device();
+    // vec_1.move_to_device();
+    // vec_2.move_to_device();
+    // vec_3.move_to_device();
 
-    vec_1.ones();
-    vec_2.ones();
-    double result = dot_product(vec_1, vec_2);
-    std::cout << "result: " << result << std::endl;
+    // vec_1.ones();
+    // vec_2.ones();
+    // double result = dot_product(vec_1, vec_2);
+    // std::cout << "result: " << result << std::endl;
 
-    vec_1.zeros();
-    vec_2.ones();
+    // vec_1.zeros();
+    // vec_2.ones();
 
-    mat_D.multiply_by_vector(vec_2, vec_1);
-    mat_D.extract_diagonal(vec_2);
-    diagonal(mat_D, vec_2);
-    compute_residual(mat_D, vec_1, vec_2, vec_3);
-    compute_residual(mat_D, vec_1, vec_2, vec_3);
-    compute_residual(mat_D, vec_1, vec_2, vec_3);
-    compute_residual(mat_D, vec_1, vec_2, vec_3);
+    // mat_D.multiply_by_vector(vec_2, vec_1);
+    // mat_D.extract_diagonal(vec_2);
+    // diagonal(mat_D, vec_2);
+    // compute_residual(mat_D, vec_1, vec_2, vec_3);
+    // compute_residual(mat_D, vec_1, vec_2, vec_3);
+    // compute_residual(mat_D, vec_1, vec_2, vec_3);
+    // compute_residual(mat_D, vec_1, vec_2, vec_3);
 
-    vec_1.ones();
-    vec_2.ones();
-    result = dot_product(vec_1, vec_2);
-    result = dot_product(vec_1, vec_2);
-    result = dot_product(vec_1, vec_2);
-    result = dot_product(vec_1, vec_2);
-    std::cout << "result: " << result << std::endl;
+    // vec_1.ones();
+    // vec_2.ones();
+    // result = dot_product(vec_1, vec_2);
+    // result = dot_product(vec_1, vec_2);
+    // result = dot_product(vec_1, vec_2);
+    // result = dot_product(vec_1, vec_2);
+    // std::cout << "result: " << result << std::endl;
 
-    double norm = norm_euclid(vec_1);
-    norm        = norm_euclid(vec_1);
-    norm        = norm_euclid(vec_1);
-    norm        = norm_euclid(vec_1);
-    norm        = norm_euclid(vec_1);
-    std::cout << "norm: " << norm << std::endl;
+    // double norm = norm_euclid(vec_1);
+    // norm        = norm_euclid(vec_1);
+    // norm        = norm_euclid(vec_1);
+    // norm        = norm_euclid(vec_1);
+    // norm        = norm_euclid(vec_1);
+    // std::cout << "norm: " << norm << std::endl;
 
-    norm = norm_inf(vec_1);
-    norm = norm_inf(vec_1);
-    norm = norm_inf(vec_1);
-    norm = norm_inf(vec_1);
-    std::cout << "norm: " << norm << std::endl;
+    // norm = norm_inf(vec_1);
+    // norm = norm_inf(vec_1);
+    // norm = norm_inf(vec_1);
+    // norm = norm_inf(vec_1);
+    // std::cout << "norm: " << norm << std::endl;
 
     // vec_1.move_to_host();
     // result = dot_product(vec_1, vec_2);
@@ -161,16 +161,15 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
         p->build(mat_A);
     }
 
-    mat_A.move_to_device();
-    vec_x.move_to_device();
-    vec_b.move_to_device();
-    cg.move_to_device();
-    if(p != nullptr)
-    {
-        p->move_to_device();
-    }
-
-    std::cout << "1111" << std::endl;
+    //mat_A.move_to_device();
+    //vec_x.move_to_device();
+    //vec_b.move_to_device();
+    //cg.move_to_device();
+    //bicgstab.move_to_device();
+    //if(p != nullptr)
+    //{
+    //    p->move_to_device();
+    //}
 
     int iter = 0;
 
@@ -202,10 +201,10 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
         delete p;
     }
 
-    mat_A.move_to_host();
-    vec_x.move_to_host();
-    vec_b.move_to_host();
-    cg.move_to_host();
+    //mat_A.move_to_host();
+    //vec_x.move_to_host();
+    //vec_b.move_to_host();
+    //cg.move_to_host();
 
     std::cout << "iter: " << iter << std::endl;
 

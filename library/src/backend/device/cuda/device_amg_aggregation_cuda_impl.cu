@@ -28,34 +28,34 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-#include "../device_amg_aggregation_impl.h"
+#include "cuda_amg_aggregation.h"
 
 #include "amg_kernels.cuh"
 
 #include "../../../trace.h"
 
-void linalg::device_initialize_pmis_state_impl(
+void linalg::cuda_initialize_pmis_state(
     int m, int n, int nnz, const int* csr_row_ptr, const int* connections, int* state, int* hash)
 {
-    ROUTINE_TRACE("linalg::device_initialize_pmis_state_impl");
+    ROUTINE_TRACE("linalg::cuda_initialize_pmis_state_impl");
     initialize_pmis_state_kernel<256>
         <<<((m - 1) / 256 + 1), 256>>>(m, n, nnz, csr_row_ptr, connections, state, hash);
     CHECK_CUDA_LAUNCH_ERROR();
 }
 
-void linalg::device_find_maximum_distance_two_node_impl(int        m,
-                                                        int        n,
-                                                        int        nnz,
-                                                        const int* csr_row_ptr,
-                                                        const int* csr_col_ind,
-                                                        const int* connections,
-                                                        const int* state,
-                                                        const int* hash,
-                                                        int64_t*   aggregates,
-                                                        int*       max_state,
-                                                        bool&      complete)
+void linalg::cuda_find_maximum_distance_two_node(int        m,
+                                                 int        n,
+                                                 int        nnz,
+                                                 const int* csr_row_ptr,
+                                                 const int* csr_col_ind,
+                                                 const int* connections,
+                                                 const int* state,
+                                                 const int* hash,
+                                                 int64_t*   aggregates,
+                                                 int*       max_state,
+                                                 bool&      complete)
 {
-    ROUTINE_TRACE("linalg::device_find_maximum_distance_two_node_impl");
+    ROUTINE_TRACE("linalg::cuda_find_maximum_distance_two_node_impl");
 
     bool* d_complete = nullptr;
     CHECK_CUDA(cudaMalloc((void**)&d_complete, sizeof(bool)));
@@ -77,18 +77,18 @@ void linalg::device_find_maximum_distance_two_node_impl(int        m,
     CHECK_CUDA(cudaFree(d_complete));
 }
 
-void linalg::device_add_unassigned_nodes_to_closest_aggregation_impl(int        m,
-                                                                     int        n,
-                                                                     int        nnz,
-                                                                     const int* csr_row_ptr,
-                                                                     const int* csr_col_ind,
-                                                                     const int* connections,
-                                                                     const int* state,
-                                                                     int64_t*   aggregates,
-                                                                     int64_t* aggregate_root_nodes,
-                                                                     int*     max_state)
+void linalg::cuda_add_unassigned_nodes_to_closest_aggregation(int        m,
+                                                              int        n,
+                                                              int        nnz,
+                                                              const int* csr_row_ptr,
+                                                              const int* csr_col_ind,
+                                                              const int* connections,
+                                                              const int* state,
+                                                              int64_t*   aggregates,
+                                                              int64_t*   aggregate_root_nodes,
+                                                              int*       max_state)
 {
-    ROUTINE_TRACE("linalg::device_add_unassigned_nodes_to_closest_aggregation_impl");
+    ROUTINE_TRACE("linalg::cuda_add_unassigned_nodes_to_closest_aggregation_impl");
 
     add_unassigned_nodes_to_closest_aggregation_kernel<256>
         <<<((m - 1) / 256 + 1), 256>>>(m,

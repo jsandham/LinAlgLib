@@ -35,7 +35,6 @@
 #include "../../csr_matrix.h"
 #include "../../vector.h"
 
-
 /*! \file
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
@@ -202,6 +201,9 @@ namespace linalg
      */
         int restart_iter;
 
+        /*! \brief Flag indicating if the solver data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
+
     public:
         /*! \brief Default constructor.
      * Initializes a new `cg_solver` object.
@@ -311,6 +313,11 @@ namespace linalg
      * @brief Moves data from host memory to device memory.
      */
         void move_to_device();
+
+        /*! \brief Checks if the solver data is currently stored on the host (CPU).
+     * \return `true` if the solver data is on the host, `false` otherwise (e.g., on a device).
+     */
+        bool is_on_host() const;
     };
 }
 

@@ -25,6 +25,7 @@
 //********************************************************************************
 
 #include "../include/csr_matrix.h"
+#include "../include/linalg_math.h"
 
 #include "backend/device/device_math.h"
 #include "backend/host/host_math.h"
@@ -316,6 +317,32 @@ struct triplet
     }
 };
 
+static bool read_file_into_string(const std::string& filename, std::string& file_contents)
+{
+    ROUTINE_TRACE("read_file_into_string");
+
+    std::ifstream file(filename);
+    if(!file.is_open())
+    {
+        std::cerr << "Error: Could not open file " << filename << std::endl;
+        return false;
+    }
+
+    // Get file size
+    file.seekg(0, std::ios::end);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    file_contents.resize(size, '\0');
+    if(file.read(&file_contents[0], size))
+    {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
+}
+
 bool csr_matrix::read_mtx(const std::string& filename)
 {
     ROUTINE_TRACE("csr_matrix::read_mtx");
@@ -327,12 +354,13 @@ bool csr_matrix::read_mtx(const std::string& filename)
         return false;
     }
 
-    std::ifstream file(filename);
-    if(!file.is_open())
+    std::string file_contents_str;
+    if(!read_file_into_string(filename, file_contents_str))
     {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
+        std::cout << "Error: Could not read file contents" << std::endl;
         return false;
     }
+    std::istringstream file_contents_ss(file_contents_str);
 
     std::string line;
     std::string header;
@@ -340,7 +368,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
     bool        is_integer   = false;
 
     // Read header line
-    std::getline(file, header);
+    std::getline(file_contents_ss, header);
     std::stringstream header_ss(header);
     std::string       token;
     header_ss >> token; // %%MatrixMarket
@@ -406,7 +434,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
     }
 
     // Skip comment lines
-    while(std::getline(file, line) && line[0] == '%')
+    while(std::getline(file_contents_ss, line) && line[0] == '%')
     {
         // Do nothing, just consume comments
     }
@@ -424,113 +452,111 @@ bool csr_matrix::read_mtx(const std::string& filename)
     triplets.reserve(is_symmetric ? nnz_coo * 2
                                   : nnz_coo); // Reserve enough space for symmetric case
 
-    // Read non-zero elements
-    int     r, c;
-    double  val_double;
-    int64_t val_long;
+    std::ios_base::sync_with_stdio(false);
 
+    // Read non-zero elements
     for(int64_t i = 0; i < nnz_coo; ++i)
     {
-        if(!(std::getline(file, line)))
+        if(!(std::getline(file_contents_ss, line)))
         {
             std::cerr << "Error: Unexpected end of file while reading elements (expected "
                       << nnz_coo << " elements)." << std::endl;
             return false;
         }
-        std::stringstream element_ss(line);
 
-        if(is_integer)
-        {
-            if(!(element_ss >> r >> c >> val_long))
-            {
-                std::cerr << "Error: Failed to parse integer element at line " << i + 1 << "."
-                          << std::endl;
-                return false;
-            }
-            triplets.push_back(
-                {r - 1, c - 1, static_cast<double>(val_long)}); // Matrix Market is 1-indexed
-        }
-        else // real
-        {
-            if(!(element_ss >> r >> c >> val_double))
-            {
-                std::cerr << "Error: Failed to parse real element at line " << i + 1 << "."
-                          << std::endl;
-                return false;
-            }
-            triplets.push_back({r - 1, c - 1, val_double}); // Matrix Market is 1-indexed
-        }
+        // Find the positions of the two space separators
+        size_t first_space  = line.find(' ');
+        size_t second_space = line.find(' ', first_space + 1);
+
+        // Extract substrings and convert to numbers
+        int    r   = std::stoi(line.substr(0, first_space));
+        int    c   = std::stoi(line.substr(first_space + 1, second_space - (first_space + 1)));
+        double val = std::stod(line.substr(second_space + 1));
+
+        triplets.push_back({r - 1, c - 1, val}); // Matrix Market is 1-indexed
 
         // Handle symmetric case: add the (c, r) entry if r != c
-        if(is_symmetric && r - 1 != c - 1)
+        if(is_symmetric && r != c)
         {
-            triplets.push_back({c - 1, r - 1, triplets.back().value});
+            triplets.push_back({c - 1, r - 1, val});
         }
     }
 
-    file.close();
+    std::ios_base::sync_with_stdio(true);
 
-    // Sort triplets to group by row, then by column. This is crucial for CSR.
-    std::sort(triplets.begin(), triplets.end());
-
-    // Remove duplicate entries (e.g., if a symmetric matrix had (i,j) and (j,i) explicitly listed,
-    // or if (i,i) was explicitly listed and then added again by symmetric handling).
-    // Also, sum values if multiple entries refer to the same (row, col)
-    if(!triplets.empty())
     {
-        std::vector<triplet> unique_triplets;
-        unique_triplets.reserve(triplets.size());
-        unique_triplets.push_back(triplets[0]);
-
-        for(size_t i = 1; i < triplets.size(); ++i)
-        {
-            if(triplets[i].row == unique_triplets.back().row
-               && triplets[i].col == unique_triplets.back().col)
-            {
-                // If duplicate, sum values
-                unique_triplets.back().value += triplets[i].value;
-            }
-            else
-            {
-                unique_triplets.push_back(triplets[i]);
-            }
-        }
-        triplets = std::move(unique_triplets); // Use move assignment
+        ROUTINE_TRACE("sorting");
+        // Sort triplets to group by row, then by column. This is crucial for CSR.
+        std::sort(triplets.begin(), triplets.end());
     }
 
-    // Convert to CSR format
-    nnz = triplets.size();
-
-    if(nnz == 0)
     {
-        // Handle empty matrix case: all dimensions valid but no entries
-        // csr_row_ptr.assign(m + 1, 0);
+        ROUTINE_TRACE("unique");
+        // Remove duplicate entries (e.g., if a symmetric matrix had (i,j) and (j,i) explicitly listed,
+        // or if (i,i) was explicitly listed and then added again by symmetric handling).
+        // Also, sum values if multiple entries refer to the same (row, col)
+        if(!triplets.empty())
+        {
+            std::vector<triplet> unique_triplets;
+            unique_triplets.reserve(triplets.size());
+            unique_triplets.push_back(triplets[0]);
+
+            for(size_t i = 1; i < triplets.size(); ++i)
+            {
+                if(triplets[i].row == unique_triplets.back().row
+                   && triplets[i].col == unique_triplets.back().col)
+                {
+                    // If duplicate, sum values
+                    unique_triplets.back().value += triplets[i].value;
+                }
+                else
+                {
+                    unique_triplets.push_back(triplets[i]);
+                }
+            }
+            triplets = std::move(unique_triplets); // Use move assignment
+        }
+    }
+
+    {
+        ROUTINE_TRACE("allocate");
+        // Convert to CSR format
+        nnz = triplets.size();
+
+        if(nnz == 0)
+        {
+            // Handle empty matrix case: all dimensions valid but no entries
+            // csr_row_ptr.assign(m + 1, 0);
+            csr_row_ptr.resize(m + 1);
+            csr_row_ptr.zeros();
+            csr_col_ind.clear();
+            csr_val.clear();
+            return true;
+        }
+
+        // csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
         csr_row_ptr.resize(m + 1);
-        csr_row_ptr.zeros();
-        csr_col_ind.clear();
-        csr_val.clear();
-        return true;
+        csr_row_ptr.zeros(); // Initialize with zeros
+        csr_col_ind.resize(nnz);
+        csr_val.resize(nnz);
     }
 
-    // csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
-    csr_row_ptr.resize(m + 1);
-    csr_row_ptr.zeros(); // Initialize with zeros
-    csr_col_ind.resize(nnz);
-    csr_val.resize(nnz);
-
-    for(int64_t i = 0; i < nnz; ++i)
     {
-        const triplet& t = triplets[i];
+        ROUTINE_TRACE("copy");
+        for(int64_t i = 0; i < nnz; ++i)
+        {
+            const triplet& t = triplets[i];
 
-        csr_row_ptr[t.row + 1]++;
-        csr_col_ind[i] = t.col;
-        csr_val[i]     = t.value;
-    }
+            csr_row_ptr[t.row + 1]++;
+            csr_col_ind[i] = t.col;
+            csr_val[i]     = t.value;
+        }
 
-    // Convert counts to cumulative sum (prefix sum) for row_ptr
-    for(int i = 0; i < m; ++i)
-    {
-        csr_row_ptr[i + 1] += csr_row_ptr[i];
+        // Convert counts to cumulative sum (prefix sum) for row_ptr
+        for(int i = 0; i < m; ++i)
+        {
+            csr_row_ptr[i + 1] += csr_row_ptr[i];
+        }
     }
 
     return true;

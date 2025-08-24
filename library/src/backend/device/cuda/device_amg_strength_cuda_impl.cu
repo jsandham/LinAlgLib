@@ -28,33 +28,33 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-#include "../device_amg_strength_impl.h"
+#include "cuda_amg_strength.h"
 
 #include "amg_kernels.cuh"
 
 #include "../../../trace.h"
 
-void linalg::device_compute_strong_connections_impl(int           m,
-                                                    int           n,
-                                                    int           nnz,
-                                                    const int*    csr_row_ptr,
-                                                    const int*    csr_col_ind,
-                                                    const double* csr_val,
-                                                    double        eps,
-                                                    int*          connections)
+void linalg::cuda_compute_strong_connections(int           m,
+                                             int           n,
+                                             int           nnz,
+                                             const int*    csr_row_ptr,
+                                             const int*    csr_col_ind,
+                                             const double* csr_val,
+                                             double        eps,
+                                             int*          connections)
 {
 }
 
-void linalg::device_compute_classical_strong_connections_impl(int           m,
-                                                              int           n,
-                                                              int           nnz,
-                                                              const int*    csr_row_ptr_A,
-                                                              const int*    csr_col_ind_A,
-                                                              const double* csr_val_A,
-                                                              double        theta,
-                                                              int*          csr_row_ptr_S,
-                                                              int*          csr_col_ind_S,
-                                                              double*       csr_val_S,
-                                                              int*          connections)
+void linalg::cuda_compute_classical_strong_connections(int           m,
+                                                       int           n,
+                                                       int           nnz,
+                                                       const int*    csr_row_ptr_A,
+                                                       const int*    csr_col_ind_A,
+                                                       const double* csr_val_A,
+                                                       double        theta,
+                                                       int*          csr_row_ptr_S,
+                                                       int*          csr_col_ind_S,
+                                                       double*       csr_val_S,
+                                                       int*          connections)
 {
 }

@@ -32,7 +32,10 @@
 
 using namespace linalg;
 
-jacobi_precond::jacobi_precond() {}
+jacobi_precond::jacobi_precond()
+    : on_host(false)
+{
+}
 jacobi_precond::~jacobi_precond() {}
 
 void jacobi_precond::build(const csr_matrix& A)
@@ -53,10 +56,6 @@ void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 
     // Solve M * x = rhs where M = D
     jacobi_solve(rhs, diag, x);
-    //for(int i = 0; i < rhs.get_size(); i++)
-    //{
-    //    x[i] = rhs[i] / diag[i];
-    //}
 
     // if(moved_to_host)
     // {
@@ -69,14 +68,24 @@ void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 void jacobi_precond::move_to_device()
 {
     diag.move_to_device();
+    this->on_host = false;
 }
 
 void jacobi_precond::move_to_host()
 {
     diag.move_to_host();
+    this->on_host = true;
 }
 
-gauss_seidel_precond::gauss_seidel_precond() {}
+bool jacobi_precond::is_on_host() const
+{
+    return on_host;
+}
+
+gauss_seidel_precond::gauss_seidel_precond()
+    : on_host(false)
+{
+}
 gauss_seidel_precond::~gauss_seidel_precond() {}
 
 void gauss_seidel_precond::build(const csr_matrix& A)
@@ -90,12 +99,24 @@ void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) c
     forward_solve(this->A, rhs, x, false);
 }
 
-void gauss_seidel_precond::move_to_device() {}
+void gauss_seidel_precond::move_to_device()
+{
+    this->on_host = false;
+}
 
-void gauss_seidel_precond::move_to_host() {}
+void gauss_seidel_precond::move_to_host()
+{
+    this->on_host = true;
+}
+
+bool gauss_seidel_precond::is_on_host() const
+{
+    return on_host;
+}
 
 SOR_precond::SOR_precond(double omega)
     : omega(omega)
+    , on_host(false)
 {
 }
 SOR_precond::~SOR_precond() {}
@@ -139,11 +160,25 @@ void SOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
     }
 }
 
-void SOR_precond::move_to_device() {}
+void SOR_precond::move_to_device()
+{
+    this->on_host = false;
+}
 
-void SOR_precond::move_to_host() {}
+void SOR_precond::move_to_host()
+{
+    this->on_host = true;
+}
 
-symmetric_gauss_seidel_precond::symmetric_gauss_seidel_precond() {}
+bool SOR_precond::is_on_host() const
+{
+    return on_host;
+}
+
+symmetric_gauss_seidel_precond::symmetric_gauss_seidel_precond()
+    : on_host(false)
+{
+}
 symmetric_gauss_seidel_precond::~symmetric_gauss_seidel_precond() {}
 
 void symmetric_gauss_seidel_precond::build(const csr_matrix& A)
@@ -210,11 +245,25 @@ void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<dou
     backward_solve(this->A, y, x, false);
 }
 
-void symmetric_gauss_seidel_precond::move_to_device() {}
+void symmetric_gauss_seidel_precond::move_to_device()
+{
+    this->on_host = false;
+}
 
-void symmetric_gauss_seidel_precond::move_to_host() {}
+void symmetric_gauss_seidel_precond::move_to_host()
+{
+    this->on_host = true;
+}
 
-ilu_precond::ilu_precond() {}
+bool symmetric_gauss_seidel_precond::is_on_host() const
+{
+    return on_host;
+}
+
+ilu_precond::ilu_precond()
+    : on_host(false)
+{
+}
 ilu_precond::~ilu_precond() {}
 
 void ilu_precond::build(const csr_matrix& A)
@@ -241,11 +290,25 @@ void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
     backward_solve(LU, y, x, false);
 }
 
-void ilu_precond::move_to_device() {}
+void ilu_precond::move_to_device()
+{
+    this->on_host = false;
+}
 
-void ilu_precond::move_to_host() {}
+void ilu_precond::move_to_host()
+{
+    this->on_host = true;
+}
 
-ic_precond::ic_precond() {}
+bool ilu_precond::is_on_host() const
+{
+    return on_host;
+}
+
+ic_precond::ic_precond()
+    : on_host(false)
+{
+}
 ic_precond::~ic_precond() {}
 
 void ic_precond::build(const csr_matrix& A)
@@ -308,6 +371,17 @@ void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
     backward_solve(LLT, y, x, false);
 }
 
-void ic_precond::move_to_device() {}
+void ic_precond::move_to_device()
+{
+    this->on_host = false;
+}
 
-void ic_precond::move_to_host() {}
+void ic_precond::move_to_host()
+{
+    this->on_host = true;
+}
+
+bool ic_precond::is_on_host() const
+{
+    return on_host;
+}

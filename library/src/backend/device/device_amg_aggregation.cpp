@@ -23,11 +23,16 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#include <iostream>
 
 #include "device_amg_aggregation.h"
-#include "device_amg_aggregation_impl.h"
 
 #include "../../trace.h"
+#include "../../utility.h"
+
+#if defined(LINALGLIB_HAS_CUDA)
+#include "cuda/cuda_amg_aggregation.h"
+#endif
 
 void linalg::device_initialize_pmis_state(const csr_matrix&  A,
                                           const vector<int>& connections,
@@ -35,13 +40,31 @@ void linalg::device_initialize_pmis_state(const csr_matrix&  A,
                                           vector<int>&       hash)
 {
     ROUTINE_TRACE("linalg::device_initialize_pmis_state");
-    device_initialize_pmis_state_impl(A.get_m(),
-                                      A.get_n(),
-                                      A.get_nnz(),
-                                      A.get_row_ptr(),
-                                      connections.get_vec(),
-                                      state.get_vec(),
-                                      hash.get_vec());
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_initialize_pmis_state(A.get_m(),
+                                             A.get_n(),
+                                             A.get_nnz(),
+                                             A.get_row_ptr(),
+                                             connections.get_vec(),
+                                             state.get_vec(),
+                                             hash.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_initialize_pmis_state_impl(A.get_m(),
+    //                                   A.get_n(),
+    //                                   A.get_nnz(),
+    //                                   A.get_row_ptr(),
+    //                                   connections.get_vec(),
+    //                                   state.get_vec(),
+    //                                   hash.get_vec());
 }
 
 void linalg::device_find_maximum_distance_two_node(const csr_matrix&  A,
@@ -54,17 +77,38 @@ void linalg::device_find_maximum_distance_two_node(const csr_matrix&  A,
 {
     ROUTINE_TRACE("linalg::device_find_maximum_distance_two_node");
 
-    device_find_maximum_distance_two_node_impl(A.get_m(),
-                                               A.get_n(),
-                                               A.get_nnz(),
-                                               A.get_row_ptr(),
-                                               A.get_col_ind(),
-                                               connections.get_vec(),
-                                               state.get_vec(),
-                                               hash.get_vec(),
-                                               aggregates.get_vec(),
-                                               max_state.get_vec(),
-                                               complete);
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_find_maximum_distance_two_node(A.get_m(),
+                                                      A.get_n(),
+                                                      A.get_nnz(),
+                                                      A.get_row_ptr(),
+                                                      A.get_col_ind(),
+                                                      connections.get_vec(),
+                                                      state.get_vec(),
+                                                      hash.get_vec(),
+                                                      aggregates.get_vec(),
+                                                      max_state.get_vec(),
+                                                      complete));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_find_maximum_distance_two_node_impl(A.get_m(),
+    //                                            A.get_n(),
+    //                                            A.get_nnz(),
+    //                                            A.get_row_ptr(),
+    //                                            A.get_col_ind(),
+    //                                            connections.get_vec(),
+    //                                            state.get_vec(),
+    //                                            hash.get_vec(),
+    //                                            aggregates.get_vec(),
+    //                                            max_state.get_vec(),
+    //                                            complete);
 }
 
 void linalg::device_add_unassigned_nodes_to_closest_aggregation(
@@ -77,16 +121,36 @@ void linalg::device_add_unassigned_nodes_to_closest_aggregation(
 {
     ROUTINE_TRACE("linalg::device_add_unassigned_nodes_to_closest_aggregation");
 
-    device_add_unassigned_nodes_to_closest_aggregation_impl(A.get_m(),
-                                                            A.get_n(),
-                                                            A.get_nnz(),
-                                                            A.get_row_ptr(),
-                                                            A.get_col_ind(),
-                                                            connections.get_vec(),
-                                                            state.get_vec(),
-                                                            aggregates.get_vec(),
-                                                            aggregate_root_nodes.get_vec(),
-                                                            max_state.get_vec());
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_add_unassigned_nodes_to_closest_aggregation(A.get_m(),
+                                                                   A.get_n(),
+                                                                   A.get_nnz(),
+                                                                   A.get_row_ptr(),
+                                                                   A.get_col_ind(),
+                                                                   connections.get_vec(),
+                                                                   state.get_vec(),
+                                                                   aggregates.get_vec(),
+                                                                   aggregate_root_nodes.get_vec(),
+                                                                   max_state.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // device_add_unassigned_nodes_to_closest_aggregation_impl(A.get_m(),
+    //                                                         A.get_n(),
+    //                                                         A.get_nnz(),
+    //                                                         A.get_row_ptr(),
+    //                                                         A.get_col_ind(),
+    //                                                         connections.get_vec(),
+    //                                                         state.get_vec(),
+    //                                                         aggregates.get_vec(),
+    //                                                         aggregate_root_nodes.get_vec(),
+    //                                                         max_state.get_vec());
 }
 
 void linalg::device_compute_cfpoint_first_pass(const csr_matrix& S,

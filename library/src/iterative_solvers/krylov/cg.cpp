@@ -44,6 +44,7 @@ using namespace linalg;
 
 cg_solver::cg_solver()
     : restart_iter(-1)
+    , on_host(false)
 {
 }
 
@@ -63,8 +64,6 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
 {
     ROUTINE_TRACE("cg_solver::solve_nonprecond");
 
-    std::cout << "AAAA" << std::endl;
-
     double gamma            = 0.0;
     double initial_res_norm = 0.0;
 
@@ -73,18 +72,12 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
         // res = b - A * x
         compute_residual(A, x, b, res);
 
-        std::cout << "BBBB" << std::endl;
-
         initial_res_norm = norm_inf(res);
-
-        std::cout << "CCCC" << std::endl;
 
         // p = res
         p.copy_from(res);
 
         gamma = dot_product(res, res);
-
-        std::cout << "DDDD" << std::endl;
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -254,6 +247,8 @@ void cg_solver::move_to_host()
     z.move_to_host();
     p.move_to_host();
     res.move_to_host();
+
+    this->on_host = true;
 }
 
 void cg_solver::move_to_device()
@@ -263,4 +258,11 @@ void cg_solver::move_to_device()
     z.move_to_device();
     p.move_to_device();
     res.move_to_device();
+
+    this->on_host = false;
+}
+
+bool cg_solver::is_on_host() const
+{
+    return on_host;
 }

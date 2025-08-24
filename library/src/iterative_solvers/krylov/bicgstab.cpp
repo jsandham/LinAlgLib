@@ -32,7 +32,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -45,6 +44,7 @@ using namespace linalg;
 
 bicgstab_solver::bicgstab_solver()
     : restart_iter(-1)
+    , on_host(false)
 {
 }
 
@@ -260,6 +260,8 @@ void bicgstab_solver::move_to_host()
     t.move_to_host();
     z.move_to_host();
     q.move_to_host();
+
+    this->on_host = true;
 }
 
 void bicgstab_solver::move_to_device()
@@ -273,4 +275,11 @@ void bicgstab_solver::move_to_device()
     t.move_to_device();
     z.move_to_device();
     q.move_to_device();
+
+    this->on_host = false;
+}
+
+bool bicgstab_solver::is_on_host() const
+{
+    return on_host;
 }

@@ -31,8 +31,9 @@
 
 #include "../iter_control.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
+
 
 /*! \file
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
@@ -40,7 +41,7 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Gauss-Seidel iterative method.
+    /*! \brief A solver class implementing the Gauss-Seidel iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form
@@ -158,45 +159,45 @@ namespace linalg
  * }
  * \endcode
  */
-class gs_solver
-{
-private:
-    /*! \brief Internal vector to store the residual during the solve process. */
-    vector<double> res;
+    class gs_solver
+    {
+    private:
+        /*! \brief Internal vector to store the residual during the solve process. */
+        vector<double> res;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `gs_solver` object.
      */
-    gs_solver();
+        gs_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `gs_solver` object.
      */
-    ~gs_solver();
+        ~gs_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `gs_solver` objects to avoid shallow copies and
      * ensure proper memory management.
      */
-    gs_solver (const gs_solver&) = delete;
+        gs_solver(const gs_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `gs_solver` object to another to avoid shallow copies
      * and ensure proper memory management.
      */
-    gs_solver& operator= (const gs_solver&) = delete;
+        gs_solver& operator=(const gs_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the Gauss-Seidel solver.
+        /*! \brief Builds necessary data structures for the Gauss-Seidel solver.
      * \details
      * This method might pre-process the input matrix `A` to optimize the
      * Gauss-Seidel iterations. For example, it might extract the diagonal elements
      * of `A` for efficient division in the iterative step.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Gauss-Seidel method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Gauss-Seidel method.
      *
      * This method iteratively updates the solution vector `x` until the convergence
      * criteria specified by `control` are met or the maximum number of iterations
@@ -212,8 +213,11 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., matrix not diagonally dominant, singular diagonal element).
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  iter_control          control);
+    };
 }
 
 #endif

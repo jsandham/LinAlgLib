@@ -61,6 +61,7 @@ set(LINALGLIB_SOURCE
   src/backend/device/device_amg_strength.cpp
   src/backend/device/device_math.cpp
   src/backend/device/device_vector.cpp
+  src/backend/device/device_memory.cpp
   src/eigen_value_solvers/power_iteration.cpp
   src/iterative_solvers/amg/amg_aggregation.cpp
   src/iterative_solvers/amg/amg_strength.cpp
@@ -176,7 +177,7 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
   )
 endif()
 
-target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
+#target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
 #target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
 #target_compile_definitions(linalglib PRIVATE -DCONVERGENCE_LOGGING)
 

@@ -32,8 +32,8 @@
 #include "../iter_control.h"
 #include "../preconditioner/preconditioner.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
 
 /*! \file
  *  \brief gmres.h provides interface for generalized minimum residual solver
@@ -41,7 +41,7 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Generalized Minimum Residual (GMRES) method.
+    /*! \brief A solver class implementing the Generalized Minimum Residual (GMRES) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, **non-symmetric** systems
@@ -224,62 +224,62 @@ namespace linalg
  * }
  * \endcode
  */
-class gmres_solver
-{
-private:
-    /*! \brief Upper Hessenberg matrix `H` (or \f$\bar{H}_m\f$), used in the Arnoldi process. */
-    vector<double> H; // Stores coefficients of Hessenberg matrix, often flattened
-    /*! \brief Orthonormal basis vectors `Q` (or `V`), storing the krylov subspace basis.
+    class gmres_solver
+    {
+    private:
+        /*! \brief Upper Hessenberg matrix `H` (or \f$\bar{H}_m\f$), used in the Arnoldi process. */
+        vector<double> H; // Stores coefficients of Hessenberg matrix, often flattened
+        /*! \brief Orthonormal basis vectors `Q` (or `V`), storing the krylov subspace basis.
      * \details This is typically a collection of `m+1` vectors, often stored contiguously
      * in a larger vector or an array of vectors.
      */
-    vector<double> Q; // Stores orthonormal basis vectors v_1, ..., v_{m+1}
-    /*! \brief Cosine rotation values from Givens rotations. */
-    vector<double> c;
-    /*! \brief Sine rotation values from Givens rotations. */
-    vector<double> s;
-    /*! \brief Residual vector or temporary storage for vector operations. */
-    vector<double> res;
-    /*! \brief Intermediate vector for preconditioning or other operations. */
-    vector<double> z;
+        vector<double> Q; // Stores orthonormal basis vectors v_1, ..., v_{m+1}
+        /*! \brief Cosine rotation values from Givens rotations. */
+        vector<double> c;
+        /*! \brief Sine rotation values from Givens rotations. */
+        vector<double> s;
+        /*! \brief Residual vector or temporary storage for vector operations. */
+        vector<double> res;
+        /*! \brief Intermediate vector for preconditioning or other operations. */
+        vector<double> z;
 
-    /*! \brief The restart parameter `m` for GMRES(m).
+        /*! \brief The restart parameter `m` for GMRES(m).
      * \details This defines the maximum dimension of the krylov subspace before restarting.
      * A smaller `restart` value means less memory usage but potentially more restarts.
      */
-    int restart;
+        int restart;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `gmres_solver` object.
      */
-    gmres_solver();
+        gmres_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `gmres_solver` object.
      */
-    ~gmres_solver();
+        ~gmres_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `gmres_solver` objects to ensure proper memory management.
      */
-    gmres_solver (const gmres_solver&) = delete;
+        gmres_solver(const gmres_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `gmres_solver` object to another to ensure proper memory management.
      */
-    gmres_solver& operator= (const gmres_solver&) = delete;
+        gmres_solver& operator=(const gmres_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the GMRES solver.
+        /*! \brief Builds necessary data structures for the GMRES solver.
      * \details
      * This method allocates and resizes the internal work vectors (`H`, `Q`, `c`, `s`, `res`, `z`)
      * based on the matrix dimensions and the `restart` parameter.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      * \param restart The restart parameter `m` for GMRES(m).
      */
-    void build(const csr_matrix& A, int restart);
+        void build(const csr_matrix& A, int restart);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned GMRES method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned GMRES method.
      *
      * This method implements the GMRES(m) algorithm without any explicit preconditioning.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -295,9 +295,12 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns (e.g., null vectors).
      */
-    int solve_nonprecond(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
+        int solve_nonprecond(const csr_matrix&     A,
+                             vector<double>&       x,
+                             const vector<double>& b,
+                             iter_control          control);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned GMRES method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned GMRES method.
      *
      * This method implements the GMRES(m) algorithm with the provided preconditioner.
      * It iteratively refines the solution `x` until the convergence criteria from `control`
@@ -315,9 +318,13 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns or issues with the preconditioner.
      */
-    int solve_precond(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
+        int solve_precond(const csr_matrix&     A,
+                          vector<double>&       x,
+                          const vector<double>& b,
+                          const preconditioner* precond,
+                          iter_control          control);
 
-    /*! \brief Generic solve method for the GMRES solver (delegates to non-preconditioned or preconditioned).
+        /*! \brief Generic solve method for the GMRES solver (delegates to non-preconditioned or preconditioned).
      *
      * This method acts as a convenience wrapper. If `precond` is `nullptr`, it calls
      * `solve_nonprecond`. Otherwise, it calls `solve_precond`.
@@ -330,8 +337,12 @@ public:
      * including convergence tolerance and total maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, const preconditioner *precond, iter_control control);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  const preconditioner* precond,
+                  iter_control          control);
+    };
 }
 
 #endif
