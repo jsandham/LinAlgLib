@@ -385,3 +385,49 @@ bool ic_precond::is_on_host() const
 {
     return on_host;
 }
+
+itilu_precond::itilu_precond()
+    : on_host(false)
+{
+}
+itilu_precond::~itilu_precond() {}
+
+void itilu_precond::build(const csr_matrix& A)
+{
+
+    // this->LU.copy_from(A);
+
+    // int structural_zero = -1;
+    // int numeric_zero    = -1;
+
+    // // In place incomplete LU factorization
+    // csrilu0(LU, &structural_zero, &numeric_zero);
+}
+
+void itilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
+{
+    // // L * U * x = rhs
+    // // Let y = U * x
+    // vector<double> y(rhs.get_size());
+
+    // // Solve L * y = rhs
+    // forward_solve(LU, rhs, y, true);
+
+    // // Solve U * x = y
+    // backward_solve(LU, y, x, false);
+}
+
+void itilu_precond::move_to_device()
+{
+    this->on_host = false;
+}
+
+void itilu_precond::move_to_host()
+{
+    this->on_host = true;
+}
+
+bool itilu_precond::is_on_host() const
+{
+    return on_host;
+}

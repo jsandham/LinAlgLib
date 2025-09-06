@@ -55,7 +55,6 @@ namespace linalg
                                  const double* x,
                                  const double* b,
                                  double*       res);
-    void   cuda_exclusive_scan(int64_t* x, int n);
     void   cuda_extract_diagonal(int           m,
                                  int           n,
                                  int           nnz,

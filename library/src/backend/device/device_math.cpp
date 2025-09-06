@@ -34,6 +34,7 @@
 
 #if defined(LINALGLIB_HAS_CUDA)
 #include "cuda/cuda_math.h"
+#include "cuda/cuda_primitives.h"
 #endif
 
 // Compute y = alpha * x + y
@@ -270,7 +271,18 @@ void linalg::device_compute_residual(const csr_matrix&     A,
 // Exclusive scan
 void linalg::device_exclusive_scan(vector<int64_t>& x)
 {
-    std::cout << "Error: exclusive_scan on device not implemented" << std::endl;
+    ROUTINE_TRACE("linalg::device_exclusive_scan");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_exclusive_scan((int)x.get_size(), x.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
 }
 
 // Extract diagonal entries

@@ -27,14 +27,14 @@
 #ifndef AMG_H
 #define AMG_H
 
-#include <vector>
 #include <array>
+#include <vector>
 
 #include "amg_util.h"
 
+#include "../../csr_matrix.h"
 #include "../../linalg_export.h"
 #include "../../vector.h"
-#include "../../csr_matrix.h"
 
 #include "../iter_control.h"
 
@@ -44,7 +44,7 @@
 
 namespace linalg
 {
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers
  * \brief Data structure for storing the matrix hierarchy used in algebraic multigrid solver
  *
  * \details
@@ -54,9 +54,9 @@ namespace linalg
  * restriction operators (for projecting residuals from finer to coarser levels),
  * the sequence of coarse-level matrices, and the total number of levels in the hierarchy.
  */
-struct hierarchy
-{
-    /**
+    struct hierarchy
+    {
+        /**
     * @brief Prolongation matrices.
     *
     * These matrices are used to interpolate the correction computed on a coarser
@@ -64,10 +64,10 @@ struct hierarchy
     * operators between consecutive levels, where `prolongations[i]` maps from
     * level `i+1` to level `i`.
     */
-    //std::vector<csr_matrix> prolongations;
-    std::array<csr_matrix, 20> prolongations;
+        //std::vector<csr_matrix> prolongations;
+        std::array<csr_matrix, 20> prolongations;
 
-    /**
+        /**
     * @brief Restriction matrices.
     *
     * These matrices are used to transfer the residual from a finer level to the
@@ -76,10 +76,10 @@ struct hierarchy
     * Typically, the restriction operator is related to the transpose of the
     * prolongation operator.
     */
-    // std::vector<csr_matrix> restrictions;
-    std::array<csr_matrix, 20> restrictions;
+        // std::vector<csr_matrix> restrictions;
+        std::array<csr_matrix, 20> restrictions;
 
-    /**
+        /**
     * @brief Coarse level matrices.
     *
     * These matrices represent the discretized problem on the coarser levels of
@@ -87,10 +87,10 @@ struct hierarchy
     * hierarchy, with `A_cs[0]` being the original system matrix on the finest level.
     * The size of these matrices decreases as the level number increases.
     */
-    // std::vector<csr_matrix> A_cs;
-    std::array<csr_matrix, 21> A_cs;
+        // std::vector<csr_matrix> A_cs;
+        std::array<csr_matrix, 21> A_cs;
 
-    /**
+        /**
     * @brief Number of levels in the hierarchy.
     *
     * This integer indicates the total number of levels in the multigrid hierarchy,
@@ -98,10 +98,18 @@ struct hierarchy
     * `total_levels = 1` would represent a direct solver without any multigrid
     * coarsening.
     */
-    int total_levels;
-};
+        int  total_levels;
+        bool on_host;
 
-/*! \ingroup iterative_solvers
+        hierarchy();
+
+        bool is_on_host() const;
+
+        void move_to_device();
+        void move_to_host();
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Cycle type used in algebraic multigrid solver
  *
  * \details
@@ -110,9 +118,9 @@ struct hierarchy
  * at various levels of the multigrid hierarchy. This enumeration defines the
  * commonly used cycle types.
  */
-enum class Cycle
-{
-    /*! \brief V-cycle.
+    enum class Cycle
+    {
+        /*! \brief V-cycle.
     *
     * The V-cycle proceeds by recursively applying smoothing on the current level,
     * then restricting the residual to the coarser level, solving the coarse-level
@@ -120,9 +128,9 @@ enum class Cycle
     * back to the finer level followed by another smoothing step. The process resembles
     * the shape of the letter "V".
     */
-    Vcycle,
+        Vcycle,
 
-    /*! \brief W-cycle.
+        /*! \brief W-cycle.
     *
     * The W-cycle differs from the V-cycle by performing more than one recursive
     * call to the coarser level. Typically, two or more V-cycles are performed on
@@ -130,9 +138,9 @@ enum class Cycle
     * can be more effective at reducing low-frequency errors but is also more computationally
     * expensive. The process resembles the shape of the letter "W".
     */
-    Wcycle,
+        Wcycle,
 
-    /*! \brief F-cycle (or Full Multigrid cycle).
+        /*! \brief F-cycle (or Full Multigrid cycle).
     *
     * The F-cycle starts by recursively solving the problem on the coarsest level.
     * Then, it interpolates the solution to the next finer level and performs one or
@@ -141,10 +149,10 @@ enum class Cycle
     * and often leads to faster convergence overall. The process resembles the shape
     * of the letter "F" if visualized across multiple levels.
     */
-    Fcycle
-};
+        Fcycle
+    };
 
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers
  * \brief Smoother type used in algebraic multigrid solver.
  *
  * \details
@@ -154,52 +162,52 @@ enum class Cycle
  * smoother can significantly impact the convergence rate and efficiency of the
  * amg method.
  */
-enum class Smoother
-{
-    /*! \brief Jacobi smoother.
+    enum class Smoother
+    {
+        /*! \brief Jacobi smoother.
     *
     * The Jacobi method is a simple iterative method where each unknown is updated
     * based on the values of all other unknowns from the previous iteration. It is
     * easy to parallelize but often converges slowly.
     */
-    Jacobi,
+        Jacobi,
 
-    /*! \brief Gauss-Seidel smoother.
+        /*! \brief Gauss-Seidel smoother.
     *
     * The Gauss-Seidel method is similar to Jacobi, but it updates each unknown
     * using the most recently computed values of other unknowns within the same
     * iteration. This sequential dependency can lead to faster convergence than Jacobi
     * in many cases.
     */
-    Gauss_Seidel,
+        Gauss_Seidel,
 
-    /*! \brief Symmetric Gauss-Seidel (SGS) smoother.
+        /*! \brief Symmetric Gauss-Seidel (SGS) smoother.
     *
     * The Symmetric Gauss-Seidel method consists of performing a standard
     * Gauss-Seidel sweep followed by a backward Gauss-Seidel sweep. This symmetric
     * application can improve the smoothing properties, particularly for symmetric
     * positive definite systems.
     */
-    Symm_Gauss_Seidel,
+        Symm_Gauss_Seidel,
 
-    /*! \brief Successive Over-Relaxation (SOR) smoother.
+        /*! \brief Successive Over-Relaxation (SOR) smoother.
     *
     * The Successive Over-Relaxation method is an extension of the Gauss-Seidel
     * method that introduces a relaxation parameter (omega) to accelerate convergence.
     * The optimal choice of omega depends on the properties of the system matrix.
     */
-    SOR,
+        SOR,
 
-    /*! \brief Symmetric Successive Over-Relaxation (SSOR) smoother.
+        /*! \brief Symmetric Successive Over-Relaxation (SSOR) smoother.
     *
     * The Symmetric Successive Over-Relaxation method applies SOR in a forward sweep
     * followed by SOR in a backward sweep (often with the same relaxation parameter).
     * Similar to SGS, SSOR can offer improved smoothing properties, especially for
     * symmetric positive definite problems.
     */
-    SSOR
-};
-/*! \brief Solves a linear system using the Algebraic Multigrid (amg) method.
+        SSOR
+    };
+    /*! \brief Solves a linear system using the Algebraic Multigrid (amg) method.
  *
  * \details
  * This function implements the core multigrid cycle (V-cycle, W-cycle, or F-cycle, specified by `cycle`)
@@ -366,8 +374,14 @@ enum class Smoother
  * }
  * \endcode
  */
-LINALGLIB_API int amg_solve(const hierarchy &hierarchy, vector<double>& x, const vector<double>& b, int n1, int n2, Cycle cycle,
-              Smoother smoother, iter_control control);
+    LINALGLIB_API int amg_solve(const hierarchy&      hierarchy,
+                                vector<double>&       x,
+                                const vector<double>& b,
+                                int                   n1,
+                                int                   n2,
+                                Cycle                 cycle,
+                                Smoother              smoother,
+                                iter_control          control);
 }
 
 #endif

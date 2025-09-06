@@ -395,6 +395,31 @@ namespace linalg
 
         bool is_on_host() const override;
     };
+
+    class itilu_precond : public preconditioner
+    {
+    private:
+        csr_matrix L;
+
+        bool on_host;
+
+    public:
+        /*! \brief Constructs a new `itilu_precond` object. */
+        itilu_precond();
+
+        /*! \brief Destroys the `itilu_precond` object. */
+        ~itilu_precond();
+
+        void build(const csr_matrix& A) override;
+
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
+
+        void move_to_device() override;
+        void move_to_host() override;
+
+        bool is_on_host() const override;
+    };
+
 }
 
 #endif

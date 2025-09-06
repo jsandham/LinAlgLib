@@ -92,7 +92,7 @@ set(LINALGLIB_CUDA_SOURCE
   src/backend/device/cuda/device_amg_strength_cuda_impl.cu
   src/backend/device/cuda/device_math_cuda_impl.cu
   src/backend/device/cuda/device_memory_cuda_impl.cu
-  src/backend/device/cuda/cuda_kernels.cu)
+  src/backend/device/cuda/device_primitives_cuda_impl.cu)
 
 # Provide an option for the user to enable CUDA
 option(ENABLE_CUDA "Enable CUDA compilation if NVIDIA CUDA Toolkit is available" ON)

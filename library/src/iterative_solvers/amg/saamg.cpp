@@ -38,7 +38,6 @@
 #include <unordered_set>
 #include <vector>
 
-
 #include "../../trace.h"
 
 //********************************************************************************
@@ -206,7 +205,6 @@ namespace linalg
 void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("saamg_setup");
-    std::cout << "saamg_setup" << std::endl;
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -221,6 +219,10 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hier
     double eps   = 0.08; // strength_of_connection/coupling strength
     double relax = 2.0 / 3.0;
 
+    vector<int>     connections;
+    vector<int64_t> aggregates;
+    vector<int64_t> aggregate_root_nodes;
+
     int level = 0;
     while(level < max_level)
     {
@@ -230,10 +232,6 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hier
         csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
         csr_matrix&       P        = hierarchy.prolongations[level];
         csr_matrix&       R        = hierarchy.restrictions[level];
-
-        vector<int>     connections;
-        vector<int64_t> aggregates;
-        vector<int64_t> aggregate_root_nodes;
 
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);

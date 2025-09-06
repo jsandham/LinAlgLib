@@ -28,8 +28,9 @@
 #include <stdint.h>
 
 #include "common.cuh"
-#include "cuda_kernels.cuh"
 #include "cuda_memory.h"
+
+#include "../../../trace.h"
 
 template <typename T>
 void linalg::cuda_allocate(T** ptr, size_t size)
@@ -70,7 +71,9 @@ void linalg::cuda_fill(T* data, size_t size, T val)
     }
     else
     {
-        launch_cuda_fill_kernel(data, size, val);
+        ROUTINE_TRACE("launch_cuda_fill_kernel");
+        fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
+        CHECK_CUDA_LAUNCH_ERROR();
     }
 }
 

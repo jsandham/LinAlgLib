@@ -128,6 +128,13 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
     vector<int> state(A.get_m());
     vector<int> max_state(A.get_m());
 
+    if(bend == backend::device)
+    {
+        hash.move_to_device();
+        state.move_to_device();
+        max_state.move_to_device();
+    }
+
     // Initialize parallel maximal independent set state
     initialize_pmis_state(A, connections, max_state, hash);
 
@@ -158,22 +165,34 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
         iter++;
     }
 
+    std::cout << "A" << std::endl;
+
     aggregate_root_nodes.resize(A.get_m(), -1);
+
+    std::cout << "B" << std::endl;
+
+    aggregate_root_nodes.move_to_host();
+    aggregates.move_to_host();
 
     for(size_t i = 0; i < aggregates.get_size(); i++)
     {
         aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
     }
+    std::cout << "C" << std::endl;
 
     //aggregates.print_vector("aggregates before exclusive sum");
 
     // Exclusive sum
     exclusive_scan(aggregates);
 
+    aggregate_root_nodes.move_to_device();
+    aggregates.move_to_device();
+
     //max_state.print_vector("max_state");
     //aggregates.print_vector("aggregates after exclusive sum");
     //aggregate_root_nodes.print_vector("aggregate_root_nodes");
 
+    std::cout << "D" << std::endl;
     // Add any unassigned nodes to an existing aggregation
     for(int k = 0; k < 2; k++)
     {
@@ -182,6 +201,8 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
         add_unassigned_nodes_to_closest_aggregation(
             A, connections, state, aggregates, aggregate_root_nodes, max_state);
     }
+
+    std::cout << "E" << std::endl;
 
     //aggregates.print_vector("aggregates final");
     //aggregate_root_nodes.print_vector("aggregate_root_nodes final");

@@ -39,4 +39,4 @@ namespace linalg
 
 } // namespace linalg
 
-#endif HOST_MEMORY_H
+#endif

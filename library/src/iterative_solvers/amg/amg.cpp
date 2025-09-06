@@ -34,11 +34,60 @@
 #include <stdlib.h>
 #include <vector>
 
-
 #include "../../trace.h"
 
 namespace linalg
 {
+    hierarchy::hierarchy()
+        : on_host(true)
+    {
+    }
+
+    bool hierarchy::is_on_host() const
+    {
+        return this->on_host;
+    }
+
+    void hierarchy::move_to_device()
+    {
+        for(size_t i = 0; i < prolongations.size(); i++)
+        {
+            prolongations[i].move_to_device();
+        }
+
+        for(size_t i = 0; i < restrictions.size(); i++)
+        {
+            restrictions[i].move_to_device();
+        }
+
+        for(size_t i = 0; i < A_cs.size(); i++)
+        {
+            A_cs[i].move_to_device();
+        }
+
+        on_host = false;
+    }
+
+    void hierarchy::move_to_host()
+    {
+        for(size_t i = 0; i < prolongations.size(); i++)
+        {
+            prolongations[i].move_to_host();
+        }
+
+        for(size_t i = 0; i < restrictions.size(); i++)
+        {
+            restrictions[i].move_to_host();
+        }
+
+        for(size_t i = 0; i < A_cs.size(); i++)
+        {
+            A_cs[i].move_to_host();
+        }
+
+        on_host = true;
+    }
+
     void jacobi_iteration(const csr_matrix&     A,
                           vector<double>&       x,
                           const vector<double>& xold,

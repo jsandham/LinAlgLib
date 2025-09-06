@@ -36,7 +36,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 //********************************************************************************
@@ -145,6 +144,17 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
 
     double eps = 0.001;
 
+    vector<int>     connections;
+    vector<int64_t> aggregates;
+    vector<int64_t> aggregate_root_nodes;
+
+    if(!A.is_on_host())
+    {
+        connections.move_to_device();
+        aggregates.move_to_device();
+        aggregate_root_nodes.move_to_device();
+    }
+
     int level = 0;
     while(level < max_level)
     {
@@ -157,22 +167,26 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
 
         // A_fine.print_matrix("A_fine");
 
-        vector<int>     connections;
-        vector<int64_t> aggregates;
-        vector<int64_t> aggregate_root_nodes;
-
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);
+
+        std::cout << "1111" << std::endl;
 
         // Compute strength of connections
         compute_strong_connections(A_fine, eps, connections);
 
+        std::cout << "2222" << std::endl;
+
         // Compute aggregations using parallel maximal independent set
         compute_aggregates_using_pmis(A_fine, connections, aggregates, aggregate_root_nodes);
+
+        std::cout << "3333" << std::endl;
 
         // Construct prolongation matrix using smoothed aggregation
         construct_prolongation_using_unsmoothed_aggregation(
             A_fine, connections, aggregates, aggregate_root_nodes, P);
+
+        std::cout << "4444" << std::endl;
 
         if(P.get_n() == 0)
         {

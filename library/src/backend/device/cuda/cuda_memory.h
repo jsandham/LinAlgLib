@@ -48,4 +48,4 @@ namespace linalg
     void cuda_fill(T* data, size_t size, T val);
 } // namespace linalg
 
-#endif CUDA_MEMORY_H
+#endif

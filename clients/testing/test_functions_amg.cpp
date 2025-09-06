@@ -53,26 +53,41 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
     vector<double> vec_e(mat_A.get_n());
     vec_e.ones();
 
+    hierarchy hierachy;
+
+    mat_A.move_to_device();
+    vec_x.move_to_device();
+    vec_init_x.move_to_device();
+    vec_b.move_to_device();
+    vec_e.move_to_device();
+    hierachy.move_to_device();
+
     mat_A.multiply_by_vector(vec_b, vec_e);
 
     int max_levels = 100;
 
-    hierarchy hierachy;
     switch(solver_type)
     {
-        case AMGSolver::UAAMG:
-            uaamg_setup(mat_A, max_levels, hierachy);
-            break;
-        case AMGSolver::SAAMG:
-            saamg_setup(mat_A, max_levels, hierachy);
-            break;
-        case AMGSolver::RSAMG:
-            rsamg_setup(mat_A, max_levels, hierachy);
-            break;
+    case AMGSolver::UAAMG:
+        uaamg_setup(mat_A, max_levels, hierachy);
+        break;
+    case AMGSolver::SAAMG:
+        saamg_setup(mat_A, max_levels, hierachy);
+        break;
+    case AMGSolver::RSAMG:
+        rsamg_setup(mat_A, max_levels, hierachy);
+        break;
     }
 
-    std::cout << "arg.presmoothing: " << arg.presmoothing 
-              << " arg.postsmoothing: " << arg.postsmoothing 
+    mat_A.move_to_host();
+    vec_x.move_to_host();
+    vec_init_x.move_to_host();
+    vec_b.move_to_host();
+    vec_e.move_to_host();
+    hierachy.move_to_host();
+
+    std::cout << "arg.presmoothing: " << arg.presmoothing
+              << " arg.postsmoothing: " << arg.postsmoothing
               << " arg.cycle: " << CycleToString(arg.cycle)
               << " arg.smoother: " << SmootherToString(arg.smoother) << std::endl;
 
@@ -80,11 +95,19 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
     control.max_cycle = arg.max_iters;
 
     // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
-    int cycles = amg_solve(hierachy, vec_x, vec_b, arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
+    int cycles = amg_solve(hierachy,
+                           vec_x,
+                           vec_b,
+                           arg.presmoothing,
+                           arg.postsmoothing,
+                           arg.cycle,
+                           arg.smoother,
+                           control);
 
     std::cout << "cycles: " << cycles << std::endl;
 
     int norm_type = 0;
 
-    return check_solution(mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
+    return check_solution(
+        mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);
 }

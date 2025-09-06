@@ -257,7 +257,7 @@ void vector<T>::print_vector(const std::string name) const
     }
 
     std::cout << name << std::endl;
-    for(int i = 0; i < this->get_size(); i++)
+    for(size_t i = 0; i < this->get_size(); i++)
     {
         std::cout << (*this->vec)[i] << " ";
     }

@@ -37,6 +37,17 @@ using namespace linalg;
 
 bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
+    vector<int64_t> vec_a(33);
+    vec_a.ones();
+
+    vec_a.move_to_device();
+
+    exclusive_scan(vec_a);
+
+    vec_a.move_to_host();
+
+    vec_a.print_vector("vec_a");
+
     // csr_matrix mat_D;
     // mat_D.read_mtx(arg.filename);
 

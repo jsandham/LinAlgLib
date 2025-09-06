@@ -23,11 +23,14 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef CUDA_PRIMITIVES_H
+#define CUDA_PRIMITIVES_H
 
-#ifndef CUDA_KERNELS_H
-#define CUDA_KERNELS_H
+#include <cstdint>
 
-template <typename T>
-void launch_cuda_fill_kernel(T* data, size_t size, T val);
+namespace linalg
+{
+    void cuda_exclusive_scan(int size, int64_t* x);
+}
 
 #endif

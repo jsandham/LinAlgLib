@@ -50,4 +50,4 @@ namespace linalg
     void device_fill(T* data, size_t size, T val);
 } // namespace linalg
 
-#endif DEVICE_MEMORY_H
+#endif
