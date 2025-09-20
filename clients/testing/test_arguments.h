@@ -37,9 +37,10 @@ namespace Testing
 {
     struct Arguments
     {
-        std::string category;
-        std::string filename;
-        Solver solver;
+        Category category; // IterativeSolvers, Math, Primitive
+        Fixture fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
+        std::string group; // small, medium, large, etc
+        std::string filename; // bmwcra_1.mtx, shipsec1.mtx, etc
         preconditioner precond;
         linalg::Cycle cycle;
         linalg::Smoother smoother;
@@ -91,8 +92,7 @@ namespace Testing
                 }
             }
             
-            std::string name = category + "_"
-                             + SolverToString(this->solver) + "_" 
+            std::string name = group + "_"
                              + PreconditionerToString(this->precond) + "_"
                              + CycleToString(this->cycle) + "_"
                              + SmootherToString(this->smoother) + "_"

@@ -32,7 +32,15 @@
 
 namespace Testing
 {
-    enum class Solver
+    enum class Category
+    {
+        IterativeSolvers,
+        Math,
+        Primitive,
+        Unknown
+    };
+
+    enum class Fixture
     {
         Jacobi,
         GaussSeidel,
@@ -44,7 +52,12 @@ namespace Testing
         GMRES,
         UAAMG,
         SAAMG,
-        RSAMG
+        RSAMG,
+        SpMV,
+        SpGEMM,
+        SpGEAM,
+        ExclusiveScan,
+        Unknown
     };
 
     enum class ClassicalSolver
@@ -80,33 +93,56 @@ namespace Testing
         IC,
         None
     };
-    
-    inline std::string SolverToString(Solver solver)
+
+    inline std::string CategoryToString(Category category)
     {
-        switch(solver)
+        switch(category)
         {
-            case Solver::Jacobi:
+            case Category::IterativeSolvers:
+                return "IterativeSolvers";
+            case Category::Math:
+                return "Math";
+            case Category::Primitive:
+                return "Primitive";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string FixtureToString(Fixture fixture)
+    {
+        switch(fixture)
+        {
+            case Fixture::Jacobi:
                 return "Jacobi";
-            case Solver::GaussSeidel:
+            case Fixture::GaussSeidel:
                 return "GaussSeidel";
-            case Solver::SOR:
+            case Fixture::SOR:
                 return "SOR";
-            case Solver::SymmGaussSeidel:
+            case Fixture::SymmGaussSeidel:
                 return "SymmGaussSeidel";
-            case Solver::SSOR:
+            case Fixture::SSOR:
                 return "SSOR";
-            case Solver::CG:
+            case Fixture::CG:
                 return "CG";
-            case Solver::BICGSTAB:
+            case Fixture::BICGSTAB:
                 return "BICGSTAB";
-            case Solver::GMRES:
+            case Fixture::GMRES:
                 return "GMRES";
-            case Solver::UAAMG:
+            case Fixture::UAAMG:
                 return "UAAMG";
-            case Solver::SAAMG:
+            case Fixture::SAAMG:
                 return "SAAMG";
-            case Solver::RSAMG:
+            case Fixture::RSAMG:
                 return "RSAMG";
+            case Fixture::SpMV:
+                return "SpMV";
+            case Fixture::SpGEMM:
+                return "SpGEMM";
+            case Fixture::SpGEAM:
+                return "SpGEAM";
+            case Fixture::ExclusiveScan:
+                return "ExclusiveScan";
         }
 
         return "Invalid";

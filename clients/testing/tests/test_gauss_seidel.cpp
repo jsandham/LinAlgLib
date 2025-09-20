@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(iterative_solvers, gauss_seidel, classical, "tests/test_gauss_seidel.yaml");
+INSTANTIATE_TEST(IterativeSolvers, GaussSeidel, classical, "tests/test_gauss_seidel.yaml");

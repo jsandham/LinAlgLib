@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(iterative_solvers, BICGSTAB, krylov, "tests/test_BICGSTAB.yaml");
+INSTANTIATE_TEST(IterativeSolvers, BICGSTAB, krylov, "tests/test_BICGSTAB.yaml");

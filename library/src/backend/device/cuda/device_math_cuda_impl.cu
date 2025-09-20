@@ -29,13 +29,13 @@
 #include <iostream>
 
 #include "cuda_math.h"
+#include "cuda_primitives.h"
 
 #include "axpby_kernels.cuh"
 #include "compute_residual_kernels.cuh"
 #include "csrmv_kernels.cuh"
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
-#include "find_minmax_kernels.cuh"
 #include "jacobi_solve_kernels.cuh"
 
 #include "../../../trace.h"
@@ -154,20 +154,7 @@ void linalg::cuda_extract_diagonal(int           m,
 double linalg::cuda_norm_inf(const double* array, int size)
 {
     ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    double* workspace = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(double) * 256));
-
-    find_max_kernel_part1<256><<<256, 256>>>(size, array, workspace);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    find_max_kernel_part2<256><<<1, 256>>>(workspace);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    double result;
-    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(double), cudaMemcpyDeviceToHost));
-    CHECK_CUDA(cudaFree(workspace));
-
-    return result;
+    return cuda_find_maximum(size, array);
 }
 
 //-------------------------------------------------------------------------------

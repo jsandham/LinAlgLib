@@ -24,6 +24,18 @@
 //
 //********************************************************************************
 
-#include "../test.h"
+#include "test_functions.h"
+#include "utility.h"
 
-INSTANTIATE_TEST(IterativeSolvers, GMRES, krylov, "tests/test_GMRES.yaml");
+#include <chrono>
+#include <cmath>
+#include <iostream>
+
+#include "linalg.h"
+
+using namespace linalg;
+
+bool Testing::test_exclusive_scan(Arguments arg)
+{
+    return false;
+}

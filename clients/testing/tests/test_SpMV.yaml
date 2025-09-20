@@ -1,9 +1,7 @@
 Tests:
   small:
-    precond: [None, Jacobi]
-    matrix_file: [
-                  # "matrices/SPD/bcsstm02/bcsstm02.mtx",
-                  # "matrices/SPD/ex5/ex5.mtx",
+    matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
+                  "matrices/SPD/ex5/ex5.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/bcsstk01/bcsstk01.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",
@@ -21,4 +19,3 @@ Tests:
                   "matrices/SPD/thermomech_TC/thermomech_TC.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx",
                   "matrices/SPD/bundle1/bundle1.mtx"]
-    max_iters: [200]

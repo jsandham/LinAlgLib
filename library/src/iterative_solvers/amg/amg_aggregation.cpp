@@ -180,13 +180,13 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
     }
     std::cout << "C" << std::endl;
 
+    aggregate_root_nodes.move_to_device();
+    aggregates.move_to_device();
+
     //aggregates.print_vector("aggregates before exclusive sum");
 
     // Exclusive sum
     exclusive_scan(aggregates);
-
-    aggregate_root_nodes.move_to_device();
-    aggregates.move_to_device();
 
     //max_state.print_vector("max_state");
     //aggregates.print_vector("aggregates after exclusive sum");

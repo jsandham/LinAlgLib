@@ -292,6 +292,91 @@ __device__ __forceinline__ void block_reduction_max(T* __restrict__ data, int ti
 }
 
 template <uint32_t BLOCKSIZE, typename T>
+__device__ __forceinline__ void block_reduction_min(T* __restrict__ data, int tid)
+{
+    if(BLOCKSIZE > 512)
+    {
+        if(tid < 512)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[512 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 256)
+    {
+        if(tid < 256)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[256 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 128)
+    {
+        if(tid < 128)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[128 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 64)
+    {
+        if(tid < 64)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[64 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 32)
+    {
+        if(tid < 32)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[32 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 16)
+    {
+        if(tid < 16)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[16 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 8)
+    {
+        if(tid < 8)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[8 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 4)
+    {
+        if(tid < 4)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[4 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 2)
+    {
+        if(tid < 2)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[2 + tid]));
+        }
+        __syncthreads();
+    }
+    if(BLOCKSIZE > 1)
+    {
+        if(tid < 1)
+        {
+            data[tid] = linalg::min(linalg::abs(data[tid]), linalg::abs(data[1 + tid]));
+        }
+        __syncthreads();
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
 __global__ void fill_kernel(T* __restrict__ data, size_t size, T val)
 {
     int tid = threadIdx.x + BLOCKSIZE * blockIdx.x;

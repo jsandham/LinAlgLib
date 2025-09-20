@@ -41,10 +41,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(yaml-cpp)
 
 set(LINALGLIB_CLIENTS_TEST_SOURCE
+  test_functions_dispatch.cpp
+
   test_functions_classical.cpp
   test_functions_krylov.cpp
   test_functions_amg.cpp
-  test_functions_dispatch.cpp
+  test_functions_spmv.cpp
+  test_functions_spgemm.cpp
+  test_functions_spgeam.cpp
+  test_functions_exclusive_scan.cpp
 
   tests/test_jacobi.cpp
   tests/test_gauss_seidel.cpp
@@ -59,6 +64,8 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   tests/test_UAAMG.cpp
   tests/test_SAAMG.cpp
   #tests/test_RSAMG.cpp
+
+  tests/test_SpMV.cpp
 )
 
 set(LINALGLIB_CLIENTS_COMMON_SOURCE

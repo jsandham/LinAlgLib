@@ -27,7 +27,110 @@
 #ifndef PRIMITIVE_KERNELS_H
 #define PRIMITIVE_KERNELS_H
 
+#include <cuda/std/limits>
+
 #include "common.cuh"
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void find_max_kernel_part1(int size, const T* __restrict__ x, T* __restrict__ workspace)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    // currently block_reduction_max uses abs so we are getting the maximum abs value
+    T val = cuda::std::numeric_limits<T>::min();
+
+    int index = gid;
+    while(index < size)
+    {
+        val = linalg::max(linalg::abs(val), linalg::abs(x[index]));
+
+        index += BLOCKSIZE * gridDim.x;
+    }
+
+    shared[tid] = val;
+
+    __syncthreads();
+
+    block_reduction_max<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[bid] = shared[0];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void find_max_kernel_part2(T* __restrict__ workspace)
+{
+    int tid = threadIdx.x;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    shared[tid] = workspace[tid];
+
+    __syncthreads();
+
+    block_reduction_max<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[0] = shared[0];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void find_min_kernel_part1(int size, const T* __restrict__ x, T* __restrict__ workspace)
+{
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    T val = cuda::std::numeric_limits<T>::max();
+
+    int index = gid;
+    while(index < size)
+    {
+        val = linalg::min(linalg::abs(val), linalg::abs(x[index]));
+
+        index += BLOCKSIZE * gridDim.x;
+    }
+
+    shared[tid] = val;
+
+    __syncthreads();
+
+    block_reduction_min<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[bid] = shared[0];
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void find_min_kernel_part2(T* __restrict__ workspace)
+{
+    int tid = threadIdx.x;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    shared[tid] = workspace[tid];
+
+    __syncthreads();
+
+    block_reduction_min<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        workspace[0] = shared[0];
+    }
+}
 
 template <uint32_t BLOCKSIZE, typename T>
 __global__ void exclusive_scan_kernel_part1(const T* d_in, T* d_out, T* workspace, int n)

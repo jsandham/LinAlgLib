@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(iterative_solvers, SOR, classical, "tests/test_SOR.yaml");
+INSTANTIATE_TEST(IterativeSolvers, SOR, classical, "tests/test_SOR.yaml");

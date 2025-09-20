@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,34 @@
 //
 //********************************************************************************
 
-#include "../test.h"
+#include "test_functions.h"
+#include "utility.h"
 
-INSTANTIATE_TEST(IterativeSolvers, GMRES, krylov, "tests/test_GMRES.yaml");
+#include <chrono>
+#include <cmath>
+#include <iostream>
+
+#include "linalg.h"
+
+using namespace linalg;
+
+bool Testing::test_spmv(Arguments arg)
+{
+    csr_matrix mat_A;
+    mat_A.read_mtx(arg.filename);
+
+    vector<double> vec_x(mat_A.get_n());
+    vec_x.ones();
+
+    vector<double> vec_y(mat_A.get_m());
+    vec_y.ones();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    mat_A.multiply_by_vector(vec_y, vec_x);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << ms_double.count() << "ms" << std::endl;
+
+    return true;
+}

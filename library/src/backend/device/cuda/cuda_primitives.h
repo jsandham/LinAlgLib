@@ -30,7 +30,9 @@
 
 namespace linalg
 {
-    void cuda_exclusive_scan(int size, int64_t* x);
+    double cuda_find_maximum(int size, const double* array);
+    double cuda_find_minimum(int size, const double* array);
+    void   cuda_exclusive_scan(int size, int64_t* array);
 }
 
 #endif

@@ -28,9 +28,10 @@
 #define TEST_YAML_LOADER_H__
 
 #include <iostream>
-#include <vector>
-#include <string>
 #include <queue>
+#include <stack>
+#include <string>
+#include <vector>
 
 #include <yaml-cpp/yaml.h>
 
@@ -39,339 +40,192 @@
 
 namespace YAML
 {
-    template <> struct convert<Testing::Solver>
+    template <>
+    struct convert<Testing::preconditioner>
     {
-        static Node encode(const Testing::Solver &rhs)
+        static Node encode(const Testing::preconditioner& rhs)
         {
             Node node;
-            switch (rhs)
+            switch(rhs)
             {
-            case Testing::Solver::Jacobi:
+            case Testing::preconditioner::Jacobi:
                 node = "Jacobi";
                 break;
-            case Testing::Solver::GaussSeidel:
+            case Testing::preconditioner::GaussSeidel:
                 node = "GaussSeidel";
                 break;
-            case Testing::Solver::SymmGaussSeidel:
-                node = "SymmGaussSeidel";
-                break;
-            case Testing::Solver::SOR:
+            case Testing::preconditioner::SOR:
                 node = "SOR";
                 break;
-            case Testing::Solver::SSOR:
-                node = "SSOR";
+            case Testing::preconditioner::SymmGaussSeidel:
+                node = "SymmGaussSeidel";
                 break;
-            case Testing::Solver::CG:
-                node = "CG";
+            case Testing::preconditioner::IC:
+                node = "IC";
                 break;
-            case Testing::Solver::GMRES:
-                node = "GMRES";
+            case Testing::preconditioner::ILU:
+                node = "ILU";
                 break;
-            case Testing::Solver::BICGSTAB:
-                node = "BICGSTAB";
-                break;
-            case Testing::Solver::UAAMG:
-                node = "UAAMG";
-                break;
-            case Testing::Solver::SAAMG:
-                node = "SAAMG";
-                break;
-            case Testing::Solver::RSAMG:
-                node = "RSAMG";
+            case Testing::preconditioner::None:
+                node = "None";
                 break;
             }
-    
+
             return node;
         }
-    
-        static bool decode(const Node &node, Testing::Solver &rhs)
+
+        static bool decode(const Node& node, Testing::preconditioner& rhs)
         {
             std::string type = node.as<std::string>();
-            if (type == "Jacobi")
+            if(type == "Jacobi")
             {
-                rhs = Testing::Solver::Jacobi;
+                rhs = Testing::preconditioner::Jacobi;
             }
-            else if (type == "GaussSeidel")
+            if(type == "GaussSeidel")
             {
-                rhs = Testing::Solver::GaussSeidel;
+                rhs = Testing::preconditioner::GaussSeidel;
             }
-            else if (type == "SymmGaussSeidel")
+            if(type == "SOR")
             {
-                rhs = Testing::Solver::SymmGaussSeidel;
+                rhs = Testing::preconditioner::SOR;
             }
-            else if (type == "SOR")
+            if(type == "SymmGaussSeidel")
             {
-                rhs = Testing::Solver::SOR;
+                rhs = Testing::preconditioner::SymmGaussSeidel;
             }
-            else if (type == "SSOR")
+            else if(type == "IC")
             {
-                rhs = Testing::Solver::SSOR;
+                rhs = Testing::preconditioner::IC;
             }
-            else if (type == "CG")
+            else if(type == "ILU")
             {
-                rhs = Testing::Solver::CG;
+                rhs = Testing::preconditioner::ILU;
             }
-            else if (type == "GMRES")
+            else if(type == "None")
             {
-                rhs = Testing::Solver::GMRES;
+                rhs = Testing::preconditioner::None;
             }
-            else if (type == "BICGSTAB")
-            {
-                rhs = Testing::Solver::BICGSTAB;
-            }
-            else if (type == "UAAMG")
-            {
-                rhs = Testing::Solver::UAAMG;
-            }
-            else if (type == "SAAMG")
-            {
-                rhs = Testing::Solver::SAAMG;
-            }
-            else if (type == "RSAMG")
-            {
-                rhs = Testing::Solver::RSAMG;
-            }
-            
 
             return true;
         }
     };
 
-template <> struct convert<Testing::ClassicalSolver>
-{
-    static Node encode(const Testing::ClassicalSolver &rhs)
+    template <>
+    struct convert<linalg::Cycle>
     {
-        Node node;
-        switch (rhs)
+        static Node encode(const linalg::Cycle& rhs)
         {
-        case Testing::ClassicalSolver::Jacobi:
-            node = "Jacobi";
-            break;
-        case Testing::ClassicalSolver::GaussSeidel:
-            node = "GaussSeidel";
-            break;
-        case Testing::ClassicalSolver::SymmGaussSeidel:
-            node = "SymmGaussSeidel";
-            break;
-        case Testing::ClassicalSolver::SOR:
-            node = "SOR";
-            break;
-        case Testing::ClassicalSolver::SSOR:
-            node = "SSOR";
-            break;
+            Node node;
+            switch(rhs)
+            {
+            case linalg::Cycle::Fcycle:
+                node = "Fcycle";
+                break;
+            case linalg::Cycle::Vcycle:
+                node = "Vcycle";
+                break;
+            case linalg::Cycle::Wcycle:
+                node = "Wcycle";
+                break;
+            }
+
+            return node;
         }
 
-        return node;
-    }
+        static bool decode(const Node& node, linalg::Cycle& rhs)
+        {
+            std::string type = node.as<std::string>();
+            if(type == "Fcycle")
+            {
+                rhs = linalg::Cycle::Fcycle;
+            }
+            else if(type == "Vcycle")
+            {
+                rhs = linalg::Cycle::Vcycle;
+            }
+            else if(type == "Wcycle")
+            {
+                rhs = linalg::Cycle::Wcycle;
+            }
 
-    static bool decode(const Node &node, Testing::ClassicalSolver &rhs)
+            return true;
+        }
+    };
+
+    template <>
+    struct convert<linalg::Smoother>
     {
-        std::string type = node.as<std::string>();
-        if (type == "Jacobi")
+        static Node encode(const linalg::Smoother& rhs)
         {
-            rhs = Testing::ClassicalSolver::Jacobi;
-        }
-        else if (type == "GaussSeidel")
-        {
-            rhs = Testing::ClassicalSolver::GaussSeidel;
-        }
-        else if (type == "SymmGaussSeidel")
-        {
-            rhs = Testing::ClassicalSolver::SymmGaussSeidel;
-        }
-        else if (type == "SOR")
-        {
-            rhs = Testing::ClassicalSolver::SOR;
-        }
-        else if (type == "SSOR")
-        {
-            rhs = Testing::ClassicalSolver::SSOR;
+            Node node;
+            switch(rhs)
+            {
+            case linalg::Smoother::Jacobi:
+                node = "Jacobi";
+                break;
+            case linalg::Smoother::Gauss_Seidel:
+                node = "Gauss_Seidel";
+                break;
+            case linalg::Smoother::Symm_Gauss_Seidel:
+                node = "Symm_Gauss_Seidel";
+                break;
+            case linalg::Smoother::SOR:
+                node = "SOR";
+                break;
+            case linalg::Smoother::SSOR:
+                node = "SSOR";
+                break;
+            }
+
+            return node;
         }
 
-        return true;
-    }
-};
+        static bool decode(const Node& node, linalg::Smoother& rhs)
+        {
+            std::string type = node.as<std::string>();
+            if(type == "Jacobi")
+            {
+                rhs = linalg::Smoother::Jacobi;
+            }
+            else if(type == "Gauss_Seidel")
+            {
+                rhs = linalg::Smoother::Gauss_Seidel;
+            }
+            else if(type == "Symm_Gauss_Seidel")
+            {
+                rhs = linalg::Smoother::Symm_Gauss_Seidel;
+            }
+            else if(type == "SOR")
+            {
+                rhs = linalg::Smoother::SOR;
+            }
+            else if(type == "SSOR")
+            {
+                rhs = linalg::Smoother::SSOR;
+            }
 
-template <> struct convert<Testing::preconditioner>
-{
-    static Node encode(const Testing::preconditioner &rhs)
-    {
-        Node node;
-        switch (rhs)
-        {
-        case Testing::preconditioner::Jacobi:
-            node = "Jacobi";
-            break;
-        case Testing::preconditioner::GaussSeidel:
-            node = "GaussSeidel";
-            break;
-        case Testing::preconditioner::SOR:
-            node = "SOR";
-            break;
-        case Testing::preconditioner::SymmGaussSeidel:
-            node = "SymmGaussSeidel";
-            break;
-        case Testing::preconditioner::IC:
-            node = "IC";
-            break;
-        case Testing::preconditioner::ILU:
-            node = "ILU";
-            break;
-        case Testing::preconditioner::None:
-            node = "None";
-            break;
+            return true;
         }
-
-        return node;
-    }
-
-    static bool decode(const Node &node, Testing::preconditioner &rhs)
-    {
-        std::string type = node.as<std::string>();
-        if (type == "Jacobi")
-        {
-            rhs = Testing::preconditioner::Jacobi;
-        }
-        if (type == "GaussSeidel")
-        {
-            rhs = Testing::preconditioner::GaussSeidel;
-        }
-        if (type == "SOR")
-        {
-            rhs = Testing::preconditioner::SOR;
-        }
-        if (type == "SymmGaussSeidel")
-        {
-            rhs = Testing::preconditioner::SymmGaussSeidel;
-        }
-        else if (type == "IC")
-        {
-            rhs = Testing::preconditioner::IC;
-        }
-        else if (type == "ILU")
-        {
-            rhs = Testing::preconditioner::ILU;
-        }
-        else if(type == "None")
-        {
-            rhs = Testing::preconditioner::None;
-        }
-
-        return true;
-    }
-};
-
-template <> struct convert<linalg::Cycle>
-{
-    static Node encode(const linalg::Cycle &rhs)
-    {
-        Node node;
-        switch (rhs)
-        {
-        case linalg::Cycle::Fcycle:
-            node = "Fcycle";
-            break;
-        case linalg::Cycle::Vcycle:
-            node = "Vcycle";
-            break;
-        case linalg::Cycle::Wcycle:
-            node = "Wcycle";
-            break;
-        }
-
-        return node;
-    }
-
-    static bool decode(const Node &node, linalg::Cycle &rhs)
-    {
-        std::string type = node.as<std::string>();
-        if (type == "Fcycle")
-        {
-            rhs = linalg::Cycle::Fcycle;
-        }
-        else if (type == "Vcycle")
-        {
-            rhs = linalg::Cycle::Vcycle;
-        }
-        else if (type == "Wcycle")
-        {
-            rhs = linalg::Cycle::Wcycle;
-        }
-
-        return true;
-    }
-};
-
-template <> struct convert<linalg::Smoother>
-{
-    static Node encode(const linalg::Smoother &rhs)
-    {
-        Node node;
-        switch (rhs)
-        {
-        case linalg::Smoother::Jacobi:
-            node = "Jacobi";
-            break;
-        case linalg::Smoother::Gauss_Seidel:
-            node = "Gauss_Seidel";
-            break;
-        case linalg::Smoother::Symm_Gauss_Seidel:
-            node = "Symm_Gauss_Seidel";
-            break;
-        case linalg::Smoother::SOR:
-            node = "SOR";
-            break;
-        case linalg::Smoother::SSOR:
-            node = "SSOR";
-            break;
-        }
-
-        return node;
-    }
-
-    static bool decode(const Node &node, linalg::Smoother &rhs)
-    {
-        std::string type = node.as<std::string>();
-        if (type == "Jacobi")
-        {
-            rhs = linalg::Smoother::Jacobi;
-        }
-        else if (type == "Gauss_Seidel")
-        {
-            rhs = linalg::Smoother::Gauss_Seidel;
-        }
-        else if (type == "Symm_Gauss_Seidel")
-        {
-            rhs = linalg::Smoother::Symm_Gauss_Seidel;
-        }
-        else if (type == "SOR")
-        {
-            rhs = linalg::Smoother::SOR;
-        }
-        else if (type == "SSOR")
-        {
-            rhs = linalg::Smoother::SSOR;
-        }
-
-        return true;
-    }
-};
+    };
 }
 
-template<typename T>
-std::vector<T> read_values(const std::string& category, const std::string& label, const YAML::Node& node, T default_value)
+template <typename T>
+std::vector<T> read_values(const std::string& group,
+                           const std::string& label,
+                           const YAML::Node&  node,
+                           T                  default_value)
 {
     std::vector<T> values;
 
-    if(node[category][label].IsDefined())
+    if(node[group][label].IsDefined())
     {
-        if(node[category][label].IsSequence())
+        if(node[group][label].IsSequence())
         {
-            values = node[category][label].as<std::vector<T>>();
+            values = node[group][label].as<std::vector<T>>();
         }
         else
         {
-            values.push_back(node[category][label].as<T>());
+            values.push_back(node[group][label].as<T>());
         }
 
         return values;
@@ -391,77 +245,212 @@ inline std::string correct_test_filepath(const std::string& filepath)
 #endif
 }
 
-inline std::vector<Testing::Arguments> generate_tests(const std::string filepath)
-{
-    std::cout << "filepath: " << correct_test_filepath(filepath) << std::endl;
-    YAML::Node root_node = YAML::LoadFile(correct_test_filepath(filepath));
+inline Testing::Category StringToCategory(const std::string& str) {
+    // Static map for efficiency. It's initialized only once.
+    static const std::unordered_map<std::string, Testing::Category> categoryMap = {
+        {"IterativeSolvers", Testing::Category::IterativeSolvers},
+        {"Math", Testing::Category::Math},
+        {"Primitive", Testing::Category::Primitive}
+    };
 
-    size_t index = 0;
+    // Find the string in the map
+    auto it = categoryMap.find(str);
+    
+    // Return the corresponding enum value or a default value
+    if (it != categoryMap.end()) 
+    {
+        return it->second;
+    }
+
+    return Testing::Category::Unknown;
+}
+
+inline Testing::Fixture StringToFixture(const std::string& str) {
+    // Static map for efficiency. It's initialized only once.
+    static const std::unordered_map<std::string, Testing::Fixture> fixtureMap = {
+        {"Jacobi", Testing::Fixture::Jacobi},
+        {"GaussSeidel", Testing::Fixture::GaussSeidel},
+        {"SOR", Testing::Fixture::SOR},
+        {"SymmGaussSeidel", Testing::Fixture::SymmGaussSeidel},
+        {"SSOR", Testing::Fixture::SSOR},
+        {"CG", Testing::Fixture::CG},
+        {"BICGSTAB", Testing::Fixture::BICGSTAB},
+        {"GMRES", Testing::Fixture::GMRES},
+        {"UAAMG", Testing::Fixture::UAAMG},
+        {"SAAMG", Testing::Fixture::SAAMG},
+        {"RSAMG", Testing::Fixture::RSAMG},
+        {"SpMV", Testing::Fixture::SpMV},
+        {"SpGEMM", Testing::Fixture::SpGEMM},
+        {"SpGEAM", Testing::Fixture::SpGEAM},
+        {"ExclusiveScan", Testing::Fixture::ExclusiveScan}
+    };
+
+    // Find the string in the map
+    auto it = fixtureMap.find(str);
+    
+    // Return the corresponding enum value or a default value
+    if (it != fixtureMap.end()) 
+    {
+        return it->second;
+    }
+
+    return Testing::Fixture::Unknown;
+}
+
+// Helper struct to hold all parameter vectors
+struct TestParameters
+{
+    std::vector<std::string>             matrices;
+    std::vector<Testing::preconditioner> preconds;
+    std::vector<linalg::Cycle>           cycles;
+    std::vector<linalg::Smoother>        smoothers;
+    std::vector<int>                     presmoothings;
+    std::vector<int>                     postsmoothings;
+    std::vector<int>                     max_iters;
+    std::vector<double>                  tols;
+    std::vector<double>                  omegas;
+};
+
+inline std::vector<Testing::Arguments> generate_tests(const std::string category, const std::string fixture, const std::string filepath)
+{
+    YAML::Node                      root_node = YAML::LoadFile(correct_test_filepath(filepath));
     std::vector<Testing::Arguments> tests;
 
-    for (YAML::const_iterator it = root_node["Tests"].begin(); it != root_node["Tests"].end(); ++it)
+    for(YAML::const_iterator it = root_node["Tests"].begin(); it != root_node["Tests"].end(); ++it)
     {
-        std::string category = it->first.as<std::string>();
+        std::string group = it->first.as<std::string>();
 
-        std::cout << "category: " << category << std::endl;
+        TestParameters params;
+        params.matrices = read_values<std::string>(group, "matrix_file", root_node["Tests"], "");
+        params.preconds = read_values<Testing::preconditioner>(
+            group, "precond", root_node["Tests"], Testing::preconditioner::None);
+        params.cycles = read_values<linalg::Cycle>(
+            group, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
+        params.smoothers = read_values<linalg::Smoother>(
+            group, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
+        params.presmoothings  = read_values<int>(group, "presmoothing", root_node["Tests"], 1);
+        params.postsmoothings = read_values<int>(group, "postsmoothing", root_node["Tests"], 1);
+        params.max_iters      = read_values<int>(group, "max_iters", root_node["Tests"], 1000);
+        params.tols           = read_values<double>(group, "tol", root_node["Tests"], 1e-06);
+        params.omegas         = read_values<double>(group, "omega", root_node["Tests"], 0.66667);
 
-        std::vector<Testing::Solver> solvers = read_values<Testing::Solver>(category, "solver", root_node["Tests"], Testing::Solver::Jacobi);
-        std::vector<std::string> matrices = read_values<std::string>(category, "matrix_file", root_node["Tests"], "");
-        std::vector<Testing::preconditioner> preconds = read_values<Testing::preconditioner>(category, "precond", root_node["Tests"], Testing::preconditioner::None);
-        std::vector<linalg::Cycle> cycles = read_values<linalg::Cycle>(category, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
-        std::vector<linalg::Smoother> smoothers = read_values<linalg::Smoother>(category, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
-        std::vector<int> presmoothings = read_values<int>(category, "presmoothing", root_node["Tests"], 1);
-        std::vector<int> postsmoothings = read_values<int>(category, "postsmoothing", root_node["Tests"], 1);
-        std::vector<int> max_iters = read_values<int>(category, "max_iters", root_node["Tests"], 1000);
-        std::vector<double> tols = read_values<double>(category, "tol", root_node["Tests"], 1e-06);
-        std::vector<double> omegas = read_values<double>(category, "omega", root_node["Tests"], 0.66667);
-
-        size_t total_tests = solvers.size() * matrices.size() * preconds.size() * cycles.size() * smoothers.size() * presmoothings.size() *
-                            postsmoothings.size() * max_iters.size() * tols.size() * omegas.size();
-
+        size_t total_tests = params.matrices.size() * params.preconds.size()
+                             * params.cycles.size() * params.smoothers.size()
+                             * params.presmoothings.size() * params.postsmoothings.size()
+                             * params.max_iters.size() * params.tols.size() * params.omegas.size();
         std::cout << "total_tests: " << total_tests << std::endl;
 
-        tests.resize(tests.size() + total_tests);
+        // Reserve memory once to avoid multiple reallocations
+        tests.reserve(tests.size() + total_tests);
 
-        for(size_t i = 0; i < solvers.size(); i++)
+        // A tuple for each item on the stack: {current_args, depth}
+        using StackItem = std::tuple<Testing::Arguments, size_t>;
+        std::stack<StackItem> s;
+
+        // Push the initial state onto the stack
+        Testing::Arguments initial_args;
+        initial_args.category = StringToCategory(category);
+        initial_args.fixture = StringToFixture(fixture);
+        initial_args.group = group;
+        s.push({initial_args, 0});
+
+        // The main loop
+        while(!s.empty())
         {
-            for(size_t j = 0; j < matrices.size(); j++)
+            StackItem current_item = s.top();
+            s.pop();
+
+            Testing::Arguments current_args = std::get<0>(current_item);
+            size_t             depth        = std::get<1>(current_item);
+
+            // Base Case: A full combination is found
+            if(depth == 9/*param_lists.size()*/)
             {
-                for(size_t k = 0; k < preconds.size(); k++)
+                tests.push_back(current_args);
+                continue;
+            }
+
+            // Recursive Step (Iterative): Expand to the next level
+            // This part is the tricky bit due to different types
+            if(depth == 0)
+            { // Matrix Files
+                for(const auto& matrix_file : params.matrices)
                 {
-                    for(size_t l = 0; l < cycles.size(); l++)
-                    {
-                        for(size_t m = 0; m < smoothers.size(); m++)
-                        {
-                            for(size_t n = 0; n < presmoothings.size(); n++)
-                            {
-                                for(size_t o = 0; o < postsmoothings.size(); o++)
-                                {
-                                    for(size_t p = 0; p < max_iters.size(); p++)
-                                    {
-                                        for(size_t q = 0; q < tols.size(); q++)
-                                        {
-                                            for(size_t r = 0; r < omegas.size(); r++)
-                                            {
-                                                tests[index].category = category;
-                                                tests[index].solver = solvers[i]; 
-                                                tests[index].filename = matrices[j]; 
-                                                tests[index].precond = preconds[k]; 
-                                                tests[index].cycle = cycles[l]; 
-                                                tests[index].smoother = smoothers[m]; 
-                                                tests[index].presmoothing = presmoothings[n]; 
-                                                tests[index].postsmoothing = postsmoothings[o]; 
-                                                tests[index].max_iters = max_iters[p]; 
-                                                tests[index].tol = tols[q]; 
-                                                tests[index].omega = omegas[r];
-                                                index++;                    
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Testing::Arguments next_args = current_args;
+                    next_args.filename           = matrix_file;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 1)
+            {
+                for(const auto& precond : params.preconds)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.precond           = precond;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 2)
+            {
+                for(const auto& cycle : params.cycles)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.cycle           = cycle;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 3)
+            {
+                for(const auto& smoother : params.smoothers)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.smoother           = smoother;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 4)
+            {
+                for(const auto& presmoothing : params.presmoothings)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.presmoothing           = presmoothing;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 5)
+            {
+                for(const auto& postsmoothing : params.postsmoothings)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.postsmoothing           = postsmoothing;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 6)
+            {
+                for(const auto& max_iters : params.max_iters)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.max_iters           = max_iters;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 7)
+            {
+                for(const auto& tol : params.tols)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.tol           = tol;
+                    s.push({next_args, depth + 1});
+                }
+            }
+            else if(depth == 8)
+            {
+                for(const auto& omega : params.omegas)
+                {
+                    Testing::Arguments next_args = current_args;
+                    next_args.omega           = omega;
+                    s.push({next_args, depth + 1});
                 }
             }
         }

@@ -1,6 +1,5 @@
 Tests:
   small:
-    solver: SAAMG
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",

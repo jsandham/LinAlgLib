@@ -1,6 +1,5 @@
 Tests:
   small:
-    solver: SSOR
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/ex5/ex5.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
@@ -42,7 +41,6 @@ Tests:
     max_iters: [1000]
 
   medium:
-    solver: SSOR
     matrix_file: ["matrices/SPD/olafu/olafu.mtx",
                   "matrices/SPD/gyro/gyro.mtx",
                   "matrices/SPD/Dubcova2/Dubcova2.mtx",
@@ -88,7 +86,6 @@ Tests:
     max_iters: [1000]
 
   large:
-    solver: SSOR
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
                   "matrices/SPD/bmwcra_1/bmwcra_1.mtx",
                   "matrices/SPD/pwtk/pwtk.mtx",

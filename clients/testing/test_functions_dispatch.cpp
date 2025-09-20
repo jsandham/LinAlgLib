@@ -35,34 +35,78 @@ static std::string correct_filename(const std::string& filename)
 #endif
 }
 
+namespace Testing
+{
+    static bool solver_test_dispatch(Arguments arg)
+    {
+        switch(arg.fixture)
+        {
+            case Fixture::Jacobi:
+                return test_classical(ClassicalSolver::Jacobi, arg);
+            case Fixture::GaussSeidel:
+                return test_classical(ClassicalSolver::GaussSeidel, arg);
+            case Fixture::SOR:
+                return test_classical(ClassicalSolver::SOR, arg);
+            case Fixture::SymmGaussSeidel:
+                return test_classical(ClassicalSolver::SymmGaussSeidel, arg);
+            case Fixture::SSOR:
+                return test_classical(ClassicalSolver::SSOR, arg);
+            case Fixture::CG:
+                return test_krylov(KrylovSolver::CG, arg);
+            case Fixture::BICGSTAB:
+                return test_krylov(KrylovSolver::BICGSTAB, arg);
+            case Fixture::GMRES:
+                return test_krylov(KrylovSolver::GMRES, arg);
+            case Fixture::UAAMG:
+                return test_amg(AMGSolver::UAAMG, arg);
+            case Fixture::SAAMG:
+                return test_amg(AMGSolver::SAAMG, arg);
+            case Fixture::RSAMG:
+                return test_amg(AMGSolver::RSAMG, arg);
+        }
+
+        return false;
+    }
+
+    static bool math_test_dispatch(Arguments arg)
+    {
+        switch(arg.fixture)
+        {
+            case Fixture::SpMV:
+                return test_spmv(arg);
+            case Fixture::SpGEMM:
+                return test_spgemm(arg);
+            case Fixture::SpGEAM:
+                return test_spgeam(arg);
+        }
+
+        return false;
+    }
+
+    static bool primitive_test_dispatch(Arguments arg)
+    {
+        switch(arg.fixture)
+        {
+            case Fixture::ExclusiveScan:
+                return test_exclusive_scan(arg);
+        }
+        
+        return false;
+    }
+}
+
 bool Testing::test_dispatch(Arguments arg)
 {
     arg.filename = correct_filename(arg.filename);
 
-    switch(arg.solver)
+    switch(arg.category)
     {
-        case Solver::Jacobi:
-            return test_classical(ClassicalSolver::Jacobi, arg);
-        case Solver::GaussSeidel:
-            return test_classical(ClassicalSolver::GaussSeidel, arg);
-        case Solver::SOR:
-            return test_classical(ClassicalSolver::SOR, arg);
-        case Solver::SymmGaussSeidel:
-            return test_classical(ClassicalSolver::SymmGaussSeidel, arg);
-        case Solver::SSOR:
-            return test_classical(ClassicalSolver::SSOR, arg);
-        case Solver::CG:
-            return test_krylov(KrylovSolver::CG, arg);
-        case Solver::BICGSTAB:
-            return test_krylov(KrylovSolver::BICGSTAB, arg);
-        case Solver::GMRES:
-            return test_krylov(KrylovSolver::GMRES, arg);
-        case Solver::UAAMG:
-            return test_amg(AMGSolver::UAAMG, arg);
-        case Solver::SAAMG:
-            return test_amg(AMGSolver::SAAMG, arg);
-        case Solver::RSAMG:
-            return test_amg(AMGSolver::RSAMG, arg);
+        case Category::IterativeSolvers:
+           return solver_test_dispatch(arg);
+        case Category::Math:
+           return math_test_dispatch(arg);
+        case Category::Primitive:
+           return primitive_test_dispatch(arg);
     }
 
     return false;

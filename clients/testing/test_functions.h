@@ -32,9 +32,20 @@
 namespace Testing
 {
     bool test_dispatch(Arguments arg);
+
+    // Iterative solvers
     bool test_classical(ClassicalSolver solver_type, Arguments arg);
     bool test_krylov(KrylovSolver solver_type, Arguments arg);
     bool test_amg(AMGSolver solver_type, Arguments arg);
+
+    // Math testing
+    bool test_spmv(Arguments arg);
+    bool test_spgemm(Arguments arg);
+    bool test_spgeam(Arguments arg);
+
+    // Primitive
+    bool test_exclusive_scan(Arguments arg);
+
 } // namespace Testing
 
 #endif
