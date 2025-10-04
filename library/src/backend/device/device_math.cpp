@@ -34,7 +34,7 @@
 
 #if defined(LINALGLIB_HAS_CUDA)
 #include "cuda/cuda_math.h"
-#include "cuda/cuda_primitives.h"
+#include "cuda/cuda_memory.h"
 #endif
 
 // Compute y = alpha * x + y
@@ -52,8 +52,6 @@ void linalg::device_axpy(double alpha, const vector<double>& x, vector<double>& 
                   << std::endl;
         return;
     }
-
-    //device_axpy_impl(x.get_size(), alpha, x.get_vec(), y.get_vec());
 }
 
 // Compute y = alpha * x + beta * y
@@ -70,7 +68,6 @@ void linalg::device_axpby(double alpha, const vector<double>& x, double beta, ve
                   << std::endl;
         return;
     }
-    //device_axpby_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec());
 }
 
 // Compute z = alpha * x + beta * y + gamma * z
@@ -94,7 +91,6 @@ void linalg::device_axpbypgz(double                alpha,
                   << std::endl;
         return;
     }
-    //device_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
 // Compute y = A * x
@@ -122,17 +118,6 @@ void linalg::device_matrix_vector_product(const csr_matrix&     A,
                   << std::endl;
         return;
     }
-
-    // device_csrmv_impl(A.get_m(),
-    //                   A.get_n(),
-    //                   A.get_nnz(),
-    //                   1.0,
-    //                   A.get_row_ptr(),
-    //                   A.get_col_ind(),
-    //                   A.get_val(),
-    //                   x.get_vec(),
-    //                   0.0,
-    //                   y.get_vec());
 }
 
 // Compute y = alpha * A * x + beta * y
@@ -160,23 +145,32 @@ void linalg::device_matrix_vector_product(
                   << std::endl;
         return;
     }
-
-    // device_csrmv_impl(A.get_m(),
-    //                   A.get_n(),
-    //                   A.get_nnz(),
-    //                   alpha,
-    //                   A.get_row_ptr(),
-    //                   A.get_col_ind(),
-    //                   A.get_val(),
-    //                   x.get_vec(),
-    //                   beta,
-    //                   y.get_vec());
 }
 
 // Compute C = A * B
 void linalg::device_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    std::cout << "Error: matrix_matrix_product on device not implemented" << std::endl;
+    ROUTINE_TRACE("linalg::device_matrix_matrix_product");
+
+    if constexpr(is_cuda_available())
+    {
+        // CALL_CUDA(cuda_csrmv(A.get_m(),
+        //                      A.get_n(),
+        //                      A.get_nnz(),
+        //                      alpha,
+        //                      A.get_row_ptr(),
+        //                      A.get_col_ind(),
+        //                      A.get_val(),
+        //                      x.get_vec(),
+        //                      beta,
+        //                      y.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
 }
 
 // Compute C = A + B
@@ -218,7 +212,45 @@ void linalg::device_backward_solve(const csr_matrix&     A,
 // Transpose matrix
 void linalg::device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 {
-    std::cout << "Error: transpose_matrix on device not implemented" << std::endl;
+    ROUTINE_TRACE("linalg::device_multiply_by_vector");
+
+    if constexpr(is_cuda_available())
+    {
+        size_t buffer_size;
+        CALL_CUDA(cuda_csr2csc_buffer_size(A.get_m(),
+                                           A.get_n(),
+                                           A.get_nnz(),
+                                           A.get_row_ptr(),
+                                           A.get_col_ind(),
+                                           A.get_val(),
+                                           &buffer_size));
+
+        int32_t* buffer = nullptr;
+        linalg::cuda_allocate(&buffer, sizeof(int32_t) * A.get_nnz());
+
+        CALL_CUDA(cuda_csr2csc(A.get_m(),
+                               A.get_n(),
+                               A.get_nnz(),
+                               A.get_row_ptr(),
+                               A.get_col_ind(),
+                               A.get_val(),
+                               transposeA.get_row_ptr(),
+                               transposeA.get_col_ind(),
+                               transposeA.get_val(),
+                               buffer));
+
+        linalg::cuda_free(buffer);
+
+        //CHECK_CUDA(cudaMalloc((void**)&buffer, sizeof(int) * A.get_nnz()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+
+    // std::cout << "Error: transpose_matrix on device not implemented" << std::endl;
 }
 
 // Dot product
@@ -268,23 +300,6 @@ void linalg::device_compute_residual(const csr_matrix&     A,
     }
 }
 
-// Exclusive scan
-void linalg::device_exclusive_scan(vector<int64_t>& x)
-{
-    ROUTINE_TRACE("linalg::device_exclusive_scan");
-
-    if constexpr(is_cuda_available())
-    {
-        CALL_CUDA(cuda_exclusive_scan((int)x.get_size(), x.get_vec()));
-    }
-    else
-    {
-        std::cout << "Error: Not device backend available for the function " << __func__
-                  << std::endl;
-        return;
-    }
-}
-
 // Extract diagonal entries
 void linalg::device_diagonal(const csr_matrix& A, vector<double>& d)
 {
@@ -306,14 +321,6 @@ void linalg::device_diagonal(const csr_matrix& A, vector<double>& d)
                   << std::endl;
         return;
     }
-
-    // device_extract_diagonal_impl(A.get_m(),
-    //                              A.get_n(),
-    //                              A.get_nnz(),
-    //                              A.get_row_ptr(),
-    //                              A.get_col_ind(),
-    //                              A.get_val(),
-    //                              d.get_vec());
 }
 
 // Euclidean norm

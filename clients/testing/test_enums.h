@@ -27,8 +27,8 @@
 #ifndef TEST_ENUMS_H__
 #define TEST_ENUMS_H__
 
-#include <string>
 #include <linalg.h>
+#include <string>
 
 namespace Testing
 {
@@ -56,6 +56,7 @@ namespace Testing
         SpMV,
         SpGEMM,
         SpGEAM,
+        Transpose,
         ExclusiveScan,
         Unknown
     };
@@ -98,12 +99,12 @@ namespace Testing
     {
         switch(category)
         {
-            case Category::IterativeSolvers:
-                return "IterativeSolvers";
-            case Category::Math:
-                return "Math";
-            case Category::Primitive:
-                return "Primitive";
+        case Category::IterativeSolvers:
+            return "IterativeSolvers";
+        case Category::Math:
+            return "Math";
+        case Category::Primitive:
+            return "Primitive";
         }
 
         return "Invalid";
@@ -113,36 +114,38 @@ namespace Testing
     {
         switch(fixture)
         {
-            case Fixture::Jacobi:
-                return "Jacobi";
-            case Fixture::GaussSeidel:
-                return "GaussSeidel";
-            case Fixture::SOR:
-                return "SOR";
-            case Fixture::SymmGaussSeidel:
-                return "SymmGaussSeidel";
-            case Fixture::SSOR:
-                return "SSOR";
-            case Fixture::CG:
-                return "CG";
-            case Fixture::BICGSTAB:
-                return "BICGSTAB";
-            case Fixture::GMRES:
-                return "GMRES";
-            case Fixture::UAAMG:
-                return "UAAMG";
-            case Fixture::SAAMG:
-                return "SAAMG";
-            case Fixture::RSAMG:
-                return "RSAMG";
-            case Fixture::SpMV:
-                return "SpMV";
-            case Fixture::SpGEMM:
-                return "SpGEMM";
-            case Fixture::SpGEAM:
-                return "SpGEAM";
-            case Fixture::ExclusiveScan:
-                return "ExclusiveScan";
+        case Fixture::Jacobi:
+            return "Jacobi";
+        case Fixture::GaussSeidel:
+            return "GaussSeidel";
+        case Fixture::SOR:
+            return "SOR";
+        case Fixture::SymmGaussSeidel:
+            return "SymmGaussSeidel";
+        case Fixture::SSOR:
+            return "SSOR";
+        case Fixture::CG:
+            return "CG";
+        case Fixture::BICGSTAB:
+            return "BICGSTAB";
+        case Fixture::GMRES:
+            return "GMRES";
+        case Fixture::UAAMG:
+            return "UAAMG";
+        case Fixture::SAAMG:
+            return "SAAMG";
+        case Fixture::RSAMG:
+            return "RSAMG";
+        case Fixture::SpMV:
+            return "SpMV";
+        case Fixture::SpGEMM:
+            return "SpGEMM";
+        case Fixture::SpGEAM:
+            return "SpGEAM";
+        case Fixture::Transpose:
+            return "Transpose";
+        case Fixture::ExclusiveScan:
+            return "ExclusiveScan";
         }
 
         return "Invalid";
@@ -152,16 +155,16 @@ namespace Testing
     {
         switch(solver)
         {
-            case ClassicalSolver::Jacobi:
-                return "Jacobi";
-            case ClassicalSolver::GaussSeidel:
-                return "GaussSeidel";
-            case ClassicalSolver::SOR:
-                return "SOR";
-            case ClassicalSolver::SymmGaussSeidel:
-                return "SymmGaussSeidel";
-            case ClassicalSolver::SSOR:
-                return "SSOR";
+        case ClassicalSolver::Jacobi:
+            return "Jacobi";
+        case ClassicalSolver::GaussSeidel:
+            return "GaussSeidel";
+        case ClassicalSolver::SOR:
+            return "SOR";
+        case ClassicalSolver::SymmGaussSeidel:
+            return "SymmGaussSeidel";
+        case ClassicalSolver::SSOR:
+            return "SSOR";
         }
 
         return "Invalid";
@@ -171,12 +174,12 @@ namespace Testing
     {
         switch(solver)
         {
-            case KrylovSolver::CG:
-                return "CG";
-            case KrylovSolver::BICGSTAB:
-                return "BICGSTAB";
-            case KrylovSolver::GMRES:
-                return "GMRES";
+        case KrylovSolver::CG:
+            return "CG";
+        case KrylovSolver::BICGSTAB:
+            return "BICGSTAB";
+        case KrylovSolver::GMRES:
+            return "GMRES";
         }
 
         return "Invalid";
@@ -186,20 +189,20 @@ namespace Testing
     {
         switch(precond)
         {
-            case preconditioner::Jacobi:
-                return "Jacobi";
-            case preconditioner::GaussSeidel:
-                return "GaussSeidel";
-            case preconditioner::SOR:
-                return "SOR";
-            case preconditioner::SymmGaussSeidel:
-                return "SymmGaussSeidel";
-            case preconditioner::ILU:
-                return "ILU";
-            case preconditioner::IC:
-                return "IC";
-            case preconditioner::None:
-                return "None";
+        case preconditioner::Jacobi:
+            return "Jacobi";
+        case preconditioner::GaussSeidel:
+            return "GaussSeidel";
+        case preconditioner::SOR:
+            return "SOR";
+        case preconditioner::SymmGaussSeidel:
+            return "SymmGaussSeidel";
+        case preconditioner::ILU:
+            return "ILU";
+        case preconditioner::IC:
+            return "IC";
+        case preconditioner::None:
+            return "None";
         }
 
         return "Invalid";
@@ -209,12 +212,12 @@ namespace Testing
     {
         switch(solver)
         {
-            case AMGSolver::UAAMG:
-                return "UAAMG";
-            case AMGSolver::SAAMG:
-                return "SAAMG";
-            case AMGSolver::RSAMG:
-                return "RSAMG";
+        case AMGSolver::UAAMG:
+            return "UAAMG";
+        case AMGSolver::SAAMG:
+            return "SAAMG";
+        case AMGSolver::RSAMG:
+            return "RSAMG";
         }
 
         return "Invalid";
@@ -224,12 +227,12 @@ namespace Testing
     {
         switch(cycle)
         {
-            case linalg::Cycle::Vcycle:
-                return "Vcycle";
-            case linalg::Cycle::Wcycle:
-                return "Wcycle";
-            case linalg::Cycle::Fcycle:
-                return "Fcycle";
+        case linalg::Cycle::Vcycle:
+            return "Vcycle";
+        case linalg::Cycle::Wcycle:
+            return "Wcycle";
+        case linalg::Cycle::Fcycle:
+            return "Fcycle";
         }
 
         return "Invalid";
@@ -239,16 +242,16 @@ namespace Testing
     {
         switch(smoother)
         {
-            case linalg::Smoother::Jacobi:
-                return "Jacobi";
-            case linalg::Smoother::Gauss_Seidel:
-                return "Gauss_Seidel";
-            case linalg::Smoother::Symm_Gauss_Seidel:
-                return "Symm_Gauss_Seidel";
-            case linalg::Smoother::SOR:
-                return "SOR";
-            case linalg::Smoother::SSOR:
-                return "SSOR";
+        case linalg::Smoother::Jacobi:
+            return "Jacobi";
+        case linalg::Smoother::Gauss_Seidel:
+            return "Gauss_Seidel";
+        case linalg::Smoother::Symm_Gauss_Seidel:
+            return "Symm_Gauss_Seidel";
+        case linalg::Smoother::SOR:
+            return "SOR";
+        case linalg::Smoother::SSOR:
+            return "SSOR";
         }
 
         return "Invalid";

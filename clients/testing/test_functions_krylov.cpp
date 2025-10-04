@@ -48,8 +48,38 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     vec_a.print_vector("vec_a");
 
-    // csr_matrix mat_D;
-    // mat_D.read_mtx(arg.filename);
+    // 1 2 0 0
+    // 0 3 0 4
+    // 5 6 7 0
+    // 0 8 9 0
+    //
+    // 1 0 5 0
+    // 2 3 6 8
+    // 0 0 7 9
+    // 0 4 0 0
+    std::vector<int>    csr_row_ptr = {0, 2, 4, 7, 9};
+    std::vector<int>    csr_col_ind = {0, 1, 1, 3, 0, 1, 2, 1, 2};
+    std::vector<double> csr_val     = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    csr_matrix mat_D(csr_row_ptr, csr_col_ind, csr_val, 4, 4, 9);
+    //mat_D.read_mtx(arg.filename);
+
+    csr_matrix transpose_mat_D;
+    transpose_mat_D.resize(mat_D.get_n(), mat_D.get_m(), mat_D.get_nnz());
+
+    mat_D.move_to_device();
+    transpose_mat_D.move_to_device();
+
+    linalg::transpose_matrix(mat_D, transpose_mat_D);
+
+    mat_D.move_to_host();
+    transpose_mat_D.move_to_host();
+
+    mat_D.print_matrix("D");
+    transpose_mat_D.print_matrix("D^T");
+
+    //mat_D.print_col_ind("mat_D col indices");
+    //transpose_mat_D.print_col_ind("transpose_mat_D col indices");
 
     // vector<double> vec_1(mat_D.get_m());
     // vec_1.zeros();

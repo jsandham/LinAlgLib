@@ -41,28 +41,28 @@ namespace Testing
     {
         switch(arg.fixture)
         {
-            case Fixture::Jacobi:
-                return test_classical(ClassicalSolver::Jacobi, arg);
-            case Fixture::GaussSeidel:
-                return test_classical(ClassicalSolver::GaussSeidel, arg);
-            case Fixture::SOR:
-                return test_classical(ClassicalSolver::SOR, arg);
-            case Fixture::SymmGaussSeidel:
-                return test_classical(ClassicalSolver::SymmGaussSeidel, arg);
-            case Fixture::SSOR:
-                return test_classical(ClassicalSolver::SSOR, arg);
-            case Fixture::CG:
-                return test_krylov(KrylovSolver::CG, arg);
-            case Fixture::BICGSTAB:
-                return test_krylov(KrylovSolver::BICGSTAB, arg);
-            case Fixture::GMRES:
-                return test_krylov(KrylovSolver::GMRES, arg);
-            case Fixture::UAAMG:
-                return test_amg(AMGSolver::UAAMG, arg);
-            case Fixture::SAAMG:
-                return test_amg(AMGSolver::SAAMG, arg);
-            case Fixture::RSAMG:
-                return test_amg(AMGSolver::RSAMG, arg);
+        case Fixture::Jacobi:
+            return test_classical(ClassicalSolver::Jacobi, arg);
+        case Fixture::GaussSeidel:
+            return test_classical(ClassicalSolver::GaussSeidel, arg);
+        case Fixture::SOR:
+            return test_classical(ClassicalSolver::SOR, arg);
+        case Fixture::SymmGaussSeidel:
+            return test_classical(ClassicalSolver::SymmGaussSeidel, arg);
+        case Fixture::SSOR:
+            return test_classical(ClassicalSolver::SSOR, arg);
+        case Fixture::CG:
+            return test_krylov(KrylovSolver::CG, arg);
+        case Fixture::BICGSTAB:
+            return test_krylov(KrylovSolver::BICGSTAB, arg);
+        case Fixture::GMRES:
+            return test_krylov(KrylovSolver::GMRES, arg);
+        case Fixture::UAAMG:
+            return test_amg(AMGSolver::UAAMG, arg);
+        case Fixture::SAAMG:
+            return test_amg(AMGSolver::SAAMG, arg);
+        case Fixture::RSAMG:
+            return test_amg(AMGSolver::RSAMG, arg);
         }
 
         return false;
@@ -72,12 +72,14 @@ namespace Testing
     {
         switch(arg.fixture)
         {
-            case Fixture::SpMV:
-                return test_spmv(arg);
-            case Fixture::SpGEMM:
-                return test_spgemm(arg);
-            case Fixture::SpGEAM:
-                return test_spgeam(arg);
+        case Fixture::SpMV:
+            return test_spmv(arg);
+        case Fixture::SpGEMM:
+            return test_spgemm(arg);
+        case Fixture::SpGEAM:
+            return test_spgeam(arg);
+        case Fixture::Transpose:
+            return test_transpose(arg);
         }
 
         return false;
@@ -85,12 +87,14 @@ namespace Testing
 
     static bool primitive_test_dispatch(Arguments arg)
     {
+        std::cout << "primitive_test_dispatch" << std::endl;
+
         switch(arg.fixture)
         {
-            case Fixture::ExclusiveScan:
-                return test_exclusive_scan(arg);
+        case Fixture::ExclusiveScan:
+            return test_exclusive_scan(arg);
         }
-        
+
         return false;
     }
 }
@@ -101,12 +105,12 @@ bool Testing::test_dispatch(Arguments arg)
 
     switch(arg.category)
     {
-        case Category::IterativeSolvers:
-           return solver_test_dispatch(arg);
-        case Category::Math:
-           return math_test_dispatch(arg);
-        case Category::Primitive:
-           return primitive_test_dispatch(arg);
+    case Category::IterativeSolvers:
+        return solver_test_dispatch(arg);
+    case Category::Math:
+        return math_test_dispatch(arg);
+    case Category::Primitive:
+        return primitive_test_dispatch(arg);
     }
 
     return false;

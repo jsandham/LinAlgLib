@@ -32,18 +32,32 @@
 
 #include "linalg.h"
 
-bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                   std::vector<double> &csr_val, int &m, int &n, int &nnz);
+bool load_mtx_file(const std::string&   filename,
+                   std::vector<int>&    csr_row_ptr,
+                   std::vector<int>&    csr_col_ind,
+                   std::vector<double>& csr_val,
+                   int&                 m,
+                   int&                 n,
+                   int&                 nnz);
 
-bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr,
-                                       std::vector<int> &csr_col_ind, std::vector<double> &csr_val, int &m, int &n,
-                                       int &nnz);
+bool load_diagonally_dominant_mtx_file(const std::string&   filename,
+                                       std::vector<int>&    csr_row_ptr,
+                                       std::vector<int>&    csr_col_ind,
+                                       std::vector<double>& csr_val,
+                                       int&                 m,
+                                       int&                 n,
+                                       int&                 nnz);
 
 // bool load_spd_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
 //                        std::vector<double> &csr_val, int &m, int &n, int &nnz);
 
+bool check_solution(const linalg::csr_matrix&     A,
+                    const linalg::vector<double>& b,
+                    const linalg::vector<double>& x,
+                    const linalg::vector<double>& initial_x,
+                    double                        tol,
+                    int                           norm_type);
 
-bool check_solution(const linalg::csr_matrix& A, const linalg::vector<double> &b, const linalg::vector<double> &x, 
-    const linalg::vector<double> &initial_x, double tol, int norm_type);
+bool check_matrix_equality(const linalg::csr_matrix& A, const linalg::csr_matrix& B);
 
 #endif

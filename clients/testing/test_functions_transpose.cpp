@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2024 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -23,19 +23,44 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef CUDA_PRIMITIVES_H
-#define CUDA_PRIMITIVES_H
 
-#include <cstdint>
+#include "test_functions.h"
+#include "utility.h"
 
-namespace linalg
+#include <chrono>
+#include <cmath>
+#include <iostream>
+
+#include "linalg.h"
+
+using namespace linalg;
+
+bool Testing::test_transpose(Arguments arg)
 {
-    template<typename T>
-    T cuda_find_maximum(int size, const T* array);
-    template<typename T>
-    T cuda_find_minimum(int size, const T* array);
-    template <typename T>
-    void   cuda_exclusive_scan(int size, T* array);
-}
+    csr_matrix mat_A;
+    mat_A.read_mtx(arg.filename);
 
-#endif
+    csr_matrix mat_A_transpose;
+    csr_matrix mat_A2;
+
+    mat_A_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
+    mat_A2.resize(mat_A.get_m(), mat_A.get_n(), mat_A.get_nnz());
+
+    mat_A.move_to_device();
+    mat_A_transpose.move_to_device();
+    mat_A2.move_to_device();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    mat_A.transpose(mat_A_transpose);
+    mat_A_transpose.transpose(mat_A2);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << ms_double.count() << "ms" << std::endl;
+
+    mat_A.move_to_host();
+    mat_A_transpose.move_to_host();
+    mat_A2.move_to_host();
+
+    return check_matrix_equality(mat_A, mat_A2);
+}

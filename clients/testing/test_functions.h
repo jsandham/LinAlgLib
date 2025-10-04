@@ -42,6 +42,7 @@ namespace Testing
     bool test_spmv(Arguments arg);
     bool test_spgemm(Arguments arg);
     bool test_spgeam(Arguments arg);
+    bool test_transpose(Arguments arg);
 
     // Primitive
     bool test_exclusive_scan(Arguments arg);

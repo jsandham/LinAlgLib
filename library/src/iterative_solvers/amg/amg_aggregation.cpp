@@ -168,11 +168,12 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
     std::cout << "A" << std::endl;
 
     aggregate_root_nodes.resize(A.get_m(), -1);
+    aggregate_root_nodes.fill(-1);
 
     std::cout << "B" << std::endl;
 
-    aggregate_root_nodes.move_to_host();
-    aggregates.move_to_host();
+    //aggregate_root_nodes.move_to_host();
+    //aggregates.move_to_host();
 
     for(size_t i = 0; i < aggregates.get_size(); i++)
     {
@@ -180,13 +181,18 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
     }
     std::cout << "C" << std::endl;
 
-    aggregate_root_nodes.move_to_device();
-    aggregates.move_to_device();
+    //aggregate_root_nodes.move_to_device();
+    //aggregates.move_to_device();
 
     //aggregates.print_vector("aggregates before exclusive sum");
 
     // Exclusive sum
     exclusive_scan(aggregates);
+
+    if(aggregates.get_size() < 300)
+    {
+        aggregates.print_vector("aggregates after scan");
+    }
 
     //max_state.print_vector("max_state");
     //aggregates.print_vector("aggregates after exclusive sum");
@@ -204,8 +210,11 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
 
     std::cout << "E" << std::endl;
 
-    //aggregates.print_vector("aggregates final");
-    //aggregate_root_nodes.print_vector("aggregate_root_nodes final");
+    if(aggregates.get_size() < 300)
+    {
+        aggregates.print_vector("aggregates final");
+        aggregate_root_nodes.print_vector("aggregate_root_nodes final");
+    }
 
     return true;
 }

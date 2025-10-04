@@ -222,25 +222,6 @@ namespace linalg
     }
 
     //-------------------------------------------------------------------------------
-    // exclusive scan
-    //-------------------------------------------------------------------------------
-    static void host_exclusive_scan_impl(int64_t* x, int n)
-    {
-        ROUTINE_TRACE("host_exclusive_scan_impl");
-
-        if(n > 0)
-        {
-            int64_t sum = 0;
-            for(int i = 0; i < n; i++)
-            {
-                int64_t temp = x[i];
-                x[i]         = sum;
-                sum += temp;
-            }
-        }
-    }
-
-    //-------------------------------------------------------------------------------
     // diagonal d = diag(A)
     //-------------------------------------------------------------------------------
     static void host_diagonal_impl(
@@ -1273,14 +1254,6 @@ void linalg::host_compute_residual(const csr_matrix&     A,
                                b.get_vec(),
                                res.get_vec(),
                                A.get_m());
-}
-
-// Exclusive scan
-void linalg::host_exclusive_scan(vector<int64_t>& x)
-{
-    ROUTINE_TRACE("linalg::host_exclusive_scan");
-
-    host_exclusive_scan_impl(x.get_vec(), x.get_size());
 }
 
 // Extract diagonal entries

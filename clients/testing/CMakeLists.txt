@@ -49,6 +49,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_functions_spmv.cpp
   test_functions_spgemm.cpp
   test_functions_spgeam.cpp
+  test_functions_transpose.cpp
   test_functions_exclusive_scan.cpp
 
   tests/test_jacobi.cpp
@@ -66,6 +67,8 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   #tests/test_RSAMG.cpp
 
   tests/test_SpMV.cpp
+  tests/test_transpose.cpp
+  tests/test_exclusive_scan.cpp
 )
 
 set(LINALGLIB_CLIENTS_COMMON_SOURCE

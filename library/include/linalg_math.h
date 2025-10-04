@@ -230,18 +230,6 @@ namespace linalg
                                         vector<double>&       res);
 
     /**
-     * @brief Performs an exclusive scan (prefix sum) on a vector.
-     *
-     * This function replaces each element with the sum of all elements preceding it.
-     * The first element of the output vector will be 0.
-     * For example, if input `x` is `{a, b, c}`, output `x` will be `{0, a, a+b}`.
-     *
-     * @param x The input/output vector. On input, it contains the original values; on output,
-     * it contains the exclusive scan results.
-     */
-    LINALGLIB_API void exclusive_scan(vector<int64_t>& x);
-
-    /**
      * @brief Extracts the diagonal entries of a CSR matrix.
      *
      * @param A The input `csr_matrix` from which to extract the diagonal.

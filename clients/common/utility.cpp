@@ -28,37 +28,42 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cmath>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
-#include <cmath>
-#include <cstring>
 
 struct col_val
 {
-    int col_ind;
+    int    col_ind;
     double val;
 };
 
-bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, std::vector<int> &csr_col_ind,
-                   std::vector<double> &csr_val, int &m, int &n, int &nnz)
+bool load_mtx_file(const std::string&   filename,
+                   std::vector<int>&    csr_row_ptr,
+                   std::vector<int>&    csr_col_ind,
+                   std::vector<double>& csr_val,
+                   int&                 m,
+                   int&                 n,
+                   int&                 nnz)
 {
     std::cout << "filename: " << filename << std::endl;
     std::ifstream file;
 
     file.open(filename.c_str());
 
-    std::vector<int> row_ind;
-    std::vector<int> col_ind;
+    std::vector<int>    row_ind;
+    std::vector<int>    col_ind;
     std::vector<double> vals;
 
-    m = 0;
-    n = 0;
+    m   = 0;
+    n   = 0;
     nnz = 0;
 
     int index = 0;
-    if (file.is_open())
+    if(file.is_open())
     {
 
         std::string percent("%");
@@ -68,29 +73,29 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
         int currentLine = 0;
 
         // scan through file
-        while (!file.eof())
+        while(!file.eof())
         {
             std::string line;
             std::getline(file, line);
 
-            if (currentLine > 0 && index == nnz)
+            if(currentLine > 0 && index == nnz)
             {
                 break;
             }
 
             // parse the line
-            if (line.substr(0, 1).compare(percent) != 0)
+            if(line.substr(0, 1).compare(percent) != 0)
             {
-                if (currentLine == 0)
+                if(currentLine == 0)
                 {
                     std::cout << "line: " << line << std::endl;
                     token = line.substr(0, line.find(space));
-                    m = atoi(token.c_str());
+                    m     = atoi(token.c_str());
                     line.erase(0, line.find(space) + space.length());
                     token = line.substr(0, line.find(space));
-                    n = atoi(token.c_str());
+                    n     = atoi(token.c_str());
                     line.erase(0, line.find(space) + space.length());
-                    token = line.substr(0, line.find(space));
+                    token                    = line.substr(0, line.find(space));
                     int lower_triangular_nnz = atoi(token.c_str());
 
                     nnz = 2 * (lower_triangular_nnz - m) + m;
@@ -102,33 +107,35 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
                     std::cout << "m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
                 }
 
-                if (currentLine > 0)
+                if(currentLine > 0)
                 {
                     token = line.substr(0, line.find(space));
                     int r = atoi(token.c_str()) - 1;
                     line.erase(0, line.find(space) + space.length());
-                    token = line.substr(0, line.find(space));
-                    int c = atoi(token.c_str()) - 1;
+                    token    = line.substr(0, line.find(space));
+                    int    c = atoi(token.c_str()) - 1;
                     double v = 1.0;
-                    if (line.find(space) != std::string::npos) // some mtx files do not have any values. In these cases
-                                                               // just use a value of 1
+                    if(line.find(space)
+                       != std::string::
+                           npos) // some mtx files do not have any values. In these cases
+                    // just use a value of 1
                     {
                         line.erase(0, line.find(space) + space.length());
                         token = line.substr(0, line.find(space));
-                        v = strtod(token.c_str(), NULL);
+                        v     = strtod(token.c_str(), NULL);
                     }
 
                     row_ind[index] = r;
                     col_ind[index] = c;
-                    vals[index] = v;
+                    vals[index]    = v;
 
                     index++;
 
-                    if (r != c)
+                    if(r != c)
                     {
                         row_ind[index] = c;
                         col_ind[index] = r;
-                        vals[index] = v;
+                        vals[index]    = v;
 
                         index++;
                     }
@@ -147,12 +154,12 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
 
     // find number of entries in each row;
     csr_row_ptr.resize(m + 1, 0);
-    for (size_t i = 0; i < row_ind.size(); i++)
+    for(size_t i = 0; i < row_ind.size(); i++)
     {
         csr_row_ptr[row_ind[i] + 1]++;
     }
 
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         csr_row_ptr[i + 1] += csr_row_ptr[i];
     }
@@ -167,26 +174,26 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
     csr_col_ind.resize(nnz, -1);
     csr_val.resize(nnz, 0.0);
 
-    for (int i = 0; i < nnz; i++)
+    for(int i = 0; i < nnz; i++)
     {
         int row_start = csr_row_ptr[row_ind[i]];
-        int row_end = csr_row_ptr[row_ind[i] + 1];
+        int row_end   = csr_row_ptr[row_ind[i] + 1];
 
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
-            if (csr_col_ind[j] == -1)
+            if(csr_col_ind[j] == -1)
             {
                 csr_col_ind[j] = col_ind[i];
-                csr_val[j] = vals[i];
+                csr_val[j]     = vals[i];
                 break;
             }
         }
     }
 
     // Verify no negative 1 found in csr column indices array
-    for (size_t i = 0; i < csr_col_ind.size(); i++)
+    for(size_t i = 0; i < csr_col_ind.size(); i++)
     {
-        if (csr_col_ind[i] == -1)
+        if(csr_col_ind[i] == -1)
         {
             std::cout << "Error in csr_co_ind array. Negative 1 found" << std::endl;
             return false;
@@ -194,25 +201,26 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
     }
 
     // Sort columns and values
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int row_start = csr_row_ptr[row_ind[i]];
-        int row_end = csr_row_ptr[row_ind[i] + 1];
+        int row_end   = csr_row_ptr[row_ind[i] + 1];
 
         std::vector<col_val> unsorted_col_vals(row_end - row_start);
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
             unsorted_col_vals[j - row_start].col_ind = csr_col_ind[j];
-            unsorted_col_vals[j - row_start].val = csr_val[j];
+            unsorted_col_vals[j - row_start].val     = csr_val[j];
         }
 
-        std::sort(unsorted_col_vals.begin(), unsorted_col_vals.end(),
-                  [&](col_val t1, col_val t2) { return t1.col_ind < t2.col_ind; });
+        std::sort(unsorted_col_vals.begin(), unsorted_col_vals.end(), [&](col_val t1, col_val t2) {
+            return t1.col_ind < t2.col_ind;
+        });
 
-        for (int j = row_start; j < row_end; j++)
+        for(int j = row_start; j < row_end; j++)
         {
             csr_col_ind[j] = unsorted_col_vals[j - row_start].col_ind;
-            csr_val[j] = unsorted_col_vals[j - row_start].val;
+            csr_val[j]     = unsorted_col_vals[j - row_start].val;
         }
     }
 
@@ -233,9 +241,13 @@ bool load_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr, s
     return true;
 }
 
-bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<int> &csr_row_ptr,
-                                       std::vector<int> &csr_col_ind, std::vector<double> &csr_val, int &m, int &n,
-                                       int &nnz)
+bool load_diagonally_dominant_mtx_file(const std::string&   filename,
+                                       std::vector<int>&    csr_row_ptr,
+                                       std::vector<int>&    csr_col_ind,
+                                       std::vector<double>& csr_val,
+                                       int&                 m,
+                                       int&                 n,
+                                       int&                 nnz)
 {
     load_mtx_file(filename, csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
@@ -244,14 +256,14 @@ bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<
 
     // Return early is matrix has no diagonal
     int diagonal_count = 0;
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+        int end   = csr_row_ptr[i + 1];
 
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] == i)
+            if(csr_col_ind[j] == i)
             {
                 diagonal_count++;
                 break;
@@ -259,29 +271,29 @@ bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<
         }
     }
 
-    if (diagonal_count < m)
+    if(diagonal_count < m)
     {
         return false;
     }
 
     // Make matrix diagonally dominant so that convergence is guaranteed
-    for (int i = 0; i < m; i++)
+    for(int i = 0; i < m; i++)
     {
         int start = csr_row_ptr[i];
-        int end = csr_row_ptr[i + 1];
+        int end   = csr_row_ptr[i + 1];
 
         double row_sum = 0;
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] != i)
+            if(csr_col_ind[j] != i)
             {
                 row_sum += std::abs(csr_val[j]);
             }
         }
 
-        for (int j = start; j < end; j++)
+        for(int j = start; j < end; j++)
         {
-            if (csr_col_ind[j] == i)
+            if(csr_col_ind[j] == i)
             {
                 csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
                 break;
@@ -411,12 +423,16 @@ bool load_diagonally_dominant_mtx_file(const std::string &filename, std::vector<
 //     return true;
 // }
 
-bool check_solution(const linalg::csr_matrix& A, const linalg::vector<double> &b, const linalg::vector<double> &x, 
-    const linalg::vector<double> &initial_x, double tol, int norm_type)
+bool check_solution(const linalg::csr_matrix&     A,
+                    const linalg::vector<double>& b,
+                    const linalg::vector<double>& x,
+                    const linalg::vector<double>& initial_x,
+                    double                        tol,
+                    int                           norm_type)
 {
-    for (size_t i = 0; i < x.get_size(); i++)
+    for(size_t i = 0; i < x.get_size(); i++)
     {
-        if (std::isnan(x[i]) || std::isinf(x[i]))
+        if(std::isnan(x[i]) || std::isinf(x[i]))
         {
             return false;
         }
@@ -448,7 +464,8 @@ bool check_solution(const linalg::csr_matrix& A, const linalg::vector<double> &b
         residual_norm = linalg::norm_euclid(residual);
     }
 
-    std::cout << "absolute residual: " << residual_norm << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
+    std::cout << "absolute residual: " << residual_norm
+              << " relative residual: " << residual_norm / initial_residual_norm << std::endl;
 
     if(residual_norm <= tol || residual_norm / initial_residual_norm <= tol)
     {
@@ -456,4 +473,52 @@ bool check_solution(const linalg::csr_matrix& A, const linalg::vector<double> &b
     }
 
     return false;
+}
+
+bool check_matrix_equality(const linalg::csr_matrix& A, const linalg::csr_matrix& B)
+{
+    const int*    csr_row_ptr_A = A.get_row_ptr();
+    const int*    csr_col_ind_A = A.get_col_ind();
+    const double* csr_val_A     = A.get_val();
+
+    const int*    csr_row_ptr_B = B.get_row_ptr();
+    const int*    csr_col_ind_B = B.get_col_ind();
+    const double* csr_val_B     = B.get_val();
+
+    if(A.get_m() != B.get_m() || A.get_n() != B.get_n() || A.get_nnz() != B.get_nnz())
+    {
+        return false;
+    }
+
+    for(int i = 0; i < A.get_m() + 1; i++)
+    {
+        if(csr_row_ptr_A[i] != csr_row_ptr_B[i])
+        {
+            std::cout << "i: " << i << " csr_row_ptr_A[i]: " << csr_row_ptr_A[i]
+                      << " csr_row_ptr_B[i]: " << csr_row_ptr_B[i] << std::endl;
+            return false;
+        }
+    }
+
+    for(int i = 0; i < A.get_nnz(); i++)
+    {
+        if(csr_col_ind_A[i] != csr_col_ind_B[i])
+        {
+            std::cout << "i: " << i << " csr_col_ind_A[i]: " << csr_col_ind_A[i]
+                      << " csr_col_ind_B[i]: " << csr_col_ind_B[i] << std::endl;
+            return false;
+        }
+    }
+
+    for(int i = 0; i < A.get_nnz(); i++)
+    {
+        if(csr_val_A[i] != csr_val_B[i])
+        {
+            std::cout << "i: " << i << " csr_val_A[i]: " << csr_val_A[i]
+                      << " csr_val_B[i]: " << csr_val_B[i] << std::endl;
+            return false;
+        }
+    }
+
+    return true;
 }

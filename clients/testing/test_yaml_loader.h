@@ -245,19 +245,19 @@ inline std::string correct_test_filepath(const std::string& filepath)
 #endif
 }
 
-inline Testing::Category StringToCategory(const std::string& str) {
+inline Testing::Category StringToCategory(const std::string& str)
+{
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, Testing::Category> categoryMap = {
-        {"IterativeSolvers", Testing::Category::IterativeSolvers},
-        {"Math", Testing::Category::Math},
-        {"Primitive", Testing::Category::Primitive}
-    };
+    static const std::unordered_map<std::string, Testing::Category> categoryMap
+        = {{"IterativeSolvers", Testing::Category::IterativeSolvers},
+           {"Math", Testing::Category::Math},
+           {"Primitive", Testing::Category::Primitive}};
 
     // Find the string in the map
     auto it = categoryMap.find(str);
-    
+
     // Return the corresponding enum value or a default value
-    if (it != categoryMap.end()) 
+    if(it != categoryMap.end())
     {
         return it->second;
     }
@@ -265,31 +265,32 @@ inline Testing::Category StringToCategory(const std::string& str) {
     return Testing::Category::Unknown;
 }
 
-inline Testing::Fixture StringToFixture(const std::string& str) {
+inline Testing::Fixture StringToFixture(const std::string& str)
+{
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, Testing::Fixture> fixtureMap = {
-        {"Jacobi", Testing::Fixture::Jacobi},
-        {"GaussSeidel", Testing::Fixture::GaussSeidel},
-        {"SOR", Testing::Fixture::SOR},
-        {"SymmGaussSeidel", Testing::Fixture::SymmGaussSeidel},
-        {"SSOR", Testing::Fixture::SSOR},
-        {"CG", Testing::Fixture::CG},
-        {"BICGSTAB", Testing::Fixture::BICGSTAB},
-        {"GMRES", Testing::Fixture::GMRES},
-        {"UAAMG", Testing::Fixture::UAAMG},
-        {"SAAMG", Testing::Fixture::SAAMG},
-        {"RSAMG", Testing::Fixture::RSAMG},
-        {"SpMV", Testing::Fixture::SpMV},
-        {"SpGEMM", Testing::Fixture::SpGEMM},
-        {"SpGEAM", Testing::Fixture::SpGEAM},
-        {"ExclusiveScan", Testing::Fixture::ExclusiveScan}
-    };
+    static const std::unordered_map<std::string, Testing::Fixture> fixtureMap
+        = {{"Jacobi", Testing::Fixture::Jacobi},
+           {"GaussSeidel", Testing::Fixture::GaussSeidel},
+           {"SOR", Testing::Fixture::SOR},
+           {"SymmGaussSeidel", Testing::Fixture::SymmGaussSeidel},
+           {"SSOR", Testing::Fixture::SSOR},
+           {"CG", Testing::Fixture::CG},
+           {"BICGSTAB", Testing::Fixture::BICGSTAB},
+           {"GMRES", Testing::Fixture::GMRES},
+           {"UAAMG", Testing::Fixture::UAAMG},
+           {"SAAMG", Testing::Fixture::SAAMG},
+           {"RSAMG", Testing::Fixture::RSAMG},
+           {"SpMV", Testing::Fixture::SpMV},
+           {"SpGEMM", Testing::Fixture::SpGEMM},
+           {"SpGEAM", Testing::Fixture::SpGEAM},
+           {"Transpose", Testing::Fixture::Transpose},
+           {"ExclusiveScan", Testing::Fixture::ExclusiveScan}};
 
     // Find the string in the map
     auto it = fixtureMap.find(str);
-    
+
     // Return the corresponding enum value or a default value
-    if (it != fixtureMap.end()) 
+    if(it != fixtureMap.end())
     {
         return it->second;
     }
@@ -311,10 +312,15 @@ struct TestParameters
     std::vector<double>                  omegas;
 };
 
-inline std::vector<Testing::Arguments> generate_tests(const std::string category, const std::string fixture, const std::string filepath)
+inline std::vector<Testing::Arguments> generate_tests(const std::string category,
+                                                      const std::string fixture,
+                                                      const std::string filepath)
 {
     YAML::Node                      root_node = YAML::LoadFile(correct_test_filepath(filepath));
     std::vector<Testing::Arguments> tests;
+
+    std::cout << "category: " << category << " fixture: " << fixture << " filepath: " << filepath
+              << std::endl;
 
     for(YAML::const_iterator it = root_node["Tests"].begin(); it != root_node["Tests"].end(); ++it)
     {
@@ -324,8 +330,8 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         params.matrices = read_values<std::string>(group, "matrix_file", root_node["Tests"], "");
         params.preconds = read_values<Testing::preconditioner>(
             group, "precond", root_node["Tests"], Testing::preconditioner::None);
-        params.cycles = read_values<linalg::Cycle>(
-            group, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
+        params.cycles
+            = read_values<linalg::Cycle>(group, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
         params.smoothers = read_values<linalg::Smoother>(
             group, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
         params.presmoothings  = read_values<int>(group, "presmoothing", root_node["Tests"], 1);
@@ -334,10 +340,10 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         params.tols           = read_values<double>(group, "tol", root_node["Tests"], 1e-06);
         params.omegas         = read_values<double>(group, "omega", root_node["Tests"], 0.66667);
 
-        size_t total_tests = params.matrices.size() * params.preconds.size()
-                             * params.cycles.size() * params.smoothers.size()
-                             * params.presmoothings.size() * params.postsmoothings.size()
-                             * params.max_iters.size() * params.tols.size() * params.omegas.size();
+        size_t total_tests = params.matrices.size() * params.preconds.size() * params.cycles.size()
+                             * params.smoothers.size() * params.presmoothings.size()
+                             * params.postsmoothings.size() * params.max_iters.size()
+                             * params.tols.size() * params.omegas.size();
         std::cout << "total_tests: " << total_tests << std::endl;
 
         // Reserve memory once to avoid multiple reallocations
@@ -350,9 +356,12 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         // Push the initial state onto the stack
         Testing::Arguments initial_args;
         initial_args.category = StringToCategory(category);
-        initial_args.fixture = StringToFixture(fixture);
-        initial_args.group = group;
+        initial_args.fixture  = StringToFixture(fixture);
+        initial_args.group    = group;
         s.push({initial_args, 0});
+
+        std::cout << "initial_args.category: " << (int)initial_args.category
+                  << " initial_args.fixture: " << (int)initial_args.fixture << std::endl;
 
         // The main loop
         while(!s.empty())
@@ -364,7 +373,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
             size_t             depth        = std::get<1>(current_item);
 
             // Base Case: A full combination is found
-            if(depth == 9/*param_lists.size()*/)
+            if(depth == 9 /*param_lists.size()*/)
             {
                 tests.push_back(current_args);
                 continue;
@@ -386,7 +395,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& precond : params.preconds)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.precond           = precond;
+                    next_args.precond            = precond;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -395,7 +404,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& cycle : params.cycles)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.cycle           = cycle;
+                    next_args.cycle              = cycle;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -413,7 +422,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& presmoothing : params.presmoothings)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.presmoothing           = presmoothing;
+                    next_args.presmoothing       = presmoothing;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -422,7 +431,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& postsmoothing : params.postsmoothings)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.postsmoothing           = postsmoothing;
+                    next_args.postsmoothing      = postsmoothing;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -431,7 +440,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& max_iters : params.max_iters)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.max_iters           = max_iters;
+                    next_args.max_iters          = max_iters;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -440,7 +449,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& tol : params.tols)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.tol           = tol;
+                    next_args.tol                = tol;
                     s.push({next_args, depth + 1});
                 }
             }
@@ -449,7 +458,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 for(const auto& omega : params.omegas)
                 {
                     Testing::Arguments next_args = current_args;
-                    next_args.omega           = omega;
+                    next_args.omega              = omega;
                     s.push({next_args, depth + 1});
                 }
             }

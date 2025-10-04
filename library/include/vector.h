@@ -164,6 +164,8 @@ namespace linalg
         /*! \brief Sets all elements of the vector to one. */
         void ones();
 
+        void fill(T val);
+
         /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available
      * and `on_host` is true. After this call, `is_on_host()` will return `false`.

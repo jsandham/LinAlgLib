@@ -170,6 +170,9 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);
 
+        connections.zeros();
+        aggregates.zeros();
+
         std::cout << "1111" << std::endl;
 
         // Compute strength of connections
@@ -198,6 +201,10 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
 
         // Compute coarse grid matrix using Galarkin triple product A_c = R * A_f * P
         galarkin_triple_product(R, A_fine, P, A_coarse);
+
+        std::cout << "R.m: " << R.get_m() << " R.n: " << R.get_n() 
+                  << " A_fine.get_m(): " << A_fine.get_m() << " A_fine.get_n(): " << A_fine.get_n()
+                  << " P.m: " << P.get_m() << " P.n: " << P.get_n() << std::endl; 
 
         level++;
         eps *= 0.5;

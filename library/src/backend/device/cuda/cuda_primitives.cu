@@ -40,10 +40,11 @@
 //-------------------------------------------------------------------------------
 // find maximum
 //-------------------------------------------------------------------------------
-double linalg::cuda_find_maximum(int size, const double* array)
+template <typename T>
+T linalg::cuda_find_maximum(int size, const T* array)
 {
-    double* workspace = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(double) * 256));
+    T* workspace = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(T) * 256));
 
     find_max_kernel_part1<256><<<256, 256>>>(size, array, workspace);
     CHECK_CUDA_LAUNCH_ERROR();
@@ -51,8 +52,8 @@ double linalg::cuda_find_maximum(int size, const double* array)
     find_max_kernel_part2<256><<<1, 256>>>(workspace);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    double result;
-    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(double), cudaMemcpyDeviceToHost));
+    T result;
+    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(T), cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaFree(workspace));
 
     return result;
@@ -61,10 +62,11 @@ double linalg::cuda_find_maximum(int size, const double* array)
 //-------------------------------------------------------------------------------
 // find minimum
 //-------------------------------------------------------------------------------
-double linalg::cuda_find_minimum(int size, const double* array)
+template <typename T>
+T linalg::cuda_find_minimum(int size, const T* array)
 {
-    double* workspace = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(double) * 256));
+    T* workspace = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(T) * 256));
 
     find_min_kernel_part1<256><<<256, 256>>>(size, array, workspace);
     CHECK_CUDA_LAUNCH_ERROR();
@@ -72,8 +74,8 @@ double linalg::cuda_find_minimum(int size, const double* array)
     find_min_kernel_part2<256><<<1, 256>>>(workspace);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    double result;
-    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(double), cudaMemcpyDeviceToHost));
+    T result;
+    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(T), cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaFree(workspace));
 
     return result;
@@ -82,7 +84,8 @@ double linalg::cuda_find_minimum(int size, const double* array)
 //-------------------------------------------------------------------------------
 // exclusive scan
 //-------------------------------------------------------------------------------
-void linalg::cuda_exclusive_scan(int size, int64_t* array)
+template <typename T>
+void linalg::cuda_exclusive_scan(int size, T* array)
 {
     ROUTINE_TRACE("linalg::cuda_exclusive_scan");
 
@@ -92,20 +95,20 @@ void linalg::cuda_exclusive_scan(int size, int64_t* array)
 
     assert(size >= nblocks);
 
-    int64_t* workspace = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(int64_t) * (size + 2 * nblocks)));
-    CHECK_CUDA(cudaMemcpy(workspace, array, sizeof(int64_t) * size, cudaMemcpyDeviceToDevice));
+    T* workspace = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(T) * (size + 2 * nblocks)));
+    CHECK_CUDA(cudaMemcpy(workspace, array, sizeof(T) * size, cudaMemcpyDeviceToDevice));
 
-    int64_t* workspace1 = workspace;
-    int64_t* workspace2 = workspace + size;
-    int64_t* workspace3 = workspace + size + nblocks;
+    T* workspace1 = workspace;
+    T* workspace2 = workspace + size;
+    T* workspace3 = workspace + size + nblocks;
 
     exclusive_scan_kernel_part1<256>
         <<<((size - 1) / 256 + 1), 256>>>(workspace1, array, workspace2, size);
     CHECK_CUDA_LAUNCH_ERROR();
 
     exclusive_scan_kernel_part1<256>
-        <<<((size - 1) / 256 + 1), 256>>>(workspace2, workspace3, (int64_t*)nullptr, size);
+        <<<((size - 1) / 256 + 1), 256>>>(workspace2, workspace3, (T*)nullptr, size);
     CHECK_CUDA_LAUNCH_ERROR();
 
     exclusive_scan_kernel_part2<256><<<((size - 1) / 256 + 1), 256>>>(workspace3, array, size);
@@ -114,8 +117,14 @@ void linalg::cuda_exclusive_scan(int size, int64_t* array)
     CHECK_CUDA(cudaFree(workspace));
 }
 
-// rename device_primitives_cuda_impl.cu -> cuda_primitives.cu
-// rename device_primitives_cuda_impl.cu -> cuda_math.cu
-// rename device_primitives_cuda_impl.cu -> cuda_memory.cu
-// rename device_primitives_cuda_impl.cu -> cuda_amg_aggregation.cu
-// rename device_primitives_cuda_impl.cu -> cuda_amg_strength.cu
+template int32_t linalg::cuda_find_minimum<int32_t>(int size, const int32_t* array);
+template int64_t linalg::cuda_find_minimum<int64_t>(int size, const int64_t* array);
+template double  linalg::cuda_find_minimum<double>(int size, const double* array);
+
+template int32_t linalg::cuda_find_maximum<int32_t>(int size, const int32_t* array);
+template int64_t linalg::cuda_find_maximum<int64_t>(int size, const int64_t* array);
+template double  linalg::cuda_find_maximum<double>(int size, const double* array);
+
+template void linalg::cuda_exclusive_scan<int32_t>(int size, int32_t* array);
+template void linalg::cuda_exclusive_scan<int64_t>(int size, int64_t* array);
+template void linalg::cuda_exclusive_scan<double>(int size, double* array);

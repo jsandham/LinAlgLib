@@ -28,11 +28,18 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
+#include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h> // Required to specify thrust::device execution policy
+#include <thrust/host_vector.h>
+#include <thrust/sort.h>
+
 #include "cuda_math.h"
 #include "cuda_primitives.h"
 
 #include "axpby_kernels.cuh"
 #include "compute_residual_kernels.cuh"
+#include "csr2coo_kernels.cuh"
 #include "csrmv_kernels.cuh"
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
@@ -321,4 +328,55 @@ void linalg::cuda_backward_solve(const int*    csr_row_ptr,
                                  int           n,
                                  bool          unit_diag)
 {
+}
+
+void linalg::cuda_csr2csc_buffer_size(int           m,
+                                      int           n,
+                                      int           nnz,
+                                      const int*    csr_row_ptr,
+                                      const int*    csr_Col_ind,
+                                      const double* csr_val,
+                                      size_t*       buffer_size)
+{
+    *buffer_size = 0;
+    *buffer_size += sizeof(int) * nnz; // perm
+    *buffer_size += sizeof(int) * nnz; // coo_row_ind
+}
+
+void linalg::cuda_csr2csc(int           m,
+                          int           n,
+                          int           nnz,
+                          const int*    csr_row_ptr,
+                          const int*    csr_col_ind,
+                          const double* csr_val,
+                          int*          csc_col_ptr,
+                          int*          csc_row_ind,
+                          double*       csc_val,
+                          void*         buffer)
+{
+    int* perm        = reinterpret_cast<int*>(buffer);
+    int* coo_row_ind = reinterpret_cast<int*>(buffer) + nnz;
+
+    fill_identity_permuation_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(nnz, perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(csc_row_ind, csr_col_ind, sizeof(int) * nnz, cudaMemcpyDeviceToDevice));
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(csc_row_ind);
+    thrust::device_ptr<int> d_values(perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + nnz, d_values);
+
+    coo2csr_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csc_row_ind, csc_col_ptr);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    csr2coo_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csr_row_ptr, coo_row_ind);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    csr2csc_permute_colval_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(
+        m, n, nnz, coo_row_ind, csr_val, perm, csc_row_ind, csc_val);
+    CHECK_CUDA_LAUNCH_ERROR();
 }

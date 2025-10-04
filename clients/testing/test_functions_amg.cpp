@@ -55,12 +55,12 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 
     hierarchy hierachy;
 
-    mat_A.move_to_device();
-    vec_x.move_to_device();
-    vec_init_x.move_to_device();
-    vec_b.move_to_device();
-    vec_e.move_to_device();
-    hierachy.move_to_device();
+    //mat_A.move_to_device();
+    //vec_x.move_to_device();
+    //vec_init_x.move_to_device();
+    //vec_b.move_to_device();
+    //vec_e.move_to_device();
+    //hierachy.move_to_device();
 
     mat_A.multiply_by_vector(vec_b, vec_e);
 
@@ -79,12 +79,12 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
         break;
     }
 
-    mat_A.move_to_host();
-    vec_x.move_to_host();
-    vec_init_x.move_to_host();
-    vec_b.move_to_host();
-    vec_e.move_to_host();
-    hierachy.move_to_host();
+    //mat_A.move_to_host();
+    //vec_x.move_to_host();
+    //vec_init_x.move_to_host();
+    //vec_b.move_to_host();
+    //vec_e.move_to_host();
+    //hierachy.move_to_host();
 
     std::cout << "arg.presmoothing: " << arg.presmoothing
               << " arg.postsmoothing: " << arg.postsmoothing

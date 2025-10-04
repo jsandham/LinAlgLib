@@ -37,5 +37,20 @@ using namespace linalg;
 
 bool Testing::test_exclusive_scan(Arguments arg)
 {
-    return false;
+    std::cout << "test_exclusive_scan" << std::endl;
+    
+    vector<double> vec(10);
+    vec.ones();
+
+    exclusive_scan(vec);
+
+    std::cout << "vec" << std::endl;
+    for(int i = 0; i < vec.get_size(); i++)
+    {
+        std::cout << vec[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+
+    return true;
 }

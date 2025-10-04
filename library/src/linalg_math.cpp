@@ -199,14 +199,6 @@ void linalg::compute_residual(const csr_matrix&     A,
         "linalg::compute_residual", host_compute_residual, device_compute_residual, A, x, b, res);
 }
 
-// Exclusive scan
-void linalg::exclusive_scan(vector<int64_t>& x)
-{
-    ROUTINE_TRACE("linalg::exclusive_scan");
-
-    backend_dispatch("linalg::exclusive_scan", host_exclusive_scan, device_exclusive_scan, x);
-}
-
 // Extract diagonal entries
 void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 {

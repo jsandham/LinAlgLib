@@ -1,0 +1,3 @@
+Tests:
+  small:
+    matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx"]

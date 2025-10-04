@@ -164,14 +164,7 @@ void vector<T>::zeros()
 {
     ROUTINE_TRACE("vector<T>::zeros");
 
-    if(this->is_on_host())
-    {
-        return host_fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(0));
-    }
-    else
-    {
-        return device_fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(0));
-    }
+    this->fill(static_cast<T>(0));
 }
 
 template <typename T>
@@ -179,13 +172,21 @@ void vector<T>::ones()
 {
     ROUTINE_TRACE("vector<T>::ones");
 
+    this->fill(static_cast<T>(1));
+}
+
+template <typename T>
+void vector<T>::fill(T val)
+{
+    ROUTINE_TRACE("vector<T>::fill");
+
     if(this->is_on_host())
     {
-        return host_fill(this->hvec->get_data(), this->hvec->get_size(), static_cast<T>(1));
+        return host_fill(this->hvec->get_data(), this->hvec->get_size(), val);
     }
     else
     {
-        return device_fill(this->dvec->get_data(), this->dvec->get_size(), static_cast<T>(1));
+        return device_fill(this->dvec->get_data(), this->dvec->get_size(), val);
     }
 }
 

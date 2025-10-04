@@ -287,6 +287,18 @@ namespace linalg
      * \param name A string identifier for the matrix, used in the print output.
      */
         void print_matrix(const std::string name) const;
+
+        void print_row_ptr(const std::string name) const;
+        void print_col_ind(const std::string name) const;
+        void print_values(const std::string name) const;
+
+        static void print_matrix(const std::string          name,
+                                 int                        m,
+                                 int                        n,
+                                 int                        nnz,
+                                 const std::vector<int>&    csr_row_ptr,
+                                 const std::vector<int>&    csr_col_ind,
+                                 const std::vector<double>& csr_val);
     };
 }
 

@@ -94,9 +94,6 @@ namespace linalg
                                  const vector<double>& b,
                                  vector<double>&       res);
 
-    // Exclusive scan
-    void device_exclusive_scan(vector<int64_t>& x);
-
     // Extract diagonal entries
     void device_diagonal(const csr_matrix& A, vector<double>& d);
 

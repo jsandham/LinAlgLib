@@ -58,6 +58,12 @@ namespace linalg
     {
         ROUTINE_TRACE("construct_prolongation_using_smoothed_aggregation");
 
+        if(aggregates.get_size() < 300)
+        {
+            aggregates.print_vector("aggregates");
+        }
+
+
         // Determine number of columns in the prolongation matrix. This will be
         // the maximum aggregate plus one.
         int64_t n = -1;
@@ -235,6 +241,9 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hier
 
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);
+
+        connections.zeros();
+        aggregates.zeros();
 
         // Compute strength of connections
         compute_strong_connections(A_fine, eps, connections);

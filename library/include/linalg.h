@@ -224,6 +224,7 @@
 #include "eigen_value_solvers/power_iteration.h"
 
 #include "iterative_solvers/iter_control.h"
+#include "linalg_primitives.h"
 #include "linalg_math.h"
 
 #endif

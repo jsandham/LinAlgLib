@@ -23,19 +23,28 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef CUDA_PRIMITIVES_H
-#define CUDA_PRIMITIVES_H
 
-#include <cstdint>
+#ifndef HOST_PRIMITIVES_H
+#define HOST_PRIMITIVES_H
+
+#include <string>
+
+#include "linalg_export.h"
+#include "vector.h"
 
 namespace linalg
 {
+    // Find minimum
     template<typename T>
-    T cuda_find_maximum(int size, const T* array);
+    T host_find_min(const vector<T>& x);
+
+    // Find maximum
     template<typename T>
-    T cuda_find_minimum(int size, const T* array);
+    T host_find_max(const vector<T>& x);
+
+    // Exclusive scan
     template <typename T>
-    void   cuda_exclusive_scan(int size, T* array);
+    void host_exclusive_scan(vector<T>& x);
 }
 
 #endif

@@ -23,19 +23,7 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef CUDA_PRIMITIVES_H
-#define CUDA_PRIMITIVES_H
 
-#include <cstdint>
+#include "../test.h"
 
-namespace linalg
-{
-    template<typename T>
-    T cuda_find_maximum(int size, const T* array);
-    template<typename T>
-    T cuda_find_minimum(int size, const T* array);
-    template <typename T>
-    void   cuda_exclusive_scan(int size, T* array);
-}
-
-#endif
+INSTANTIATE_TEST(Math, Transpose, matrix_transpose, "tests/test_transpose.yaml");

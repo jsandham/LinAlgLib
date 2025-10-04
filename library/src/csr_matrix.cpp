@@ -682,3 +682,86 @@ void csr_matrix::print_matrix(const std::string name) const
     }
     std::cout << "" << std::endl;
 }
+
+void csr_matrix::print_row_ptr(const std::string name) const
+{
+    ROUTINE_TRACE("csr_matrix::print_row_ptr");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to print to console" << std::endl;
+        return;
+    }
+
+    std::cout << name << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << csr_row_ptr[i] << " ";
+    }
+    std::cout << "" << std::endl;
+}
+void csr_matrix::print_col_ind(const std::string name) const
+{
+    ROUTINE_TRACE("csr_matrix::print_col_ind");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to print to console" << std::endl;
+        return;
+    }
+
+    std::cout << name << std::endl;
+    for(int i = 0; i < nnz; i++)
+    {
+        std::cout << csr_col_ind[i] << " ";
+    }
+    std::cout << "" << std::endl;
+}
+void csr_matrix::print_values(const std::string name) const
+{
+    ROUTINE_TRACE("csr_matrix::print_values");
+
+    if(!this->is_on_host())
+    {
+        std::cout << "Matrix must be on the host in order to print to console" << std::endl;
+        return;
+    }
+
+    std::cout << name << std::endl;
+    for(int i = 0; i < nnz; i++)
+    {
+        std::cout << csr_val[i] << " ";
+    }
+    std::cout << "" << std::endl;
+}
+
+void csr_matrix::print_matrix(const std::string          name,
+                              int                        m,
+                              int                        n,
+                              int                        nnz,
+                              const std::vector<int>&    csr_row_ptr,
+                              const std::vector<int>&    csr_col_ind,
+                              const std::vector<double>& csr_val)
+{
+    ROUTINE_TRACE("csr_matrix::print_matrix");
+
+    std::cout << name << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        int start = csr_row_ptr[i];
+        int end   = csr_row_ptr[i + 1];
+
+        std::vector<double> temp(n, 0.0);
+        for(int j = start; j < end; j++)
+        {
+            temp[csr_col_ind[j]] = (nnz != 0) ? csr_val[j] : 1.0;
+        }
+
+        for(int j = 0; j < n; j++)
+        {
+            std::cout << temp[j] << " ";
+        }
+        std::cout << "" << std::endl;
+    }
+    std::cout << "" << std::endl;
+}
