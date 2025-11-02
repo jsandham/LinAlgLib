@@ -24,32 +24,22 @@
 //
 //********************************************************************************
 
-#ifndef DEVICE_MEMORY_H
-#define DEVICE_MEMORY_H
+#include "../include/linalg_memory.h"
+#include <assert.h>
+#include <iostream>
 
-#include <cstddef>
+#include "trace.h"
+#include "utility.h"
 
-namespace linalg
+#include "backend/device/device_memory.h"
+
+// Synchornize
+void linalg::sync()
 {
-    template <typename T>
-    void device_allocate(T** ptr, size_t size);
+    ROUTINE_TRACE("linalg::sync");
 
-    template <typename T>
-    void device_free(T* ptr); // if we pass with T** ptr, we could set to NULL after free'ing...
-
-    template <typename T>
-    void copy_h2d(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void copy_d2h(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void copy_d2d(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void device_fill(T* data, size_t size, T val);
-
-    void device_sync();
-} // namespace linalg
-
-#endif
+    if(is_device_available())
+    {
+        device_sync();
+    }
+}

@@ -1,0 +1,3 @@
+Tests:
+  small:
+    matrix_file: ["matrices/SPD/ex5/ex5.mtx"]

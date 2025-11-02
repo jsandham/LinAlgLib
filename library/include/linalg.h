@@ -217,14 +217,17 @@
 #include "iterative_solvers/amg/saamg.h"
 #include "iterative_solvers/amg/uaamg.h"
 
+#include "iterative_solvers/iter_control.h"
+
 // Preconditioners
 #include "iterative_solvers/preconditioner/preconditioner.h"
 
 // Eigenvalues solvers
 #include "eigen_value_solvers/power_iteration.h"
 
-#include "iterative_solvers/iter_control.h"
-#include "linalg_primitives.h"
 #include "linalg_math.h"
+#include "linalg_memory.h"
+#include "linalg_primitives.h"
+
 
 #endif

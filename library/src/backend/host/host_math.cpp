@@ -310,7 +310,7 @@ namespace linalg
             double s = 0.0;
             for(int j = row_start; j < row_end; j++)
             {
-                s += csr_val[j] * x[csr_col_ind[j]];
+                s = std::fma(csr_val[j], x[csr_col_ind[j]], s);
             }
 
             if(beta == 0.0)
@@ -319,7 +319,7 @@ namespace linalg
             }
             else
             {
-                y[i] = alpha * s + beta * y[i];
+                y[i] = std::fma(alpha, s, beta * y[i]);
             }
         }
     }
@@ -550,12 +550,10 @@ namespace linalg
         {
             std::vector<int> nnz(n, -1);
 
-            csr_row_ptr_C[i] = 0;
-
             int row_begin_A = csr_row_ptr_A[i];
             int row_end_A   = csr_row_ptr_A[i + 1];
 
-            for(int j = row_begin_A; j < row_end_A; i++)
+            for(int j = row_begin_A; j < row_end_A; j++)
             {
                 nnz[csr_col_ind_A[j]] = 1;
             }
@@ -568,13 +566,15 @@ namespace linalg
                 nnz[csr_col_ind_B[j]] = 1;
             }
 
+            int row_nnz = 0;
             for(int j = 0; j < n; j++)
             {
                 if(nnz[j] != -1)
                 {
-                    csr_row_ptr_C[i + 1]++;
+                    row_nnz++;
                 }
             }
+            csr_row_ptr_C[i + 1] = row_nnz;
         }
 
         for(int i = 0; i < m; i++)
@@ -1062,8 +1062,12 @@ void linalg::host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, con
     double alpha = 1.0;
     double beta  = 1.0;
 
+    std::cout << "A: " << A.get_m() << "x" << A.get_n() << " nnz: " << A.get_nnz() << std::endl;
+
     // Determine number of non-zeros in C = A + B product
     C.resize(A.get_m(), B.get_n(), 0);
+
+    std::cout << "B: " << B.get_m() << "x" << B.get_n() << " nnz: " << B.get_nnz() << std::endl;
 
     int nnz_C;
     host_csrgeam_nnz_impl(A.get_m(),
@@ -1078,6 +1082,8 @@ void linalg::host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, con
                           B.get_col_ind(),
                           C.get_row_ptr(),
                           &nnz_C);
+
+    std::cout << "nnz_C: " << nnz_C << std::endl;
 
     C.resize(A.get_m(), B.get_n(), nnz_C);
 

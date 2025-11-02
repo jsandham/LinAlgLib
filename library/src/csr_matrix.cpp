@@ -449,79 +449,67 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     std::ios_base::sync_with_stdio(true);
 
-    {
-        ROUTINE_TRACE("sorting");
-        // Sort triplets to group by row, then by column. This is crucial for CSR.
-        std::sort(triplets.begin(), triplets.end());
-    }
+    // Sort triplets to group by row, then by column. This is crucial for CSR.
+    std::sort(triplets.begin(), triplets.end());
 
+    // Remove duplicate entries (e.g., if a symmetric matrix had (i,j) and (j,i) explicitly listed,
+    // or if (i,i) was explicitly listed and then added again by symmetric handling).
+    // Also, sum values if multiple entries refer to the same (row, col)
+    if(!triplets.empty())
     {
-        ROUTINE_TRACE("unique");
-        // Remove duplicate entries (e.g., if a symmetric matrix had (i,j) and (j,i) explicitly listed,
-        // or if (i,i) was explicitly listed and then added again by symmetric handling).
-        // Also, sum values if multiple entries refer to the same (row, col)
-        if(!triplets.empty())
+        std::vector<triplet> unique_triplets;
+        unique_triplets.reserve(triplets.size());
+        unique_triplets.push_back(triplets[0]);
+
+        for(size_t i = 1; i < triplets.size(); ++i)
         {
-            std::vector<triplet> unique_triplets;
-            unique_triplets.reserve(triplets.size());
-            unique_triplets.push_back(triplets[0]);
-
-            for(size_t i = 1; i < triplets.size(); ++i)
+            if(triplets[i].row == unique_triplets.back().row
+               && triplets[i].col == unique_triplets.back().col)
             {
-                if(triplets[i].row == unique_triplets.back().row
-                   && triplets[i].col == unique_triplets.back().col)
-                {
-                    // If duplicate, sum values
-                    unique_triplets.back().value += triplets[i].value;
-                }
-                else
-                {
-                    unique_triplets.push_back(triplets[i]);
-                }
+                // If duplicate, sum values
+                unique_triplets.back().value += triplets[i].value;
             }
-            triplets = std::move(unique_triplets); // Use move assignment
+            else
+            {
+                unique_triplets.push_back(triplets[i]);
+            }
         }
+        triplets = std::move(unique_triplets); // Use move assignment
     }
 
+    // Convert to CSR format
+    nnz = triplets.size();
+
+    if(nnz == 0)
     {
-        ROUTINE_TRACE("allocate");
-        // Convert to CSR format
-        nnz = triplets.size();
-
-        if(nnz == 0)
-        {
-            // Handle empty matrix case: all dimensions valid but no entries
-            // csr_row_ptr.assign(m + 1, 0);
-            csr_row_ptr.resize(m + 1);
-            csr_row_ptr.zeros();
-            csr_col_ind.clear();
-            csr_val.clear();
-            return true;
-        }
-
-        // csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
+        // Handle empty matrix case: all dimensions valid but no entries
+        // csr_row_ptr.assign(m + 1, 0);
         csr_row_ptr.resize(m + 1);
-        csr_row_ptr.zeros(); // Initialize with zeros
-        csr_col_ind.resize(nnz);
-        csr_val.resize(nnz);
+        csr_row_ptr.zeros();
+        csr_col_ind.clear();
+        csr_val.clear();
+        return true;
     }
 
+    // csr_row_ptr.assign(m + 1, 0); // Initialize with zeros
+    csr_row_ptr.resize(m + 1);
+    csr_row_ptr.zeros(); // Initialize with zeros
+    csr_col_ind.resize(nnz);
+    csr_val.resize(nnz);
+
+    for(int64_t i = 0; i < nnz; ++i)
     {
-        ROUTINE_TRACE("copy");
-        for(int64_t i = 0; i < nnz; ++i)
-        {
-            const triplet& t = triplets[i];
+        const triplet& t = triplets[i];
 
-            csr_row_ptr[t.row + 1]++;
-            csr_col_ind[i] = t.col;
-            csr_val[i]     = t.value;
-        }
+        csr_row_ptr[t.row + 1]++;
+        csr_col_ind[i] = t.col;
+        csr_val[i]     = t.value;
+    }
 
-        // Convert counts to cumulative sum (prefix sum) for row_ptr
-        for(int i = 0; i < m; ++i)
-        {
-            csr_row_ptr[i + 1] += csr_row_ptr[i];
-        }
+    // Convert counts to cumulative sum (prefix sum) for row_ptr
+    for(int i = 0; i < m; ++i)
+    {
+        csr_row_ptr[i + 1] += csr_row_ptr[i];
     }
 
     return true;

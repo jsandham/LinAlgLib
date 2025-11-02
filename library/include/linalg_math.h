@@ -257,6 +257,23 @@ namespace linalg
      */
     LINALGLIB_API double norm_inf(const vector<double>& array);
 
+    /**
+     * @brief Performs a Jacobi diagonal solve: x = rhs ./ diag (element-wise division).
+     *
+     * @details
+     * This helper computes the solution for a diagonal system where the matrix is
+     * represented by its diagonal entries. For each index i:
+     * \f[ x_i = \frac{rhs_i}{diag_i} \f]
+     *
+     * The caller is responsible for ensuring that `diag` contains no zeros; division
+     * by zero will lead to undefined behavior. Both input vectors (`rhs`, `diag`)
+     * must have the same length as the output vector `x`.
+     *
+     * @param rhs Right-hand side vector b (input).
+     * @param diag Diagonal entries of the matrix (input). Must be non-zero.
+     * @param x Solution vector (output). On return, contains the element-wise
+     *          division result rhs ./ diag.
+     */
     LINALGLIB_API void
         jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 }

@@ -24,32 +24,20 @@
 //
 //********************************************************************************
 
-#ifndef DEVICE_MEMORY_H
-#define DEVICE_MEMORY_H
+#ifndef MEMORY_H
+#define MEMORY_H
 
-#include <cstddef>
+#include <string>
+
+#include "linalg_export.h"
+
+/*! \file
+ *  \brief linalg_memory.h provides memory operations like allocate/free memcpy, and synchronization
+ */
 
 namespace linalg
 {
-    template <typename T>
-    void device_allocate(T** ptr, size_t size);
-
-    template <typename T>
-    void device_free(T* ptr); // if we pass with T** ptr, we could set to NULL after free'ing...
-
-    template <typename T>
-    void copy_h2d(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void copy_d2h(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void copy_d2d(T* dest, const T* src, size_t size);
-
-    template <typename T>
-    void device_fill(T* data, size_t size, T val);
-
-    void device_sync();
-} // namespace linalg
+    void sync();
+}
 
 #endif

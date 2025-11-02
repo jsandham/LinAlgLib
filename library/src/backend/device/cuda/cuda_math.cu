@@ -40,6 +40,8 @@
 #include "axpby_kernels.cuh"
 #include "compute_residual_kernels.cuh"
 #include "csr2coo_kernels.cuh"
+#include "csrgeam_kernels.cuh"
+#include "csrgemm_kernels.cuh"
 #include "csrmv_kernels.cuh"
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
@@ -92,8 +94,28 @@ void linalg::cuda_matrix_vector_product(int           m,
 {
     ROUTINE_TRACE("linalg::cuda_matrix_vector_product_impl");
 
-    csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
-        m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+    int avg_nnz_per_row = nnz / m;
+
+    if(avg_nnz_per_row <= 8)
+    {
+        csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
+            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+    }
+    else if(avg_nnz_per_row <= 16)
+    {
+        csrmv_vector_kernel<256, 8><<<((m - 1) / (256 / 8) + 1), 256>>>(
+            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+    }
+    else if(avg_nnz_per_row <= 32)
+    {
+        csrmv_vector_kernel<256, 16><<<((m - 1) / (256 / 16) + 1), 256>>>(
+            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+    }
+    else
+    {
+        csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+    }
     CHECK_CUDA_LAUNCH_ERROR();
 }
 
@@ -190,90 +212,1103 @@ void linalg::cuda_csrmv(int           m,
 {
     ROUTINE_TRACE("linalg::cuda_csrmv_impl");
 
-    csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
-        m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    int avg_nnz_per_row = nnz / m;
+
+    if(avg_nnz_per_row <= 8)
+    {
+        csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
+            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    }
+    else if(avg_nnz_per_row <= 16)
+    {
+        csrmv_vector_kernel<256, 8><<<((m - 1) / (256 / 8) + 1), 256>>>(
+            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    }
+    else if(avg_nnz_per_row <= 32)
+    {
+        csrmv_vector_kernel<256, 16><<<((m - 1) / (256 / 16) + 1), 256>>>(
+            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    }
+    else
+    {
+        csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    }
     CHECK_CUDA_LAUNCH_ERROR();
 }
 
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A * B + beta * D
 //-------------------------------------------------------------------------------
-void linalg::cuda_csrgemm_nnz(int        m,
-                              int        n,
-                              int        k,
-                              int        nnz_A,
-                              int        nnz_B,
-                              int        nnz_D,
-                              double     alpha,
-                              const int* csr_row_ptr_A,
-                              const int* csr_col_ind_A,
-                              const int* csr_row_ptr_B,
-                              const int* csr_col_ind_B,
-                              double     beta,
-                              const int* csr_row_ptr_D,
-                              const int* csr_col_ind_D,
-                              int*       csr_row_ptr_C,
-                              int*       nnz_C)
+struct linalg::csrgemm_descr
 {
+    int* perm;
+    int* bin_offsets;
+};
+
+void linalg::cuda_create_csrgemm_descr(csrgemm_descr** descr)
+{
+    *descr = new csrgemm_descr;
 }
 
-void linalg::cuda_csrgemm(int           m,
-                          int           n,
-                          int           k,
-                          int           nnz_A,
-                          int           nnz_B,
-                          int           nnz_D,
-                          double        alpha,
-                          const int*    csr_row_ptr_A,
-                          const int*    csr_col_ind_A,
-                          const double* csr_val_A,
-                          const int*    csr_row_ptr_B,
-                          const int*    csr_col_ind_B,
-                          const double* csr_val_B,
-                          double        beta,
-                          const int*    csr_row_ptr_D,
-                          const int*    csr_col_ind_D,
-                          const double* csr_val_D,
-                          const int*    csr_row_ptr_C,
-                          int*          csr_col_ind_C,
-                          double*       csr_val_C)
+void linalg::cuda_destroy_csrgemm_descr(csrgemm_descr* descr)
 {
+    if(descr != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->perm));
+        CHECK_CUDA(cudaFree(descr->bin_offsets));
+
+        delete descr;
+    }
+}
+
+void linalg::cuda_csrgemm_nnz(int            m,
+                              int            n,
+                              int            k,
+                              int            nnz_A,
+                              int            nnz_B,
+                              int            nnz_D,
+                              csrgemm_descr* descr,
+                              double         alpha,
+                              const int*     csr_row_ptr_A,
+                              const int*     csr_col_ind_A,
+                              const int*     csr_row_ptr_B,
+                              const int*     csr_col_ind_B,
+                              double         beta,
+                              const int*     csr_row_ptr_D,
+                              const int*     csr_col_ind_D,
+                              int*           csr_row_ptr_C,
+                              int*           nnz_C)
+{
+    // Determine maximum hash table size
+    csrgemm_count_products_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+        m, alpha, csr_row_ptr_A, csr_col_ind_A, csr_row_ptr_B, beta, csr_row_ptr_D, csr_row_ptr_C);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int> hcsr_row_ptr_C(m + 1);
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    descr->perm = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&descr->perm, sizeof(int) * m));
+
+    fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(csr_row_ptr_C);
+    thrust::device_ptr<int> d_values(descr->perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + m, d_values);
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    std::vector<int> hperm(m);
+    CHECK_CUDA(cudaMemcpy(hperm.data(), descr->perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    std::cout << "perm" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        std::cout << hperm[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    // Bin rows based on required hash table size.
+    // Bin sizes are: 32, 64, 128, 256, 512, 1024, 2048, 4096
+    int bin_count      = 8;
+    descr->bin_offsets = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&descr->bin_offsets, sizeof(int) * (bin_count + 1)));
+    CHECK_CUDA(cudaMemset(descr->bin_offsets, 0, sizeof(int) * (bin_count + 1)));
+
+    compute_rows_bin_number_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    fill_bin_offsets_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C, descr->bin_offsets);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int> hbin_offsets(bin_count + 1, 0);
+    CHECK_CUDA(cudaMemcpy(hbin_offsets.data(),
+                          descr->bin_offsets,
+                          sizeof(int) * (bin_count + 1),
+                          cudaMemcpyDeviceToHost));
+
+    std::cout << "hbin_offsets" << std::endl;
+    for(int i = 0; i < bin_count + 1; i++)
+    {
+        std::cout << hbin_offsets[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    const int bin_0_count = hbin_offsets[1] - hbin_offsets[0];
+    const int bin_1_count = hbin_offsets[2] - hbin_offsets[1];
+    const int bin_2_count = hbin_offsets[3] - hbin_offsets[2];
+    const int bin_3_count = hbin_offsets[4] - hbin_offsets[3];
+    const int bin_4_count = hbin_offsets[5] - hbin_offsets[4];
+    const int bin_5_count = hbin_offsets[6] - hbin_offsets[5];
+    const int bin_6_count = hbin_offsets[7] - hbin_offsets[6];
+    const int bin_7_count = hbin_offsets[8] - hbin_offsets[7];
+
+    CHECK_CUDA(cudaMemset(csr_row_ptr_C, 0, sizeof(int) * (m + 1)));
+
+    if(bin_0_count > 0)
+    {
+        std::cout << "bin_0_count: " << bin_0_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 32>
+            <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[0]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_1_count > 0)
+    {
+        std::cout << "bin_1_count: " << bin_1_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 64>
+            <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[1]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_2_count > 0)
+    {
+        std::cout << "bin_2_count: " << bin_2_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 128>
+            <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[2]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_3_count > 0)
+    {
+        std::cout << "bin_3_count: " << bin_3_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 256>
+            <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[3]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_4_count > 0)
+    {
+        std::cout << "bin_4_count: " << bin_4_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 512>
+            <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[4]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_5_count > 0)
+    {
+        std::cout << "bin_5_count: " << bin_5_count << std::endl;
+        csrgemm_nnz_per_row_kernel<256, 32, 1024>
+            <<<((bin_5_count - 1) / (256 / 32) + 1), 256>>>(bin_5_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[5]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_6_count > 0)
+    {
+        std::cout << "bin_6_count: " << bin_6_count << std::endl;
+        csrgemm_nnz_per_row_kernel<128, 32, 2048>
+            <<<((bin_6_count - 1) / (128 / 32) + 1), 128>>>(bin_6_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[6]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_7_count > 0)
+    {
+        std::cout << "bin_7_count: " << bin_7_count << std::endl;
+        csrgemm_nnz_per_row_kernel<64, 32, 4096>
+            <<<((bin_7_count - 1) / (64 / 32) + 1), 64>>>(bin_7_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[7]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          beta,
+                                                          csr_row_ptr_D,
+                                                          csr_col_ind_D,
+                                                          csr_row_ptr_C);
+    }
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    cuda_exclusive_scan(m + 1, csr_row_ptr_C);
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    CHECK_CUDA(cudaMemcpy(nnz_C, csr_row_ptr_C + m, sizeof(int), cudaMemcpyDeviceToHost));
+
+    // CHECK_CUDA(cudaFree(perm));
+    // CHECK_CUDA(cudaFree(bin_offsets));
+}
+
+void linalg::cuda_csrgemm(int            m,
+                          int            n,
+                          int            k,
+                          int            nnz_A,
+                          int            nnz_B,
+                          int            nnz_D,
+                          int            nnz_C,
+                          csrgemm_descr* descr,
+                          double         alpha,
+                          const int*     csr_row_ptr_A,
+                          const int*     csr_col_ind_A,
+                          const double*  csr_val_A,
+                          const int*     csr_row_ptr_B,
+                          const int*     csr_col_ind_B,
+                          const double*  csr_val_B,
+                          double         beta,
+                          const int*     csr_row_ptr_D,
+                          const int*     csr_col_ind_D,
+                          const double*  csr_val_D,
+                          const int*     csr_row_ptr_C,
+                          int*           csr_col_ind_C,
+                          double*        csr_val_C)
+{
+    std::cout << "nnz_C: " << nnz_C << std::endl;
+
+    int              bin_count = 8;
+    std::vector<int> hbin_offsets(bin_count + 1, 0);
+    CHECK_CUDA(cudaMemcpy(hbin_offsets.data(),
+                          descr->bin_offsets,
+                          sizeof(int) * (bin_count + 1),
+                          cudaMemcpyDeviceToHost));
+
+    std::cout << "hbin_offsets" << std::endl;
+    for(int i = 0; i < bin_count + 1; i++)
+    {
+        std::cout << hbin_offsets[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    const int bin_0_count = hbin_offsets[1] - hbin_offsets[0];
+    const int bin_1_count = hbin_offsets[2] - hbin_offsets[1];
+    const int bin_2_count = hbin_offsets[3] - hbin_offsets[2];
+    const int bin_3_count = hbin_offsets[4] - hbin_offsets[3];
+    const int bin_4_count = hbin_offsets[5] - hbin_offsets[4];
+    const int bin_5_count = hbin_offsets[6] - hbin_offsets[5];
+    const int bin_6_count = hbin_offsets[7] - hbin_offsets[6];
+    const int bin_7_count = hbin_offsets[8] - hbin_offsets[7];
+
+    if(bin_0_count > 0)
+    {
+        std::cout << "bin_0_count: " << bin_0_count << std::endl;
+        csrgemm_fill_kernel<256, 32, 32>
+            <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[0]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_1_count > 0)
+    {
+        std::cout << "bin_1_count: " << bin_1_count << std::endl;
+        csrgemm_fill_kernel<256, 32, 64>
+            <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[1]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_2_count > 0)
+    {
+        std::cout << "bin_2_count: " << bin_2_count << std::endl;
+        csrgemm_fill_kernel<256, 32, 128>
+            <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[2]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_3_count > 0)
+    {
+        std::cout << "bin_3_count: " << bin_3_count << std::endl;
+        csrgemm_fill_kernel<256, 32, 256>
+            <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[3]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_4_count > 0)
+    {
+        std::cout << "bin_4_count: " << bin_4_count << std::endl;
+        csrgemm_fill_kernel<256, 32, 512>
+            <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[4]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_5_count > 0)
+    {
+        std::cout << "bin_5_count: " << bin_5_count << std::endl;
+        csrgemm_fill_kernel<128, 32, 1024>
+            <<<((bin_5_count - 1) / (128 / 32) + 1), 128>>>(bin_5_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[5]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            beta,
+                                                            csr_row_ptr_D,
+                                                            csr_col_ind_D,
+                                                            csr_val_D,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_6_count > 0)
+    {
+        std::cout << "bin_6_count: " << bin_6_count << std::endl;
+        csrgemm_fill_kernel<64, 32, 2048>
+            <<<((bin_6_count - 1) / (64 / 32) + 1), 64>>>(bin_6_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[6]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          csr_val_A,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          csr_val_B,
+                                                          beta,
+                                                          csr_row_ptr_D,
+                                                          csr_col_ind_D,
+                                                          csr_val_D,
+                                                          csr_row_ptr_C,
+                                                          csr_col_ind_C,
+                                                          csr_val_C);
+    }
+    if(bin_7_count > 0)
+    {
+        std::cout << "bin_7_count: " << bin_7_count << std::endl;
+        csrgemm_fill_kernel<32, 32, 4096>
+            <<<((bin_7_count - 1) / (32 / 32) + 1), 32>>>(bin_7_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[7]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          csr_val_A,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          csr_val_B,
+                                                          beta,
+                                                          csr_row_ptr_D,
+                                                          csr_col_ind_D,
+                                                          csr_val_D,
+                                                          csr_row_ptr_C,
+                                                          csr_col_ind_C,
+                                                          csr_val_C);
+    }
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int>    hcsr_row_ptr_C(m + 1, 0);
+    std::vector<int>    hcsr_col_ind_C(nnz_C, 0);
+    std::vector<double> hcsr_val_C(nnz_C);
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_col_ind_C.data(), csr_col_ind_C, sizeof(int) * nnz_C, cudaMemcpyDeviceToHost));
+    CHECK_CUDA(
+        cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(double) * nnz_C, cudaMemcpyDeviceToHost));
+
+    std::cout << "hcsr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+    std::cout << "hcsr_col_ind_C" << std::endl;
+    for(int i = 0; i < nnz_C; i++)
+    {
+        std::cout << hcsr_col_ind_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+    std::cout << "hcsr_val_C" << std::endl;
+    for(int i = 0; i < nnz_C; i++)
+    {
+        std::cout << hcsr_val_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
 }
 
 //-------------------------------------------------------------------------------
 // Compute C = alpha * A + beta * B
 //-------------------------------------------------------------------------------
-void linalg::cuda_csrgeam_nnz(int        m,
-                              int        n,
-                              int        nnz_A,
-                              int        nnz_B,
-                              double     alpha,
-                              const int* csr_row_ptr_A,
-                              const int* csr_col_ind_A,
-                              double     beta,
-                              const int* csr_row_ptr_B,
-                              const int* csr_col_ind_B,
-                              int*       csr_row_ptr_C,
-                              int*       nnz_C)
+struct linalg::csrgeam_descr
 {
+    int* perm;
+    int* bin_offsets;
+};
+
+void linalg::cuda_create_csrgeam_descr(csrgeam_descr** descr)
+{
+    *descr = new csrgeam_descr;
 }
 
-void linalg::cuda_csrgeam(int           m,
-                          int           n,
-                          int           nnz_A,
-                          int           nnz_B,
-                          double        alpha,
-                          const int*    csr_row_ptr_A,
-                          const int*    csr_col_ind_A,
-                          const double* csr_val_A,
-                          double        beta,
-                          const int*    csr_row_ptr_B,
-                          const int*    csr_col_ind_B,
-                          const double* csr_val_B,
-                          const int*    csr_row_ptr_C,
-                          int*          csr_col_ind_C,
-                          double*       csr_val_C)
+void linalg::cuda_destroy_csrgeam_descr(csrgeam_descr* descr)
 {
+    if(descr != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->perm));
+        CHECK_CUDA(cudaFree(descr->bin_offsets));
+
+        delete descr;
+    }
+}
+
+void linalg::cuda_csrgeam_nnz(int            m,
+                              int            n,
+                              int            nnz_A,
+                              int            nnz_B,
+                              csrgeam_descr* descr,
+                              double         alpha,
+                              const int*     csr_row_ptr_A,
+                              const int*     csr_col_ind_A,
+                              double         beta,
+                              const int*     csr_row_ptr_B,
+                              const int*     csr_col_ind_B,
+                              int*           csr_row_ptr_C,
+                              int*           nnz_C)
+{
+    // Determine maximum hash table size
+    csrgeam_count_additions_kernel<256><<<((m - 1) / 256 + 1), 256>>>(
+        m, alpha, csr_row_ptr_A, csr_col_ind_A, beta, csr_row_ptr_B, csr_row_ptr_C);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int> hcsr_row_ptr_C(m + 1);
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    descr->perm = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&descr->perm, sizeof(int) * m));
+
+    fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(csr_row_ptr_C);
+    thrust::device_ptr<int> d_values(descr->perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + m, d_values);
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    std::vector<int> hperm(m);
+    CHECK_CUDA(cudaMemcpy(hperm.data(), descr->perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    std::cout << "perm" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        std::cout << hperm[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    // Bin rows based on required hash table size.
+    // Bin sizes are: 32, 64, 128, 256, 512, 1024, 2048, 4096
+    int bin_count      = 8;
+    descr->bin_offsets = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&descr->bin_offsets, sizeof(int) * (bin_count + 1)));
+    CHECK_CUDA(cudaMemset(descr->bin_offsets, 0, sizeof(int) * (bin_count + 1)));
+
+    compute_rows_bin_number_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    fill_bin_offsets_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C, descr->bin_offsets);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int> hbin_offsets(bin_count + 1, 0);
+    CHECK_CUDA(cudaMemcpy(hbin_offsets.data(),
+                          descr->bin_offsets,
+                          sizeof(int) * (bin_count + 1),
+                          cudaMemcpyDeviceToHost));
+
+    std::cout << "hbin_offsets" << std::endl;
+    for(int i = 0; i < bin_count + 1; i++)
+    {
+        std::cout << hbin_offsets[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    const int bin_0_count = hbin_offsets[1] - hbin_offsets[0];
+    const int bin_1_count = hbin_offsets[2] - hbin_offsets[1];
+    const int bin_2_count = hbin_offsets[3] - hbin_offsets[2];
+    const int bin_3_count = hbin_offsets[4] - hbin_offsets[3];
+    const int bin_4_count = hbin_offsets[5] - hbin_offsets[4];
+    const int bin_5_count = hbin_offsets[6] - hbin_offsets[5];
+    const int bin_6_count = hbin_offsets[7] - hbin_offsets[6];
+    const int bin_7_count = hbin_offsets[8] - hbin_offsets[7];
+
+    CHECK_CUDA(cudaMemset(csr_row_ptr_C, 0, sizeof(int) * (m + 1)));
+
+    if(bin_0_count > 0)
+    {
+        std::cout << "bin_0_count: " << bin_0_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 32>
+            <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[0]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_1_count > 0)
+    {
+        std::cout << "bin_1_count: " << bin_1_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 64>
+            <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[1]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_2_count > 0)
+    {
+        std::cout << "bin_2_count: " << bin_2_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 128>
+            <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[2]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_3_count > 0)
+    {
+        std::cout << "bin_3_count: " << bin_3_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 256>
+            <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[3]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_4_count > 0)
+    {
+        std::cout << "bin_4_count: " << bin_4_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 512>
+            <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[4]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_5_count > 0)
+    {
+        std::cout << "bin_5_count: " << bin_5_count << std::endl;
+        csrgeam_nnz_per_row_kernel<256, 32, 1024>
+            <<<((bin_5_count - 1) / (256 / 32) + 1), 256>>>(bin_5_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[5]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_6_count > 0)
+    {
+        std::cout << "bin_6_count: " << bin_6_count << std::endl;
+        csrgeam_nnz_per_row_kernel<128, 32, 2048>
+            <<<((bin_6_count - 1) / (128 / 32) + 1), 128>>>(bin_6_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[6]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_row_ptr_C);
+    }
+    if(bin_7_count > 0)
+    {
+        std::cout << "bin_7_count: " << bin_7_count << std::endl;
+        csrgeam_nnz_per_row_kernel<64, 32, 4096>
+            <<<((bin_7_count - 1) / (64 / 32) + 1), 64>>>(bin_7_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[7]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          beta,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          csr_row_ptr_C);
+    }
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    cuda_exclusive_scan(m + 1, csr_row_ptr_C);
+
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+    std::cout << "csr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    CHECK_CUDA(cudaMemcpy(nnz_C, csr_row_ptr_C + m, sizeof(int), cudaMemcpyDeviceToHost));
+}
+
+void linalg::cuda_csrgeam(int            m,
+                          int            n,
+                          int            nnz_A,
+                          int            nnz_B,
+                          int            nnz_C,
+                          csrgeam_descr* descr,
+                          double         alpha,
+                          const int*     csr_row_ptr_A,
+                          const int*     csr_col_ind_A,
+                          const double*  csr_val_A,
+                          double         beta,
+                          const int*     csr_row_ptr_B,
+                          const int*     csr_col_ind_B,
+                          const double*  csr_val_B,
+                          const int*     csr_row_ptr_C,
+                          int*           csr_col_ind_C,
+                          double*        csr_val_C)
+{
+    std::cout << "nnz_C: " << nnz_C << std::endl;
+
+    int              bin_count = 8;
+    std::vector<int> hbin_offsets(bin_count + 1, 0);
+    CHECK_CUDA(cudaMemcpy(hbin_offsets.data(),
+                          descr->bin_offsets,
+                          sizeof(int) * (bin_count + 1),
+                          cudaMemcpyDeviceToHost));
+
+    std::cout << "hbin_offsets" << std::endl;
+    for(int i = 0; i < bin_count + 1; i++)
+    {
+        std::cout << hbin_offsets[i] << " ";
+    }
+    std::cout << "" << std::endl;
+
+    const int bin_0_count = hbin_offsets[1] - hbin_offsets[0];
+    const int bin_1_count = hbin_offsets[2] - hbin_offsets[1];
+    const int bin_2_count = hbin_offsets[3] - hbin_offsets[2];
+    const int bin_3_count = hbin_offsets[4] - hbin_offsets[3];
+    const int bin_4_count = hbin_offsets[5] - hbin_offsets[4];
+    const int bin_5_count = hbin_offsets[6] - hbin_offsets[5];
+    const int bin_6_count = hbin_offsets[7] - hbin_offsets[6];
+    const int bin_7_count = hbin_offsets[8] - hbin_offsets[7];
+
+    if(bin_0_count > 0)
+    {
+        std::cout << "bin_0_count: " << bin_0_count << std::endl;
+        csrgeam_fill_kernel<256, 32, 32>
+            <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[0]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_1_count > 0)
+    {
+        std::cout << "bin_1_count: " << bin_1_count << std::endl;
+        csrgeam_fill_kernel<256, 32, 64>
+            <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[1]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_2_count > 0)
+    {
+        std::cout << "bin_2_count: " << bin_2_count << std::endl;
+        csrgeam_fill_kernel<256, 32, 128>
+            <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[2]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_3_count > 0)
+    {
+        std::cout << "bin_3_count: " << bin_3_count << std::endl;
+        csrgeam_fill_kernel<256, 32, 256>
+            <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[3]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_4_count > 0)
+    {
+        std::cout << "bin_4_count: " << bin_4_count << std::endl;
+        csrgeam_fill_kernel<256, 32, 512>
+            <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[4]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_5_count > 0)
+    {
+        std::cout << "bin_5_count: " << bin_5_count << std::endl;
+        csrgeam_fill_kernel<128, 32, 1024>
+            <<<((bin_5_count - 1) / (128 / 32) + 1), 128>>>(bin_5_count,
+                                                            descr->perm,
+                                                            &(descr->bin_offsets[5]),
+                                                            alpha,
+                                                            csr_row_ptr_A,
+                                                            csr_col_ind_A,
+                                                            csr_val_A,
+                                                            beta,
+                                                            csr_row_ptr_B,
+                                                            csr_col_ind_B,
+                                                            csr_val_B,
+                                                            csr_row_ptr_C,
+                                                            csr_col_ind_C,
+                                                            csr_val_C);
+    }
+    if(bin_6_count > 0)
+    {
+        std::cout << "bin_6_count: " << bin_6_count << std::endl;
+        csrgeam_fill_kernel<64, 32, 2048>
+            <<<((bin_6_count - 1) / (64 / 32) + 1), 64>>>(bin_6_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[6]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          csr_val_A,
+                                                          beta,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          csr_val_B,
+                                                          csr_row_ptr_C,
+                                                          csr_col_ind_C,
+                                                          csr_val_C);
+    }
+    if(bin_7_count > 0)
+    {
+        std::cout << "bin_7_count: " << bin_7_count << std::endl;
+        csrgeam_fill_kernel<32, 32, 4096>
+            <<<((bin_7_count - 1) / (32 / 32) + 1), 32>>>(bin_7_count,
+                                                          descr->perm,
+                                                          &(descr->bin_offsets[7]),
+                                                          alpha,
+                                                          csr_row_ptr_A,
+                                                          csr_col_ind_A,
+                                                          csr_val_A,
+                                                          beta,
+                                                          csr_row_ptr_B,
+                                                          csr_col_ind_B,
+                                                          csr_val_B,
+                                                          csr_row_ptr_C,
+                                                          csr_col_ind_C,
+                                                          csr_val_C);
+    }
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    std::vector<int>    hcsr_row_ptr_C(m + 1, 0);
+    std::vector<int>    hcsr_col_ind_C(nnz_C, 0);
+    std::vector<double> hcsr_val_C(nnz_C);
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(
+        hcsr_col_ind_C.data(), csr_col_ind_C, sizeof(int) * nnz_C, cudaMemcpyDeviceToHost));
+    CHECK_CUDA(
+        cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(double) * nnz_C, cudaMemcpyDeviceToHost));
+
+    std::cout << "hcsr_row_ptr_C" << std::endl;
+    for(int i = 0; i < m + 1; i++)
+    {
+        std::cout << hcsr_row_ptr_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+    std::cout << "hcsr_col_ind_C" << std::endl;
+    for(int i = 0; i < nnz_C; i++)
+    {
+        std::cout << hcsr_col_ind_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
+    std::cout << "hcsr_val_C" << std::endl;
+    for(int i = 0; i < nnz_C; i++)
+    {
+        std::cout << hcsr_val_C[i] << " ";
+    }
+    std::cout << "" << std::endl;
 }
 
 //-------------------------------------------------------------------------------

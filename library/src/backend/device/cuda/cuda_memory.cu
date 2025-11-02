@@ -77,6 +77,11 @@ void linalg::cuda_fill(T* data, size_t size, T val)
     }
 }
 
+void linalg::cuda_sync()
+{
+    CHECK_CUDA(cudaDeviceSynchronize());
+}
+
 template void linalg::cuda_allocate<uint32_t>(uint32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int32_t>(int32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int64_t>(int64_t** ptr, size_t size);

@@ -46,6 +46,8 @@ namespace linalg
 
     template <typename T>
     void cuda_fill(T* data, size_t size, T val);
+
+    void cuda_sync();
 } // namespace linalg
 
 #endif

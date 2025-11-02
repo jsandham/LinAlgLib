@@ -40,6 +40,40 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(yaml-cpp)
 
+# If the yaml-cpp target was created by FetchContent, mark its includes as
+# system and silence noisy warnings from that external dependency only.
+if(TARGET yaml-cpp::yaml-cpp)
+  # yaml-cpp::yaml-cpp may be an ALIAS target. Resolve the real target so we
+  # can set properties on it.
+  get_target_property(_aliased_target yaml-cpp::yaml-cpp ALIASED_TARGET)
+  if(NOT _aliased_target STREQUAL "_yamlcpp_includes-NOTFOUND" AND NOT "${_aliased_target}" STREQUAL "")
+    set(_yaml_target ${_aliased_target})
+  else()
+    set(_yaml_target yaml-cpp::yaml-cpp)
+  endif()
+
+  # Try to re-declare its include directories as SYSTEM so compilers suppress
+  # diagnostics from third-party headers. This duplicates the INTERFACE
+  # include directories as SYSTEM-interface entries on the real target.
+  get_target_property(_yamlcpp_includes ${_yaml_target} INTERFACE_INCLUDE_DIRECTORIES)
+  if(NOT _yamlcpp_includes STREQUAL "_yamlcpp_includes-NOTFOUND" AND NOT "${_yamlcpp_includes}" STREQUAL "")
+    target_include_directories(${_yaml_target} SYSTEM INTERFACE ${_yamlcpp_includes})
+  endif()
+
+  # Per-target compile options: suppress warnings when compiling yaml-cpp.
+  target_compile_options(${_yaml_target} PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/external:W0>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4456>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4458>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4018>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4189>
+    $<$<CXX_COMPILER_ID:MSVC>:/wd4389>
+    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+  )
+endif()
+
 set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_functions_dispatch.cpp
 
@@ -67,6 +101,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   #tests/test_RSAMG.cpp
 
   tests/test_SpMV.cpp
+  tests/test_SpGEMM.cpp
   tests/test_transpose.cpp
   tests/test_exclusive_scan.cpp
 )

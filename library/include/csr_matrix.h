@@ -288,10 +288,56 @@ namespace linalg
      */
         void print_matrix(const std::string name) const;
 
+        /*! \brief Prints the CSR row pointer array to the console.
+         *
+         * \details
+         * Outputs the internal row pointer array (length m+1). The output is
+         * prefixed with the provided name so multiple arrays can be distinguished
+         * when debugging. Typical format:
+         * "<name> row_ptr: [v0, v1, ..., v_m]".
+         *
+         * \param name A string used as a prefix in the printed output.
+         */
         void print_row_ptr(const std::string name) const;
+
+        /*! \brief Prints the CSR column indices array to the console.
+         *
+         * \details
+         * Outputs the column indices for the non-zero entries (length nnz).
+         * The output is prefixed with the provided name. Typical format:
+         * "<name> col_ind: [c0, c1, ..., c_{nnz-1}]".
+         *
+         * \param name A string used as a prefix in the printed output.
+         */
         void print_col_ind(const std::string name) const;
+
+        /*! \brief Prints the CSR non-zero values array to the console.
+         *
+         * \details
+         * Outputs the non-zero values stored in the CSR structure (length nnz).
+         * The output is prefixed with the provided name. Typical format:
+         * "<name> values: [v0, v1, ..., v_{nnz-1}]".
+         *
+         * \param name A string used as a prefix in the printed output.
+         */
         void print_values(const std::string name) const;
 
+        /*! \brief Prints CSR matrix data given raw arrays and dimensions.
+         *
+         * \details
+         * Static helper that prints a complete CSR representation using the
+         * supplied container references. Useful for quick debugging without
+         * creating a `csr_matrix` instance. The output includes the matrix
+         * dimensions and a readable listing of row_ptr, col_ind and values.
+         *
+         * \param name A string identifier used as a prefix in the printed output.
+         * \param m Number of rows in the matrix.
+         * \param n Number of columns in the matrix.
+         * \param nnz Number of non-zero entries.
+         * \param csr_row_ptr Reference to the row pointer vector (length m+1).
+         * \param csr_col_ind Reference to the column indices vector (length nnz).
+         * \param csr_val Reference to the values vector (length nnz).
+         */
         static void print_matrix(const std::string          name,
                                  int                        m,
                                  int                        n,

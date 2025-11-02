@@ -59,7 +59,7 @@ __global__ void csrmv_vector_kernel(int     m,
             int col = csr_col_ind[j];
             T   val = csr_val[j];
 
-            sum += x[col] * val;
+            sum = std::fma(x[col], val, sum);
         }
 
         warp_reduction_sum<WARPSIZE>(&sum, lid);
@@ -72,7 +72,7 @@ __global__ void csrmv_vector_kernel(int     m,
             }
             else
             {
-                y[row] = alpha * sum + beta * y[row];
+                y[row] = std::fma(alpha, sum, beta * y[row]);
             }
         }
     }

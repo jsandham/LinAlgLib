@@ -27,6 +27,7 @@
 set(LINALGLIB_HEADERS_PUBLIC
   include/linalg_primitives.h
   include/linalg_math.h
+  include/linalg_memory.h
   include/eigen_value_solvers/power_iteration.h
   include/iterative_solvers/amg/amg_aggregation.h
   include/iterative_solvers/amg/amg_strength.h
@@ -54,6 +55,7 @@ set(LINALGLIB_HEADERS_PUBLIC
 set(LINALGLIB_SOURCE
   src/linalg_primitives.cpp
   src/linalg_math.cpp
+  src/linalg_memory.cpp
   src/backend/host/host_amg_aggregation.cpp
   src/backend/host/host_amg_strength.cpp
   src/backend/host/host_primitives.cpp
@@ -178,10 +180,11 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3> # Pass /W3 to the host compiler (MSVC) for CUDA files
     $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>       # Enable relocatable device code (important for shared libraries)
     $<$<COMPILE_LANGUAGE:CUDA>:-G>              # Enable debug info for device code (for debugging)
+    $<$<COMPILE_LANGUAGE:CUDA>:-arch=native>
   )
 endif()
 
-#target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
+target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
 #target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED -DCONVERGENCE_LOGGING)
 #target_compile_definitions(linalglib PRIVATE -DCONVERGENCE_LOGGING)
 

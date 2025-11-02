@@ -154,16 +154,67 @@ void linalg::device_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, co
 
     if constexpr(is_cuda_available())
     {
-        // CALL_CUDA(cuda_csrmv(A.get_m(),
-        //                      A.get_n(),
-        //                      A.get_nnz(),
-        //                      alpha,
-        //                      A.get_row_ptr(),
-        //                      A.get_col_ind(),
-        //                      A.get_val(),
-        //                      x.get_vec(),
-        //                      beta,
-        //                      y.get_vec()));
+        int nnz_C;
+        //CALL_CUDA(cuda_allocate(&nnz_C, sizeof(int)));
+
+        if(C.get_m() != A.get_m() || C.get_n() != B.get_n())
+        {
+            C.resize(A.get_m(), B.get_n(), 0);
+        }
+
+        std::cout << "C.get_m(): " << C.get_m() << " C.get_n(): " << C.get_n()
+                  << " C.get_nnz(): " << C.get_nnz() << std::endl;
+
+        csrgemm_descr* descr;
+        CALL_CUDA(cuda_create_csrgemm_descr(&descr));
+
+        CALL_CUDA(cuda_csrgemm_nnz(C.get_m(),
+                                   C.get_n(),
+                                   B.get_m(),
+                                   A.get_nnz(),
+                                   B.get_nnz(),
+                                   0,
+                                   descr,
+                                   1.0,
+                                   A.get_row_ptr(),
+                                   A.get_col_ind(),
+                                   B.get_row_ptr(),
+                                   B.get_col_ind(),
+                                   0.0,
+                                   nullptr,
+                                   nullptr,
+                                   C.get_row_ptr(),
+                                   &nnz_C));
+        std::cout << "nnz_C: " << nnz_C << std::endl;
+
+        C.resize(C.get_m(), C.get_n(), nnz_C);
+
+        CALL_CUDA(cuda_csrgemm(C.get_m(),
+                               C.get_n(),
+                               B.get_m(),
+                               A.get_nnz(),
+                               B.get_nnz(),
+                               0,
+                               C.get_nnz(),
+                               descr,
+                               1.0,
+                               A.get_row_ptr(),
+                               A.get_col_ind(),
+                               A.get_val(),
+                               B.get_row_ptr(),
+                               B.get_col_ind(),
+                               B.get_val(),
+                               0.0,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               C.get_row_ptr(),
+                               C.get_col_ind(),
+                               C.get_val()));
+
+        CALL_CUDA(cuda_destroy_csrgemm_descr(descr));
+
+        //CALL_CUDA(cuda_free(nnz_C));
     }
     else
     {
@@ -176,7 +227,66 @@ void linalg::device_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, co
 // Compute C = A + B
 void linalg::device_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
 {
-    std::cout << "Error: matrix_matrix_addition on device not implemented" << std::endl;
+    ROUTINE_TRACE("linalg::device_matrix_matrix_addition");
+
+    if constexpr(is_cuda_available())
+    {
+        if(C.get_m() != A.get_m() || C.get_n() != A.get_n())
+        {
+            C.resize(A.get_m(), A.get_n(), 0);
+        }
+
+        std::cout << "C.get_m(): " << C.get_m() << " C.get_n(): " << C.get_n()
+                  << " C.get_nnz(): " << C.get_nnz() << std::endl;
+
+        int nnz_C;
+
+        csrgeam_descr* descr;
+        CALL_CUDA(cuda_create_csrgeam_descr(&descr));
+
+        CALL_CUDA(cuda_csrgeam_nnz(C.get_m(),
+                                   C.get_n(),
+                                   A.get_nnz(),
+                                   B.get_nnz(),
+                                   descr,
+                                   1.0,
+                                   A.get_row_ptr(),
+                                   A.get_col_ind(),
+                                   0.0,
+                                   B.get_row_ptr(),
+                                   B.get_col_ind(),
+                                   C.get_row_ptr(),
+                                   &nnz_C));
+        std::cout << "nnz_C: " << nnz_C << std::endl;
+
+        C.resize(C.get_m(), C.get_n(), nnz_C);
+
+        CALL_CUDA(cuda_csrgeam(C.get_m(),
+                               C.get_n(),
+                               A.get_nnz(),
+                               B.get_nnz(),
+                               C.get_nnz(),
+                               descr,
+                               1.0,
+                               A.get_row_ptr(),
+                               A.get_col_ind(),
+                               A.get_val(),
+                               1.0,
+                               B.get_row_ptr(),
+                               B.get_col_ind(),
+                               B.get_val(),
+                               C.get_row_ptr(),
+                               C.get_col_ind(),
+                               C.get_val()));
+
+        CALL_CUDA(cuda_destroy_csrgeam_descr(descr));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
 }
 
 // Incomplete IC factorization
@@ -226,7 +336,7 @@ void linalg::device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA
                                            &buffer_size));
 
         int32_t* buffer = nullptr;
-        linalg::cuda_allocate(&buffer, sizeof(int32_t) * A.get_nnz());
+        CALL_CUDA(cuda_allocate(&buffer, sizeof(int32_t) * A.get_nnz()));
 
         CALL_CUDA(cuda_csr2csc(A.get_m(),
                                A.get_n(),
@@ -239,9 +349,7 @@ void linalg::device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA
                                transposeA.get_val(),
                                buffer));
 
-        linalg::cuda_free(buffer);
-
-        //CHECK_CUDA(cudaMalloc((void**)&buffer, sizeof(int) * A.get_nnz()));
+        CALL_CUDA(cuda_free(buffer));
     }
     else
     {

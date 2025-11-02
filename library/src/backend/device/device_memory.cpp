@@ -136,6 +136,22 @@ void linalg::device_fill(T* data, size_t size, T val)
     }
 }
 
+void linalg::device_sync()
+{
+    ROUTINE_TRACE("linalg::sync");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_sync());
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}
+
 template void linalg::device_allocate<uint32_t>(uint32_t** ptr, size_t size);
 template void linalg::device_allocate<int32_t>(int32_t** ptr, size_t size);
 template void linalg::device_allocate<int64_t>(int64_t** ptr, size_t size);

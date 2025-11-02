@@ -76,10 +76,14 @@ namespace linalg
      */
         vector(size_t size);
 
+        /*! \brief Constructor to create a vector of a specified size and initial value.
+     * \param size The desired number of elements in the vector.
+     * \param val The value to initialize each element with.
+     */
         vector(size_t size, T val);
 
-        /*! \brief Constructor to initialize a vector from a `std::vector<double>`.
-     * \param vec A `std::vector<double>` whose elements will be copied into this vector.
+        /*! \brief Constructor to initialize a vector from a `std::vector`.
+     * \param vec A `std::vector<T>` whose elements will be copied into this vector.
      */
         vector(const std::vector<T>& vec);
 
@@ -129,12 +133,12 @@ namespace linalg
         size_t get_size() const;
 
         /*! \brief Returns a non-constant pointer to the beginning of the vector's underlying data.
-     * \return A `double*` to the first element of the vector. This allows modification of the vector.
+     * \return A `T*` pointer to the first element of the vector. This allows modification of the vector contents.
      */
         T* get_vec();
 
         /*! \brief Returns a constant pointer to the beginning of the vector's underlying data.
-     * \return A `const double*` to the first element of the vector. This prevents modification of the vector.
+     * \return A `const T*` pointer to the first element of the vector. This prevents modification of the vector contents.
      */
         const T* get_vec() const;
 
@@ -145,8 +149,17 @@ namespace linalg
      */
         void resize(size_t size);
 
+        /*! \brief Resizes the vector to the specified size and fills new entries with the provided value.
+     * \details If the new size is smaller, elements beyond the new size are truncated.
+     * If the new size is larger, newly created elements are initialized to `val`.
+     * \param size The new desired size of the vector.
+     * \param val The value used to initialize any newly created elements.
+     */
         void resize(size_t size, T val);
 
+        /*! \brief Clears the vector, setting its size to zero and releasing any allocated storage.
+     * \details After calling `clear()`, `get_size()` should return 0.
+     */
         void clear();
 
         // void assign(size_t size, T val);
@@ -164,6 +177,9 @@ namespace linalg
         /*! \brief Sets all elements of the vector to one. */
         void ones();
 
+        /*! \brief Fills the entire vector with the provided value.
+     * \param val The value to assign to every element of the vector.
+     */
         void fill(T val);
 
         /*! \brief Moves the vector data from host memory to device memory (e.g., GPU).
@@ -178,6 +194,12 @@ namespace linalg
      */
         void move_to_host();
 
+        /*! \brief Prints the vector contents to the console.
+     * \details The output is prefixed with the provided name for clarity when
+     * printing multiple vectors. Typical format:
+     * "<name>: [v0, v1, ..., v_{n-1}]".
+     * \param name A string identifier used as a prefix in the printed output.
+     */
         void print_vector(const std::string name) const;
     };
 

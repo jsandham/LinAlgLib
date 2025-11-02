@@ -33,10 +33,12 @@ FetchContent_MakeAvailable(perfetto)
 find_package(Threads)
 
 # Define a static library for Perfetto.
-include_directories(${CMAKE_BINARY_DIR}/_deps/perfetto-src/sdk)
 add_library(perfetto STATIC ${CMAKE_BINARY_DIR}/_deps/perfetto-src/sdk/perfetto.cc)
 
-target_include_directories(perfetto PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/_deps/perfetto-src/sdk>)
+# Mark perfetto's headers as SYSTEM to suppress warnings coming from
+# third-party headers. We still expose the include path to consumers via
+# PUBLIC so other targets that link against perfetto can find its headers.
+target_include_directories(perfetto SYSTEM PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/_deps/perfetto-src/sdk>)
 
 if (WIN32)
   # The perfetto library contains many symbols, so it needs the big object format.
@@ -44,3 +46,22 @@ if (WIN32)
   # Disable legacy features in windows.h.
   target_compile_definitions(perfetto PRIVATE -DWIN32_LEAN_AND_MEAN -DNOMINMAX)
 endif (WIN32)
+
+# Silence compiler warnings originating from the perfetto dependency only.
+# We do this per-target so warnings from the main project are still shown.
+# For MSVC use /W0, for GCC/Clang use -w.
+target_compile_options(perfetto PRIVATE
+  # For MSVC, prefer suppressing warnings coming from external/system headers
+  # using /external:W0; this works better with SYSTEM includes than /W0.
+  $<$<CXX_COMPILER_ID:MSVC>:/external:W0>
+  # Additionally disable a small set of noisy warning IDs that originate
+  # from third-party or STL instantiations when compiling perfetto.
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4456>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4458>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4018>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4189>
+  $<$<CXX_COMPILER_ID:MSVC>:/wd4389>
+  $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-w>
+)

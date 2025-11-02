@@ -120,6 +120,7 @@ void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const cs
 {
     ROUTINE_TRACE("linalg::matrix_matrix_addition");
 
+    std::cout << "Entering linalg::matrix_matrix_addition" << std::endl;
     backend_dispatch("linalg::matrix_matrix_addition",
                      host_matrix_matrix_addition,
                      device_matrix_matrix_addition,

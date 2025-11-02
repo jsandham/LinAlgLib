@@ -398,4 +398,83 @@ __global__ void copy_kernel(T* __restrict__ dest, const T* __restrict__ src, siz
     }
 }
 
+template <uint32_t HASH_TABLE_SIZE>
+__device__ bool atomic_insert_key(int* key_table, int key, int EMPTY_VAL)
+{
+    // 1. Calculate the initial hash index
+    uint32_t start_index = key % HASH_TABLE_SIZE;
+    uint32_t index       = start_index;
+
+    // 2. Linear Probing with an atomic insertion
+    for(uint32_t i = 0; i < HASH_TABLE_SIZE; ++i)
+    {
+        // Calculate the probe index (circular)
+        index = (start_index + i) % HASH_TABLE_SIZE;
+
+        // Try to atomically replace the EMPTY_VAL with the new key.
+        // atomicCAS(address, compare, val)
+        // Checks if *address == compare. If true, sets *address = val and returns compare.
+        // If false, returns *address without changing it.
+        int old_val = atomicCAS(&key_table[index], EMPTY_VAL, key);
+
+        if(old_val == EMPTY_VAL)
+        {
+            // Success: The slot was empty and we inserted the key.
+            return true;
+        }
+        else if(old_val == key)
+        {
+            // Key already exists (handling duplicates in linear probing)
+            // Return false to indicate that no insertion was required
+            return false;
+        }
+    }
+
+    // Failure: Table is full after probing all slots
+    return false;
+}
+
+template <uint32_t HASH_TABLE_SIZE, typename T>
+__device__ bool
+    atomic_insert_key_value(int* key_table, T* values_table, int key, T value, int EMPTY_VAL)
+{
+    // 1. Calculate the initial hash index
+    uint32_t start_index = key % HASH_TABLE_SIZE;
+    uint32_t index       = start_index;
+
+    // 2. Linear Probing with an atomic insertion
+    for(uint32_t i = 0; i < HASH_TABLE_SIZE; ++i)
+    {
+        // Calculate the probe index (circular)
+        index = (start_index + i) % HASH_TABLE_SIZE;
+
+        // Try to atomically replace the EMPTY_VAL with the new key.
+        // atomicCAS(address, compare, val)
+        // Checks if *address == compare. If true, sets *address = val and returns compare.
+        // If false, returns *address without changing it.
+        int old_val = atomicCAS(&key_table[index], EMPTY_VAL, key);
+
+        __threadfence_block();
+
+        if(old_val == EMPTY_VAL)
+        {
+            // Success: The slot was empty and we inserted the key.
+            // values_table[index] = value;
+            atomicAdd(&values_table[index], value);
+            return true;
+        }
+        else if(old_val == key)
+        {
+            // Key already exists (handling duplicates in linear probing)
+            // Return false to indicate that no insertion was required
+            atomicAdd(&values_table[index], value);
+            return false;
+        }
+        __threadfence_block();
+    }
+
+    // Failure: Table is full after probing all slots
+    return false;
+}
+
 #endif
