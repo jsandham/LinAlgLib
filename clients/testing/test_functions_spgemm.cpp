@@ -68,6 +68,16 @@ bool Testing::test_spgemm(Arguments arg)
     mat_B.print_matrix("B");
     mat_C.print_matrix("C");
 
+    mesh mesh;
+    load_gmsh_mesh("../../../../../fluidfe/meshes/mesh1.msh", mesh);
+
+    for(size_t i = 0; i < mesh.nodes.size(); i++)
+    {
+        const node& n = mesh.nodes[i];
+        std::cout << "Node " << n.tag << ": (" << n.x << ", " << n.y << ", " << n.z << ")"
+                  << std::endl;
+    }
+
     /*csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 

@@ -229,5 +229,8 @@
 #include "linalg_memory.h"
 #include "linalg_primitives.h"
 
+// Finite Element Method
+#include "finite_element/mesh.h"
+#include "finite_element/mesh_loader.h"
 
 #endif

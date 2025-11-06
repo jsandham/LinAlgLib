@@ -88,6 +88,7 @@ set(LINALGLIB_SOURCE
   src/iterative_solvers/krylov/cg.cpp
   src/iterative_solvers/preconditioner/preconditioner.cpp
   src/iterative_solvers/iter_control.cpp
+  src/finite_element/mesh_loader.cpp
   src/vector.cpp
   src/csr_matrix.cpp
   src/perfetto_trace.cpp
