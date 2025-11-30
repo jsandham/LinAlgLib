@@ -156,11 +156,51 @@ void csr_matrix::copy_lower_triangular_from(const csr_matrix& A, bool unit_diag)
     this->m = A.get_m();
     this->n = A.get_n();
 
+    this->csr_row_ptr.resize(A.get_m() + 1);
+
     // Determine non-zero count in lower triangular portion of A
+    backend_dispatch("linalg::csr_matrix::copy_lower_triangular_from",
+                     host_extract_lower_triangular_nnz,
+                     device_extract_lower_triangular_nnz,
+                     A,
+                     *this,
+                     this->nnz);
+
+    this->csr_col_ind.resize(this->nnz);
+    this->csr_val.resize(this->nnz);
+
+    backend_dispatch("linalg::csr_matrix::copy_lower_triangular_from",
+                     host_extract_lower_triangular,
+                     device_extract_lower_triangular,
+                     A,
+                     *this);
+}
+
+void csr_matrix::copy_upper_triangular_from(const csr_matrix& A, bool unit_diag)
+{
+    ROUTINE_TRACE("csr_matrix::copy_upper_triangular_from");
+
+    this->m = A.get_m();
+    this->n = A.get_n();
 
     this->csr_row_ptr.resize(A.get_m() + 1);
-    this->csr_col_ind.resize(A.get_nnz());
-    this->csr_val.resize(A.get_nnz());
+
+    // Determine non-zero count in upper triangular portion of A
+    backend_dispatch("linalg::csr_matrix::copy_upper_triangular_from",
+                     host_extract_upper_triangular_nnz,
+                     device_extract_upper_triangular_nnz,
+                     A,
+                     *this,
+                     this->nnz);
+
+    this->csr_col_ind.resize(this->nnz);
+    this->csr_val.resize(this->nnz);
+
+    backend_dispatch("linalg::csr_matrix::copy_upper_triangular_from",
+                     host_extract_upper_triangular,
+                     device_extract_upper_triangular,
+                     A,
+                     *this);
 }
 
 void csr_matrix::move_to_device()
@@ -197,6 +237,41 @@ void csr_matrix::extract_diagonal(vector<double>& diag) const
 
     backend_dispatch(
         "linalg::csr_matrix::extract_diagonal", host_diagonal, device_diagonal, *this, diag);
+}
+
+void csr_matrix::scale_diagonal_by(double scalar)
+{
+    ROUTINE_TRACE("csr_matrix::scale_diagonal_by");
+
+    backend_dispatch("linalg::csr_matrix::scale_diagonal_by",
+                     host_scale_diagonal,
+                     device_scale_diagonal,
+                     *this,
+                     scalar);
+}
+
+void csr_matrix::scale_by_inverse_diagonal()
+{
+    ROUTINE_TRACE("csr_matrix::scale_by_inverse_diagonal");
+
+    vector<double> diag(this->m);
+    if(this->is_on_host())
+    {
+        diag.move_to_host();
+    }
+    else
+    {
+        diag.move_to_device();
+    }
+
+    this->extract_diagonal(diag);
+
+    // Scale each row by the inverse of its diagonal element
+    backend_dispatch("linalg::csr_matrix::scale_by_inverse_diagonal",
+                     host_scale_by_inverse_diagonal,
+                     device_scale_by_inverse_diagonal,
+                     *this,
+                     diag);
 }
 
 void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
@@ -245,7 +320,7 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
 
-    backend_dispatch("linalg::csr_matrix::matrix_matrix_addition",
+    backend_dispatch("linalg::csr_matrix::multiply_by_matrix",
                      host_matrix_matrix_product,
                      device_matrix_matrix_product,
                      C,
@@ -255,13 +330,10 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 
 void csr_matrix::transpose(csr_matrix& T) const
 {
-    ROUTINE_TRACE("csr_matrix::transpose_matrix");
+    ROUTINE_TRACE("csr_matrix::transpose");
 
-    backend_dispatch("linalg::csr_matrix::transpose_matrix",
-                     host_transpose_matrix,
-                     device_transpose_matrix,
-                     *this,
-                     T);
+    backend_dispatch(
+        "linalg::csr_matrix::transpose", host_transpose_matrix, device_transpose_matrix, *this, T);
 }
 
 // Structure to hold triplet (COO) format data

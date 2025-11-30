@@ -93,6 +93,10 @@ namespace YAML
             {
                 rhs = Testing::preconditioner::SymmGaussSeidel;
             }
+            if(type == "SSOR")
+            {
+                rhs = Testing::preconditioner::SSOR;
+            }
             else if(type == "IC")
             {
                 rhs = Testing::preconditioner::IC;
@@ -281,6 +285,7 @@ inline Testing::Fixture StringToFixture(const std::string& str)
            {"SAAMG", Testing::Fixture::SAAMG},
            {"RSAMG", Testing::Fixture::RSAMG},
            {"SpMV", Testing::Fixture::SpMV},
+           {"SpTRSV", Testing::Fixture::SpTRSV},
            {"SpGEMM", Testing::Fixture::SpGEMM},
            {"SpGEAM", Testing::Fixture::SpGEAM},
            {"Transpose", Testing::Fixture::Transpose},

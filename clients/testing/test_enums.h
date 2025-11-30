@@ -54,6 +54,7 @@ namespace Testing
         SAAMG,
         RSAMG,
         SpMV,
+        SpTRSV,
         SpGEMM,
         SpGEAM,
         Transpose,
@@ -90,6 +91,7 @@ namespace Testing
         GaussSeidel,
         SOR,
         SymmGaussSeidel,
+        SSOR,
         ILU,
         IC,
         None
@@ -142,6 +144,8 @@ namespace Testing
             return "SpGEMM";
         case Fixture::SpGEAM:
             return "SpGEAM";
+        case Fixture::SpTRSV:
+            return "SpTRSV";
         case Fixture::Transpose:
             return "Transpose";
         case Fixture::ExclusiveScan:
@@ -197,6 +201,8 @@ namespace Testing
             return "SOR";
         case preconditioner::SymmGaussSeidel:
             return "SymmGaussSeidel";
+        case preconditioner::SSOR:
+            return "SSOR";
         case preconditioner::ILU:
             return "ILU";
         case preconditioner::IC:

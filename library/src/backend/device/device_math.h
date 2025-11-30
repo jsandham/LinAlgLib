@@ -30,9 +30,13 @@
 #include <string>
 
 #include "csr_matrix.h"
+#include "linalg_enums.h"
 #include "linalg_export.h"
 #include "vector.h"
 
+/*! \file
+ *  \brief device_math.h provides linear algebra APIs for device (GPU) backend
+ */
 namespace linalg
 {
     // Compute y = alpha * x + y
@@ -97,6 +101,20 @@ namespace linalg
     // Extract diagonal entries
     void device_diagonal(const csr_matrix& A, vector<double>& d);
 
+    // Extract lower triangular entries
+    void device_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L);
+    void device_extract_lower_triangular(const csr_matrix& A, csr_matrix& L);
+
+    // Extract upper triangular entries
+    void device_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U);
+    void device_extract_upper_triangular(const csr_matrix& A, csr_matrix& U);
+
+    // Scale diagonal entries
+    void device_scale_diagonal(csr_matrix& A, double scalar);
+
+    // Scale by inverse diagonal entries
+    void device_scale_by_inverse_diagonal(csr_matrix& A, const vector<double>& diag);
+
     // Euclidean norm
     double device_norm_euclid(const vector<double>& array);
 
@@ -107,6 +125,28 @@ namespace linalg
     void device_jacobi_solve(const vector<double>& rhs,
                              const vector<double>& diag,
                              vector<double>&       x);
+
+    // SSOR fill lower preconditioner
+    void device_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega);
+    // SSOR fill upper preconditioner
+    void device_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega);
+
+    struct csrtrsv_descr;
+
+    void allocate_csrtrsv_device_data(csrtrsv_descr* descr);
+    void free_csrtrsv_device_data(csrtrsv_descr* descr);
+
+    void device_csrtrsv_analysis(const csr_matrix& A,
+                                 triangular_type   tri_type,
+                                 diagonal_type     diag_type,
+                                 csrtrsv_descr*    descr);
+    void device_csrtrsv_solve(const csr_matrix&     A,
+                              const vector<double>& b,
+                              vector<double>&       x,
+                              double                alpha,
+                              triangular_type       tri_type,
+                              diagonal_type         diag_type,
+                              const csrtrsv_descr*  descr);
 
 } // namespace linalg
 

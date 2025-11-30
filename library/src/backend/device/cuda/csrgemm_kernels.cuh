@@ -44,7 +44,7 @@ __global__ void csrgemm_count_products_kernel(int     m,
     int gid = tid + BLOCKSIZE * bid;
 
     int lid = tid & WARPSIZE - 1;
-    int wid = tid / WARPSIZE;
+    //int wid = tid / WARPSIZE;
 
     int row = gid / WARPSIZE;
 

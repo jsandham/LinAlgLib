@@ -81,6 +81,9 @@ vector<T>::~vector()
 {
     delete hvec;
     delete dvec;
+
+    hvec = nullptr;
+    dvec = nullptr;
 }
 
 template <typename T>

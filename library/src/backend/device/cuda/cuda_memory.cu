@@ -71,7 +71,6 @@ void linalg::cuda_fill(T* data, size_t size, T val)
     }
     else
     {
-        ROUTINE_TRACE("launch_cuda_fill_kernel");
         fill_kernel<256><<<((size - 1) / 256 + 1), 256>>>(data, size, val);
         CHECK_CUDA_LAUNCH_ERROR();
     }

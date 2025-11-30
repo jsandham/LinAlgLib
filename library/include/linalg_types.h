@@ -24,30 +24,16 @@
 //
 //********************************************************************************
 
-#ifndef TEST_FUNCTIONS_H__
-#define TEST_FUNCTIONS_H__
+#ifndef LINEAR_TYPES_H
+#define LINEAR_TYPES_H
 
-#include "test_arguments.h"
-
-namespace Testing
+namespace linalg
 {
-    bool test_dispatch(Arguments arg);
-
-    // Iterative solvers
-    bool test_classical(ClassicalSolver solver_type, Arguments arg);
-    bool test_krylov(KrylovSolver solver_type, Arguments arg);
-    bool test_amg(AMGSolver solver_type, Arguments arg);
-
-    // Math testing
-    bool test_spmv(Arguments arg);
-    bool test_sptrsv(Arguments arg);
-    bool test_spgemm(Arguments arg);
-    bool test_spgeam(Arguments arg);
-    bool test_transpose(Arguments arg);
-
-    // Primitive
-    bool test_exclusive_scan(Arguments arg);
-
-} // namespace Testing
-
-#endif
+    /*! \brief Structure for CSR triangular solve descriptor.
+ *
+ * \details
+ * This structure holds additional parameters for the CSR triangular solve operation.
+ */
+    struct csrtrsv_descr;
+} // namespace linalg
+#endif // LINEAR_TYPES_H

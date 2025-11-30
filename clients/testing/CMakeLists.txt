@@ -81,6 +81,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_functions_krylov.cpp
   test_functions_amg.cpp
   test_functions_spmv.cpp
+  test_functions_sptrsv.cpp
   test_functions_spgemm.cpp
   test_functions_spgeam.cpp
   test_functions_transpose.cpp
@@ -101,6 +102,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   #tests/test_RSAMG.cpp
 
   tests/test_SpMV.cpp
+  tests/test_SpTRSV.cpp
   tests/test_SpGEMM.cpp
   tests/test_transpose.cpp
   tests/test_exclusive_scan.cpp

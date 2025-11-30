@@ -26,6 +26,8 @@
 #ifndef CUDA_MATH_H
 #define CUDA_MATH_H
 
+#include "linalg_enums.h"
+
 namespace linalg
 {
     void   cuda_axpy(int size, double alpha, const double* x, double* y);
@@ -62,8 +64,81 @@ namespace linalg
                                  const int*    csr_col_ind,
                                  const double* csr_val,
                                  double*       d);
+
+    void cuda_extract_lower_triangular_nnz(int        m_A,
+                                           int        n_A,
+                                           int        nnz_A,
+                                           const int* csr_row_ptr_A,
+                                           const int* csr_col_ind_A,
+                                           int*       csr_row_ptr_L,
+                                           int*       nnz_L);
+    void cuda_extract_lower_triangular(int           m_A,
+                                       int           n_A,
+                                       int           nnz_A,
+                                       const int*    csr_row_ptr_A,
+                                       const int*    csr_col_ind_A,
+                                       const double* csr_val_A,
+                                       int           m_L,
+                                       int           n_L,
+                                       int           nnz_L,
+                                       int*          csr_row_ptr_L,
+                                       int*          csr_col_ind_L,
+                                       double*       csr_val_L);
+
+    void cuda_extract_upper_triangular_nnz(int        m_A,
+                                           int        n_A,
+                                           int        nnz_A,
+                                           const int* csr_row_ptr_A,
+                                           const int* csr_col_ind_A,
+                                           int*       csr_row_ptr_U,
+                                           int*       nnz_U);
+    void cuda_extract_upper_triangular(int           m_A,
+                                       int           n_A,
+                                       int           nnz_A,
+                                       const int*    csr_row_ptr_A,
+                                       const int*    csr_col_ind_A,
+                                       const double* csr_val_A,
+                                       int           m_U,
+                                       int           n_U,
+                                       int           nnz_U,
+                                       int*          csr_row_ptr_U,
+                                       int*          csr_col_ind_U,
+                                       double*       csr_val_U);
+
+    void cuda_scale_diagonal(
+        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double scalar);
+
+    void cuda_scale_by_inverse_diagonal(
+        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, const double* diag);
+
     double cuda_norm_inf(const double* array, int size);
     void   cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size);
+    void   cuda_ssor_fill_lower_precond(int           m_A,
+                                        int           n_A,
+                                        int           nnz_A,
+                                        const int*    csr_row_ptr_A,
+                                        const int*    csr_col_ind_A,
+                                        const double* csr_val_A,
+                                        int           m_L,
+                                        int           n_L,
+                                        int           nnz_L,
+                                        const int*    csr_row_ptr_L,
+                                        int*          csr_col_ind_L,
+                                        double*       csr_val_L,
+                                        double        omega);
+    void   cuda_ssor_fill_upper_precond(int           m_A,
+                                        int           n_A,
+                                        int           nnz_A,
+                                        const int*    csr_row_ptr_A,
+                                        const int*    csr_col_ind_A,
+                                        const double* csr_val_A,
+                                        int           m_U,
+                                        int           n_U,
+                                        int           nnz_U,
+                                        const int*    csr_row_ptr_U,
+                                        int*          csr_col_ind_U,
+                                        double*       csr_val_U,
+                                        double        omega);
     void   cuda_csrmv(int           m,
                       int           n,
                       int           nnz,
@@ -209,6 +284,33 @@ namespace linalg
                       int*          csc_row_ind,
                       double*       csc_val,
                       void*         buffer);
+
+    struct csrtrsv_descr;
+
+    void allocate_csrtrsv_cuda_data(csrtrsv_descr* descr);
+    void free_csrtrsv_cuda_data(csrtrsv_descr* descr);
+
+    void cuda_csrtrsv_analysis(int             m,
+                               int             n,
+                               int             nnz,
+                               const int*      csr_row_ptr,
+                               const int*      csr_col_ind,
+                               const double*   csr_val,
+                               triangular_type tri_type,
+                               diagonal_type   diag_type,
+                               csrtrsv_descr*  descr);
+    void cuda_csrtrsv_solve(int                  m,
+                            int                  n,
+                            int                  nnz,
+                            double               alpha,
+                            const int*           csr_row_ptr,
+                            const int*           csr_col_ind,
+                            const double*        csr_val,
+                            const double*        b,
+                            double*              x,
+                            triangular_type      tri_type,
+                            diagonal_type        diag_type,
+                            const csrtrsv_descr* descr);
 }
 
 #endif

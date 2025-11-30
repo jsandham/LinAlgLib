@@ -23,25 +23,7 @@
 // SOFTWARE.
 //
 //********************************************************************************
-#ifndef JACOBI_SOLVE_KERNELS_H
-#define JACOBI_SOLVE_KERNELS_H
 
-#include "common.cuh"
+#include "../test.h"
 
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void jacobi_solve_kernel(int size,
-                                    const T* __restrict__ rhs,
-                                    const T* __restrict__ diag,
-                                    T* __restrict__ x)
-{
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int gid = tid + BLOCKSIZE * bid;
-
-    if(gid < size)
-    {
-        x[gid] = rhs[gid] / diag[gid];
-    }
-}
-
-#endif
+INSTANTIATE_TEST(Math, SpTRSV, triangular_solve, "tests/test_SpTRSV.yaml");

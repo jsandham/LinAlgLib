@@ -31,6 +31,7 @@
 
 #include "../../csr_matrix.h"
 #include "../../linalg_export.h"
+#include "../../linalg_types.h"
 
 #include "../amg/amg.h"
 
@@ -142,7 +143,8 @@ namespace linalg
      * \details The Gauss-Seidel preconditioner requires access to the
      * lower triangular part of the original matrix during the solve phase.
      */
-        csr_matrix A;
+        csr_matrix     M;
+        csrtrsv_descr* descr_M;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -191,12 +193,11 @@ namespace linalg
     class SOR_precond : public preconditioner
     {
     private:
-        /*! \brief Stores a copy of the original matrix A. */
-        csr_matrix A;
         /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
         double omega;
-        /*! \brief Stores the diagonal elements of the matrix A, often used in the SOR solve process. */
-        vector<double> diag;
+
+        csr_matrix     M;
+        csrtrsv_descr* descr_M;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -245,10 +246,10 @@ namespace linalg
     class symmetric_gauss_seidel_precond : public preconditioner
     {
     private:
-        /*! \brief Stores a copy of the original matrix A. */
-        csr_matrix A;
-        /*! \brief Stores the diagonal elements of the matrix A, used in the SGS solve process. */
-        vector<double> diag;
+        csr_matrix     L;
+        csr_matrix     U;
+        csrtrsv_descr* descr_L;
+        csrtrsv_descr* descr_U;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -285,6 +286,60 @@ namespace linalg
     };
 
     /*! \ingroup iterative_solvers
+ * \brief Symmetric Successive Over-Relaxation (SSOR) preconditioner.
+ *
+ * \details
+ * Implements the Symmetric Successive Over-Relaxation (SSOR) preconditioning method.
+ * SSOR is a variant of SOR that introduces a relaxation parameter
+ * (\f$\omega\f$) to potentially accelerate convergence.
+ */
+    class SSOR_precond : public preconditioner
+    {
+    private:
+        /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
+        double omega;
+
+        //   vector<double> y;
+
+        csr_matrix     L;
+        csr_matrix     U;
+        csrtrsv_descr* descr_L;
+        csrtrsv_descr* descr_U;
+
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
+        bool on_host;
+
+    public:
+        /*! \brief Constructs a new `SSOR_precond` object with a specified relaxation parameter.
+     * \param omega The relaxation parameter for the SSOR method.
+     */
+        SSOR_precond(double omega);
+
+        /*! \brief Destroys the `SSOR_precond` object. */
+        ~SSOR_precond();
+
+        /*! \brief Builds the SSOR preconditioner.
+     *
+     * \param A The input matrix for which the preconditioner is to be built.
+     */
+        void build(const csr_matrix& A) override;
+
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the SSOR method.
+     *
+     * This method applies the SSOR preconditioning iteration to solve for `x`.
+     *
+     * \param rhs The right-hand side vector.
+     * \param x The output vector, which will contain the preconditioned result.
+     */
+        void solve(const vector<double>& rhs, vector<double>& x) const override;
+
+        void move_to_device() override;
+        void move_to_host() override;
+
+        bool is_on_host() const override;
+    };
+
+    /*! \ingroup iterative_solvers
  * \brief Incomplete LU (ILU) preconditioner.
  *
  * \details
@@ -304,6 +359,9 @@ namespace linalg
      * potentially in a merged format.
      */
         csr_matrix LU;
+
+        csrtrsv_descr* descr_L;
+        csrtrsv_descr* descr_U;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -359,6 +417,9 @@ namespace linalg
      * will store the lower triangular factor L.
      */
         csr_matrix LLT;
+
+        csrtrsv_descr* descr_L;
+        csrtrsv_descr* descr_LT;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;

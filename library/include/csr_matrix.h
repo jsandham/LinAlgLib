@@ -214,6 +214,18 @@ namespace linalg
     */
         void copy_lower_triangular_from(const csr_matrix& A, bool unit_diag);
 
+        /*! \brief Copies the upper triangular portion of another csr_matrix into this object.
+    *
+    * This method performs a deep copy of the elements from the source matrix A that are on or above the main diagonal.
+    * The unit_diag parameter determines how the diagonal elements are handled. If unit_diag is true,
+    * the diagonal is treated as all ones, regardless of the values in the source matrix.
+    * If unit_diag is false, the actual diagonal values from A are copied.
+    *
+    * \param A The source csr_matrix to copy from.
+    * \param unit_diag A flag to specify whether the diagonal should be treated as all ones.
+    */
+        void copy_upper_triangular_from(const csr_matrix& A, bool unit_diag);
+
         /*! \brief Moves the matrix data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available
      * and `on_host` is true. After this call, `is_on_host()` will return `false`.
@@ -232,6 +244,10 @@ namespace linalg
      * \param diag An output `vector` that will store the diagonal elements.
      */
         void extract_diagonal(vector<double>& diag) const;
+
+        void scale_diagonal_by(double scalar);
+
+        void scale_by_inverse_diagonal();
 
         /*! \brief Multiplies the CSR matrix by a vector: \f$y = A \cdot x\f$.
      *

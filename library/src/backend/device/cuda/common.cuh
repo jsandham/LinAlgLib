@@ -121,6 +121,32 @@ __device__ __forceinline__ void warp_reduction_sum(T* __restrict__ data, int lid
     }
 }
 
+template <uint32_t WARPSIZE, typename T>
+__device__ __forceinline__ void warp_reduction_max(T* __restrict__ data, int lid)
+{
+    if(WARPSIZE > 16)
+    {
+        *data
+            = linalg::max(linalg::abs(*data), linalg::abs(__shfl_down_sync(FULL_MASK, *data, 16)));
+    }
+    if(WARPSIZE > 8)
+    {
+        *data = linalg::max(linalg::abs(*data), linalg::abs(__shfl_down_sync(FULL_MASK, *data, 8)));
+    }
+    if(WARPSIZE > 4)
+    {
+        *data = linalg::max(linalg::abs(*data), linalg::abs(__shfl_down_sync(FULL_MASK, *data, 4)));
+    }
+    if(WARPSIZE > 2)
+    {
+        *data = linalg::max(linalg::abs(*data), linalg::abs(__shfl_down_sync(FULL_MASK, *data, 2)));
+    }
+    if(WARPSIZE > 1)
+    {
+        *data = linalg::max(linalg::abs(*data), linalg::abs(__shfl_down_sync(FULL_MASK, *data, 1)));
+    }
+}
+
 template <uint32_t BLOCKSIZE, typename T>
 __device__ __forceinline__ void block_reduction_sum(T* __restrict__ data, int tid)
 {

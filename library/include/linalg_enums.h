@@ -24,30 +24,24 @@
 //
 //********************************************************************************
 
-#ifndef TEST_FUNCTIONS_H__
-#define TEST_FUNCTIONS_H__
+#ifndef LINEAR_ENUMS_H
+#define LINEAR_ENUMS_H
 
-#include "test_arguments.h"
-
-namespace Testing
+namespace linalg
 {
-    bool test_dispatch(Arguments arg);
+    /*! \brief Enumeration for triangular matrix types. */
+    enum class triangular_type
+    {
+        lower, /*!< Lower triangular matrix */
+        upper /*!< Upper triangular matrix */
+    };
 
-    // Iterative solvers
-    bool test_classical(ClassicalSolver solver_type, Arguments arg);
-    bool test_krylov(KrylovSolver solver_type, Arguments arg);
-    bool test_amg(AMGSolver solver_type, Arguments arg);
+    /*! \brief Enumeration for diagonal matrix types. */
+    enum class diagonal_type
+    {
+        non_unit, /*!< Non-unit diagonal */
+        unit /*!< Unit diagonal */
+    };
+} // namespace linalg
 
-    // Math testing
-    bool test_spmv(Arguments arg);
-    bool test_sptrsv(Arguments arg);
-    bool test_spgemm(Arguments arg);
-    bool test_spgeam(Arguments arg);
-    bool test_transpose(Arguments arg);
-
-    // Primitive
-    bool test_exclusive_scan(Arguments arg);
-
-} // namespace Testing
-
-#endif
+#endif // LINEAR_ENUMS_H

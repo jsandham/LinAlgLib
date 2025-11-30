@@ -27,42 +27,37 @@
 #include "../../../include/iterative_solvers/amg/saamg.h"
 #include "../../../include/linalg_math.h"
 
+#include "../../backend/device/device_math.h"
+#include "../../backend/host/host_math.h"
+
+#include "../../trace.h"
+#include "../../utility.h"
+
 #include <iostream>
 #include <vector>
 
 using namespace linalg;
 
 jacobi_precond::jacobi_precond()
-    : on_host(false)
+    : on_host(true)
 {
 }
 jacobi_precond::~jacobi_precond() {}
 
 void jacobi_precond::build(const csr_matrix& A)
 {
+    ROUTINE_TRACE("jacobi_precond::build");
+
     diag.resize(A.get_m());
     diagonal(A, diag);
 }
 
 void jacobi_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
-    // bool moved_to_host = !rhs.is_on_host();
-    // if(moved_to_host)
-    // {
-    //     rhs.move_to_host();
-    //     x.move_to_host();
-    //     diag.move_to_host();
-    // }
+    ROUTINE_TRACE("jacobi_precond::solve");
 
     // Solve M * x = rhs where M = D
-    jacobi_solve(rhs, diag, x);
-
-    // if(moved_to_host)
-    // {
-    //     rhs.move_to_device();
-    //     x.move_to_device();
-    //     diag.move_to_device();
-    // }
+    backend_dispatch("linalg::jacobi_solve", host_jacobi_solve, device_jacobi_solve, rhs, diag, x);
 }
 
 void jacobi_precond::move_to_device()
@@ -83,29 +78,41 @@ bool jacobi_precond::is_on_host() const
 }
 
 gauss_seidel_precond::gauss_seidel_precond()
-    : on_host(false)
+    : on_host(true)
 {
+    create_csrtrsv_descr(&descr_M);
 }
-gauss_seidel_precond::~gauss_seidel_precond() {}
+gauss_seidel_precond::~gauss_seidel_precond()
+{
+    destroy_csrtrsv_descr(descr_M);
+}
 
 void gauss_seidel_precond::build(const csr_matrix& A)
 {
-    this->A.copy_from(A);
+    ROUTINE_TRACE("gauss_seidel_precond::build");
+
+    this->M.copy_lower_triangular_from(A, false);
+    csrtrsv_analysis(this->M, triangular_type::lower, diagonal_type::non_unit, this->descr_M);
 }
 
 void gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
+    ROUTINE_TRACE("gauss_seidel_precond::solve");
+
     // Solve M * x = rhs where M = L + D
-    forward_solve(this->A, rhs, x, false);
+    csrtrsv_solve(
+        this->M, rhs, x, 1.0, triangular_type::lower, diagonal_type::non_unit, this->descr_M);
 }
 
 void gauss_seidel_precond::move_to_device()
 {
+    this->M.move_to_device();
     this->on_host = false;
 }
 
 void gauss_seidel_precond::move_to_host()
 {
+    this->M.move_to_host();
     this->on_host = true;
 }
 
@@ -116,57 +123,47 @@ bool gauss_seidel_precond::is_on_host() const
 
 SOR_precond::SOR_precond(double omega)
     : omega(omega)
-    , on_host(false)
+    , on_host(true)
 {
+    std::cout << "Create SOR preconditioner with omega: " << omega << std::endl;
+    create_csrtrsv_descr(&descr_M);
 }
-SOR_precond::~SOR_precond() {}
+SOR_precond::~SOR_precond()
+{
+    std::cout << "Destroy SOR preconditioner with omega: " << omega << std::endl;
+    destroy_csrtrsv_descr(descr_M);
+}
 
 void SOR_precond::build(const csr_matrix& A)
 {
-    this->A.copy_from(A);
+    ROUTINE_TRACE("SOR_precond::build");
 
-    diag.resize(A.get_m());
-    diagonal(A, diag);
+    // M = (1 / omega) * (D + omega * L)
+    //   = (1 / omega) * D + L
+    this->M.copy_lower_triangular_from(A, false);
+    this->M.scale_diagonal_by(1.0 / omega);
+
+    csrtrsv_analysis(this->M, triangular_type::lower, diagonal_type::non_unit, this->descr_M);
 }
 
 void SOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
-    const int*    csr_row_ptr = this->A.get_row_ptr();
-    const int*    csr_col_ind = this->A.get_col_ind();
-    const double* csr_val     = this->A.get_val();
+    ROUTINE_TRACE("SOR_precond::solve");
 
     // Solve M * x = rhs where M = (1 / omega) * (D + omega * L)
-    for(int i = 0; i < this->A.get_m(); i++)
-    {
-        int row_start = csr_row_ptr[i];
-        int row_end   = csr_row_ptr[i + 1];
-
-        double diag_val = 1.0;
-
-        x[i] = rhs[i];
-        for(int j = row_start; j < row_end; j++)
-        {
-            int col = csr_col_ind[j];
-            if(col < i)
-            {
-                x[i] -= csr_val[j] * x[col];
-            }
-            else if(col == i)
-            {
-                diag_val = csr_val[j] / omega;
-            }
-        }
-        x[i] /= diag_val;
-    }
+    csrtrsv_solve(
+        this->M, rhs, x, 1.0, triangular_type::lower, diagonal_type::non_unit, this->descr_M);
 }
 
 void SOR_precond::move_to_device()
 {
+    this->M.move_to_device();
     this->on_host = false;
 }
 
 void SOR_precond::move_to_host()
 {
+    this->M.move_to_host();
     this->on_host = true;
 }
 
@@ -176,21 +173,43 @@ bool SOR_precond::is_on_host() const
 }
 
 symmetric_gauss_seidel_precond::symmetric_gauss_seidel_precond()
-    : on_host(false)
+    : on_host(true)
 {
+    create_csrtrsv_descr(&descr_L);
+    create_csrtrsv_descr(&descr_U);
 }
-symmetric_gauss_seidel_precond::~symmetric_gauss_seidel_precond() {}
+symmetric_gauss_seidel_precond::~symmetric_gauss_seidel_precond()
+{
+    destroy_csrtrsv_descr(descr_L);
+    destroy_csrtrsv_descr(descr_U);
+}
 
 void symmetric_gauss_seidel_precond::build(const csr_matrix& A)
 {
-    this->A.copy_from(A);
+    ROUTINE_TRACE("symmetric_gauss_seidel_precond::build");
 
-    diag.resize(A.get_m());
-    diagonal(A, diag);
+    // M = (D - E) * D^-1 * (D - F) where A = D-E-F
+    //
+    // |*    |
+    // | *-F |
+    // |  D  |
+    // |-E * |
+    // |    *|
+    //
+    // L = (D - E) * D^-1 and U = (D - F) so that M = L * U
+    this->L.copy_lower_triangular_from(A, false);
+    this->L.scale_by_inverse_diagonal();
+
+    this->U.copy_upper_triangular_from(A, false);
+
+    csrtrsv_analysis(this->L, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
+    csrtrsv_analysis(this->U, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
 }
 
 void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
+    ROUTINE_TRACE("symmetric_gauss_seidel_precond::solve");
+
     // M = (D - E) * D^-1 * (D - F) where A = D-E-F
     //
     // |*    |
@@ -209,49 +228,37 @@ void symmetric_gauss_seidel_precond::solve(const vector<double>& rhs, vector<dou
     // means that if A is diagonally dominant then this error will be small
     // so when A is diagonally dominant, M is a good approximation of A.
 
-    const int*    csr_row_ptr = this->A.get_row_ptr();
-    const int*    csr_col_ind = this->A.get_col_ind();
-    const double* csr_val     = this->A.get_val();
+    vector<double> y(this->L.get_m());
 
-    vector<double> y(this->A.get_m());
-
-    // Solve (D - E) * D^-1 * y = rhs
-    // (I - E * D^-1) * y = rhs
-    for(int i = 0; i < this->A.get_m(); i++)
+    if(rhs.is_on_host())
     {
-        int row_start = csr_row_ptr[i];
-        int row_end   = csr_row_ptr[i + 1];
-
-        double diag_val = 0.0;
-
-        y[i] = rhs[i];
-        for(int j = row_start; j < row_end; j++)
-        {
-            int col = csr_col_ind[j];
-            if(col < i)
-            {
-                y[i] -= (csr_val[j] / diag[col]) * y[col];
-            }
-            else if(col == i)
-            {
-                diag_val = (1.0 + csr_val[j] / diag[col]);
-            }
-        }
-
-        y[i] /= diag_val;
+        y.move_to_host();
+    }
+    else
+    {
+        y.move_to_device();
     }
 
+    // Solve (D - E) * D^-1 * y = L * y = rhs
+    csrtrsv_solve(
+        this->L, rhs, y, 1.0, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
+
     // Solve (D - F) * x = y
-    backward_solve(this->A, y, x, false);
+    csrtrsv_solve(
+        this->U, y, x, 1.0, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
 }
 
 void symmetric_gauss_seidel_precond::move_to_device()
 {
+    this->L.move_to_device();
+    this->U.move_to_device();
     this->on_host = false;
 }
 
 void symmetric_gauss_seidel_precond::move_to_host()
 {
+    this->L.move_to_host();
+    this->U.move_to_host();
     this->on_host = true;
 }
 
@@ -260,14 +267,170 @@ bool symmetric_gauss_seidel_precond::is_on_host() const
     return on_host;
 }
 
-ilu_precond::ilu_precond()
-    : on_host(false)
+SSOR_precond::SSOR_precond(double omega)
+    : omega(omega)
+    , on_host(true)
 {
+    create_csrtrsv_descr(&descr_L);
+    create_csrtrsv_descr(&descr_U);
 }
-ilu_precond::~ilu_precond() {}
+SSOR_precond::~SSOR_precond()
+{
+    destroy_csrtrsv_descr(descr_L);
+    destroy_csrtrsv_descr(descr_U);
+}
+
+void SSOR_precond::build(const csr_matrix& A)
+{
+    ROUTINE_TRACE("SSOR_precond::build");
+
+    // Let alpha = 1 / (omega * (2-omega)) and beta = 1 / omega
+    double beta = 1.0 / omega;
+
+    // M = alpha * (beta * D - E) * D^-1 * (beta * D - F), where A = D-E-F
+    //
+    // |*    |
+    // | *-F |
+    // |  D  |
+    // |-E * |
+    // |    *|
+    //
+    // L = (beta * D - E) * D^-1 and U = (beta * D - F) so that M = L * U
+    int m = A.get_m();
+    int n = A.get_n();
+
+    // Fill L = (beta * D - E) * D^-1
+    L.resize(m, n, 0);
+
+    // Determine non-zero count in lower triangular portion of A
+    int nnz_L = 0;
+    backend_dispatch("linalg::csr_matrix::copy_lower_triangular_from",
+                     host_extract_lower_triangular_nnz,
+                     device_extract_lower_triangular_nnz,
+                     A,
+                     L,
+                     nnz_L);
+
+    std::cout << "nnz_L: " << nnz_L << std::endl;
+
+    L.resize(m, n, nnz_L);
+
+    backend_dispatch("linalg::ssor_fill_lower_precond",
+                     host_ssor_fill_lower_precond,
+                     device_ssor_fill_lower_precond,
+                     A,
+                     L,
+                     beta);
+
+    // Fill U = (beta * D - F)
+    U.resize(m, n, 0);
+
+    // Determine non-zero count in upper triangular portion of A
+    int nnz_U = 0;
+
+    backend_dispatch("linalg::csr_matrix::copy_upper_triangular_from",
+                     host_extract_upper_triangular_nnz,
+                     device_extract_upper_triangular_nnz,
+                     A,
+                     U,
+                     nnz_U);
+
+    std::cout << "nnz_U: " << nnz_U << std::endl;
+
+    U.resize(m, n, nnz_U);
+
+    backend_dispatch("linalg::ssor_fill_upper_precond",
+                     host_ssor_fill_upper_precond,
+                     device_ssor_fill_upper_precond,
+                     A,
+                     U,
+                     beta);
+
+    csrtrsv_analysis(this->L, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
+    csrtrsv_analysis(this->U, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
+
+    //y.resize(this->L.get_m());
+}
+
+void SSOR_precond::solve(const vector<double>& rhs, vector<double>& x) const
+{
+    ROUTINE_TRACE("SSOR_precond::solve");
+
+    // Let alpha = 1 / (omega * (2-omega)) and beta = 1 / omega
+    double alpha = 1.0 / (omega * (2.0 - omega));
+
+    // M = alpha * (beta * D - E) * D^-1 * (beta * D - F), where A = D-E-F
+    //
+    // |*    |
+    // | *-F |
+    // |  D  |
+    // |-E * |
+    // |    *|
+    //
+    // Solve M * x = rhs
+    // alpha * (beta * D - E) * D^-1 * (beta * D - F) * x = rhs
+    // Let y = (alpha * (beta * D - E) * D^-1 * x and therefore
+    // (alpha * (beta * D - E) * D^-1 * y = rhs
+    // So solve (alpha * (beta * D - E) * D^-1 * y = rhs followed by (beta * D - F) * x = y
+
+    // Let L = (beta * D - E) * D^-1 and U = (beta * D - F). This gives M = alpha * L * U.
+    vector<double> y(this->L.get_m());
+
+    if(rhs.is_on_host())
+    {
+        y.move_to_host();
+    }
+    else
+    {
+        y.move_to_device();
+    }
+
+    // Solve alpha * (beta * D - E) * D^-1 * y = alpha * L * y = rhs
+    csrtrsv_solve(
+        this->L, rhs, y, alpha, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
+
+    // Solve (beta * D - F) * x = U * x = y
+    csrtrsv_solve(
+        this->U, y, x, 1.0, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
+}
+
+void SSOR_precond::move_to_device()
+{
+    // this->y.move_to_device();
+    this->L.move_to_device();
+    this->U.move_to_device();
+    this->on_host = false;
+}
+
+void SSOR_precond::move_to_host()
+{
+    // this->y.move_to_host();
+    this->L.move_to_host();
+    this->U.move_to_host();
+    this->on_host = true;
+}
+
+bool SSOR_precond::is_on_host() const
+{
+    return on_host;
+}
+
+ilu_precond::ilu_precond()
+    : on_host(true)
+{
+    create_csrtrsv_descr(&descr_L);
+    create_csrtrsv_descr(&descr_U);
+}
+ilu_precond::~ilu_precond()
+{
+    destroy_csrtrsv_descr(descr_L);
+    destroy_csrtrsv_descr(descr_U);
+}
 
 void ilu_precond::build(const csr_matrix& A)
 {
+    ROUTINE_TRACE("ilu_precond::build");
+
     this->LU.copy_from(A);
 
     int structural_zero = -1;
@@ -275,28 +438,36 @@ void ilu_precond::build(const csr_matrix& A)
 
     // In place incomplete LU factorization
     csrilu0(LU, &structural_zero, &numeric_zero);
+
+    // Analyze L and U factors for triangular solves
+    csrtrsv_analysis(this->LU, triangular_type::lower, diagonal_type::unit, this->descr_L);
+    csrtrsv_analysis(this->LU, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
 }
 
 void ilu_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
+    ROUTINE_TRACE("ilu_precond::solve");
+
     // L * U * x = rhs
     // Let y = U * x
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LU, rhs, y, true);
+    csrtrsv_solve(LU, rhs, y, 1.0, triangular_type::lower, diagonal_type::unit, this->descr_L);
 
     // Solve U * x = y
-    backward_solve(LU, y, x, false);
+    csrtrsv_solve(LU, y, x, 1.0, triangular_type::upper, diagonal_type::non_unit, this->descr_U);
 }
 
 void ilu_precond::move_to_device()
 {
+    this->LU.move_to_device();
     this->on_host = false;
 }
 
 void ilu_precond::move_to_host()
 {
+    this->LU.move_to_host();
     this->on_host = true;
 }
 
@@ -306,21 +477,27 @@ bool ilu_precond::is_on_host() const
 }
 
 ic_precond::ic_precond()
-    : on_host(false)
+    : on_host(true)
 {
+    create_csrtrsv_descr(&descr_L);
+    create_csrtrsv_descr(&descr_LT);
 }
-ic_precond::~ic_precond() {}
+ic_precond::~ic_precond()
+{
+    destroy_csrtrsv_descr(descr_L);
+    destroy_csrtrsv_descr(descr_LT);
+}
 
 void ic_precond::build(const csr_matrix& A)
 {
+    ROUTINE_TRACE("ic_precond::build");
+
     this->LLT.copy_from(A);
 
     int structural_zero = -1;
     int numeric_zero    = -1;
 
     int     m               = LLT.get_m();
-    int     n               = LLT.get_n();
-    int     nnz             = LLT.get_nnz();
     int*    csr_row_ptr_LLT = LLT.get_row_ptr();
     int*    csr_col_ind_LLT = LLT.get_col_ind();
     double* csr_val_LLT     = LLT.get_val();
@@ -356,28 +533,36 @@ void ic_precond::build(const csr_matrix& A)
             }
         }
     }
+
+    // Analyze L and L^T factors for triangular solves
+    csrtrsv_analysis(this->LLT, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
+    csrtrsv_analysis(this->LLT, triangular_type::upper, diagonal_type::non_unit, this->descr_LT);
 }
 
 void ic_precond::solve(const vector<double>& rhs, vector<double>& x) const
 {
+    ROUTINE_TRACE("ic_precond::solve");
+
     // L * L^T * x = rhs
     // Let y = L^T * x
     vector<double> y(rhs.get_size());
 
     // Solve L * y = rhs
-    forward_solve(LLT, rhs, y, false);
+    csrtrsv_solve(LLT, rhs, y, 1.0, triangular_type::lower, diagonal_type::non_unit, this->descr_L);
 
     // Solve L^T * x = y
-    backward_solve(LLT, y, x, false);
+    csrtrsv_solve(LLT, y, x, 1.0, triangular_type::upper, diagonal_type::non_unit, this->descr_LT);
 }
 
 void ic_precond::move_to_device()
 {
+    this->LLT.move_to_device();
     this->on_host = false;
 }
 
 void ic_precond::move_to_host()
 {
+    this->LLT.move_to_host();
     this->on_host = true;
 }
 
@@ -387,7 +572,7 @@ bool ic_precond::is_on_host() const
 }
 
 itilu_precond::itilu_precond()
-    : on_host(false)
+    : on_host(true)
 {
 }
 itilu_precond::~itilu_precond() {}

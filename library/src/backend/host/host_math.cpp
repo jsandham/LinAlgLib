@@ -249,6 +249,218 @@ namespace linalg
     }
 
     //-------------------------------------------------------------------------------
+    // Extract lower triangular matrix A->L
+    //-------------------------------------------------------------------------------
+    static void host_extract_lower_triangular_nnz_impl(int        m_A,
+                                                       int        n_A,
+                                                       int        nnz_A,
+                                                       const int* csr_row_ptr_A,
+                                                       const int* csr_col_ind_A,
+                                                       int*       csr_row_ptr_L,
+                                                       int*       nnz_L)
+    {
+        ROUTINE_TRACE("host_extract_lower_triangular_nnz_impl");
+
+        csr_row_ptr_L[0] = 0;
+
+        // Fill L row pointer array
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            int row_start_A = csr_row_ptr_A[i];
+            int row_end_A   = csr_row_ptr_A[i + 1];
+
+            int nnz_per_row = 0;
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A <= i)
+                {
+                    nnz_per_row++;
+                }
+            }
+
+            csr_row_ptr_L[i + 1] = nnz_per_row;
+        }
+
+        // Exclusive scan
+        for(int i = 0; i < m_A; i++)
+        {
+            csr_row_ptr_L[i + 1] += csr_row_ptr_L[i];
+        }
+
+        *nnz_L = csr_row_ptr_L[m_A];
+    }
+
+    static void host_extract_lower_triangular_impl(int           m_A,
+                                                   int           n_A,
+                                                   int           nnz_A,
+                                                   const int*    csr_row_ptr_A,
+                                                   const int*    csr_col_ind_A,
+                                                   const double* csr_val_A,
+                                                   int           m_L,
+                                                   int           n_L,
+                                                   int           nnz_L,
+                                                   int*          csr_row_ptr_L,
+                                                   int*          csr_col_ind_L,
+                                                   double*       csr_val_L)
+    {
+        ROUTINE_TRACE("host_extract_lower_triangular_impl");
+
+        // Fill column and values
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            int row_start_A = csr_row_ptr_A[i];
+            int row_end_A   = csr_row_ptr_A[i + 1];
+
+            int nnz_per_row = csr_row_ptr_L[i];
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A <= i)
+                {
+                    csr_col_ind_L[nnz_per_row] = col_A;
+                    csr_val_L[nnz_per_row]     = csr_val_A[j];
+                    nnz_per_row++;
+                }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------------
+    // Extract upper triangular matrix A->U
+    //-------------------------------------------------------------------------------
+    static void host_extract_upper_triangular_nnz_impl(int        m_A,
+                                                       int        n_A,
+                                                       int        nnz_A,
+                                                       const int* csr_row_ptr_A,
+                                                       const int* csr_col_ind_A,
+                                                       int*       csr_row_ptr_U,
+                                                       int*       nnz_U)
+    {
+        ROUTINE_TRACE("host_extract_upper_triangular_nnz_impl");
+
+        csr_row_ptr_U[0] = 0;
+
+        // Fill U row pointer array
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            int row_start_A = csr_row_ptr_A[i];
+            int row_end_A   = csr_row_ptr_A[i + 1];
+
+            int nnz_per_row = 0;
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A >= i)
+                {
+                    nnz_per_row++;
+                }
+            }
+
+            csr_row_ptr_U[i + 1] = nnz_per_row;
+        }
+
+        // Exclusive scan
+        for(int i = 0; i < m_A; i++)
+        {
+            csr_row_ptr_U[i + 1] += csr_row_ptr_U[i];
+        }
+
+        *nnz_U = csr_row_ptr_U[m_A];
+    }
+
+    static void host_extract_upper_triangular_impl(int           m_A,
+                                                   int           n_A,
+                                                   int           nnz_A,
+                                                   const int*    csr_row_ptr_A,
+                                                   const int*    csr_col_ind_A,
+                                                   const double* csr_val_A,
+                                                   int           m_U,
+                                                   int           n_U,
+                                                   int           nnz_U,
+                                                   int*          csr_row_ptr_U,
+                                                   int*          csr_col_ind_U,
+                                                   double*       csr_val_U)
+    {
+        ROUTINE_TRACE("host_extract_upper_triangular_impl");
+
+        // Fill column and values
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            const int row_start_A = csr_row_ptr_A[i];
+            const int row_end_A   = csr_row_ptr_A[i + 1];
+
+            int nnz_per_row = csr_row_ptr_U[i];
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A >= i)
+                {
+                    csr_col_ind_U[nnz_per_row] = col_A;
+                    csr_val_U[nnz_per_row]     = csr_val_A[j];
+                    nnz_per_row++;
+                }
+            }
+        }
+    }
+
+    static void host_scale_diagonal_impl(
+        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int n, double scalar)
+    {
+        ROUTINE_TRACE("host_scale_diagonal_impl");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < n; i++)
+        {
+            const int row_start = csr_row_ptr[i];
+            const int row_end   = csr_row_ptr[i + 1];
+
+            for(int j = row_start; j < row_end; j++)
+            {
+                if(csr_col_ind[j] == i)
+                {
+                    csr_val[j] *= scalar;
+                    break;
+                }
+            }
+        }
+    }
+
+    static void host_scale_by_inverse_diagonal_impl(
+        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int n, const double* diag)
+    {
+        ROUTINE_TRACE("host_scale_by_inverse_diagonal_impl");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < n; i++)
+        {
+            const int row_start = csr_row_ptr[i];
+            const int row_end   = csr_row_ptr[i + 1];
+
+            for(int j = row_start; j < row_end; j++)
+            {
+                csr_val[j] *= (1.0 / diag[csr_col_ind[j]]);
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------------
     // infinity norm
     //-------------------------------------------------------------------------------
     static double host_norm_inf_impl(const double* array, int n)
@@ -280,6 +492,124 @@ namespace linalg
         for(size_t i = 0; i < n; i++)
         {
             x[i] = rhs[i] / diag[i];
+        }
+    }
+
+    //-------------------------------------------------------------------------------
+    // SSOR fill lower preconditioner L = (beta * D - E) * D^-1, beta = 1 / omega
+    //-------------------------------------------------------------------------------
+    static void host_ssor_fill_lower_precond_impl(int           m_A,
+                                                  int           n_A,
+                                                  int           nnz_A,
+                                                  const int*    csr_row_ptr_A,
+                                                  const int*    csr_col_ind_A,
+                                                  const double* csr_val_A,
+                                                  int           m_L,
+                                                  int           n_L,
+                                                  int           nnz_L,
+                                                  const int*    csr_row_ptr_L,
+                                                  int*          csr_col_ind_L,
+                                                  double*       csr_val_L,
+                                                  double        omega)
+    {
+        ROUTINE_TRACE("host_ssor_fill_lower_precond_impl");
+
+        std::vector<double> diag(m_A, 0.0);
+        host_diagonal_impl(csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag.data(), m_A);
+
+        double beta = 1.0 / omega;
+
+        // beta = 1 / omega
+        // L = (beta * D - E) * D^-1
+        // L = beta * I - E * D^-1
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            const int row_start_A = csr_row_ptr_A[i];
+            const int row_end_A   = csr_row_ptr_A[i + 1];
+
+            const int row_start_L = csr_row_ptr_L[i];
+            const int row_end_L   = csr_row_ptr_L[i + 1];
+
+            int index = row_start_L;
+
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A < i)
+                {
+                    csr_col_ind_L[index] = col_A;
+                    csr_val_L[index]     = csr_val_A[j] / diag[col_A];
+                    index++;
+                }
+                else if(col_A == i)
+                {
+                    csr_col_ind_L[index] = col_A;
+                    csr_val_L[index]     = beta;
+                    index++;
+                }
+            }
+
+            assert(index == row_end_L);
+        }
+    }
+
+    //-------------------------------------------------------------------------------
+    // SSOR fill upper preconditioner U = (beta * D - F), beta = 1 / omega
+    //-------------------------------------------------------------------------------
+    static void host_ssor_fill_upper_precond_impl(int           m_A,
+                                                  int           n_A,
+                                                  int           nnz_A,
+                                                  const int*    csr_row_ptr_A,
+                                                  const int*    csr_col_ind_A,
+                                                  const double* csr_val_A,
+                                                  int           m_U,
+                                                  int           n_U,
+                                                  int           nnz_U,
+                                                  const int*    csr_row_ptr_U,
+                                                  int*          csr_col_ind_U,
+                                                  double*       csr_val_U,
+                                                  double        omega)
+    {
+        ROUTINE_TRACE("host_ssor_fill_upper_precond_impl");
+
+        double beta = 1.0 / omega;
+
+        // beta = 1 / omega
+        // U = (beta * D - F)
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_A; i++)
+        {
+            const int row_start_A = csr_row_ptr_A[i];
+            const int row_end_A   = csr_row_ptr_A[i + 1];
+
+            const int row_start_U = csr_row_ptr_U[i];
+            const int row_end_U   = csr_row_ptr_U[i + 1];
+
+            int index = row_start_U;
+
+            for(int j = row_start_A; j < row_end_A; j++)
+            {
+                int col_A = csr_col_ind_A[j];
+                if(col_A > i)
+                {
+                    csr_col_ind_U[index] = col_A;
+                    csr_val_U[index]     = csr_val_A[j];
+                    index++;
+                }
+                else if(col_A == i)
+                {
+                    csr_col_ind_U[index] = col_A;
+                    csr_val_U[index]     = beta * csr_val_A[j];
+                    index++;
+                }
+            }
+
+            assert(index == row_end_U);
         }
     }
 
@@ -876,7 +1206,10 @@ namespace linalg
 
             double diag_val = 1.0;
 
-            x[i] = b[i];
+            //x[i] = b[i];
+
+            double sum = 0.0;
+
             for(int j = row_start; j < row_end; j++)
             {
                 int col = csr_col_ind[j];
@@ -886,7 +1219,8 @@ namespace linalg
 
                 if(col < i)
                 {
-                    x[i] -= csr_val[j] * x[col];
+                    sum = std::fma(csr_val[j], x[col], sum);
+                    // x[i] -= csr_val[j] * x[col];
                 }
                 else if(!unit_diag && col == i)
                 {
@@ -897,7 +1231,8 @@ namespace linalg
                     break;
                 }
             }
-            x[i] /= diag_val;
+            //x[i] /= diag_val;
+            x[i] = (b[i] - sum) / diag_val;
         }
     }
 
@@ -1270,6 +1605,84 @@ void linalg::host_diagonal(const csr_matrix& A, vector<double>& d)
     host_diagonal_impl(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }
 
+// Extract lower triangular entries
+void linalg::host_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L)
+{
+    ROUTINE_TRACE("linalg::host_extract_lower_triangular_nnz");
+
+    host_extract_lower_triangular_nnz_impl(A.get_m(),
+                                           A.get_n(),
+                                           A.get_nnz(),
+                                           A.get_row_ptr(),
+                                           A.get_col_ind(),
+                                           L.get_row_ptr(),
+                                           &nnz_L);
+}
+void linalg::host_extract_lower_triangular(const csr_matrix& A, csr_matrix& L)
+{
+    ROUTINE_TRACE("linalg::host_extract_lower_triangular");
+
+    host_extract_lower_triangular_impl(A.get_m(),
+                                       A.get_n(),
+                                       A.get_nnz(),
+                                       A.get_row_ptr(),
+                                       A.get_col_ind(),
+                                       A.get_val(),
+                                       L.get_m(),
+                                       L.get_n(),
+                                       L.get_nnz(),
+                                       L.get_row_ptr(),
+                                       L.get_col_ind(),
+                                       L.get_val());
+}
+
+// Extract upper triangular entries
+void linalg::host_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U)
+{
+    ROUTINE_TRACE("linalg::host_extract_upper_triangular_nnz");
+
+    host_extract_upper_triangular_nnz_impl(A.get_m(),
+                                           A.get_n(),
+                                           A.get_nnz(),
+                                           A.get_row_ptr(),
+                                           A.get_col_ind(),
+                                           U.get_row_ptr(),
+                                           &nnz_U);
+}
+void linalg::host_extract_upper_triangular(const csr_matrix& A, csr_matrix& U)
+{
+    ROUTINE_TRACE("linalg::host_extract_upper_triangular");
+
+    host_extract_upper_triangular_impl(A.get_m(),
+                                       A.get_n(),
+                                       A.get_nnz(),
+                                       A.get_row_ptr(),
+                                       A.get_col_ind(),
+                                       A.get_val(),
+                                       U.get_m(),
+                                       U.get_n(),
+                                       U.get_nnz(),
+                                       U.get_row_ptr(),
+                                       U.get_col_ind(),
+                                       U.get_val());
+}
+
+// Scale diagonal entries
+void linalg::host_scale_diagonal(csr_matrix& A, double scalar)
+{
+    ROUTINE_TRACE("linalg::host_scale_diagonal");
+
+    host_scale_diagonal_impl(A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), scalar);
+}
+
+void linalg::host_scale_by_inverse_diagonal(csr_matrix& A, const vector<double>& diag)
+{
+    ROUTINE_TRACE("linalg::host_scale_by_inverse_diagonal");
+
+    host_scale_by_inverse_diagonal_impl(
+        A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), diag.get_vec());
+}
+
 // Euclidean norm
 double linalg::host_norm_euclid(const vector<double>& array)
 {
@@ -1294,4 +1707,82 @@ void linalg::host_jacobi_solve(const vector<double>& rhs,
     ROUTINE_TRACE("linalg::host_jacobi_solve");
 
     host_jacobi_solve_impl(rhs.get_vec(), diag.get_vec(), x.get_vec(), x.get_size());
+}
+
+// SSOR fill lower preconditioner
+void linalg::host_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega)
+{
+    ROUTINE_TRACE("linalg::host_ssor_fill_lower_precond");
+
+    host_ssor_fill_lower_precond_impl(A.get_m(),
+                                      A.get_n(),
+                                      A.get_nnz(),
+                                      A.get_row_ptr(),
+                                      A.get_col_ind(),
+                                      A.get_val(),
+                                      L.get_m(),
+                                      L.get_n(),
+                                      L.get_nnz(),
+                                      L.get_row_ptr(),
+                                      L.get_col_ind(),
+                                      L.get_val(),
+                                      omega);
+}
+
+// SSOR fill upper preconditioner
+void linalg::host_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega)
+{
+    ROUTINE_TRACE("linalg::host_ssor_fill_upper_precond");
+
+    host_ssor_fill_upper_precond_impl(A.get_m(),
+                                      A.get_n(),
+                                      A.get_nnz(),
+                                      A.get_row_ptr(),
+                                      A.get_col_ind(),
+                                      A.get_val(),
+                                      U.get_m(),
+                                      U.get_n(),
+                                      U.get_nnz(),
+                                      U.get_row_ptr(),
+                                      U.get_col_ind(),
+                                      U.get_val(),
+                                      omega);
+}
+
+void linalg::host_csrtrsv_analysis(const csr_matrix& A,
+                                   triangular_type   tri_type,
+                                   diagonal_type     diag_type,
+                                   csrtrsv_descr*    descr)
+{
+}
+void linalg::host_csrtrsv_solve(const csr_matrix&     A,
+                                const vector<double>& b,
+                                vector<double>&       x,
+                                double                alpha,
+                                triangular_type       tri_type,
+                                diagonal_type         diag_type,
+                                const csrtrsv_descr*  descr)
+{
+    ROUTINE_TRACE("linalg::host_csrtrsv_solve");
+
+    if(tri_type == triangular_type::upper)
+    {
+        host_backward_solve_impl(A.get_row_ptr(),
+                                 A.get_col_ind(),
+                                 A.get_val(),
+                                 b.get_vec(),
+                                 x.get_vec(),
+                                 A.get_m(),
+                                 diag_type == diagonal_type::unit);
+    }
+    else if(tri_type == triangular_type::lower)
+    {
+        host_forward_solve_impl(A.get_row_ptr(),
+                                A.get_col_ind(),
+                                A.get_val(),
+                                b.get_vec(),
+                                x.get_vec(),
+                                A.get_m(),
+                                diag_type == diagonal_type::unit);
+    }
 }

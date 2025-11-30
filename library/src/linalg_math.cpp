@@ -147,30 +147,6 @@ void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
         "linalg::csrilu0", host_csrilu0, device_csrilu0, LU, structural_zero, numeric_zero);
 }
 
-// Forward solve
-void linalg::forward_solve(const csr_matrix&     A,
-                           const vector<double>& b,
-                           vector<double>&       x,
-                           bool                  unit_diag)
-{
-    ROUTINE_TRACE("linalg::forward_solve");
-
-    backend_dispatch(
-        "linalg::forward_solve", host_forward_solve, device_forward_solve, A, b, x, unit_diag);
-}
-
-// Backward solve
-void linalg::backward_solve(const csr_matrix&     A,
-                            const vector<double>& b,
-                            vector<double>&       x,
-                            bool                  unit_diag)
-{
-    ROUTINE_TRACE("linalg::backward_solve");
-
-    backend_dispatch(
-        "linalg::backward_solve", host_backward_solve, device_backward_solve, A, b, x, unit_diag);
-}
-
 // Transpose matrix
 void linalg::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 {
@@ -224,11 +200,67 @@ double linalg::norm_inf(const vector<double>& array)
     return backend_dispatch("linalg::norm_inf", host_norm_inf, device_norm_inf, array);
 }
 
-// Jacobi solve
-void linalg::jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x)
+struct linalg::csrtrsv_descr
 {
-    ROUTINE_TRACE("linalg::jacobi_solve");
+    int* done_array;
+    int* row_perm;
+    int* diag_ind;
+};
 
-    return backend_dispatch(
-        "linalg::jacobi_solve", host_jacobi_solve, device_jacobi_solve, rhs, diag, x);
+void linalg::create_csrtrsv_descr(csrtrsv_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csrtrsv_descr");
+
+    *descr = new csrtrsv_descr;
+    allocate_csrtrsv_device_data(*descr);
+}
+
+void linalg::destroy_csrtrsv_descr(csrtrsv_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csrtrsv_descr");
+
+    if(descr != nullptr)
+    {
+        free_csrtrsv_device_data(descr);
+
+        delete descr;
+    }
+}
+
+void linalg::csrtrsv_analysis(const csr_matrix& A,
+                              triangular_type   tri_type,
+                              diagonal_type     diag_type,
+                              csrtrsv_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::csrtrsv_analysis");
+
+    return backend_dispatch("linalg::csrtrsv_analysis",
+                            host_csrtrsv_analysis,
+                            device_csrtrsv_analysis,
+                            A,
+                            tri_type,
+                            diag_type,
+                            descr);
+}
+
+void linalg::csrtrsv_solve(const csr_matrix&     A,
+                           const vector<double>& b,
+                           vector<double>&       x,
+                           double                alpha,
+                           triangular_type       tri_type,
+                           diagonal_type         diag_type,
+                           const csrtrsv_descr*  descr)
+{
+    ROUTINE_TRACE("linalg::csrtrsv_solve");
+
+    return backend_dispatch("linalg::csrtrsv_solve",
+                            host_csrtrsv_solve,
+                            device_csrtrsv_solve,
+                            A,
+                            b,
+                            x,
+                            alpha,
+                            tri_type,
+                            diag_type,
+                            descr);
 }

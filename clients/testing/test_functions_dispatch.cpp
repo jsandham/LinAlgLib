@@ -74,6 +74,8 @@ namespace Testing
         {
         case Fixture::SpMV:
             return test_spmv(arg);
+        case Fixture::SpTRSV:
+            return test_sptrsv(arg);
         case Fixture::SpGEMM:
             return test_spgemm(arg);
         case Fixture::SpGEAM:

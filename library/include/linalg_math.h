@@ -30,7 +30,9 @@
 #include <string>
 
 #include "csr_matrix.h"
+#include "linalg_enums.h"
 #include "linalg_export.h"
+#include "linalg_types.h"
 #include "vector.h"
 
 /*! \file
@@ -161,38 +163,6 @@ namespace linalg
     LINALGLIB_API void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
 
     /**
-     * @brief Performs a forward substitution solve for \f$A \cdot x = b\f$.
-     *
-     * This function solves a lower triangular system \f$A \cdot x = b\f$, where \f$A\f$ is a `csr_matrix`.
-     *
-     * @param A The input lower triangular `csr_matrix` \f$A\f$.
-     * @param b The input right-hand side vector \f$b\f$.
-     * @param x The output vector \f$x\f$ to store the solution.
-     * @param unit_diag A boolean flag indicating whether the diagonal of \f$A\f$ is assumed to be unit (1.0).
-     * If `true`, division by diagonal elements is skipped.
-     */
-    LINALGLIB_API void forward_solve(const csr_matrix&     A,
-                                     const vector<double>& b,
-                                     vector<double>&       x,
-                                     bool                  unit_diag);
-
-    /**
-     * @brief Performs a backward substitution solve for \f$A \cdot x = b\f$.
-     *
-     * This function solves an upper triangular system \f$A \cdot x = b\f$, where \f$A\f$ is a `csr_matrix`.
-     *
-     * @param A The input upper triangular `csr_matrix` \f$A\f$.
-     * @param b The input right-hand side vector \f$b\f$.
-     * @param x The output vector \f$x\f$ to store the solution.
-     * @param unit_diag A boolean flag indicating whether the diagonal of \f$A\f$ is assumed to be unit (1.0).
-     * If `true`, division by diagonal elements is skipped.
-     */
-    LINALGLIB_API void backward_solve(const csr_matrix&     A,
-                                      const vector<double>& b,
-                                      vector<double>&       x,
-                                      bool                  unit_diag);
-
-    /**
      * @brief Computes the transpose of a CSR matrix.
      *
      * This function computes \f$transposeA = A^T\f$.
@@ -257,25 +227,22 @@ namespace linalg
      */
     LINALGLIB_API double norm_inf(const vector<double>& array);
 
-    /**
-     * @brief Performs a Jacobi diagonal solve: x = rhs ./ diag (element-wise division).
-     *
-     * @details
-     * This helper computes the solution for a diagonal system where the matrix is
-     * represented by its diagonal entries. For each index i:
-     * \f[ x_i = \frac{rhs_i}{diag_i} \f]
-     *
-     * The caller is responsible for ensuring that `diag` contains no zeros; division
-     * by zero will lead to undefined behavior. Both input vectors (`rhs`, `diag`)
-     * must have the same length as the output vector `x`.
-     *
-     * @param rhs Right-hand side vector b (input).
-     * @param diag Diagonal entries of the matrix (input). Must be non-zero.
-     * @param x Solution vector (output). On return, contains the element-wise
-     *          division result rhs ./ diag.
-     */
-    LINALGLIB_API void
-        jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
+    LINALGLIB_API void create_csrtrsv_descr(csrtrsv_descr** descr);
+    LINALGLIB_API void destroy_csrtrsv_descr(csrtrsv_descr* descr);
+
+    LINALGLIB_API void csrtrsv_analysis(const csr_matrix& A,
+                                        triangular_type   tri_type,
+                                        diagonal_type     diag_type,
+                                        csrtrsv_descr*    descr);
+
+    LINALGLIB_API void csrtrsv_solve(const csr_matrix&     A,
+                                     const vector<double>& b,
+                                     vector<double>&       x,
+                                     double                alpha,
+                                     triangular_type       tri_type,
+                                     diagonal_type         diag_type,
+                                     const csrtrsv_descr*  descr);
+
 }
 
 #endif

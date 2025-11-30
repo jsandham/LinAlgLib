@@ -37,46 +37,46 @@ using namespace linalg;
 
 bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 {
-    vector<int64_t> vec_a(33);
-    vec_a.ones();
+    // vector<int64_t> vec_a(33);
+    // vec_a.ones();
 
-    vec_a.move_to_device();
+    // vec_a.move_to_device();
 
-    exclusive_scan(vec_a);
+    // exclusive_scan(vec_a);
 
-    vec_a.move_to_host();
+    // vec_a.move_to_host();
 
-    vec_a.print_vector("vec_a");
+    // vec_a.print_vector("vec_a");
 
-    // 1 2 0 0
-    // 0 3 0 4
-    // 5 6 7 0
-    // 0 8 9 0
-    //
-    // 1 0 5 0
-    // 2 3 6 8
-    // 0 0 7 9
-    // 0 4 0 0
-    std::vector<int>    csr_row_ptr = {0, 2, 4, 7, 9};
-    std::vector<int>    csr_col_ind = {0, 1, 1, 3, 0, 1, 2, 1, 2};
-    std::vector<double> csr_val     = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    // // 1 2 0 0
+    // // 0 3 0 4
+    // // 5 6 7 0
+    // // 0 8 9 0
+    // //
+    // // 1 0 5 0
+    // // 2 3 6 8
+    // // 0 0 7 9
+    // // 0 4 0 0
+    // std::vector<int>    csr_row_ptr = {0, 2, 4, 7, 9};
+    // std::vector<int>    csr_col_ind = {0, 1, 1, 3, 0, 1, 2, 1, 2};
+    // std::vector<double> csr_val     = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-    csr_matrix mat_D(csr_row_ptr, csr_col_ind, csr_val, 4, 4, 9);
-    //mat_D.read_mtx(arg.filename);
+    // csr_matrix mat_D(csr_row_ptr, csr_col_ind, csr_val, 4, 4, 9);
+    // //mat_D.read_mtx(arg.filename);
 
-    csr_matrix transpose_mat_D;
-    transpose_mat_D.resize(mat_D.get_n(), mat_D.get_m(), mat_D.get_nnz());
+    // csr_matrix transpose_mat_D;
+    // transpose_mat_D.resize(mat_D.get_n(), mat_D.get_m(), mat_D.get_nnz());
 
-    mat_D.move_to_device();
-    transpose_mat_D.move_to_device();
+    // mat_D.move_to_device();
+    // transpose_mat_D.move_to_device();
 
-    linalg::transpose_matrix(mat_D, transpose_mat_D);
+    // linalg::transpose_matrix(mat_D, transpose_mat_D);
 
-    mat_D.move_to_host();
-    transpose_mat_D.move_to_host();
+    // mat_D.move_to_host();
+    // transpose_mat_D.move_to_host();
 
-    mat_D.print_matrix("D");
-    transpose_mat_D.print_matrix("D^T");
+    // mat_D.print_matrix("D");
+    // transpose_mat_D.print_matrix("D^T");
 
     //mat_D.print_col_ind("mat_D col indices");
     //transpose_mat_D.print_col_ind("transpose_mat_D col indices");
@@ -188,6 +188,9 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     case Testing::preconditioner::SymmGaussSeidel:
         p = new symmetric_gauss_seidel_precond;
         break;
+    case Testing::preconditioner::SSOR:
+        p = new SSOR_precond(1.2);
+        break;
     case Testing::preconditioner::ILU:
         p = new ilu_precond;
         break;
@@ -196,21 +199,21 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
         break;
     }
 
+    mat_A.move_to_device();
+    vec_x.move_to_device();
+    vec_b.move_to_device();
+    cg.move_to_device();
+    //bicgstab.move_to_device();
+    if(p != nullptr)
+    {
+        p->move_to_device();
+    }
+
     if(p != nullptr)
     {
         std::cout << "Build preconditioner" << std::endl;
         p->build(mat_A);
     }
-
-    //mat_A.move_to_device();
-    //vec_x.move_to_device();
-    //vec_b.move_to_device();
-    //cg.move_to_device();
-    //bicgstab.move_to_device();
-    //if(p != nullptr)
-    //{
-    //    p->move_to_device();
-    //}
 
     int iter = 0;
 
@@ -242,10 +245,10 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
         delete p;
     }
 
-    //mat_A.move_to_host();
-    //vec_x.move_to_host();
-    //vec_b.move_to_host();
-    //cg.move_to_host();
+    mat_A.move_to_host();
+    vec_x.move_to_host();
+    vec_b.move_to_host();
+    cg.move_to_host();
 
     std::cout << "iter: " << iter << std::endl;
 

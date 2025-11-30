@@ -43,9 +43,10 @@
 #include "csrgeam_kernels.cuh"
 #include "csrgemm_kernels.cuh"
 #include "csrmv_kernels.cuh"
+#include "csrtrsv_kernels.cuh"
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
-#include "jacobi_solve_kernels.cuh"
+#include "preconditioner_kernels.cuh"
 
 #include "../../../trace.h"
 
@@ -178,6 +179,134 @@ void linalg::cuda_extract_diagonal(int           m,
 }
 
 //-------------------------------------------------------------------------------
+// lower triangular L = tril(A)
+//-------------------------------------------------------------------------------
+void linalg::cuda_extract_lower_triangular_nnz(int        m_A,
+                                               int        n_A,
+                                               int        nnz_A,
+                                               const int* csr_row_ptr_A,
+                                               const int* csr_col_ind_A,
+                                               int*       csr_row_ptr_L,
+                                               int*       nnz_L)
+{
+    ROUTINE_TRACE("linalg::cuda_extract_lower_triangular_nnz");
+    extract_lower_triangular_nnz_kernel<256, 4><<<((m_A - 1) / (256 / 4) + 1), 256>>>(
+        m_A, n_A, nnz_A, csr_row_ptr_A, csr_col_ind_A, csr_row_ptr_L);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // exclusive scan to get row pointers
+    thrust::device_ptr<int> d_csr_row_ptr_L(csr_row_ptr_L);
+    thrust::exclusive_scan(
+        thrust::device, d_csr_row_ptr_L, d_csr_row_ptr_L + (m_A + 1), d_csr_row_ptr_L);
+
+    CHECK_CUDA(cudaMemcpy(nnz_L, &csr_row_ptr_L[m_A], sizeof(int), cudaMemcpyDeviceToHost));
+}
+void linalg::cuda_extract_lower_triangular(int           m_A,
+                                           int           n_A,
+                                           int           nnz_A,
+                                           const int*    csr_row_ptr_A,
+                                           const int*    csr_col_ind_A,
+                                           const double* csr_val_A,
+                                           int           m_L,
+                                           int           n_L,
+                                           int           nnz_L,
+                                           int*          csr_row_ptr_L,
+                                           int*          csr_col_ind_L,
+                                           double*       csr_val_L)
+{
+    ROUTINE_TRACE("linalg::cuda_extract_lower_triangular");
+    extract_lower_triangular_kernel<256><<<((m_A - 1) / 256 + 1), 256>>>(m_A,
+                                                                         n_A,
+                                                                         nnz_A,
+                                                                         csr_row_ptr_A,
+                                                                         csr_col_ind_A,
+                                                                         csr_val_A,
+                                                                         m_L,
+                                                                         n_L,
+                                                                         nnz_L,
+                                                                         csr_row_ptr_L,
+                                                                         csr_col_ind_L,
+                                                                         csr_val_L);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+//-------------------------------------------------------------------------------
+// upper triangular U = triu(A)
+//-------------------------------------------------------------------------------
+void linalg::cuda_extract_upper_triangular_nnz(int        m_A,
+                                               int        n_A,
+                                               int        nnz_A,
+                                               const int* csr_row_ptr_A,
+                                               const int* csr_col_ind_A,
+                                               int*       csr_row_ptr_U,
+                                               int*       nnz_U)
+{
+    ROUTINE_TRACE("linalg::cuda_extract_upper_triangular_nnz");
+    extract_upper_triangular_nnz_kernel<256, 4><<<((m_A - 1) / (256 / 4) + 1), 256>>>(
+        m_A, n_A, nnz_A, csr_row_ptr_A, csr_col_ind_A, csr_row_ptr_U);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // exclusive scan to get row pointers
+    thrust::device_ptr<int> d_csr_row_ptr_U(csr_row_ptr_U);
+    thrust::exclusive_scan(
+        thrust::device, d_csr_row_ptr_U, d_csr_row_ptr_U + (m_A + 1), d_csr_row_ptr_U);
+
+    CHECK_CUDA(cudaMemcpy(nnz_U, &csr_row_ptr_U[m_A], sizeof(int), cudaMemcpyDeviceToHost));
+}
+void linalg::cuda_extract_upper_triangular(int           m_A,
+                                           int           n_A,
+                                           int           nnz_A,
+                                           const int*    csr_row_ptr_A,
+                                           const int*    csr_col_ind_A,
+                                           const double* csr_val_A,
+                                           int           m_U,
+                                           int           n_U,
+                                           int           nnz_U,
+                                           int*          csr_row_ptr_U,
+                                           int*          csr_col_ind_U,
+                                           double*       csr_val_U)
+{
+    ROUTINE_TRACE("linalg::cuda_extract_upper_triangular");
+    extract_upper_triangular_kernel<256><<<((m_A - 1) / 256 + 1), 256>>>(m_A,
+                                                                         n_A,
+                                                                         nnz_A,
+                                                                         csr_row_ptr_A,
+                                                                         csr_col_ind_A,
+                                                                         csr_val_A,
+                                                                         m_U,
+                                                                         n_U,
+                                                                         nnz_U,
+                                                                         csr_row_ptr_U,
+                                                                         csr_col_ind_U,
+                                                                         csr_val_U);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+//-------------------------------------------------------------------------------
+// scale diagonal
+//-------------------------------------------------------------------------------
+void linalg::cuda_scale_diagonal(
+    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double scalar)
+{
+    ROUTINE_TRACE("linalg::cuda_scale_diagonal_impl");
+    scale_diagonal_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, scalar);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+//-------------------------------------------------------------------------------
+// scale by inverse diagonal
+//-------------------------------------------------------------------------------
+void linalg::cuda_scale_by_inverse_diagonal(
+    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, const double* diag)
+{
+    ROUTINE_TRACE("linalg::cuda_scale_by_inverse_diagonal_impl");
+    scale_by_inverse_diagonal_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, diag);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+//-------------------------------------------------------------------------------
 // infinity norm
 //-------------------------------------------------------------------------------
 double linalg::cuda_norm_inf(const double* array, int size)
@@ -193,6 +322,77 @@ void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x,
 {
     ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
     jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+//-------------------------------------------------------------------------------
+// SSOR fill lower preconditioner L = (beta * D - E) * D^-1, beta = 1 / omega
+//-------------------------------------------------------------------------------
+void linalg::cuda_ssor_fill_lower_precond(int           m_A,
+                                          int           n_A,
+                                          int           nnz_A,
+                                          const int*    csr_row_ptr_A,
+                                          const int*    csr_col_ind_A,
+                                          const double* csr_val_A,
+                                          int           m_L,
+                                          int           n_L,
+                                          int           nnz_L,
+                                          const int*    csr_row_ptr_L,
+                                          int*          csr_col_ind_L,
+                                          double*       csr_val_L,
+                                          double        omega)
+{
+    ROUTINE_TRACE("linalg::cuda_ssor_fill_lower_precond");
+
+    double* diag = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&diag, sizeof(double) * m_A));
+
+    cuda_extract_diagonal(m_A, n_A, nnz_A, csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag);
+
+    ssor_fill_lower_precond_kernel<256><<<((m_A - 1) / 256 + 1), 256>>>(m_A,
+                                                                        n_A,
+                                                                        nnz_A,
+                                                                        omega,
+                                                                        csr_row_ptr_A,
+                                                                        csr_col_ind_A,
+                                                                        csr_val_A,
+                                                                        diag,
+                                                                        csr_row_ptr_L,
+                                                                        csr_col_ind_L,
+                                                                        csr_val_L);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaFree(diag));
+}
+
+//-------------------------------------------------------------------------------
+// SSOR fill upper preconditioner U = (beta * D - F), beta = 1 / omega
+//-------------------------------------------------------------------------------
+void linalg::cuda_ssor_fill_upper_precond(int           m_A,
+                                          int           n_A,
+                                          int           nnz_A,
+                                          const int*    csr_row_ptr_A,
+                                          const int*    csr_col_ind_A,
+                                          const double* csr_val_A,
+                                          int           m_U,
+                                          int           n_U,
+                                          int           nnz_U,
+                                          const int*    csr_row_ptr_U,
+                                          int*          csr_col_ind_U,
+                                          double*       csr_val_U,
+                                          double        omega)
+{
+    ROUTINE_TRACE("linalg::cuda_ssor_fill_upper_precond");
+    ssor_fill_upper_precond_kernel<256><<<((m_A - 1) / 256 + 1), 256>>>(m_A,
+                                                                        n_A,
+                                                                        nnz_A,
+                                                                        omega,
+                                                                        csr_row_ptr_A,
+                                                                        csr_col_ind_A,
+                                                                        csr_val_A,
+                                                                        csr_row_ptr_U,
+                                                                        csr_col_ind_U,
+                                                                        csr_val_U);
     CHECK_CUDA_LAUNCH_ERROR();
 }
 
@@ -1414,4 +1614,160 @@ void linalg::cuda_csr2csc(int           m,
     csr2csc_permute_colval_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(
         m, n, nnz, coo_row_ind, csr_val, perm, csc_row_ind, csc_val);
     CHECK_CUDA_LAUNCH_ERROR();
+}
+
+struct linalg::csrtrsv_descr
+{
+    int* done_array;
+    int* row_perm;
+    int* diag_ind;
+};
+
+void linalg::allocate_csrtrsv_cuda_data(csrtrsv_descr* descr)
+{
+    descr->done_array = nullptr;
+    descr->row_perm   = nullptr;
+    descr->diag_ind   = nullptr;
+}
+
+void linalg::free_csrtrsv_cuda_data(csrtrsv_descr* descr)
+{
+    if(descr != nullptr)
+    {
+        if(descr->done_array == nullptr)
+        {
+            std::cout << "Freeing done_array" << std::endl;
+            CHECK_CUDA(cudaFree(descr->done_array));
+        }
+
+        if(descr->row_perm == nullptr)
+        {
+            std::cout << "Freeing row_perm" << std::endl;
+            CHECK_CUDA(cudaFree(descr->row_perm));
+        }
+
+        if(descr->diag_ind == nullptr)
+        {
+            std::cout << "Freeing diag_ind" << std::endl;
+            CHECK_CUDA(cudaFree(descr->diag_ind));
+        }
+    }
+}
+
+void linalg::cuda_csrtrsv_analysis(int             m,
+                                   int             n,
+                                   int             nnz,
+                                   const int*      csr_row_ptr,
+                                   const int*      csr_col_ind,
+                                   const double*   csr_val,
+                                   triangular_type tri_type,
+                                   diagonal_type   diag_type,
+                                   csrtrsv_descr*  descr)
+{
+    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
+
+    // Free any previous allocations?
+    assert(descr->done_array == nullptr);
+    assert(descr->row_perm == nullptr);
+    assert(descr->diag_ind == nullptr);
+
+    descr->done_array = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->done_array), sizeof(int) * m));
+    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
+
+    descr->row_perm = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->row_perm), sizeof(int) * m));
+
+    descr->diag_ind = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->diag_ind), sizeof(int) * m));
+
+    csrtrsv_analysis_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+        m, tri_type, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // std::vector<int> hdiag_ind(m, 10);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "diag_ind" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hdiag_ind[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+
+    // std::vector<int> hdone_array(m, 0);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "done_array" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hdone_array[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+
+    fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->row_perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(descr->done_array);
+    thrust::device_ptr<int> d_values(descr->row_perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + m, d_values);
+
+    // std::vector<int> hrow_perm(m, 0);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "row_perm" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hrow_perm[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+}
+void linalg::cuda_csrtrsv_solve(int                  m,
+                                int                  n,
+                                int                  nnz,
+                                double               alpha,
+                                const int*           csr_row_ptr,
+                                const int*           csr_col_ind,
+                                const double*        csr_val,
+                                const double*        b,
+                                double*              x,
+                                triangular_type      tri_type,
+                                diagonal_type        diag_type,
+                                const csrtrsv_descr* descr)
+{
+    assert(descr->diag_ind != nullptr);
+    assert(descr->done_array != nullptr);
+    assert(descr->row_perm != nullptr);
+
+    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
+
+    csrtrsv_solve_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m,
+                                                                       tri_type,
+                                                                       diag_type,
+                                                                       alpha,
+                                                                       csr_row_ptr,
+                                                                       csr_col_ind,
+                                                                       csr_val,
+                                                                       descr->diag_ind,
+                                                                       b,
+                                                                       x,
+                                                                       descr->done_array,
+                                                                       descr->row_perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // std::vector<double> hx(m, 0.0);
+    // CHECK_CUDA(cudaMemcpy(hx.data(), x, sizeof(double) * m, cudaMemcpyDeviceToHost));
+    // std::cout << "x" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hx[i] << " ";
+    // }
+    // std::cout << std::endl;
 }
