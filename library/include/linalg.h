@@ -80,25 +80,25 @@
  *  std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
  *  std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
  *  std::vector<double> csr_val = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
- *  
+ *
  *  csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
- *  
+ *
  *  // Solution vector
  *  vector x(A.get_m());
  *  x.zeros();
- *  
+ *
  *  // Righthand side vector
  *  vector b(A.get_m());
  *  b.ones();
- *  
+ *
  *  jacobi_solver jacobi;
  *  jacobi.build(A);
- *  
+ *
  *  iter_control control;
  *  control.max_iter = 1000;
  *  control.rel_tol = 1e-08;
  *  control.abs_tol = 1e-08;
- *  
+ *
  *  int iter = jacobi.solve(A, x, b, control);
  * ```
  *
@@ -135,7 +135,7 @@
  * 1. Navigate to the root directory of the library.
  * ```bash
  * cd LinAlgLib
- * ``` 
+ * ```
  * 2. Run Doxygen using the provided configuration file (named `Doxyfile`).
  * ```bash
  * doxygen Doxyfile
@@ -195,6 +195,9 @@
 // CSR matrix
 #include "csr_matrix.h"
 
+/*! \defgroup iterative_solvers Iterative Solvers
+ *  \brief Classes and functions for iterative linear system solvers
+ */
 // classic Linear solvers
 #include "iterative_solvers/classic/gauss_seidel.h"
 #include "iterative_solvers/classic/jacobi.h"
@@ -228,6 +231,5 @@
 #include "linalg_math.h"
 #include "linalg_memory.h"
 #include "linalg_primitives.h"
-
 
 #endif

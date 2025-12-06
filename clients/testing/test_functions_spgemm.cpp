@@ -57,8 +57,8 @@ bool Testing::test_spgemm(Arguments arg)
     mat_B.move_to_device();
     mat_C.move_to_device();
 
-    //mat_A.multiply_by_matrix(mat_C, mat_B);
-    matrix_matrix_addition(mat_C, mat_A, mat_B);
+    mat_A.multiply_by_matrix(mat_C, mat_B);
+    //matrix_matrix_addition(mat_C, mat_A, mat_B);
 
     mat_A.move_to_host();
     mat_B.move_to_host();

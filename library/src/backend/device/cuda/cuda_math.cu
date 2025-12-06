@@ -397,20 +397,277 @@ void linalg::cuda_ssor_fill_upper_precond(int           m_A,
 }
 
 //-------------------------------------------------------------------------------
-// Compute y = alpha * A * x + beta * y
+// Compute incomplete LU factorization inplace
 //-------------------------------------------------------------------------------
-void linalg::cuda_csrmv(int           m,
-                        int           n,
-                        int           nnz,
-                        double        alpha,
-                        const int*    csr_row_ptr,
-                        const int*    csr_col_ind,
-                        const double* csr_val,
-                        const double* x,
-                        double        beta,
-                        double*       y)
+void linalg::cuda_csrilu0(int        m,
+                          int        n,
+                          int        nnz,
+                          const int* csr_row_ptr,
+                          const int* csr_col_ind,
+                          double*    csr_val,
+                          int*       structural_zero,
+                          int*       numeric_zero)
 {
-    ROUTINE_TRACE("linalg::cuda_csrmv_impl");
+}
+
+//----------------------------------------------------------------------------------------
+// Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
+//----------------------------------------------------------------------------------------
+void linalg::cuda_csric0(int        m,
+                         int        n,
+                         int        nnz,
+                         const int* csr_row_ptr,
+                         const int* csr_col_ind,
+                         double*    csr_val,
+                         int*       structural_zero,
+                         int*       numeric_zero)
+{
+}
+
+void linalg::cuda_csr2csc_buffer_size(int           m,
+                                      int           n,
+                                      int           nnz,
+                                      const int*    csr_row_ptr,
+                                      const int*    csr_Col_ind,
+                                      const double* csr_val,
+                                      size_t*       buffer_size)
+{
+    *buffer_size = 0;
+    *buffer_size += sizeof(int) * nnz; // perm
+    *buffer_size += sizeof(int) * nnz; // coo_row_ind
+}
+
+void linalg::cuda_csr2csc(int           m,
+                          int           n,
+                          int           nnz,
+                          const int*    csr_row_ptr,
+                          const int*    csr_col_ind,
+                          const double* csr_val,
+                          int*          csc_col_ptr,
+                          int*          csc_row_ind,
+                          double*       csc_val,
+                          void*         buffer)
+{
+    int* perm        = reinterpret_cast<int*>(buffer);
+    int* coo_row_ind = reinterpret_cast<int*>(buffer) + nnz;
+
+    fill_identity_permuation_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(nnz, perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    CHECK_CUDA(cudaMemcpy(csc_row_ind, csr_col_ind, sizeof(int) * nnz, cudaMemcpyDeviceToDevice));
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(csc_row_ind);
+    thrust::device_ptr<int> d_values(perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + nnz, d_values);
+
+    coo2csr_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csc_row_ind, csc_col_ptr);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    csr2coo_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csr_row_ptr, coo_row_ind);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    csr2csc_permute_colval_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(
+        m, n, nnz, coo_row_ind, csr_val, perm, csc_row_ind, csc_val);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+struct linalg::csrtrsv_descr
+{
+    int* done_array;
+    int* row_perm;
+    int* diag_ind;
+};
+
+void linalg::allocate_csrtrsv_cuda_data(csrtrsv_descr* descr)
+{
+    descr->done_array = nullptr;
+    descr->row_perm   = nullptr;
+    descr->diag_ind   = nullptr;
+}
+
+void linalg::free_csrtrsv_cuda_data(csrtrsv_descr* descr)
+{
+    if(descr != nullptr)
+    {
+        if(descr->done_array == nullptr)
+        {
+            std::cout << "Freeing done_array" << std::endl;
+            CHECK_CUDA(cudaFree(descr->done_array));
+        }
+
+        if(descr->row_perm == nullptr)
+        {
+            std::cout << "Freeing row_perm" << std::endl;
+            CHECK_CUDA(cudaFree(descr->row_perm));
+        }
+
+        if(descr->diag_ind == nullptr)
+        {
+            std::cout << "Freeing diag_ind" << std::endl;
+            CHECK_CUDA(cudaFree(descr->diag_ind));
+        }
+    }
+}
+
+void linalg::cuda_csrtrsv_analysis(int             m,
+                                   int             n,
+                                   int             nnz,
+                                   const int*      csr_row_ptr,
+                                   const int*      csr_col_ind,
+                                   const double*   csr_val,
+                                   triangular_type tri_type,
+                                   diagonal_type   diag_type,
+                                   csrtrsv_descr*  descr)
+{
+    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
+
+    // Free any previous allocations?
+    assert(descr->done_array == nullptr);
+    assert(descr->row_perm == nullptr);
+    assert(descr->diag_ind == nullptr);
+
+    descr->done_array = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->done_array), sizeof(int) * m));
+    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
+
+    descr->row_perm = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->row_perm), sizeof(int) * m));
+
+    descr->diag_ind = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&(descr->diag_ind), sizeof(int) * m));
+
+    csrtrsv_analysis_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+        m, tri_type, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // std::vector<int> hdiag_ind(m, 10);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "diag_ind" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hdiag_ind[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+
+    // std::vector<int> hdone_array(m, 0);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "done_array" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hdone_array[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+
+    fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->row_perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // Wrap Raw Pointers and Execute Thrust Algorithm
+    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
+    thrust::device_ptr<int> d_keys(descr->done_array);
+    thrust::device_ptr<int> d_values(descr->row_perm);
+
+    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
+    thrust::sort_by_key(d_keys, d_keys + m, d_values);
+
+    // std::vector<int> hrow_perm(m, 0);
+    // CHECK_CUDA(
+    //     cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+
+    // std::cout << "row_perm" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hrow_perm[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+}
+void linalg::cuda_csrtrsv_solve(int                  m,
+                                int                  n,
+                                int                  nnz,
+                                double               alpha,
+                                const int*           csr_row_ptr,
+                                const int*           csr_col_ind,
+                                const double*        csr_val,
+                                const double*        b,
+                                double*              x,
+                                triangular_type      tri_type,
+                                diagonal_type        diag_type,
+                                const csrtrsv_descr* descr)
+{
+    assert(descr->diag_ind != nullptr);
+    assert(descr->done_array != nullptr);
+    assert(descr->row_perm != nullptr);
+
+    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
+
+    csrtrsv_solve_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m,
+                                                                       tri_type,
+                                                                       diag_type,
+                                                                       alpha,
+                                                                       csr_row_ptr,
+                                                                       csr_col_ind,
+                                                                       csr_val,
+                                                                       descr->diag_ind,
+                                                                       b,
+                                                                       x,
+                                                                       descr->done_array,
+                                                                       descr->row_perm);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    // std::vector<double> hx(m, 0.0);
+    // CHECK_CUDA(cudaMemcpy(hx.data(), x, sizeof(double) * m, cudaMemcpyDeviceToHost));
+    // std::cout << "x" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hx[i] << " ";
+    // }
+    // std::cout << std::endl;
+}
+
+struct linalg::csrmv_descr
+{
+};
+
+void linalg::allocate_csrmv_cuda_data(csrmv_descr* descr) {}
+
+void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
+{
+    if(descr != nullptr)
+    {
+    }
+}
+
+void linalg::cuda_csrmv_analysis(int             m,
+                                 int             n,
+                                 int             nnz,
+                                 const int*      csr_row_ptr,
+                                 const int*      csr_col_ind,
+                                 const double*   csr_val,
+                                 csrmv_algorithm alg,
+                                 csrmv_descr*    descr)
+{
+}
+void linalg::cuda_csrmv_solve(int                m,
+                              int                n,
+                              int                nnz,
+                              double             alpha,
+                              const int*         csr_row_ptr,
+                              const int*         csr_col_ind,
+                              const double*      csr_val,
+                              const double*      x,
+                              double             beta,
+                              double*            y,
+                              csrmv_algorithm    alg,
+                              const csrmv_descr* descr)
+{
+    ROUTINE_TRACE("linalg::cuda_csrmv_solve");
 
     int avg_nnz_per_row = nnz / m;
 
@@ -434,7 +691,6 @@ void linalg::cuda_csrmv(int           m,
         csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
             m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
     }
-    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 //-------------------------------------------------------------------------------
@@ -446,19 +702,27 @@ struct linalg::csrgemm_descr
     int* bin_offsets;
 };
 
-void linalg::cuda_create_csrgemm_descr(csrgemm_descr** descr)
+void linalg::allocate_csrgemm_cuda_data(csrgemm_descr* descr)
 {
-    *descr = new csrgemm_descr;
+    descr->perm        = nullptr;
+    descr->bin_offsets = nullptr;
 }
 
-void linalg::cuda_destroy_csrgemm_descr(csrgemm_descr* descr)
+void linalg::free_csrgemm_cuda_data(csrgemm_descr* descr)
 {
     if(descr != nullptr)
     {
-        CHECK_CUDA(cudaFree(descr->perm));
-        CHECK_CUDA(cudaFree(descr->bin_offsets));
+        if(descr->perm == nullptr)
+        {
+            std::cout << "Freeing perm" << std::endl;
+            CHECK_CUDA(cudaFree(descr->perm));
+        }
 
-        delete descr;
+        if(descr->bin_offsets == nullptr)
+        {
+            std::cout << "Freeing bin_offsets" << std::endl;
+            CHECK_CUDA(cudaFree(descr->bin_offsets));
+        }
     }
 }
 
@@ -744,28 +1008,28 @@ void linalg::cuda_csrgemm_nnz(int            m,
     // CHECK_CUDA(cudaFree(bin_offsets));
 }
 
-void linalg::cuda_csrgemm(int            m,
-                          int            n,
-                          int            k,
-                          int            nnz_A,
-                          int            nnz_B,
-                          int            nnz_D,
-                          int            nnz_C,
-                          csrgemm_descr* descr,
-                          double         alpha,
-                          const int*     csr_row_ptr_A,
-                          const int*     csr_col_ind_A,
-                          const double*  csr_val_A,
-                          const int*     csr_row_ptr_B,
-                          const int*     csr_col_ind_B,
-                          const double*  csr_val_B,
-                          double         beta,
-                          const int*     csr_row_ptr_D,
-                          const int*     csr_col_ind_D,
-                          const double*  csr_val_D,
-                          const int*     csr_row_ptr_C,
-                          int*           csr_col_ind_C,
-                          double*        csr_val_C)
+void linalg::cuda_csrgemm_solve(int                  m,
+                                int                  n,
+                                int                  k,
+                                int                  nnz_A,
+                                int                  nnz_B,
+                                int                  nnz_D,
+                                int                  nnz_C,
+                                const csrgemm_descr* descr,
+                                double               alpha,
+                                const int*           csr_row_ptr_A,
+                                const int*           csr_col_ind_A,
+                                const double*        csr_val_A,
+                                const int*           csr_row_ptr_B,
+                                const int*           csr_col_ind_B,
+                                const double*        csr_val_B,
+                                double               beta,
+                                const int*           csr_row_ptr_D,
+                                const int*           csr_col_ind_D,
+                                const double*        csr_val_D,
+                                const int*           csr_row_ptr_C,
+                                int*                 csr_col_ind_C,
+                                double*              csr_val_C)
 {
     std::cout << "nnz_C: " << nnz_C << std::endl;
 
@@ -1009,19 +1273,27 @@ struct linalg::csrgeam_descr
     int* bin_offsets;
 };
 
-void linalg::cuda_create_csrgeam_descr(csrgeam_descr** descr)
+void linalg::allocate_csrgeam_cuda_data(csrgeam_descr* descr)
 {
-    *descr = new csrgeam_descr;
+    descr->perm        = nullptr;
+    descr->bin_offsets = nullptr;
 }
 
-void linalg::cuda_destroy_csrgeam_descr(csrgeam_descr* descr)
+void linalg::free_csrgeam_cuda_data(csrgeam_descr* descr)
 {
     if(descr != nullptr)
     {
-        CHECK_CUDA(cudaFree(descr->perm));
-        CHECK_CUDA(cudaFree(descr->bin_offsets));
+        if(descr->perm == nullptr)
+        {
+            std::cout << "Freeing perm" << std::endl;
+            CHECK_CUDA(cudaFree(descr->perm));
+        }
 
-        delete descr;
+        if(descr->bin_offsets == nullptr)
+        {
+            std::cout << "Freeing bin_offsets" << std::endl;
+            CHECK_CUDA(cudaFree(descr->bin_offsets));
+        }
     }
 }
 
@@ -1284,23 +1556,23 @@ void linalg::cuda_csrgeam_nnz(int            m,
     CHECK_CUDA(cudaMemcpy(nnz_C, csr_row_ptr_C + m, sizeof(int), cudaMemcpyDeviceToHost));
 }
 
-void linalg::cuda_csrgeam(int            m,
-                          int            n,
-                          int            nnz_A,
-                          int            nnz_B,
-                          int            nnz_C,
-                          csrgeam_descr* descr,
-                          double         alpha,
-                          const int*     csr_row_ptr_A,
-                          const int*     csr_col_ind_A,
-                          const double*  csr_val_A,
-                          double         beta,
-                          const int*     csr_row_ptr_B,
-                          const int*     csr_col_ind_B,
-                          const double*  csr_val_B,
-                          const int*     csr_row_ptr_C,
-                          int*           csr_col_ind_C,
-                          double*        csr_val_C)
+void linalg::cuda_csrgeam_solve(int                  m,
+                                int                  n,
+                                int                  nnz_A,
+                                int                  nnz_B,
+                                int                  nnz_C,
+                                const csrgeam_descr* descr,
+                                double               alpha,
+                                const int*           csr_row_ptr_A,
+                                const int*           csr_col_ind_A,
+                                const double*        csr_val_A,
+                                double               beta,
+                                const int*           csr_row_ptr_B,
+                                const int*           csr_col_ind_B,
+                                const double*        csr_val_B,
+                                const int*           csr_row_ptr_C,
+                                int*                 csr_col_ind_C,
+                                double*              csr_val_C)
 {
     std::cout << "nnz_C: " << nnz_C << std::endl;
 
@@ -1509,303 +1781,4 @@ void linalg::cuda_csrgeam(int            m,
         std::cout << hcsr_val_C[i] << " ";
     }
     std::cout << "" << std::endl;
-}
-
-//-------------------------------------------------------------------------------
-// Compute incomplete LU factorization inplace
-//-------------------------------------------------------------------------------
-void linalg::cuda_csrilu0(int        m,
-                          int        n,
-                          int        nnz,
-                          const int* csr_row_ptr,
-                          const int* csr_col_ind,
-                          double*    csr_val,
-                          int*       structural_zero,
-                          int*       numeric_zero)
-{
-}
-
-//----------------------------------------------------------------------------------------
-// Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
-//----------------------------------------------------------------------------------------
-void linalg::cuda_csric0(int        m,
-                         int        n,
-                         int        nnz,
-                         const int* csr_row_ptr,
-                         const int* csr_col_ind,
-                         double*    csr_val,
-                         int*       structural_zero,
-                         int*       numeric_zero)
-{
-}
-
-//-------------------------------------------------------------------------------
-// solve Lx = b where L is a lower triangular sparse matrix
-//-------------------------------------------------------------------------------
-void linalg::cuda_forward_solve(const int*    csr_row_ptr,
-                                const int*    csr_col_ind,
-                                const double* csr_val,
-                                const double* b,
-                                double*       x,
-                                int           n,
-                                bool          unit_diag)
-{
-}
-
-//-------------------------------------------------------------------------------
-// solve Ux = b where U is a upper triangular sparse matrix
-//-------------------------------------------------------------------------------
-void linalg::cuda_backward_solve(const int*    csr_row_ptr,
-                                 const int*    csr_col_ind,
-                                 const double* csr_val,
-                                 const double* b,
-                                 double*       x,
-                                 int           n,
-                                 bool          unit_diag)
-{
-}
-
-void linalg::cuda_csr2csc_buffer_size(int           m,
-                                      int           n,
-                                      int           nnz,
-                                      const int*    csr_row_ptr,
-                                      const int*    csr_Col_ind,
-                                      const double* csr_val,
-                                      size_t*       buffer_size)
-{
-    *buffer_size = 0;
-    *buffer_size += sizeof(int) * nnz; // perm
-    *buffer_size += sizeof(int) * nnz; // coo_row_ind
-}
-
-void linalg::cuda_csr2csc(int           m,
-                          int           n,
-                          int           nnz,
-                          const int*    csr_row_ptr,
-                          const int*    csr_col_ind,
-                          const double* csr_val,
-                          int*          csc_col_ptr,
-                          int*          csc_row_ind,
-                          double*       csc_val,
-                          void*         buffer)
-{
-    int* perm        = reinterpret_cast<int*>(buffer);
-    int* coo_row_ind = reinterpret_cast<int*>(buffer) + nnz;
-
-    fill_identity_permuation_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(nnz, perm);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    CHECK_CUDA(cudaMemcpy(csc_row_ind, csr_col_ind, sizeof(int) * nnz, cudaMemcpyDeviceToDevice));
-
-    // Wrap Raw Pointers and Execute Thrust Algorithm
-    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
-    thrust::device_ptr<int> d_keys(csc_row_ind);
-    thrust::device_ptr<int> d_values(perm);
-
-    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
-    thrust::sort_by_key(d_keys, d_keys + nnz, d_values);
-
-    coo2csr_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csc_row_ind, csc_col_ptr);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    csr2coo_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csr_row_ptr, coo_row_ind);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    csr2csc_permute_colval_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(
-        m, n, nnz, coo_row_ind, csr_val, perm, csc_row_ind, csc_val);
-    CHECK_CUDA_LAUNCH_ERROR();
-}
-
-struct linalg::csrtrsv_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
-
-void linalg::allocate_csrtrsv_cuda_data(csrtrsv_descr* descr)
-{
-    descr->done_array = nullptr;
-    descr->row_perm   = nullptr;
-    descr->diag_ind   = nullptr;
-}
-
-void linalg::free_csrtrsv_cuda_data(csrtrsv_descr* descr)
-{
-    if(descr != nullptr)
-    {
-        if(descr->done_array == nullptr)
-        {
-            std::cout << "Freeing done_array" << std::endl;
-            CHECK_CUDA(cudaFree(descr->done_array));
-        }
-
-        if(descr->row_perm == nullptr)
-        {
-            std::cout << "Freeing row_perm" << std::endl;
-            CHECK_CUDA(cudaFree(descr->row_perm));
-        }
-
-        if(descr->diag_ind == nullptr)
-        {
-            std::cout << "Freeing diag_ind" << std::endl;
-            CHECK_CUDA(cudaFree(descr->diag_ind));
-        }
-    }
-}
-
-void linalg::cuda_csrtrsv_analysis(int             m,
-                                   int             n,
-                                   int             nnz,
-                                   const int*      csr_row_ptr,
-                                   const int*      csr_col_ind,
-                                   const double*   csr_val,
-                                   triangular_type tri_type,
-                                   diagonal_type   diag_type,
-                                   csrtrsv_descr*  descr)
-{
-    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
-
-    // Free any previous allocations?
-    assert(descr->done_array == nullptr);
-    assert(descr->row_perm == nullptr);
-    assert(descr->diag_ind == nullptr);
-
-    descr->done_array = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&(descr->done_array), sizeof(int) * m));
-    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
-
-    descr->row_perm = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&(descr->row_perm), sizeof(int) * m));
-
-    descr->diag_ind = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&(descr->diag_ind), sizeof(int) * m));
-
-    csrtrsv_analysis_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
-        m, tri_type, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    // std::vector<int> hdiag_ind(m, 10);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    // std::cout << "diag_ind" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hdiag_ind[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    // std::vector<int> hdone_array(m, 0);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    // std::cout << "done_array" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hdone_array[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->row_perm);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    // Wrap Raw Pointers and Execute Thrust Algorithm
-    // thrust::device_ptr allows us to treat a raw pointer like a Thrust iterator.
-    thrust::device_ptr<int> d_keys(descr->done_array);
-    thrust::device_ptr<int> d_values(descr->row_perm);
-
-    // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
-    thrust::sort_by_key(d_keys, d_keys + m, d_values);
-
-    // std::vector<int> hrow_perm(m, 0);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    // std::cout << "row_perm" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hrow_perm[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-}
-void linalg::cuda_csrtrsv_solve(int                  m,
-                                int                  n,
-                                int                  nnz,
-                                double               alpha,
-                                const int*           csr_row_ptr,
-                                const int*           csr_col_ind,
-                                const double*        csr_val,
-                                const double*        b,
-                                double*              x,
-                                triangular_type      tri_type,
-                                diagonal_type        diag_type,
-                                const csrtrsv_descr* descr)
-{
-    assert(descr->diag_ind != nullptr);
-    assert(descr->done_array != nullptr);
-    assert(descr->row_perm != nullptr);
-
-    CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
-
-    csrtrsv_solve_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(m,
-                                                                       tri_type,
-                                                                       diag_type,
-                                                                       alpha,
-                                                                       csr_row_ptr,
-                                                                       csr_col_ind,
-                                                                       csr_val,
-                                                                       descr->diag_ind,
-                                                                       b,
-                                                                       x,
-                                                                       descr->done_array,
-                                                                       descr->row_perm);
-    CHECK_CUDA_LAUNCH_ERROR();
-
-    // std::vector<double> hx(m, 0.0);
-    // CHECK_CUDA(cudaMemcpy(hx.data(), x, sizeof(double) * m, cudaMemcpyDeviceToHost));
-    // std::cout << "x" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hx[i] << " ";
-    // }
-    // std::cout << std::endl;
-}
-
-struct linalg::csrmv_descr
-{
-};
-
-void linalg::allocate_csrmv_cuda_data(csrmv_descr* descr) {}
-
-void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
-{
-    if(descr != nullptr)
-    {
-    }
-}
-
-void linalg::cuda_csrmv_analysis(int             m,
-                                 int             n,
-                                 int             nnz,
-                                 const int*      csr_row_ptr,
-                                 const int*      csr_col_ind,
-                                 const double*   csr_val,
-                                 csrmv_algorithm alg,
-                                 csrmv_descr*    descr)
-{
-}
-void linalg::cuda_csrmv_solve(int                m,
-                              int                n,
-                              int                nnz,
-                              double             alpha,
-                              const int*         csr_row_ptr,
-                              const int*         csr_col_ind,
-                              const double*      csr_val,
-                              const double*      x,
-                              double             beta,
-                              double*            y,
-                              csrmv_algorithm    alg,
-                              const csrmv_descr* descr)
-{
 }

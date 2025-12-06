@@ -64,71 +64,6 @@ void linalg::axpbypgz(double                alpha,
         "linalg::axpbypgz", host_axpbypgz, device_axpbypgz, alpha, x, beta, y, gamma, z);
 }
 
-// Compute y = A * x
-void linalg::matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y)
-{
-    ROUTINE_TRACE("linalg::matrix_vector_product");
-
-    auto host_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
-        return host_matrix_vector_product(A, x, y);
-    };
-    auto device_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
-        return device_matrix_vector_product(A, x, y);
-    };
-
-    backend_dispatch("linalg::matrix_vector_product", host_function, device_function, A, x, y);
-}
-
-// Compute y = alpha * A * x + beta * y
-void linalg::matrix_vector_product(
-    double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
-{
-    ROUTINE_TRACE("linalg::matrix_vector_product");
-
-    auto host_function
-        = [](double                alpha,
-             const csr_matrix&     A,
-             const vector<double>& x,
-             double                beta,
-             vector<double>&       y) { return host_matrix_vector_product(alpha, A, x, beta, y); };
-    auto device_function
-        = [](double                alpha,
-             const csr_matrix&     A,
-             const vector<double>& x,
-             double                beta,
-             vector<double>& y) { return device_matrix_vector_product(alpha, A, x, beta, y); };
-
-    backend_dispatch(
-        "linalg::matrix_vector_product", host_function, device_function, alpha, A, x, beta, y);
-}
-
-// Compute C = A * B
-void linalg::matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
-{
-    ROUTINE_TRACE("linalg::matrix_matrix_product");
-
-    backend_dispatch("linalg::matrix_matrix_product",
-                     host_matrix_matrix_product,
-                     device_matrix_matrix_product,
-                     C,
-                     A,
-                     B);
-}
-
-// Compute C = A + B
-void linalg::matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
-{
-    ROUTINE_TRACE("linalg::matrix_matrix_addition");
-
-    std::cout << "Entering linalg::matrix_matrix_addition" << std::endl;
-    backend_dispatch("linalg::matrix_matrix_addition",
-                     host_matrix_matrix_addition,
-                     device_matrix_matrix_addition,
-                     C,
-                     A,
-                     B);
-}
-
 // Incomplete IC factorization
 void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
@@ -315,6 +250,123 @@ void linalg::csrmv_solve(double                alpha,
                             x,
                             beta,
                             y,
+                            alg,
+                            descr);
+}
+
+struct linalg::csrgeam_descr
+{
+};
+
+void linalg::create_csrgeam_descr(csrgeam_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csrgeam_descr");
+
+    *descr = new csrgeam_descr;
+    allocate_csrgeam_device_data(*descr);
+}
+void linalg::destroy_csrgeam_descr(csrgeam_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csrgeam_descr");
+
+    if(descr != nullptr)
+    {
+        free_csrgeam_device_data(descr);
+
+        delete descr;
+    }
+}
+
+void linalg::csrgeam_nnz(const csr_matrix& A,
+                         const csr_matrix& B,
+                         csr_matrix&       C,
+                         csrgeam_algorithm alg,
+                         csrgeam_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::csrgeam_nnz");
+
+    return backend_dispatch(
+        "linalg::csrgeam_nnz", host_csrgeam_nnz, device_csrgeam_nnz, A, B, C, alg, descr);
+}
+
+void linalg::csrgeam_solve(double               alpha,
+                           const csr_matrix&    A,
+                           double               beta,
+                           const csr_matrix&    B,
+                           csr_matrix&          C,
+                           csrgeam_algorithm    alg,
+                           const csrgeam_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csrgeam_solve");
+
+    return backend_dispatch("linalg::csrgeam_solve",
+                            host_csrgeam_solve,
+                            device_csrgeam_solve,
+                            alpha,
+                            A,
+                            beta,
+                            B,
+                            C,
+                            alg,
+                            descr);
+}
+
+struct linalg::csrgemm_descr
+{
+};
+
+void linalg::create_csrgemm_descr(csrgemm_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csrgemm_descr");
+
+    *descr = new csrgemm_descr;
+    allocate_csrgemm_device_data(*descr);
+}
+
+void linalg::destroy_csrgemm_descr(csrgemm_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csrgemm_descr");
+
+    if(descr != nullptr)
+    {
+        free_csrgemm_device_data(descr);
+
+        delete descr;
+    }
+}
+
+void linalg::csrgemm_nnz(const csr_matrix& A,
+                         const csr_matrix& B,
+                         const csr_matrix& D,
+                         csr_matrix&       C,
+                         csrgemm_algorithm alg,
+                         csrgemm_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::csrgeam_nnz");
+
+    return backend_dispatch(
+        "linalg::csrgemm_nnz", host_csrgemm_nnz, device_csrgemm_nnz, A, B, D, C, alg, descr);
+}
+void linalg::csrgemm_solve(double               alpha,
+                           const csr_matrix&    A,
+                           const csr_matrix&    B,
+                           double               beta,
+                           const csr_matrix&    D,
+                           csr_matrix&          C,
+                           csrgemm_algorithm    alg,
+                           const csrgemm_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csrgemm_solve");
+
+    return backend_dispatch("linalg::csrgemm_solve",
+                            host_csrgemm_solve,
+                            device_csrgemm_solve,
+                            alpha,
+                            A,
+                            B,
+                            beta,
+                            D,
+                            C,
                             alg,
                             descr);
 }

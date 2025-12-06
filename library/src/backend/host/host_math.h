@@ -53,37 +53,11 @@ namespace linalg
                        double                gamma,
                        vector<double>&       z);
 
-    // Compute y = A * x
-    void
-        host_matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
-
-    // Compute y = alpha * A * x + beta * y
-    void host_matrix_vector_product(
-        double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y);
-
-    // Compute C = A * B
-    void host_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
-
-    // Compute C = A + B
-    void host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
-
     // Incomplete IC factorization
     void host_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
 
     // Incomplete LU factorization
     void host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
-
-    // Forward solve
-    void host_forward_solve(const csr_matrix&     A,
-                            const vector<double>& b,
-                            vector<double>&       x,
-                            bool                  unit_diag);
-
-    // Backward solve
-    void host_backward_solve(const csr_matrix&     A,
-                             const vector<double>& b,
-                             vector<double>&       x,
-                             bool                  unit_diag);
 
     // Transpose matrix
     void host_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
@@ -146,9 +120,6 @@ namespace linalg
 
     struct csrmv_descr;
 
-    void allocate_csrmv_host_data(csrmv_descr* descr);
-    void free_csrmv_host_data(csrmv_descr* descr);
-
     void host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
     void host_csrmv_solve(double                alpha,
                           const csr_matrix&     A,
@@ -157,6 +128,39 @@ namespace linalg
                           vector<double>&       y,
                           csrmv_algorithm       alg,
                           const csrmv_descr*    descr);
+
+    struct csrgeam_descr;
+
+    void host_csrgeam_nnz(const csr_matrix& A,
+                          const csr_matrix& B,
+                          csr_matrix&       C,
+                          csrgeam_algorithm alg,
+                          csrgeam_descr*    descr);
+    void host_csrgeam_solve(double               alpha,
+                            const csr_matrix&    A,
+                            double               beta,
+                            const csr_matrix&    B,
+                            csr_matrix&          C,
+                            csrgeam_algorithm    alg,
+                            const csrgeam_descr* descr);
+
+    struct csrgemm_descr;
+
+    void host_csrgemm_nnz(const csr_matrix& A,
+                          const csr_matrix& B,
+                          const csr_matrix& D,
+                          csr_matrix&       C,
+                          csrgemm_algorithm alg,
+                          csrgemm_descr*    descr);
+    void host_csrgemm_solve(double               alpha,
+                            const csr_matrix&    A,
+                            const csr_matrix&    B,
+                            double               beta,
+                            const csr_matrix&    D,
+                            csr_matrix&          C,
+                            csrgemm_algorithm    alg,
+                            const csrgemm_descr* descr);
+
 }
 
 #endif

@@ -38,8 +38,7 @@
 
 namespace linalg
 {
-    /*! \ingroup iterative_solvers
- * \brief Data class for storing sparse CSR matrices
+    /*! \brief Data class for storing sparse CSR matrices
  *
  * \details
  * This class represents a sparse matrix stored in the **Compressed Sparse Row (CSR)** format.
@@ -245,8 +244,20 @@ namespace linalg
      */
         void extract_diagonal(vector<double>& diag) const;
 
+        /*! \brief Scales the diagonal elements of the matrix by a scalar value.
+     *
+     * This method multiplies each diagonal element of the CSR matrix by the given scalar.
+     * Non-diagonal elements remain unchanged.
+     * \param scalar The scalar value by which to multiply the diagonal elements.
+     */
         void scale_diagonal_by(double scalar);
 
+        /*! \brief Scales the matrix by the inverse of its diagonal elements.
+     *
+     * This method multiplies each row of the matrix by the reciprocal of its corresponding
+     * diagonal element. Effectively performs: \f$A_{i,j} = \frac{A_{i,j}}{A_{i,i}}\f$ for all elements
+     * in row \f$i\f$. This is commonly used for diagonal preconditioning.
+     */
         void scale_by_inverse_diagonal();
 
         /*! \brief Multiplies the CSR matrix by a vector: \f$y = A \cdot x\f$.

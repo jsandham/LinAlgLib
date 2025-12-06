@@ -72,9 +72,24 @@ namespace linalg
     */
         virtual void solve(const vector<double>& rhs, vector<double>& x) const = 0;
 
+        /*! \brief Moves the preconditioner data to the device (GPU).
+     *
+     * \details Transfers all internal data structures required by the preconditioner
+     * from host memory to device memory for GPU-accelerated operations.
+     */
         virtual void move_to_device() = 0;
-        virtual void move_to_host()   = 0;
 
+        /*! \brief Moves the preconditioner data to the host (CPU).
+     *
+     * \details Transfers all internal data structures required by the preconditioner
+     * from device memory back to host memory.
+     */
+        virtual void move_to_host() = 0;
+
+        /*! \brief Checks if the preconditioner data is currently on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         virtual bool is_on_host() const = 0;
     };
 
@@ -121,9 +136,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the Jacobi preconditioner data to the device (GPU).
+     *
+     * \details Transfers the diagonal vector from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the Jacobi preconditioner data to the host (CPU).
+     *
+     * \details Transfers the diagonal vector from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the Jacobi preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -175,9 +203,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the Gauss-Seidel preconditioner data to the device (GPU).
+     *
+     * \details Transfers the matrix M and descriptor from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the Gauss-Seidel preconditioner data to the host (CPU).
+     *
+     * \details Transfers the matrix M and descriptor from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the Gauss-Seidel preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -229,9 +270,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the SOR preconditioner data to the device (GPU).
+     *
+     * \details Transfers the matrix M and descriptor from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the SOR preconditioner data to the host (CPU).
+     *
+     * \details Transfers the matrix M and descriptor from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the SOR preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -279,9 +333,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the Symmetric Gauss-Seidel preconditioner data to the device (GPU).
+     *
+     * \details Transfers the L and U matrices and their descriptors from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the Symmetric Gauss-Seidel preconditioner data to the host (CPU).
+     *
+     * \details Transfers the L and U matrices and their descriptors from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the Symmetric Gauss-Seidel preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -333,9 +400,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the SSOR preconditioner data to the device (GPU).
+     *
+     * \details Transfers the L and U matrices and their descriptors from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the SSOR preconditioner data to the host (CPU).
+     *
+     * \details Transfers the L and U matrices and their descriptors from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the SSOR preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -392,9 +472,22 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the ILU preconditioner data to the device (GPU).
+     *
+     * \details Transfers the LU matrix and L/U descriptors from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the ILU preconditioner data to the host (CPU).
+     *
+     * \details Transfers the LU matrix and L/U descriptors from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the ILU preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
@@ -451,17 +544,39 @@ namespace linalg
      */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the IC preconditioner data to the device (GPU).
+     *
+     * \details Transfers the LLT matrix and L/LT descriptors from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the IC preconditioner data to the host (CPU).
+     *
+     * \details Transfers the LLT matrix and L/LT descriptors from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the IC preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 
+    /*! \ingroup iterative_solvers
+ * \brief Iterative ILU (ITILU) preconditioner.
+ *
+ * \details
+ * Implements an iterative variant of the Incomplete LU factorization preconditioner.
+ * This method refines the ILU factorization through iterative improvement techniques.
+ */
     class itilu_precond : public preconditioner
     {
     private:
+        /*! \brief Stores the lower triangular factor L from the iterative ILU factorization. */
         csr_matrix L;
 
+        /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
 
     public:
@@ -471,13 +586,40 @@ namespace linalg
         /*! \brief Destroys the `itilu_precond` object. */
         ~itilu_precond();
 
+        /*! \brief Builds the Iterative ILU preconditioner.
+     *
+     * This method computes an iterative refinement of the ILU factorization
+     * of the input matrix `A`.
+     * \param A The input matrix for which the preconditioner is to be built.
+     */
         void build(const csr_matrix& A) override;
 
+        /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the iterative ILU factors.
+     *
+     * This method applies the iterative ILU preconditioning to compute
+     * the preconditioned result `x`.
+     *
+     * \param rhs The right-hand side vector.
+     * \param x The output vector, which will contain the preconditioned result.
+     */
         void solve(const vector<double>& rhs, vector<double>& x) const override;
 
+        /*! \brief Moves the Iterative ILU preconditioner data to the device (GPU).
+     *
+     * \details Transfers the L matrix from host to device memory.
+     */
         void move_to_device() override;
+
+        /*! \brief Moves the Iterative ILU preconditioner data to the host (CPU).
+     *
+     * \details Transfers the L matrix from device to host memory.
+     */
         void move_to_host() override;
 
+        /*! \brief Checks if the Iterative ILU preconditioner data is on the host.
+     *
+     * \return True if the data is on the host (CPU), false if on the device (GPU).
+     */
         bool is_on_host() const override;
     };
 

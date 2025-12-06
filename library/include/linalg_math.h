@@ -81,60 +81,6 @@ namespace linalg
                                 vector<double>&       z);
 
     /**
-     * @brief Computes the matrix-vector product: \f$y = A \cdot x\f$.
-     *
-     * This function performs a sparse matrix-vector multiplication where \f$A\f$ is a `csr_matrix`.
-     *
-     * @param A The input `csr_matrix` \f$A\f$.
-     * @param x The input vector \f$x\f$.
-     * @param y The output vector \f$y\f$ to store the result of the multiplication.
-     */
-    LINALGLIB_API void
-        matrix_vector_product(const csr_matrix& A, const vector<double>& x, vector<double>& y);
-
-    /**
-     * @brief Computes the generalized matrix-vector product: \f$y = \alpha \cdot A \cdot x + \beta \cdot y\f$.
-     *
-     * This function performs a sparse matrix-vector multiplication, scales the result, and
-     * accumulates it with a scaled version of vector `y`.
-     *
-     * @param alpha The scalar multiplier \f$\alpha\f$.
-     * @param A The input `csr_matrix` \f$A\f$.
-     * @param x The input vector \f$x\f$.
-     * @param beta The scalar multiplier \f$\beta\f$.
-     * @param y The input/output vector \f$y\f$. On input, it contains the initial values; on output,
-     * it contains the result of the generalized matrix-vector product.
-     */
-    LINALGLIB_API void matrix_vector_product(
-        double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y);
-
-    /**
-     * @brief Computes the matrix-matrix product: \f$C = A \cdot B\f$.
-     *
-     * This function performs a sparse matrix-matrix multiplication where \f$A\f$, \f$B\f$, and \f$C\f$ are `csr_matrix` objects.
-     *
-     * @param C The output `csr_matrix` to store the product \f$A \cdot B\f$.
-     * @param A The left-hand side input `csr_matrix` \f$A\f$.
-     * @param B The right-hand side input `csr_matrix` \f$B\f$.
-     */
-    LINALGLIB_API void
-        matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
-
-    /**
-     * @brief Computes the matrix-matrix addition: \f$C = A + B\f$.
-     *
-     * This function performs the element-wise addition of two sparse matrices \f$A\f$ and \f$B\f$,
-     * storing the result in matrix \f$C\f$. All three matrices are in CSR format.
-     * It is assumed that matrices \f$A\f$ and \f$B\f$ have the same dimensions.
-     *
-     * @param C The output `csr_matrix` to store the sum \f$A + B\f$.
-     * @param A The left-hand side input `csr_matrix` \f$A\f$.
-     * @param B The right-hand side input `csr_matrix` \f$B\f$.
-     */
-    LINALGLIB_API void
-        matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B);
-
-    /**
      * @brief Performs an Incomplete Cholesky (IC) factorization with zero fill-in (IC(0)).
      *
      * This function computes the incomplete Cholesky factorization \f$LL^T \approx A\f$ for a symmetric positive-definite matrix \f$A\f$.
@@ -227,14 +173,87 @@ namespace linalg
      */
     LINALGLIB_API double norm_inf(const vector<double>& array);
 
+    /**
+     * @brief Performs a Jacobi diagonal solve: x = rhs ./ diag (element-wise division).
+     *
+     * @details
+     * This helper computes the solution for a diagonal system where the matrix is
+     * represented by its diagonal entries. For each index i:
+     * \f[ x_i = \frac{rhs_i}{diag_i} \f]
+     *
+     * The caller is responsible for ensuring that `diag` contains no zeros; division
+     * by zero will lead to undefined behavior. Both input vectors (`rhs`, `diag`)
+     * must have the same length as the output vector `x`.
+     *
+     * @param rhs Right-hand side vector b (input).
+     * @param diag Diagonal entries of the matrix (input). Must be non-zero.
+     * @param x Solution vector (output). On return, contains the element-wise
+     *          division result rhs ./ diag.
+     */
+    LINALGLIB_API void
+        jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
+
+    /**
+     * @brief Opaque descriptor struct for CSR triangular solve analysis.
+     *
+     * This structure holds preprocessed analysis data for solving triangular systems
+     * using sparse CSR matrices. It should be created via create_csrtrsv_descr(),
+     * populated via csrtrsv_analysis(), and destroyed via destroy_csrtrsv_descr().
+     * Users should not access its members directly.
+     */
+    struct csrtrsv_descr;
+
+    /**
+     * @brief Creates an opaque descriptor for CSR triangular solve operations.
+     *
+     * @param descr A pointer to a csrtrsv_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csrtrsv_descr
+     */
     LINALGLIB_API void create_csrtrsv_descr(csrtrsv_descr** descr);
+
+    /**
+     * @brief Destroys a CSR triangular solve descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csrtrsv_descr
+     */
     LINALGLIB_API void destroy_csrtrsv_descr(csrtrsv_descr* descr);
 
+    /**
+     * @brief Performs analysis for CSR triangular solve.
+     *
+     * Preprocesses a triangular matrix to prepare for subsequent solve operations.
+     * This may compute reordering, factorization, or other data needed for efficient solving.
+     *
+     * @param A The input triangular `csr_matrix`.
+     * @param tri_type Specifies whether the matrix is lower or upper triangular.
+     * @param diag_type Specifies whether the diagonal is unit (1.0) or general.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csrtrsv_solve
+     */
     LINALGLIB_API void csrtrsv_analysis(const csr_matrix& A,
                                         triangular_type   tri_type,
                                         diagonal_type     diag_type,
                                         csrtrsv_descr*    descr);
 
+    /**
+     * @brief Solves a triangular system \f$A \cdot x = \alpha \cdot b\f$ using CSR format.
+     *
+     * Solves the equation using preprocessing information from a prior csrtrsv_analysis() call.
+     *
+     * @param A The triangular `csr_matrix`.
+     * @param b The input right-hand side vector.
+     * @param x The output solution vector.
+     * @param alpha A scaling factor applied to the right-hand side.
+     * @param tri_type Specifies whether the matrix is lower or upper triangular.
+     * @param diag_type Specifies whether the diagonal is unit (1.0) or general.
+     * @param descr The descriptor populated by a prior csrtrsv_analysis() call.
+     * @see csrtrsv_analysis
+     */
     LINALGLIB_API void csrtrsv_solve(const csr_matrix&     A,
                                      const vector<double>& b,
                                      vector<double>&       x,
@@ -243,11 +262,61 @@ namespace linalg
                                      diagonal_type         diag_type,
                                      const csrtrsv_descr*  descr);
 
+    /**
+     * @brief Descriptor for CSR matrix-vector product operations.
+     *
+     * Holds preprocessing data for efficient CSR matrix-vector multiplication.
+     * Created with create_csrmv_descr() and destroyed with destroy_csrmv_descr().
+     */
+    struct csrmv_descr;
+
+    /**
+     * @brief Creates an opaque descriptor for CSR matrix-vector product operations.
+     *
+     * @param descr A pointer to a csrmv_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csrmv_descr
+     */
     LINALGLIB_API void create_csrmv_descr(csrmv_descr** descr);
+
+    /**
+     * @brief Destroys a CSR matrix-vector product descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csrmv_descr
+     */
     LINALGLIB_API void destroy_csrmv_descr(csrmv_descr* descr);
 
+    /**
+     * @brief Performs analysis for CSR matrix-vector product.
+     *
+     * Preprocesses a matrix to prepare for subsequent matrix-vector product operations.
+     * May involve inspecting sparsity patterns or data layout optimization.
+     *
+     * @param A The input `csr_matrix`.
+     * @param alg The algorithm selection for the multiplication.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csrmv_solve
+     */
     LINALGLIB_API void csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
 
+    /**
+     * @brief Computes a CSR matrix-vector product \f$y = \alpha A x + \beta y\f$.
+     *
+     * Performs matrix-vector multiplication using preprocessing from csrmv_analysis().
+     *
+     * @param alpha Scaling factor for \f$Ax\f$.
+     * @param A The `csr_matrix`.
+     * @param x The input vector.
+     * @param beta Scaling factor for \f$y\f$.
+     * @param y The output vector.
+     * @param alg The algorithm selection for the multiplication.
+     * @param descr The descriptor populated by a prior csrmv_analysis() call.
+     * @see csrmv_analysis
+     */
     LINALGLIB_API void csrmv_solve(double                alpha,
                                    const csr_matrix&     A,
                                    const vector<double>& x,
@@ -256,6 +325,153 @@ namespace linalg
                                    csrmv_algorithm       alg,
                                    const csrmv_descr*    descr);
 
+    /**
+     * @brief Descriptor for CSR matrix-matrix addition operations.
+     *
+     * Holds preprocessing data for computing \f$C = \alpha A + \beta B\f$ in CSR format.
+     * This is a two-stage descriptor: first csrgeam_nnz() determines the sparsity pattern,
+     * then csrgeam_solve() computes the values.
+     * Created with create_csrgeam_descr() and destroyed with destroy_csrgeam_descr().
+     */
+    struct csrgeam_descr;
+
+    /**
+     * @brief Creates an opaque descriptor for CSR matrix-matrix addition operations.
+     *
+     * @param descr A pointer to a csrgeam_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csrgeam_descr
+     */
+    LINALGLIB_API void create_csrgeam_descr(csrgeam_descr** descr);
+
+    /**
+     * @brief Destroys a CSR matrix-matrix addition descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csrgeam_descr
+     */
+    LINALGLIB_API void destroy_csrgeam_descr(csrgeam_descr* descr);
+
+    /**
+     * @brief Computes the sparsity pattern for CSR matrix-matrix addition \f$C = \alpha A + \beta B\f$.
+     *
+     * First stage: determines the number of nonzeros and sparsity structure of the result.
+     * Must be called before csrgeam_solve().
+     *
+     * @param A The first input `csr_matrix`.
+     * @param B The second input `csr_matrix`.
+     * @param C The output `csr_matrix` (row and column indices allocated, values set by csrgeam_solve()).
+     * @param alg The algorithm selection.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csrgeam_solve
+     */
+    LINALGLIB_API void csrgeam_nnz(const csr_matrix& A,
+                                   const csr_matrix& B,
+                                   csr_matrix&       C,
+                                   csrgeam_algorithm alg,
+                                   csrgeam_descr*    descr);
+
+    /**
+     * @brief Computes CSR matrix-matrix addition \f$C = \alpha A + \beta B\f$.
+     *
+     * Second stage: computes the values of the result matrix.
+     * csrgeam_nnz() must be called first to allocate the sparsity structure.
+     *
+     * @param alpha Scaling factor for matrix A.
+     * @param A The first input `csr_matrix`.
+     * @param beta Scaling factor for matrix B.
+     * @param B The second input `csr_matrix`.
+     * @param C The output `csr_matrix` with structure allocated by csrgeam_nnz().
+     * @param alg The algorithm selection.
+     * @param descr The descriptor populated by a prior csrgeam_nnz() call.
+     * @see csrgeam_nnz
+     */
+    LINALGLIB_API void csrgeam_solve(double               alpha,
+                                     const csr_matrix&    A,
+                                     double               beta,
+                                     const csr_matrix&    B,
+                                     csr_matrix&          C,
+                                     csrgeam_algorithm    alg,
+                                     const csrgeam_descr* descr);
+
+    /**
+     * @brief Descriptor for CSR matrix-matrix multiplication operations.
+     *
+     * Holds preprocessing data for computing \f$C = \alpha A \cdot B + \beta D\f$ in CSR format.
+     * This is a two-stage descriptor: first csrgemm_nnz() determines the sparsity pattern,
+     * then csrgemm_solve() computes the values.
+     * Created with create_csrgemm_descr() and destroyed with destroy_csrgemm_descr().
+     */
+    struct csrgemm_descr;
+
+    /**
+     * @brief Creates an opaque descriptor for CSR matrix-matrix multiplication operations.
+     *
+     * @param descr A pointer to a csrgemm_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csrgemm_descr
+     */
+    LINALGLIB_API void create_csrgemm_descr(csrgemm_descr** descr);
+
+    /**
+     * @brief Destroys a CSR matrix-matrix multiplication descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csrgemm_descr
+     */
+    LINALGLIB_API void destroy_csrgemm_descr(csrgemm_descr* descr);
+
+    /**
+     * @brief Computes the sparsity pattern for CSR matrix-matrix multiplication \f$C = \alpha A \cdot B + \beta D\f$.
+     *
+     * First stage: determines the number of nonzeros and sparsity structure of the result.
+     * Must be called before csrgemm_solve().
+     *
+     * @param A The first input `csr_matrix`.
+     * @param B The second input `csr_matrix`.
+     * @param D The third input `csr_matrix` (can represent \f$\beta D\f$ term or be empty).
+     * @param C The output `csr_matrix` (row and column indices allocated, values set by csrgemm_solve()).
+     * @param alg The algorithm selection.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csrgemm_solve
+     */
+    LINALGLIB_API void csrgemm_nnz(const csr_matrix& A,
+                                   const csr_matrix& B,
+                                   const csr_matrix& D,
+                                   csr_matrix&       C,
+                                   csrgemm_algorithm alg,
+                                   csrgemm_descr*    descr);
+
+    /**
+     * @brief Computes CSR matrix-matrix multiplication \f$C = \alpha A \cdot B + \beta D\f$.
+     *
+     * Second stage: computes the values of the result matrix.
+     * csrgemm_nnz() must be called first to allocate the sparsity structure.
+     *
+     * @param alpha Scaling factor for the product \f$A \cdot B\f$.
+     * @param A The first input `csr_matrix`.
+     * @param B The second input `csr_matrix`.
+     * @param beta Scaling factor for the matrix D.
+     * @param D The third input `csr_matrix` (the \f$\beta D\f$ term).
+     * @param C The output `csr_matrix` with structure allocated by csrgemm_nnz().
+     * @param alg The algorithm selection.
+     * @param descr The descriptor populated by a prior csrgemm_nnz() call.
+     * @see csrgemm_nnz
+     */
+    LINALGLIB_API void csrgemm_solve(double               alpha,
+                                     const csr_matrix&    A,
+                                     const csr_matrix&    B,
+                                     double               beta,
+                                     const csr_matrix&    D,
+                                     csr_matrix&          C,
+                                     csrgemm_algorithm    alg,
+                                     const csrgemm_descr* descr);
 }
 
 #endif

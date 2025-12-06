@@ -1305,140 +1305,6 @@ void linalg::host_axpbypgz(double                alpha,
     host_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
-// Compute y = A * x
-void linalg::host_matrix_vector_product(const csr_matrix&     A,
-                                        const vector<double>& x,
-                                        vector<double>&       y)
-{
-    ROUTINE_TRACE("linalg::host_matrix_vector_product");
-
-    host_matrix_vector_product_impl(
-        A.get_row_ptr(), A.get_col_ind(), A.get_val(), x.get_vec(), y.get_vec(), A.get_m());
-}
-
-// Compute y = alpha * A * x + beta * y
-void linalg::host_matrix_vector_product(
-    double alpha, const csr_matrix& A, const vector<double>& x, double beta, vector<double>& y)
-{
-    ROUTINE_TRACE("linalg::host_matrix_vector_product");
-
-    host_csrmv_impl(A.get_m(),
-                    A.get_n(),
-                    A.get_nnz(),
-                    alpha,
-                    A.get_row_ptr(),
-                    A.get_col_ind(),
-                    A.get_val(),
-                    x.get_vec(),
-                    beta,
-                    y.get_vec());
-}
-
-// Compute C = A * B
-void linalg::host_matrix_matrix_product(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
-{
-    ROUTINE_TRACE("linalg::host_matrix_matrix_product");
-
-    // Compute C = A * B
-    double alpha = 1.0;
-    double beta  = 0.0;
-
-    // Determine number of non-zeros in C = A * B product
-    C.resize(A.get_m(), B.get_n(), 0);
-
-    int nnz_C;
-    host_csrgemm_nnz_impl(A.get_m(),
-                          B.get_n(),
-                          A.get_n(),
-                          A.get_nnz(),
-                          B.get_nnz(),
-                          0,
-                          alpha,
-                          A.get_row_ptr(),
-                          A.get_col_ind(),
-                          B.get_row_ptr(),
-                          B.get_col_ind(),
-                          beta,
-                          nullptr,
-                          nullptr,
-                          C.get_row_ptr(),
-                          &nnz_C);
-
-    C.resize(A.get_m(), B.get_n(), nnz_C);
-
-    host_csrgemm_impl(A.get_m(),
-                      B.get_n(),
-                      A.get_n(),
-                      A.get_nnz(),
-                      B.get_nnz(),
-                      0,
-                      alpha,
-                      A.get_row_ptr(),
-                      A.get_col_ind(),
-                      A.get_val(),
-                      B.get_row_ptr(),
-                      B.get_col_ind(),
-                      B.get_val(),
-                      beta,
-                      nullptr,
-                      nullptr,
-                      nullptr,
-                      C.get_row_ptr(),
-                      C.get_col_ind(),
-                      C.get_val());
-}
-
-// Compute C = A + B
-void linalg::host_matrix_matrix_addition(csr_matrix& C, const csr_matrix& A, const csr_matrix& B)
-{
-    ROUTINE_TRACE("linalg::host_matrix_matrix_addition");
-
-    // Compute C = A + B
-    double alpha = 1.0;
-    double beta  = 1.0;
-
-    std::cout << "A: " << A.get_m() << "x" << A.get_n() << " nnz: " << A.get_nnz() << std::endl;
-
-    // Determine number of non-zeros in C = A + B product
-    C.resize(A.get_m(), B.get_n(), 0);
-
-    std::cout << "B: " << B.get_m() << "x" << B.get_n() << " nnz: " << B.get_nnz() << std::endl;
-
-    int nnz_C;
-    host_csrgeam_nnz_impl(A.get_m(),
-                          B.get_n(),
-                          A.get_nnz(),
-                          B.get_nnz(),
-                          alpha,
-                          A.get_row_ptr(),
-                          A.get_col_ind(),
-                          beta,
-                          B.get_row_ptr(),
-                          B.get_col_ind(),
-                          C.get_row_ptr(),
-                          &nnz_C);
-
-    std::cout << "nnz_C: " << nnz_C << std::endl;
-
-    C.resize(A.get_m(), B.get_n(), nnz_C);
-
-    host_csrgeam_impl(A.get_m(),
-                      B.get_n(),
-                      A.get_nnz(),
-                      B.get_nnz(),
-                      alpha,
-                      A.get_row_ptr(),
-                      A.get_col_ind(),
-                      A.get_val(),
-                      beta,
-                      B.get_row_ptr(),
-                      B.get_col_ind(),
-                      B.get_val(),
-                      C.get_row_ptr(),
-                      C.get_col_ind(),
-                      C.get_val());
-}
-
 // Incomplete IC factorization
 void linalg::host_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 {
@@ -1467,40 +1333,6 @@ void linalg::host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zer
                       LU.get_val(),
                       structural_zero,
                       numeric_zero);
-}
-
-// Forward solve
-void linalg::host_forward_solve(const csr_matrix&     A,
-                                const vector<double>& b,
-                                vector<double>&       x,
-                                bool                  unit_diag)
-{
-    ROUTINE_TRACE("linalg::host_forward_solve");
-
-    host_forward_solve_impl(A.get_row_ptr(),
-                            A.get_col_ind(),
-                            A.get_val(),
-                            b.get_vec(),
-                            x.get_vec(),
-                            A.get_m(),
-                            unit_diag);
-}
-
-// Backward solve
-void linalg::host_backward_solve(const csr_matrix&     A,
-                                 const vector<double>& b,
-                                 vector<double>&       x,
-                                 bool                  unit_diag)
-{
-    ROUTINE_TRACE("linalg::host_backward_solve");
-
-    host_backward_solve_impl(A.get_row_ptr(),
-                             A.get_col_ind(),
-                             A.get_val(),
-                             b.get_vec(),
-                             x.get_vec(),
-                             A.get_m(),
-                             unit_diag);
 }
 
 // Transpose matrix
@@ -1801,6 +1633,9 @@ void linalg::host_csrmv_solve(double                alpha,
     switch(alg)
     {
     case csrmv_algorithm::default_algorithm:
+    case csrmv_algorithm::merge_path:
+    case csrmv_algorithm::rowsplit:
+    case csrmv_algorithm::nnzsplit:
         host_csrmv_impl(A.get_m(),
                         A.get_n(),
                         A.get_nnz(),
@@ -1812,13 +1647,140 @@ void linalg::host_csrmv_solve(double                alpha,
                         beta,
                         y.get_vec());
         break;
-    case csrmv_algorithm::merge_path:
-        break;
-    case csrmv_algorithm::rowsplit:
-        break;
-    case csrmv_algorithm::nnzsplit:
-        break;
     default:
         break;
     }
+}
+
+void linalg::host_csrgeam_nnz(const csr_matrix& A,
+                              const csr_matrix& B,
+                              csr_matrix&       C,
+                              csrgeam_algorithm alg,
+                              csrgeam_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::host_csrgeam_nnz");
+
+    // Compute C = A + B
+    double alpha = 1.0;
+    double beta  = 1.0;
+
+    std::cout << "A: " << A.get_m() << "x" << A.get_n() << " nnz: " << A.get_nnz() << std::endl;
+
+    // Determine number of non-zeros in C = A + B product
+    C.resize(A.get_m(), B.get_n(), 0);
+
+    std::cout << "B: " << B.get_m() << "x" << B.get_n() << " nnz: " << B.get_nnz() << std::endl;
+
+    int nnz_C;
+    host_csrgeam_nnz_impl(A.get_m(),
+                          B.get_n(),
+                          A.get_nnz(),
+                          B.get_nnz(),
+                          alpha,
+                          A.get_row_ptr(),
+                          A.get_col_ind(),
+                          beta,
+                          B.get_row_ptr(),
+                          B.get_col_ind(),
+                          C.get_row_ptr(),
+                          &nnz_C);
+
+    std::cout << "nnz_C: " << nnz_C << std::endl;
+
+    C.resize(A.get_m(), B.get_n(), nnz_C);
+}
+void linalg::host_csrgeam_solve(double               alpha,
+                                const csr_matrix&    A,
+                                double               beta,
+                                const csr_matrix&    B,
+                                csr_matrix&          C,
+                                csrgeam_algorithm    alg,
+                                const csrgeam_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csrgeam_solve");
+
+    host_csrgeam_impl(A.get_m(),
+                      B.get_n(),
+                      A.get_nnz(),
+                      B.get_nnz(),
+                      alpha,
+                      A.get_row_ptr(),
+                      A.get_col_ind(),
+                      A.get_val(),
+                      beta,
+                      B.get_row_ptr(),
+                      B.get_col_ind(),
+                      B.get_val(),
+                      C.get_row_ptr(),
+                      C.get_col_ind(),
+                      C.get_val());
+}
+
+void linalg::host_csrgemm_nnz(const csr_matrix& A,
+                              const csr_matrix& B,
+                              const csr_matrix& D,
+                              csr_matrix&       C,
+                              csrgemm_algorithm alg,
+                              csrgemm_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::host_csrgemm_nnz");
+
+    // Compute C = A * B
+    double alpha = 1.0;
+    double beta  = 0.0;
+
+    // Determine number of non-zeros in C = A * B product
+    C.resize(A.get_m(), B.get_n(), 0);
+
+    int nnz_C;
+    host_csrgemm_nnz_impl(A.get_m(),
+                          B.get_n(),
+                          A.get_n(),
+                          A.get_nnz(),
+                          B.get_nnz(),
+                          0,
+                          alpha,
+                          A.get_row_ptr(),
+                          A.get_col_ind(),
+                          B.get_row_ptr(),
+                          B.get_col_ind(),
+                          beta,
+                          nullptr,
+                          nullptr,
+                          C.get_row_ptr(),
+                          &nnz_C);
+
+    C.resize(A.get_m(), B.get_n(), nnz_C);
+}
+void linalg::host_csrgemm_solve(double               alpha,
+                                const csr_matrix&    A,
+                                const csr_matrix&    B,
+                                double               beta,
+                                const csr_matrix&    D,
+                                csr_matrix&          C,
+                                csrgemm_algorithm    alg,
+                                const csrgemm_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csrgemm_solve");
+
+    host_csrgemm_impl(A.get_m(),
+                      B.get_n(),
+                      A.get_n(),
+                      A.get_nnz(),
+                      B.get_nnz(),
+                      0,
+                      alpha,
+                      A.get_row_ptr(),
+                      A.get_col_ind(),
+                      A.get_val(),
+                      B.get_row_ptr(),
+                      B.get_col_ind(),
+                      B.get_val(),
+                      beta,
+                      nullptr,
+                      nullptr,
+                      nullptr,
+                      C.get_row_ptr(),
+                      C.get_col_ind(),
+                      C.get_val());
 }

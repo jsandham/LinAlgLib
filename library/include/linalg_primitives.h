@@ -44,10 +44,10 @@ namespace linalg
      * This function iterates through the provided vector and returns the smallest
      * element found. It assumes the vector is not empty.
      *
-     * @param x A constant reference to the input vector of ($\text{linalg::vector}< \text{double} >$)
+     * @param x A constant reference to the input vector of type `linalg::vector<T>`
      * to search for the minimum element.
      *
-     * @return The minimum value found in the vector $\text{x}$.
+     * @return The minimum value found in the vector.
      *
      * @see find_max
      *
@@ -58,7 +58,7 @@ namespace linalg
      * // minimum will be -4.2
      * @endcode
      */
-    template<typename T>
+    template <typename T>
     LINALGLIB_API T find_min(const vector<T>& x);
 
     /**
@@ -67,10 +67,10 @@ namespace linalg
      * This function iterates through the provided vector and returns the largest
      * element found. It assumes the vector is not empty.
      *
-     * @param x A constant reference to the input vector ($\text{linalg::vector}< \text{double} >$)
+     * @param x A constant reference to the input vector of type `linalg::vector<T>`
      * to search for the maximum element.
      *
-     * @return The maximum value found in the vector $\text{x}$.
+     * @return The maximum value found in the vector.
      *
      * @see find_min
      *
@@ -81,7 +81,7 @@ namespace linalg
      * // maximum will be 9.0
      * @endcode
      */
-    template<typename T>
+    template <typename T>
     LINALGLIB_API T find_max(const vector<T>& x);
 
     /**

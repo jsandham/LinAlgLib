@@ -42,5 +42,9 @@ namespace linalg
  * multiplication operation.
  */
     struct csrmv_descr;
+
+    struct csrgeam_descr;
+
+    struct csrgemm_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H

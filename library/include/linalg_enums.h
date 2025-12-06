@@ -51,6 +51,16 @@ namespace linalg
         rowsplit,
         nnzsplit
     };
+
+    enum class csrgeam_algorithm
+    {
+        default_algorithm /*!< Default algorithm */
+    };
+
+    enum class csrgemm_algorithm
+    {
+        default_algorithm /*!< Default algorithm */
+    };
 } // namespace linalg
 
 #endif // LINEAR_ENUMS_H

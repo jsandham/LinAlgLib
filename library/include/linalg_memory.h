@@ -37,6 +37,14 @@
 
 namespace linalg
 {
+    /**
+     * @brief Synchronizes device operations.
+     *
+     * This function ensures that all pending device (GPU) operations are completed
+     * before the host (CPU) proceeds. It is typically used to synchronize between
+     * host and device when timing operations or when you need to ensure device
+     * computations have finished before accessing results on the host.
+     */
     void sync();
 }
 

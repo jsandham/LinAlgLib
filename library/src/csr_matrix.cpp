@@ -278,54 +278,44 @@ void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) 
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector");
 
-    auto host_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
-        return host_matrix_vector_product(A, x, y);
-    };
-    auto device_function = [](const csr_matrix& A, const vector<double>& x, vector<double>& y) {
-        return device_matrix_vector_product(A, x, y);
-    };
+    csrmv_descr* descr;
+    create_csrmv_descr(&descr);
 
-    backend_dispatch(
-        "linalg::csr_matrix::multiply_by_vector", host_function, device_function, *this, x, y);
+    csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
+
+    csrmv_solve(1.0, *this, x, 0.0, y, csrmv_algorithm::default_algorithm, descr);
+
+    destroy_csrmv_descr(descr);
 }
 
 void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
 
-    auto host_function
-        = [](double                alpha,
-             const csr_matrix&     A,
-             const vector<double>& x,
-             double                beta,
-             vector<double>&       y) { return host_matrix_vector_product(alpha, A, x, beta, y); };
-    auto device_function
-        = [](double                alpha,
-             const csr_matrix&     A,
-             const vector<double>& x,
-             double                beta,
-             vector<double>& y) { return device_matrix_vector_product(alpha, A, x, beta, y); };
+    csrmv_descr* descr;
+    create_csrmv_descr(&descr);
 
-    backend_dispatch("linalg::csr_matrix::multiply_by_vector_and_add",
-                     host_function,
-                     device_function,
-                     1.0,
-                     *this,
-                     x,
-                     1.0,
-                     y);
+    csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
+
+    csrmv_solve(1.0, *this, x, 1.0, y, csrmv_algorithm::default_algorithm, descr);
+
+    destroy_csrmv_descr(descr);
 }
 
 void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
 
-    backend_dispatch("linalg::csr_matrix::multiply_by_matrix",
-                     host_matrix_matrix_product,
-                     device_matrix_matrix_product,
-                     C,
-                     *this,
-                     B);
+    csr_matrix D; // Empty matrix for D
+
+    csrgemm_descr* descr;
+    create_csrgemm_descr(&descr);
+
+    csrgemm_nnz(*this, B, C, D, csrgemm_algorithm::default_algorithm, descr);
+
+    csrgemm_solve(1.0, *this, B, 0.0, D, C, csrgemm_algorithm::default_algorithm, descr);
+
+    destroy_csrgemm_descr(descr);
 }
 
 void csr_matrix::transpose(csr_matrix& T) const

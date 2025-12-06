@@ -139,99 +139,6 @@ namespace linalg
                                         int*          csr_col_ind_U,
                                         double*       csr_val_U,
                                         double        omega);
-    void   cuda_csrmv(int           m,
-                      int           n,
-                      int           nnz,
-                      double        alpha,
-                      const int*    csr_row_ptr,
-                      const int*    csr_col_ind,
-                      const double* csr_val,
-                      const double* x,
-                      double        beta,
-                      double*       y);
-
-    struct csrgemm_descr;
-
-    void cuda_create_csrgemm_descr(csrgemm_descr** descr);
-    void cuda_destroy_csrgemm_descr(csrgemm_descr* descr);
-
-    void cuda_csrgemm_nnz(int            m,
-                          int            n,
-                          int            k,
-                          int            nnz_A,
-                          int            nnz_B,
-                          int            nnz_D,
-                          csrgemm_descr* descr,
-                          double         alpha,
-                          const int*     csr_row_ptr_A,
-                          const int*     csr_col_ind_A,
-                          const int*     csr_row_ptr_B,
-                          const int*     csr_col_ind_B,
-                          double         beta,
-                          const int*     csr_row_ptr_D,
-                          const int*     csr_col_ind_D,
-                          int*           csr_row_ptr_C,
-                          int*           nnz_C);
-
-    void cuda_csrgemm(int            m,
-                      int            n,
-                      int            k,
-                      int            nnz_A,
-                      int            nnz_B,
-                      int            nnz_D,
-                      int            nnz_C,
-                      csrgemm_descr* descr,
-                      double         alpha,
-                      const int*     csr_row_ptr_A,
-                      const int*     csr_col_ind_A,
-                      const double*  csr_val_A,
-                      const int*     csr_row_ptr_B,
-                      const int*     csr_col_ind_B,
-                      const double*  csr_val_B,
-                      double         beta,
-                      const int*     csr_row_ptr_D,
-                      const int*     csr_col_ind_D,
-                      const double*  csr_val_D,
-                      const int*     csr_row_ptr_C,
-                      int*           csr_col_ind_C,
-                      double*        csr_val_C);
-
-    struct csrgeam_descr;
-
-    void cuda_create_csrgeam_descr(csrgeam_descr** descr);
-    void cuda_destroy_csrgeam_descr(csrgeam_descr* descr);
-
-    void cuda_csrgeam_nnz(int            m,
-                          int            n,
-                          int            nnz_A,
-                          int            nnz_B,
-                          csrgeam_descr* descr,
-                          double         alpha,
-                          const int*     csr_row_ptr_A,
-                          const int*     csr_col_ind_A,
-                          double         beta,
-                          const int*     csr_row_ptr_B,
-                          const int*     csr_col_ind_B,
-                          int*           csr_row_ptr_C,
-                          int*           nnz_C);
-
-    void cuda_csrgeam(int            m,
-                      int            n,
-                      int            nnz_A,
-                      int            nnz_B,
-                      int            nnz_C,
-                      csrgeam_descr* descr,
-                      double         alpha,
-                      const int*     csr_row_ptr_A,
-                      const int*     csr_col_ind_A,
-                      const double*  csr_val_A,
-                      double         beta,
-                      const int*     csr_row_ptr_B,
-                      const int*     csr_col_ind_B,
-                      const double*  csr_val_B,
-                      const int*     csr_row_ptr_C,
-                      int*           csr_col_ind_C,
-                      double*        csr_val_C);
 
     void cuda_csrilu0(int        m,
                       int        n,
@@ -249,22 +156,6 @@ namespace linalg
                      double*    csr_val,
                      int*       structural_zero,
                      int*       numeric_zero);
-
-    void cuda_forward_solve(const int*    csr_row_ptr,
-                            const int*    csr_col_ind,
-                            const double* csr_val,
-                            const double* b,
-                            double*       x,
-                            int           n,
-                            bool          unit_diag);
-
-    void cuda_backward_solve(const int*    csr_row_ptr,
-                             const int*    csr_col_ind,
-                             const double* csr_val,
-                             const double* b,
-                             double*       x,
-                             int           n,
-                             bool          unit_diag);
 
     void cuda_csr2csc_buffer_size(int           m,
                                   int           n,
@@ -337,6 +228,90 @@ namespace linalg
                           double*            y,
                           csrmv_algorithm    alg,
                           const csrmv_descr* descr);
+
+    struct csrgeam_descr;
+
+    void allocate_csrgeam_cuda_data(csrgeam_descr* descr);
+    void free_csrgeam_cuda_data(csrgeam_descr* descr);
+
+    void cuda_csrgeam_nnz(int            m,
+                          int            n,
+                          int            nnz_A,
+                          int            nnz_B,
+                          csrgeam_descr* descr,
+                          double         alpha,
+                          const int*     csr_row_ptr_A,
+                          const int*     csr_col_ind_A,
+                          double         beta,
+                          const int*     csr_row_ptr_B,
+                          const int*     csr_col_ind_B,
+                          int*           csr_row_ptr_C,
+                          int*           nnz_C);
+
+    void cuda_csrgeam_solve(int                  m,
+                            int                  n,
+                            int                  nnz_A,
+                            int                  nnz_B,
+                            int                  nnz_C,
+                            const csrgeam_descr* descr,
+                            double               alpha,
+                            const int*           csr_row_ptr_A,
+                            const int*           csr_col_ind_A,
+                            const double*        csr_val_A,
+                            double               beta,
+                            const int*           csr_row_ptr_B,
+                            const int*           csr_col_ind_B,
+                            const double*        csr_val_B,
+                            const int*           csr_row_ptr_C,
+                            int*                 csr_col_ind_C,
+                            double*              csr_val_C);
+
+    struct csrgemm_descr;
+
+    void allocate_csrgemm_cuda_data(csrgemm_descr* descr);
+    void free_csrgemm_cuda_data(csrgemm_descr* descr);
+
+    void cuda_csrgemm_nnz(int            m,
+                          int            n,
+                          int            k,
+                          int            nnz_A,
+                          int            nnz_B,
+                          int            nnz_D,
+                          csrgemm_descr* descr,
+                          double         alpha,
+                          const int*     csr_row_ptr_A,
+                          const int*     csr_col_ind_A,
+                          const int*     csr_row_ptr_B,
+                          const int*     csr_col_ind_B,
+                          double         beta,
+                          const int*     csr_row_ptr_D,
+                          const int*     csr_col_ind_D,
+                          int*           csr_row_ptr_C,
+                          int*           nnz_C);
+
+    void cuda_csrgemm_solve(int                  m,
+                            int                  n,
+                            int                  k,
+                            int                  nnz_A,
+                            int                  nnz_B,
+                            int                  nnz_D,
+                            int                  nnz_C,
+                            const csrgemm_descr* descr,
+                            double               alpha,
+                            const int*           csr_row_ptr_A,
+                            const int*           csr_col_ind_A,
+                            const double*        csr_val_A,
+                            const int*           csr_row_ptr_B,
+                            const int*           csr_col_ind_B,
+                            const double*        csr_val_B,
+                            double               beta,
+                            const int*           csr_row_ptr_D,
+                            const int*           csr_col_ind_D,
+                            const double*        csr_val_D,
+                            const int*           csr_row_ptr_C,
+                            int*                 csr_col_ind_C,
+                            double*              csr_val_C);
+
 }
 
 #endif

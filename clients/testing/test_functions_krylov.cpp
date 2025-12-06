@@ -203,7 +203,7 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     vec_x.move_to_device();
     vec_b.move_to_device();
     cg.move_to_device();
-    //bicgstab.move_to_device();
+    bicgstab.move_to_device();
     if(p != nullptr)
     {
         p->move_to_device();
@@ -249,6 +249,7 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     vec_x.move_to_host();
     vec_b.move_to_host();
     cg.move_to_host();
+    bicgstab.move_to_host();
 
     std::cout << "iter: " << iter << std::endl;
 
