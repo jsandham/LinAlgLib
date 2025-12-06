@@ -148,6 +148,20 @@ namespace linalg
                               diagonal_type         diag_type,
                               const csrtrsv_descr*  descr);
 
+    struct csrmv_descr;
+
+    void allocate_csrmv_device_data(csrmv_descr* descr);
+    void free_csrmv_device_data(csrmv_descr* descr);
+
+    void device_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
+    void device_csrmv_solve(double                alpha,
+                            const csr_matrix&     A,
+                            const vector<double>& x,
+                            double                beta,
+                            vector<double>&       y,
+                            csrmv_algorithm       alg,
+                            const csrmv_descr*    descr);
+
 } // namespace linalg
 
 #endif

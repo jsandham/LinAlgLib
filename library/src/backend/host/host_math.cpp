@@ -1786,3 +1786,39 @@ void linalg::host_csrtrsv_solve(const csr_matrix&     A,
                                 diag_type == diagonal_type::unit);
     }
 }
+
+void linalg::host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr) {}
+void linalg::host_csrmv_solve(double                alpha,
+                              const csr_matrix&     A,
+                              const vector<double>& x,
+                              double                beta,
+                              vector<double>&       y,
+                              csrmv_algorithm       alg,
+                              const csrmv_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::host_csrmv_solve");
+
+    switch(alg)
+    {
+    case csrmv_algorithm::default_algorithm:
+        host_csrmv_impl(A.get_m(),
+                        A.get_n(),
+                        A.get_nnz(),
+                        alpha,
+                        A.get_row_ptr(),
+                        A.get_col_ind(),
+                        A.get_val(),
+                        x.get_vec(),
+                        beta,
+                        y.get_vec());
+        break;
+    case csrmv_algorithm::merge_path:
+        break;
+    case csrmv_algorithm::rowsplit:
+        break;
+    case csrmv_algorithm::nnzsplit:
+        break;
+    default:
+        break;
+    }
+}

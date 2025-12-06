@@ -143,6 +143,20 @@ namespace linalg
                             triangular_type       tri_type,
                             diagonal_type         diag_type,
                             const csrtrsv_descr*  descr);
+
+    struct csrmv_descr;
+
+    void allocate_csrmv_host_data(csrmv_descr* descr);
+    void free_csrmv_host_data(csrmv_descr* descr);
+
+    void host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
+    void host_csrmv_solve(double                alpha,
+                          const csr_matrix&     A,
+                          const vector<double>& x,
+                          double                beta,
+                          vector<double>&       y,
+                          csrmv_algorithm       alg,
+                          const csrmv_descr*    descr);
 }
 
 #endif

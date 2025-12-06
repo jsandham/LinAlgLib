@@ -243,6 +243,19 @@ namespace linalg
                                      diagonal_type         diag_type,
                                      const csrtrsv_descr*  descr);
 
+    LINALGLIB_API void create_csrmv_descr(csrmv_descr** descr);
+    LINALGLIB_API void destroy_csrmv_descr(csrmv_descr* descr);
+
+    LINALGLIB_API void csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
+
+    LINALGLIB_API void csrmv_solve(double                alpha,
+                                   const csr_matrix&     A,
+                                   const vector<double>& x,
+                                   double                beta,
+                                   vector<double>&       y,
+                                   csrmv_algorithm       alg,
+                                   const csrmv_descr*    descr);
+
 }
 
 #endif

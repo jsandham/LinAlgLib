@@ -42,6 +42,15 @@ namespace linalg
         non_unit, /*!< Non-unit diagonal */
         unit /*!< Unit diagonal */
     };
+
+    /*! \brief Enumeration for CSR matrix-vector multiplication algorithms. */
+    enum class csrmv_algorithm
+    {
+        default_algorithm, /*!< Default algorithm */
+        merge_path,
+        rowsplit,
+        nnzsplit
+    };
 } // namespace linalg
 
 #endif // LINEAR_ENUMS_H

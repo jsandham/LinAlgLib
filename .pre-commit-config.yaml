@@ -1,0 +1,46 @@
+# .pre-commit-config.yaml
+
+# Controls the default behavior of pre-commit
+default_language_version:
+  # Specify the Python version for hooks that use Python
+  python: python3
+minimum_pre_commit_version: '2.9.2'
+fail_fast: false
+
+repos:
+  # This repository contains various hooks for C and C++ projects
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0 # Use the latest stable version
+    hooks:
+      # Hook 1: General file hygiene checks
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # This repository provides the official pre-commit hook for clang-format
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5 # Use the latest stable version
+    hooks:
+      # Hook 2: Clang-format execution
+      - id: clang-format
+        # Files to target (C, C++, headers)
+        files: '\.(c|cc|cxx|cpp|h|hpp|hxx|h\+\+|cu|cuh)$'
+        # Pass the --style=file argument to clang-format.
+        # This tells clang-format to look for your .clang-format file in the project root.
+        args: ['--style=file', '-i']
+
+  # Clang-Tidy (Static Analysis and Linting)
+  # - repo: https://github.com/pocc/pre-commit-hooks
+  #   rev: v1.3.5
+  #   hooks:
+  #     - id: clang-tidy
+  #       name: clang-tidy (Modernize & Bug Checks)
+  #       files: '\.(cc|cxx|cpp|cu)$' # Often only run on source files, not headers
+  #       args:
+  #         # Specify the checks you want to run (e.g., enable all modernize and bugprone checks)
+  #         # - --checks=modernize-*,bugprone-*,performance-*
+  #         - --checks=performance-*
+  #         # If you have a compilation database (compile_commands.json), add it here.
+  #         # If you don't, clang-tidy will use a simpler check, which may have limitations.
+  #         #- --extra-arg-before=-p=build/compile_commands.json

@@ -264,3 +264,57 @@ void linalg::csrtrsv_solve(const csr_matrix&     A,
                             diag_type,
                             descr);
 }
+
+struct linalg::csrmv_descr
+{
+};
+
+void linalg::create_csrmv_descr(csrmv_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csrmv_descr");
+
+    *descr = new csrmv_descr;
+    allocate_csrmv_device_data(*descr);
+}
+
+void linalg::destroy_csrmv_descr(csrmv_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csrmv_descr");
+
+    if(descr != nullptr)
+    {
+        free_csrmv_device_data(descr);
+
+        delete descr;
+    }
+}
+
+void linalg::csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csrmv_analysis");
+
+    return backend_dispatch(
+        "linalg::csrmv_analysis", host_csrmv_analysis, device_csrmv_analysis, A, alg, descr);
+}
+
+void linalg::csrmv_solve(double                alpha,
+                         const csr_matrix&     A,
+                         const vector<double>& x,
+                         double                beta,
+                         vector<double>&       y,
+                         csrmv_algorithm       alg,
+                         const csrmv_descr*    descr)
+{
+    ROUTINE_TRACE("linalg::csrmv_solve");
+
+    return backend_dispatch("linalg::csrmv_solve",
+                            host_csrmv_solve,
+                            device_csrmv_solve,
+                            alpha,
+                            A,
+                            x,
+                            beta,
+                            y,
+                            alg,
+                            descr);
+}

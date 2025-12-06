@@ -1771,3 +1771,41 @@ void linalg::cuda_csrtrsv_solve(int                  m,
     // }
     // std::cout << std::endl;
 }
+
+struct linalg::csrmv_descr
+{
+};
+
+void linalg::allocate_csrmv_cuda_data(csrmv_descr* descr) {}
+
+void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
+{
+    if(descr != nullptr)
+    {
+    }
+}
+
+void linalg::cuda_csrmv_analysis(int             m,
+                                 int             n,
+                                 int             nnz,
+                                 const int*      csr_row_ptr,
+                                 const int*      csr_col_ind,
+                                 const double*   csr_val,
+                                 csrmv_algorithm alg,
+                                 csrmv_descr*    descr)
+{
+}
+void linalg::cuda_csrmv_solve(int                m,
+                              int                n,
+                              int                nnz,
+                              double             alpha,
+                              const int*         csr_row_ptr,
+                              const int*         csr_col_ind,
+                              const double*      csr_val,
+                              const double*      x,
+                              double             beta,
+                              double*            y,
+                              csrmv_algorithm    alg,
+                              const csrmv_descr* descr)
+{
+}

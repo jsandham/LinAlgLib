@@ -35,5 +35,12 @@ namespace linalg
  * This structure holds additional parameters for the CSR triangular solve operation.
  */
     struct csrtrsv_descr;
+
+    /*! \brief Structure for CSR matrix-vector multiplication descriptor.
+ * \details
+ * This structure can be used to hold additional parameters for the CSR matrix-vector
+ * multiplication operation.
+ */
+    struct csrmv_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H
