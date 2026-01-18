@@ -479,11 +479,13 @@ bool ilu_precond::is_on_host() const
 ic_precond::ic_precond()
     : on_host(true)
 {
+    create_csric0_descr(&descr_IC);
     create_csrtrsv_descr(&descr_L);
     create_csrtrsv_descr(&descr_LT);
 }
 ic_precond::~ic_precond()
 {
+    destroy_csric0_descr(descr_IC);
     destroy_csrtrsv_descr(descr_L);
     destroy_csrtrsv_descr(descr_LT);
 }
@@ -533,6 +535,12 @@ void ic_precond::build(const csr_matrix& A)
             }
         }
     }
+
+    // Peroform analysis for incomplete Cholesky factorization
+    csric0_analysis(this->LLT, this->descr_IC);
+
+    // Compute the incomplete Cholesky factorization
+    csric0_compute(this->LLT, this->descr_IC);
 
     // Analyze L and L^T factors for triangular solves
     csrtrsv_analysis(this->LLT, triangular_type::lower, diagonal_type::non_unit, this->descr_L);

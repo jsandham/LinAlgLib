@@ -60,6 +60,22 @@ int main()
 
     linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
+    A.print_matrix("A");
+
+    linalg::csr_matrix A_copy;
+    A_copy.copy_from(A);
+
+    linalg::csric0_descr* descr_IC = nullptr;
+    linalg::create_csric0_descr(&descr_IC);
+
+    linalg::csric0_analysis(A_copy, descr_IC);
+
+    linalg::csric0_compute(A_copy, descr_IC);
+
+    A_copy.print_matrix("A_copy");
+
+    linalg::destroy_csric0_descr(descr_IC);
+
     // Solution vector
     linalg::vector<double> x(A.get_m());
     x.zeros();

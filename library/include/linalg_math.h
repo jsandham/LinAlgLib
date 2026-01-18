@@ -194,16 +194,6 @@ namespace linalg
         jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 
     /**
-     * @brief Opaque descriptor struct for CSR triangular solve analysis.
-     *
-     * This structure holds preprocessed analysis data for solving triangular systems
-     * using sparse CSR matrices. It should be created via create_csrtrsv_descr(),
-     * populated via csrtrsv_analysis(), and destroyed via destroy_csrtrsv_descr().
-     * Users should not access its members directly.
-     */
-    struct csrtrsv_descr;
-
-    /**
      * @brief Creates an opaque descriptor for CSR triangular solve operations.
      *
      * @param descr A pointer to a csrtrsv_descr* that will be initialized to point
@@ -263,14 +253,6 @@ namespace linalg
                                      const csrtrsv_descr*  descr);
 
     /**
-     * @brief Descriptor for CSR matrix-vector product operations.
-     *
-     * Holds preprocessing data for efficient CSR matrix-vector multiplication.
-     * Created with create_csrmv_descr() and destroyed with destroy_csrmv_descr().
-     */
-    struct csrmv_descr;
-
-    /**
      * @brief Creates an opaque descriptor for CSR matrix-vector product operations.
      *
      * @param descr A pointer to a csrmv_descr* that will be initialized to point
@@ -324,16 +306,6 @@ namespace linalg
                                    vector<double>&       y,
                                    csrmv_algorithm       alg,
                                    const csrmv_descr*    descr);
-
-    /**
-     * @brief Descriptor for CSR matrix-matrix addition operations.
-     *
-     * Holds preprocessing data for computing \f$C = \alpha A + \beta B\f$ in CSR format.
-     * This is a two-stage descriptor: first csrgeam_nnz() determines the sparsity pattern,
-     * then csrgeam_solve() computes the values.
-     * Created with create_csrgeam_descr() and destroyed with destroy_csrgeam_descr().
-     */
-    struct csrgeam_descr;
 
     /**
      * @brief Creates an opaque descriptor for CSR matrix-matrix addition operations.
@@ -396,16 +368,6 @@ namespace linalg
                                      csr_matrix&          C,
                                      csrgeam_algorithm    alg,
                                      const csrgeam_descr* descr);
-
-    /**
-     * @brief Descriptor for CSR matrix-matrix multiplication operations.
-     *
-     * Holds preprocessing data for computing \f$C = \alpha A \cdot B + \beta D\f$ in CSR format.
-     * This is a two-stage descriptor: first csrgemm_nnz() determines the sparsity pattern,
-     * then csrgemm_solve() computes the values.
-     * Created with create_csrgemm_descr() and destroyed with destroy_csrgemm_descr().
-     */
-    struct csrgemm_descr;
 
     /**
      * @brief Creates an opaque descriptor for CSR matrix-matrix multiplication operations.
@@ -472,6 +434,47 @@ namespace linalg
                                      csr_matrix&          C,
                                      csrgemm_algorithm    alg,
                                      const csrgemm_descr* descr);
+
+    /**
+     * @brief Creates an opaque descriptor for CSR incomplete Cholesky (IC(0)) factorization.
+     *
+     * @param descr A pointer to a csric0_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csric0_descr
+     */
+    LINALGLIB_API void create_csric0_descr(csric0_descr** descr);
+
+    /**
+     * @brief Destroys a CSR incomplete Cholesky (IC(0)) factorization descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csric0_descr
+     */
+    LINALGLIB_API void destroy_csric0_descr(csric0_descr* descr);
+
+    /**
+     * @brief Performs analysis for CSR incomplete Cholesky (IC(0)) factorization.
+     *
+     * Preprocesses a matrix to prepare for subsequent IC(0) factorization.
+     *
+     * @param A The input `csr_matrix`.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csric0_compute
+     */
+    LINALGLIB_API void csric0_analysis(const csr_matrix& A, csric0_descr* descr);
+
+    /**
+     * @brief Compute an inplace CSR incomplete Cholesky (IC(0)) factorization.
+     *
+     * Uses preprocessing information from a prior csric0_analysis() call.
+     * @param A The `csr_matrix` to factorize in place.
+     * @param descr The descriptor populated by a prior csric0_analysis() call.
+     * @see csric0_analysis
+     */
+    LINALGLIB_API void csric0_compute(csr_matrix& A, const csric0_descr* descr);
 }
 
 #endif

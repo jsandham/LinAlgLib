@@ -546,7 +546,7 @@ void linalg::allocate_csrmv_device_data(csrmv_descr* descr)
 
     if constexpr(is_cuda_available())
     {
-        CALL_CUDA(allocate_csrmv_cuda_data(descr));
+        //CALL_CUDA(allocate_csrmv_cuda_data(descr));
     }
     else
     {
@@ -833,6 +833,81 @@ void linalg::device_csrgemm_solve(double               alpha,
                                      C.get_row_ptr(),
                                      C.get_col_ind(),
                                      C.get_val()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}
+
+void linalg::allocate_csric0_device_data(csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::allocate_csric0_device_data");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(allocate_csric0_cuda_data(descr));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}
+
+void linalg::free_csric0_device_data(csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::free_csric0_device_data");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(free_csric0_cuda_data(descr));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}
+
+void linalg::device_csric0_analysis(const csr_matrix& A, csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::device_csric0_analysis");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_csric0_analysis(A.get_m(),
+                                       A.get_n(),
+                                       A.get_nnz(),
+                                       A.get_row_ptr(),
+                                       A.get_col_ind(),
+                                       A.get_val(),
+                                       descr));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}
+void linalg::device_csric0_compute(csr_matrix& A, const csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::device_csric0_compute");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_csric0_compute(A.get_m(),
+                                      A.get_n(),
+                                      A.get_nnz(),
+                                      A.get_row_ptr(),
+                                      A.get_col_ind(),
+                                      A.get_val(),
+                                      descr));
     }
     else
     {

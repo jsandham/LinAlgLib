@@ -173,6 +173,14 @@ namespace linalg
                               csrgemm_algorithm    alg,
                               const csrgemm_descr* descr);
 
+    struct csric0_descr;
+
+    void allocate_csric0_device_data(csric0_descr* descr);
+    void free_csric0_device_data(csric0_descr* descr);
+
+    void device_csric0_analysis(const csr_matrix& A, csric0_descr* descr);
+    void device_csric0_compute(csr_matrix& A, const csric0_descr* descr);
+
 } // namespace linalg
 
 #endif

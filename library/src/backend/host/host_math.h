@@ -161,6 +161,11 @@ namespace linalg
                             csrgemm_algorithm    alg,
                             const csrgemm_descr* descr);
 
+    struct csric0_descr;
+
+    void host_csric0_analysis(const csr_matrix& A, csric0_descr* descr);
+
+    void host_csric0_compute(csr_matrix& A, const csric0_descr* descr);
 }
 
 #endif

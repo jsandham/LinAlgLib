@@ -29,22 +29,51 @@
 
 namespace linalg
 {
-    /*! \brief Structure for CSR triangular solve descriptor.
- *
- * \details
- * This structure holds additional parameters for the CSR triangular solve operation.
- */
+    /**
+     * @brief Opaque descriptor struct for CSR triangular solve analysis.
+     *
+     * This structure holds preprocessed analysis data for solving triangular systems
+     * using sparse CSR matrices. It should be created via create_csrtrsv_descr(),
+     * populated via csrtrsv_analysis(), and destroyed via destroy_csrtrsv_descr().
+     * Users should not access its members directly.
+     */
     struct csrtrsv_descr;
 
-    /*! \brief Structure for CSR matrix-vector multiplication descriptor.
- * \details
- * This structure can be used to hold additional parameters for the CSR matrix-vector
- * multiplication operation.
- */
+    /**
+     * @brief Descriptor for CSR matrix-vector product operations.
+     *
+     * Holds preprocessing data for efficient CSR matrix-vector multiplication.
+     * Created with create_csrmv_descr() and destroyed with destroy_csrmv_descr().
+     */
     struct csrmv_descr;
 
+    /**
+     * @brief Descriptor for CSR matrix-matrix addition operations.
+     *
+     * Holds preprocessing data for computing \f$C = \alpha A + \beta B\f$ in CSR format.
+     * This is a two-stage descriptor: first csrgeam_nnz() determines the sparsity pattern,
+     * then csrgeam_solve() computes the values.
+     * Created with create_csrgeam_descr() and destroyed with destroy_csrgeam_descr().
+     */
     struct csrgeam_descr;
 
+    /**
+     * @brief Descriptor for CSR matrix-matrix multiplication operations.
+     *
+     * Holds preprocessing data for computing \f$C = \alpha A \cdot B + \beta D\f$ in CSR format.
+     * This is a two-stage descriptor: first csrgemm_nnz() determines the sparsity pattern,
+     * then csrgemm_solve() computes the values.
+     * Created with create_csrgemm_descr() and destroyed with destroy_csrgemm_descr().
+     */
     struct csrgemm_descr;
+
+    /**
+     * @brief Descriptor for CSR incomplete Cholesky (IC(0)) factorization.
+     *
+     * Holds preprocessing data for computing the incomplete Cholesky factorization
+     * of a sparse matrix in CSR format. Created with create_csric0_descr() and
+     * destroyed with destroy_csric0_descr().
+     */
+    struct csric0_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H

@@ -1116,6 +1116,8 @@ namespace linalg
     {
         ROUTINE_TRACE("host_csric0_impl");
 
+        std::cout << "Warning: host_csric0_impl is not optimized for performance." << std::endl;
+
         std::vector<int> diag_ptr(m, -1);
 
         for(int row = 0; row < m; row++)
@@ -1586,6 +1588,7 @@ void linalg::host_csrtrsv_analysis(const csr_matrix& A,
                                    diagonal_type     diag_type,
                                    csrtrsv_descr*    descr)
 {
+    ROUTINE_TRACE("linalg::host_csrtrsv_analysis");
 }
 void linalg::host_csrtrsv_solve(const csr_matrix&     A,
                                 const vector<double>& b,
@@ -1783,4 +1786,25 @@ void linalg::host_csrgemm_solve(double               alpha,
                       C.get_row_ptr(),
                       C.get_col_ind(),
                       C.get_val());
+}
+
+void linalg::host_csric0_analysis(const csr_matrix& A, csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csric0_analysis");
+}
+
+void linalg::host_csric0_compute(csr_matrix& A, const csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csric0_compute");
+
+    // Store structural and numerical zero info in descr?
+    // Probably dont neet triangular_type for IC(0)?
+    host_csric0_impl(A.get_m(),
+                     A.get_n(),
+                     A.get_nnz(),
+                     A.get_row_ptr(),
+                     A.get_col_ind(),
+                     A.get_val(),
+                     nullptr,
+                     nullptr);
 }

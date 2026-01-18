@@ -370,3 +370,43 @@ void linalg::csrgemm_solve(double               alpha,
                             alg,
                             descr);
 }
+
+struct linalg::csric0_descr
+{
+};
+
+void linalg::create_csric0_descr(csric0_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csric0_descr");
+
+    *descr = new csric0_descr;
+    //allocate_csric0_device_data(*descr);
+}
+
+void linalg::destroy_csric0_descr(csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csric0_descr");
+
+    if(descr != nullptr)
+    {
+        //free_csric0_device_data(descr);
+
+        delete descr;
+    }
+}
+
+void linalg::csric0_analysis(const csr_matrix& A, csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csric0_analysis");
+
+    return backend_dispatch(
+        "linalg::csric0_analysis", host_csric0_analysis, device_csric0_analysis, A, descr);
+}
+
+void linalg::csric0_compute(csr_matrix& A, const csric0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csric0_compute");
+
+    return backend_dispatch(
+        "linalg::csric0_compute", host_csric0_compute, device_csric0_compute, A, descr);
+}

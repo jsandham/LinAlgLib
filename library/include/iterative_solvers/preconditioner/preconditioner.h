@@ -511,6 +511,8 @@ namespace linalg
      */
         csr_matrix LLT;
 
+        csric0_descr* descr_IC;
+
         csrtrsv_descr* descr_L;
         csrtrsv_descr* descr_LT;
 
