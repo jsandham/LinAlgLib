@@ -278,7 +278,7 @@ void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) 
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector");
 
-    csrmv_descr* descr;
+    csrmv_descr* descr = nullptr;
     create_csrmv_descr(&descr);
 
     csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
@@ -292,7 +292,7 @@ void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<doub
 {
     ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
 
-    csrmv_descr* descr;
+    csrmv_descr* descr = nullptr;
     create_csrmv_descr(&descr);
 
     csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
@@ -308,7 +308,7 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
 
     csr_matrix D; // Empty matrix for D
 
-    csrgemm_descr* descr;
+    csrgemm_descr* descr = nullptr;
     create_csrgemm_descr(&descr);
 
     csrgemm_nnz(*this, B, C, D, csrgemm_algorithm::default_algorithm, descr);

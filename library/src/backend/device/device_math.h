@@ -181,6 +181,14 @@ namespace linalg
     void device_csric0_analysis(const csr_matrix& A, csric0_descr* descr);
     void device_csric0_compute(csr_matrix& A, const csric0_descr* descr);
 
+    struct csrilu0_descr;
+
+    void allocate_csrilu0_device_data(csrilu0_descr* descr);
+    void free_csrilu0_device_data(csrilu0_descr* descr);
+
+    void device_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
+    void device_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
+
 } // namespace linalg
 
 #endif

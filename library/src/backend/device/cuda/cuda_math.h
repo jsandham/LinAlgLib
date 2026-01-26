@@ -333,6 +333,27 @@ namespace linalg
                              double*             csr_val,
                              const csric0_descr* descr);
 
+    struct csrilu0_descr;
+
+    void allocate_csrilu0_cuda_data(csrilu0_descr* descr);
+    void free_csrilu0_cuda_data(csrilu0_descr* descr);
+
+    void cuda_csrilu0_analysis(int            m,
+                               int            n,
+                               int            nnz,
+                               const int*     csr_row_ptr,
+                               const int*     csr_col_ind,
+                               const double*  csr_val,
+                               csrilu0_descr* descr);
+
+    void cuda_csrilu0_compute(int                  m,
+                              int                  n,
+                              int                  nnz,
+                              const int*           csr_row_ptr,
+                              const int*           csr_col_ind,
+                              double*              csr_val,
+                              const csrilu0_descr* descr);
+
 }
 
 #endif

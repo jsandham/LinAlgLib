@@ -166,6 +166,12 @@ namespace linalg
     void host_csric0_analysis(const csr_matrix& A, csric0_descr* descr);
 
     void host_csric0_compute(csr_matrix& A, const csric0_descr* descr);
+
+    struct csrilu0_descr;
+
+    void host_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
+
+    void host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
 }
 
 #endif

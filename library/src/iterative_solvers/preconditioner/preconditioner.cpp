@@ -418,11 +418,13 @@ bool SSOR_precond::is_on_host() const
 ilu_precond::ilu_precond()
     : on_host(true)
 {
+    create_csrilu0_descr(&descr_ILU);
     create_csrtrsv_descr(&descr_L);
     create_csrtrsv_descr(&descr_U);
 }
 ilu_precond::~ilu_precond()
 {
+    destroy_csrilu0_descr(descr_ILU);
     destroy_csrtrsv_descr(descr_L);
     destroy_csrtrsv_descr(descr_U);
 }
@@ -433,11 +435,11 @@ void ilu_precond::build(const csr_matrix& A)
 
     this->LU.copy_from(A);
 
-    int structural_zero = -1;
-    int numeric_zero    = -1;
+    // Perform analysis for incomplete LU factorization
+    csrilu0_analysis(this->LU, this->descr_ILU);
 
-    // In place incomplete LU factorization
-    csrilu0(LU, &structural_zero, &numeric_zero);
+    // Compute the incomplete LU factorization
+    csrilu0_compute(this->LU, this->descr_ILU);
 
     // Analyze L and U factors for triangular solves
     csrtrsv_analysis(this->LU, triangular_type::lower, diagonal_type::unit, this->descr_L);
@@ -496,47 +498,7 @@ void ic_precond::build(const csr_matrix& A)
 
     this->LLT.copy_from(A);
 
-    int structural_zero = -1;
-    int numeric_zero    = -1;
-
-    int     m               = LLT.get_m();
-    int*    csr_row_ptr_LLT = LLT.get_row_ptr();
-    int*    csr_col_ind_LLT = LLT.get_col_ind();
-    double* csr_val_LLT     = LLT.get_val();
-
-    // In place incomplete Cholesky factorization
-    csric0(LLT, &structural_zero, &numeric_zero);
-
-    // Fill inplace the upper triangular part with L^T
-    for(int row = 0; row < m; row++)
-    {
-        int start = csr_row_ptr_LLT[row];
-        int end   = csr_row_ptr_LLT[row + 1];
-
-        for(int j = start; j < end; j++)
-        {
-            int col = csr_col_ind_LLT[j];
-
-            if(col < row)
-            {
-                double val = csr_val_LLT[j];
-
-                int start2 = csr_row_ptr_LLT[col];
-                int end2   = csr_row_ptr_LLT[col + 1];
-
-                for(int k = start2; k < end2; k++)
-                {
-                    if(csr_col_ind_LLT[k] == row)
-                    {
-                        csr_val_LLT[k] = val;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // Peroform analysis for incomplete Cholesky factorization
+    // Perform analysis for incomplete Cholesky factorization
     csric0_analysis(this->LLT, this->descr_IC);
 
     // Compute the incomplete Cholesky factorization

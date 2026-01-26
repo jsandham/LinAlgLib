@@ -475,6 +475,47 @@ namespace linalg
      * @see csric0_analysis
      */
     LINALGLIB_API void csric0_compute(csr_matrix& A, const csric0_descr* descr);
+
+    /**
+     * @brief Creates an opaque descriptor for CSR incomplete LU (ILU(0)) factorization.
+     *
+     * @param descr A pointer to a csrilu0_descr* that will be initialized to point
+     * to a newly allocated descriptor.
+     * @see destroy_csrilu0_descr
+     */
+    LINALGLIB_API void create_csrilu0_descr(csrilu0_descr** descr);
+
+    /**
+     * @brief Destroys a CSR incomplete LU (ILU(0)) factorization descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_csrilu0_descr
+     */
+    LINALGLIB_API void destroy_csrilu0_descr(csrilu0_descr* descr);
+
+    /**
+     * @brief Performs analysis for CSR incomplete LU (ILU(0)) factorization.
+     *
+     * Preprocesses a matrix to prepare for subsequent ILU(0) factorization.
+     *
+     * @param A The input `csr_matrix`.
+     * @param descr The descriptor to populate with analysis results.
+     * @see csrilu0_compute
+     */
+    LINALGLIB_API void csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
+
+    /**
+     * @brief Compute an inplace CSR incomplete LU (ILU(0)) factorization.
+     *
+     * Uses preprocessing information from a prior csrilu0_analysis() call.
+     * @param A The `csr_matrix` to factorize in place.
+     * @param descr The descriptor populated by a prior csrilu0_analysis() call.
+     * @see csrilu0_analysis
+     */
+    LINALGLIB_API void csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
 }
 
 #endif

@@ -380,7 +380,7 @@ void linalg::create_csric0_descr(csric0_descr** descr)
     ROUTINE_TRACE("linalg::create_csric0_descr");
 
     *descr = new csric0_descr;
-    //allocate_csric0_device_data(*descr);
+    allocate_csric0_device_data(*descr);
 }
 
 void linalg::destroy_csric0_descr(csric0_descr* descr)
@@ -389,7 +389,7 @@ void linalg::destroy_csric0_descr(csric0_descr* descr)
 
     if(descr != nullptr)
     {
-        //free_csric0_device_data(descr);
+        free_csric0_device_data(descr);
 
         delete descr;
     }
@@ -409,4 +409,43 @@ void linalg::csric0_compute(csr_matrix& A, const csric0_descr* descr)
 
     return backend_dispatch(
         "linalg::csric0_compute", host_csric0_compute, device_csric0_compute, A, descr);
+}
+
+struct linalg::csrilu0_descr
+{
+};
+
+void linalg::create_csrilu0_descr(csrilu0_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_csrilu0_descr");
+
+    *descr = new csrilu0_descr;
+    allocate_csrilu0_device_data(*descr);
+}
+
+void linalg::destroy_csrilu0_descr(csrilu0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_csrilu0_descr");
+
+    if(descr != nullptr)
+    {
+        free_csrilu0_device_data(descr);
+        delete descr;
+    }
+}
+
+void linalg::csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csrilu0_analysis");
+
+    return backend_dispatch(
+        "linalg::csrilu0_analysis", host_csrilu0_analysis, device_csrilu0_analysis, A, descr);
+}
+
+void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::csrilu0_compute");
+
+    return backend_dispatch(
+        "linalg::csrilu0_compute", host_csrilu0_compute, device_csrilu0_compute, A, descr);
 }

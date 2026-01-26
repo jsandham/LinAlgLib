@@ -53,6 +53,7 @@ int main()
     //  0 -1  4 -1  0
     //  0  0 -1  4 -1
     // -1  0  0 -1  4
+
     std::vector<int>    csr_row_ptr = {0, 3, 6, 9, 12, 15};
     std::vector<int>    csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
     std::vector<double> csr_val
@@ -72,6 +73,7 @@ int main()
 
     linalg::csric0_compute(A_copy, descr_IC);
 
+    A.print_matrix("A after IC factorization");
     A_copy.print_matrix("A_copy");
 
     linalg::destroy_csric0_descr(descr_IC);

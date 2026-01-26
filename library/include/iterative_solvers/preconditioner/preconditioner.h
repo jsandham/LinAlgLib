@@ -440,6 +440,8 @@ namespace linalg
      */
         csr_matrix LU;
 
+        csrilu0_descr* descr_ILU;
+
         csrtrsv_descr* descr_L;
         csrtrsv_descr* descr_U;
 

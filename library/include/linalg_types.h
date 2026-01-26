@@ -75,5 +75,14 @@ namespace linalg
      * destroyed with destroy_csric0_descr().
      */
     struct csric0_descr;
+
+    /**
+     * @brief Descriptor for CSR incomplete LU (ILU(0)) factorization.
+     *
+     * Holds preprocessing data for computing the incomplete LU factorization
+     * of a sparse matrix in CSR format. Created with create_csrilu0_descr() and
+     * destroyed with destroy_csrilu0_descr().
+     */
+    struct csrilu0_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H

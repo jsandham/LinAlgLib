@@ -503,4 +503,35 @@ __device__ bool
     return false;
 }
 
+template <uint32_t HASH_TABLE_SIZE, typename T>
+__device__ T atomic_find_val(int* key_table, T* values_table, int key, T EMPTY_VAL)
+{
+    // 1. Calculate the initial hash index
+    uint32_t start_index = key % HASH_TABLE_SIZE;
+    uint32_t index       = start_index;
+
+    // 2. Linear Probing to find the key
+    for(uint32_t i = 0; i < HASH_TABLE_SIZE; ++i)
+    {
+        // Calculate the probe index (circular)
+        index = (start_index + i) % HASH_TABLE_SIZE;
+
+        int current_key = key_table[index];
+
+        if(current_key == key)
+        {
+            // Key found, return the associated value
+            return values_table[index];
+        }
+        else if(current_key == EMPTY_VAL)
+        {
+            // Key not found, reached an empty slot
+            return -1; // Indicate that the key was not found
+        }
+    }
+
+    // Key not found after probing all slots
+    return -1;
+}
+
 #endif

@@ -1183,6 +1183,47 @@ namespace linalg
         }
     }
 
+    //--------------------------------------------------------------------------------
+    // Given a matrix A with lower part L, fills the upper partof A with L^T
+    // (assumes A is symmetric)
+    //--------------------------------------------------------------------------------
+    static void host_fill_upper_with_lower_transpose_impl(
+        int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val)
+    {
+        ROUTINE_TRACE("host_fill_upper_with_lower_transpose_impl");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int row = 0; row < m; row++)
+        {
+            int row_start = csr_row_ptr[row];
+            int row_end   = csr_row_ptr[row + 1];
+
+            for(int j = row_start; j < row_end; j++)
+            {
+                int col = csr_col_ind[j];
+
+                if(col > row)
+                {
+                    // Search for position of (col, row)
+                    int row_start_T = csr_row_ptr[col];
+                    int row_end_T   = csr_row_ptr[col + 1];
+
+                    for(int k = row_start_T; k < row_end_T; k++)
+                    {
+                        int col_T = csr_col_ind[k];
+                        if(col_T == row)
+                        {
+                            csr_val[j] = csr_val[k];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     //-------------------------------------------------------------------------------
     // solve Lx = b where L is a lower triangular sparse matrix
     //-------------------------------------------------------------------------------
@@ -1798,7 +1839,6 @@ void linalg::host_csric0_compute(csr_matrix& A, const csric0_descr* descr)
     ROUTINE_TRACE("linalg::host_csric0_compute");
 
     // Store structural and numerical zero info in descr?
-    // Probably dont neet triangular_type for IC(0)?
     host_csric0_impl(A.get_m(),
                      A.get_n(),
                      A.get_nnz(),
@@ -1807,4 +1847,31 @@ void linalg::host_csric0_compute(csr_matrix& A, const csric0_descr* descr)
                      A.get_val(),
                      nullptr,
                      nullptr);
+
+    A.print_matrix("A after IC factorization");
+
+    host_fill_upper_with_lower_transpose_impl(
+        A.get_m(), A.get_n(), A.get_nnz(), A.get_row_ptr(), A.get_col_ind(), A.get_val());
+
+    A.print_matrix("A after filling upper with lower transpose");
+}
+
+void linalg::host_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csrilu0_analysis");
+}
+
+void linalg::host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csrilu0_compute");
+
+    // Store structural and numerical zero info in descr?
+    host_csrilu0_impl(A.get_m(),
+                      A.get_n(),
+                      A.get_nnz(),
+                      A.get_row_ptr(),
+                      A.get_col_ind(),
+                      A.get_val(),
+                      nullptr,
+                      nullptr);
 }
