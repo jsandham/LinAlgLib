@@ -1850,10 +1850,10 @@ void linalg::host_csric0_compute(csr_matrix& A, const csric0_descr* descr)
 
     A.print_matrix("A after IC factorization");
 
-    host_fill_upper_with_lower_transpose_impl(
-        A.get_m(), A.get_n(), A.get_nnz(), A.get_row_ptr(), A.get_col_ind(), A.get_val());
+    //host_fill_upper_with_lower_transpose_impl(
+    //    A.get_m(), A.get_n(), A.get_nnz(), A.get_row_ptr(), A.get_col_ind(), A.get_val());
 
-    A.print_matrix("A after filling upper with lower transpose");
+    //A.print_matrix("A after filling upper with lower transpose");
 }
 
 void linalg::host_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)

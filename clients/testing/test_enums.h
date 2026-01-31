@@ -58,6 +58,8 @@ namespace Testing
         SpGEMM,
         SpGEAM,
         Transpose,
+        CSRIC0,
+        CSRILU0,
         ExclusiveScan,
         Unknown
     };
@@ -148,6 +150,10 @@ namespace Testing
             return "SpTRSV";
         case Fixture::Transpose:
             return "Transpose";
+        case Fixture::CSRIC0:
+            return "CSRIC0";
+        case Fixture::CSRILU0:
+            return "CSRILU0";
         case Fixture::ExclusiveScan:
             return "ExclusiveScan";
         }

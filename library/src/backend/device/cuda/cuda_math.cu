@@ -1796,6 +1796,7 @@ struct linalg::csric0_descr
 
 void linalg::allocate_csric0_cuda_data(csric0_descr* descr)
 {
+    std::cout << "allocate_csric0_cuda_data" << std::endl;
     descr->done_array = nullptr;
     descr->row_perm   = nullptr;
     descr->diag_ind   = nullptr;
@@ -1833,7 +1834,7 @@ void linalg::cuda_csric0_analysis(int           m,
                                   const double* csr_val,
                                   csric0_descr* descr)
 {
-    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
+    std::cout << "cuda_csric0_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
 
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
@@ -1859,27 +1860,27 @@ void linalg::cuda_csric0_analysis(int           m,
                                                                           descr->done_array);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    // std::vector<int> hdiag_ind(m, 10);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
+    std::vector<int> hdiag_ind(m, 10);
+    CHECK_CUDA(
+        cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
 
-    // std::cout << "diag_ind" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hdiag_ind[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
+    std::cout << "diag_ind" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        std::cout << hdiag_ind[i] << " ";
+    }
+    std::cout << "" << std::endl;
 
-    // std::vector<int> hdone_array(m, 0);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
+    std::vector<int> hdone_array(m, 0);
+    CHECK_CUDA(
+        cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
 
-    // std::cout << "done_array" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hdone_array[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
+    std::cout << "done_array" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        std::cout << hdone_array[i] << " ";
+    }
+    std::cout << "" << std::endl;
 
     fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->row_perm);
     CHECK_CUDA_LAUNCH_ERROR();
@@ -1892,16 +1893,16 @@ void linalg::cuda_csric0_analysis(int           m,
     // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
     thrust::sort_by_key(d_keys, d_keys + m, d_values);
 
-    // std::vector<int> hrow_perm(m, 0);
-    // CHECK_CUDA(
-    //     cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+    std::vector<int> hrow_perm(m, 0);
+    CHECK_CUDA(
+        cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
 
-    // std::cout << "row_perm" << std::endl;
-    // for(int i = 0; i < m; i++)
-    // {
-    //     std::cout << hrow_perm[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
+    std::cout << "row_perm" << std::endl;
+    for(int i = 0; i < m; i++)
+    {
+        std::cout << hrow_perm[i] << " ";
+    }
+    std::cout << "" << std::endl;
 }
 
 void linalg::cuda_csric0_compute(int                 m,
@@ -1918,6 +1919,7 @@ void linalg::cuda_csric0_compute(int                 m,
 
     CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
 
+    std::cout << "cuda_csric0_compute m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
     csric0_solve_kernel<256, 32, 128><<<((m - 1) / (256 / 32) + 1), 256>>>(
         m, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array, descr->row_perm);
     CHECK_CUDA_LAUNCH_ERROR();

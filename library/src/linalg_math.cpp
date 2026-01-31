@@ -373,6 +373,9 @@ void linalg::csrgemm_solve(double               alpha,
 
 struct linalg::csric0_descr
 {
+    int* done_array;
+    int* row_perm;
+    int* diag_ind;
 };
 
 void linalg::create_csric0_descr(csric0_descr** descr)
@@ -413,6 +416,9 @@ void linalg::csric0_compute(csr_matrix& A, const csric0_descr* descr)
 
 struct linalg::csrilu0_descr
 {
+    int* done_array;
+    int* row_perm;
+    int* diag_ind;
 };
 
 void linalg::create_csrilu0_descr(csrilu0_descr** descr)

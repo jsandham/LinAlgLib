@@ -38,7 +38,7 @@ __global__ void csric0_solve_kernel(int m,
                                     T* __restrict__ csr_val,
                                     const int* __restrict__ csr_diag_ind,
                                     int* __restrict__ done_array,
-                                    int* __restrict__ row_perm)
+                                    const int* __restrict__ row_perm)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -49,7 +49,7 @@ __global__ void csric0_solve_kernel(int m,
     __shared__ int shared_key[(BLOCKSIZE / WARPSIZE) * HASHSIZE];
     __shared__ int shared_val[(BLOCKSIZE / WARPSIZE) * HASHSIZE];
 
-    for(int i = tid; i < HASHSIZE; i += BLOCKSIZE)
+    for(int i = tid; i < (BLOCKSIZE / WARPSIZE) * HASHSIZE; i += BLOCKSIZE)
     {
         shared_key[i] = -1;
         shared_val[i] = 0;
@@ -66,25 +66,29 @@ __global__ void csric0_solve_kernel(int m,
     assert(row >= 0 && row < m);
 
     const int start    = csr_row_ptr[row];
-    const int end      = csr_row_ptr[row + 1];
     const int diag_end = csr_diag_ind[row];
 
-    for(int i = start + lid; i < end; i += WARPSIZE)
+    assert(start >= 0);
+    assert(diag_end >= 0);
+
+    for(int i = start + lid; i < diag_end; i += WARPSIZE)
     {
         const int col = csr_col_ind[i];
 
-        atomic_insert_key_value<HASHSIZE>(&shared_key[(BLOCKSIZE / WARPSIZE) * wid],
-                                          &shared_val[(BLOCKSIZE / WARPSIZE) * wid],
-                                          col,
-                                          i,
-                                          -1);
+        atomic_insert_key_value2<HASHSIZE>(&shared_key[(BLOCKSIZE / WARPSIZE) * wid],
+                                           &shared_val[(BLOCKSIZE / WARPSIZE) * wid],
+                                           col,
+                                           i,
+                                           -1);
     }
+
+    __syncthreads();
 
     T diag_sum = static_cast<T>(0);
     for(int i = start; i < diag_end; i++)
     {
         const int col_i = csr_col_ind[i];
-        assert(col_i >= 0 && col_i < m);
+        assert(col_i >= 0 && col_i < row);
 
         // 1. Create a temporary atomic reference to the element.
         // This provides an atomic view of the non-atomic data.
@@ -98,14 +102,18 @@ __global__ void csric0_solve_kernel(int m,
             loaded_value = atomic_view.load(cuda::memory_order_acquire);
         }
 
-        const int local_start = csr_row_ptr[col_i];
-        const int local_end   = csr_row_ptr[col_i + 1];
+        const int local_start    = csr_row_ptr[col_i];
+        const int local_diag_end = csr_diag_ind[col_i];
+
+        assert(local_start >= 0);
+        assert(local_diag_end >= 0);
+        assert(csr_col_ind[local_diag_end] == col_i);
 
         T sum = static_cast<T>(0);
-        for(int j = local_start + lid; j < local_end; j += WARPSIZE)
+        for(int j = local_start + lid; j < local_diag_end; j += WARPSIZE)
         {
             const int col_j = csr_col_ind[j];
-            assert(col_j >= 0 && col_j < m);
+            assert(col_j >= 0 && col_j < col_i);
 
             int pos = atomic_find_val<HASHSIZE>(&shared_key[(BLOCKSIZE / WARPSIZE) * wid],
                                                 &shared_val[(BLOCKSIZE / WARPSIZE) * wid],
@@ -114,8 +122,7 @@ __global__ void csric0_solve_kernel(int m,
 
             if(pos != -1)
             {
-                T val_j = csr_val[j];
-                sum     = sum + val_j * csr_val[pos];
+                sum = std::fma(csr_val[j], csr_val[pos], sum);
             }
         }
 
@@ -123,13 +130,24 @@ __global__ void csric0_solve_kernel(int m,
 
         if(lid == 0)
         {
-            csr_val[i] = (csr_val[i] - sum) / csr_val[csr_diag_ind[col_i]];
+            T diag_val = csr_val[local_diag_end];
+            if(diag_val == static_cast<T>(0))
+            {
+                // Handle zero diagonal element
+                diag_val = static_cast<T>(1);
+            }
+            T val = (csr_val[i] - sum) / diag_val;
+
+            // Accumulate squared L[i,k] values for diagonal computation
+            diag_sum   = std::fma(val, val, diag_sum);
+            csr_val[i] = val;
         }
     }
 
     if(lid == 0)
     {
-        csr_val[diag_end] = csr_val[diag_end] - diag_sum;
+        // Diagonal: L[i,i] = sqrt(A[i,i] - sum(L[i,k]^2))
+        csr_val[diag_end] = sqrt(abs(csr_val[diag_end] - diag_sum));
 
         __threadfence();
 

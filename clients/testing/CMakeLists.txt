@@ -85,6 +85,8 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_functions_spgemm.cpp
   test_functions_spgeam.cpp
   test_functions_transpose.cpp
+  test_functions_csric0.cpp
+  test_functions_csrilu0.cpp
   test_functions_exclusive_scan.cpp
 
   tests/test_jacobi.cpp
@@ -104,6 +106,8 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   tests/test_SpMV.cpp
   tests/test_SpTRSV.cpp
   tests/test_SpGEMM.cpp
+  tests/test_csric0.cpp
+  tests/test_csrilu0.cpp
   tests/test_transpose.cpp
   tests/test_exclusive_scan.cpp
 )

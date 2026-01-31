@@ -82,6 +82,10 @@ namespace Testing
             return test_spgeam(arg);
         case Fixture::Transpose:
             return test_transpose(arg);
+        case Fixture::CSRIC0:
+            return test_csric0(arg);
+        case Fixture::CSRILU0:
+            return test_csrilu0(arg);
         }
 
         return false;

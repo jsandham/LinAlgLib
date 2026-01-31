@@ -24,32 +24,6 @@
 //
 //********************************************************************************
 
-#ifndef TEST_FUNCTIONS_H__
-#define TEST_FUNCTIONS_H__
+#include "../test.h"
 
-#include "test_arguments.h"
-
-namespace Testing
-{
-    bool test_dispatch(Arguments arg);
-
-    // Iterative solvers
-    bool test_classical(ClassicalSolver solver_type, Arguments arg);
-    bool test_krylov(KrylovSolver solver_type, Arguments arg);
-    bool test_amg(AMGSolver solver_type, Arguments arg);
-
-    // Math testing
-    bool test_spmv(Arguments arg);
-    bool test_sptrsv(Arguments arg);
-    bool test_spgemm(Arguments arg);
-    bool test_spgeam(Arguments arg);
-    bool test_transpose(Arguments arg);
-    bool test_csric0(Arguments arg);
-    bool test_csrilu0(Arguments arg);
-
-    // Primitive
-    bool test_exclusive_scan(Arguments arg);
-
-} // namespace Testing
-
-#endif
+INSTANTIATE_TEST(Math, CSRILU0, incomplete_lu, "tests/test_csrilu0.yaml");

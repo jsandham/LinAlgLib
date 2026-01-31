@@ -41,26 +41,6 @@ bool Testing::test_sptrsv(Arguments arg)
     csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    std::cout << "Matrix: " << arg.filename << " m: " << mat_A.get_m() << " n: " << mat_A.get_n()
-              << " nnz: " << mat_A.get_nnz() << std::endl;
-
-    // std::vector<int>    hcsr_row_ptr = {0, 1, 3, 6, 10};
-    // std::vector<int>    hcsr_col_ind = {0, 0, 1, 0, 1, 2, 0, 1, 2, 3};
-    // std::vector<double> hcsr_val     = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    // csr_matrix          mat_A(hcsr_row_ptr, hcsr_col_ind, hcsr_val, 4, 4, 10);
-    // std::vector<int>    hcsr_row_ptr = {0, 2, 4, 6, 8};
-    // std::vector<int>    hcsr_col_ind = {0, 1, 1, 2, 2, 3, 3};
-    // std::vector<double> hcsr_val     = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    // csr_matrix          mat_A(hcsr_row_ptr, hcsr_col_ind, hcsr_val, 4, 4, 8);
-
-    std::mt19937                           generator(1234567);
-    std::uniform_real_distribution<double> distribution(-1.0, 1.0);
-
-    //for(int i = 0; i < mat_A.get_nnz(); i++)
-    //{
-    //    mat_A.get_val()[i] = distribution(generator);
-    //}
-
     vector<double> vec_x(mat_A.get_n());
     vec_x.ones();
 
