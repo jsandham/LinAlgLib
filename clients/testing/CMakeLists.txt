@@ -87,6 +87,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   test_functions_transpose.cpp
   test_functions_csric0.cpp
   test_functions_csrilu0.cpp
+  test_functions_tridiagonal_solver.cpp
   test_functions_exclusive_scan.cpp
 
   tests/test_jacobi.cpp
@@ -109,6 +110,7 @@ set(LINALGLIB_CLIENTS_TEST_SOURCE
   tests/test_csric0.cpp
   tests/test_csrilu0.cpp
   tests/test_transpose.cpp
+  tests/test_tridiagonal_solver.cpp
   tests/test_exclusive_scan.cpp
 )
 

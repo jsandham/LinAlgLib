@@ -516,6 +516,28 @@ namespace linalg
      * @see csrilu0_analysis
      */
     LINALGLIB_API void csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
+
+    /**
+     * @brief Solves a tridiagonal system of equations using the Thomas algorithm.
+     *
+     * This function solves the linear system defined by a tridiagonal matrix
+     * represented by its lower diagonal, main diagonal, and upper diagonal vectors.
+     *
+     * @param m The number of rows in the tridiagonal matrix.
+     * @param n The number of columns in the right-hand-side matrix.
+     * @param lower_diag The vector representing the lower diagonal of the tridiagonal matrix.
+     * @param main_diag The vector representing the main diagonal of the tridiagonal matrix.
+     * @param upper_diag The vector representing the upper diagonal of the tridiagonal matrix.
+     * @param rhs The right-hand side vector of the linear system.
+     * @param solution The output vector that will contain the solution to the system.
+     */
+    LINALGLIB_API void tridiagonal_solver(int                   m,
+                                          int                   n,
+                                          const vector<double>& lower_diag,
+                                          const vector<double>& main_diag,
+                                          const vector<double>& upper_diag,
+                                          const vector<double>& rhs,
+                                          vector<double>&       solution);
 }
 
 #endif

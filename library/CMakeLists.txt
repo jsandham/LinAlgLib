@@ -93,7 +93,7 @@ set(LINALGLIB_SOURCE
   src/perfetto_trace.cpp
 )
 
-set(LINALGLIB_CUDA_SOURCE 
+set(LINALGLIB_CUDA_SOURCE
   src/backend/device/cuda/cuda_amg_aggregation.cu
   src/backend/device/cuda/cuda_amg_strength.cu
   src/backend/device/cuda/cuda_math.cu
@@ -115,7 +115,7 @@ if(ENABLE_CUDA)
         message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}.")
         enable_language(CUDA) # Now actually enable it
 
-        set(CMAKE_CUDA_ARCHITECTURES "75;80" CACHE STRING "Target CUDA architectures for project" FORCE)
+        set(CMAKE_CUDA_ARCHITECTURES "75;80;89" CACHE STRING "Target CUDA architectures for project" FORCE)
 
         find_package(CUDAToolkit QUIET)
         if (CUDAToolkit_FOUND)
@@ -129,7 +129,7 @@ if(BUILD_WITH_CUDA)
   add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC} ${LINALGLIB_CUDA_SOURCE})
 
   set_target_properties(linalglib PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-  
+
   # Link necessary CUDA libraries for the CUDA-enabled library
   # CUDA::cudart is often implicitly linked by nvcc but explicit is clearer.
   target_link_libraries(linalglib PRIVATE CUDA::cudart)
@@ -146,8 +146,8 @@ else()
   target_link_libraries(linalglib PUBLIC perfetto)
 endif()
 
-# Find OpenMP
-find_package(OpenMP)
+# Find OpenMP (CXX only, not CUDA)
+find_package(OpenMP COMPONENTS CXX)
 if (OPENMP_FOUND)
     target_link_libraries(linalglib PRIVATE OpenMP::OpenMP_CXX)
 endif()
@@ -162,10 +162,10 @@ message(STATUS "CMAKE_CUDA_COMPILER_ID : ${CMAKE_CUDA_COMPILER_ID}")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_options(linalglib PRIVATE
       # Options for C++ files (MSVC)
-      $<$<COMPILE_LANGUAGE:CXX>:-W4>             # Enable warning level 4 for MSVC
-      $<$<COMPILE_LANGUAGE:CXX>:-wd4201>
-      $<$<COMPILE_LANGUAGE:CXX>:-wd4100>
-      $<$<COMPILE_LANGUAGE:CXX>:-wd4996>
+      $<$<COMPILE_LANGUAGE:CXX>:/W4>             # Enable warning level 4 for MSVC
+      $<$<COMPILE_LANGUAGE:CXX>:/wd4201>
+      $<$<COMPILE_LANGUAGE:CXX>:/wd4100>
+      $<$<COMPILE_LANGUAGE:CXX>:/wd4996>
     )
   if (OPENMP_FOUND)
     target_compile_options(linalglib PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-openmp:llvm>)
@@ -179,8 +179,9 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     # Options for CUDA files (NVCC)
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3> # Pass /W3 to the host compiler (MSVC) for CUDA files
     $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>       # Enable relocatable device code (important for shared libraries)
-    $<$<COMPILE_LANGUAGE:CUDA>:-G>              # Enable debug info for device code (for debugging)
-    $<$<COMPILE_LANGUAGE:CUDA>:-arch=native>
+    $<$<COMPILE_LANGUAGE:CUDA>:-O3>             # Maximum optimization
+    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>  # Enable fast math operations
+    # $<$<COMPILE_LANGUAGE:CUDA>:-G>
   )
 endif()
 
@@ -191,4 +192,3 @@ target_compile_definitions(linalglib PRIVATE -DTRACING_ENABLED)
 target_include_directories(linalglib
                            PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>
                            PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>)
-

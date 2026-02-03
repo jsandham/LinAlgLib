@@ -189,6 +189,14 @@ namespace linalg
     void device_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
     void device_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
 
+    void device_tridiagonal_solver(int                   m,
+                                   int                   n,
+                                   const vector<double>& lower_diag,
+                                   const vector<double>& main_diag,
+                                   const vector<double>& upper_diag,
+                                   const vector<double>& b,
+                                   vector<double>&       x);
+
 } // namespace linalg
 
 #endif

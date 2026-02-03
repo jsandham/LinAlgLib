@@ -1317,6 +1317,49 @@ namespace linalg
         }
     }
 
+    template <uint32_t M>
+    static void host_thomas_algorithm_impl(int           n,
+                                           const double* lower_diag,
+                                           const double* main_diag,
+                                           const double* upper_diag,
+                                           const double* b,
+                                           double*       x)
+    {
+        ROUTINE_TRACE("host_thomas_algorithm_impl");
+
+        double c_prime[M];
+
+        // Forward sweep
+        c_prime[0] = upper_diag[0] / main_diag[0];
+        for(int i = 1; i < M - 1; i++)
+        {
+            double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+            c_prime[i]   = upper_diag[i] / denom;
+        }
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int j = 0; j < n; j++)
+        {
+            double d_prime[M];
+
+            d_prime[0] = b[M * j + 0] / main_diag[0];
+            for(int i = 1; i < M; i++)
+            {
+                double num   = b[M * j + i] - lower_diag[i] * d_prime[(i - 1)];
+                double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+                d_prime[i]   = num / denom;
+            }
+
+            // Back substitution
+            x[M * j + (M - 1)] = d_prime[(M - 1)];
+            for(int i = M - 2; i >= 0; i--)
+            {
+                x[M * j + i] = d_prime[i] - c_prime[i] * x[M * j + (i + 1)];
+            }
+        }
+    }
 }
 
 // Compute y = alpha * x + y
@@ -1874,4 +1917,87 @@ void linalg::host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
                       A.get_val(),
                       nullptr,
                       nullptr);
+}
+
+void linalg::host_tridiagonal_solver(int                   m,
+                                     int                   n,
+                                     const vector<double>& lower_diag,
+                                     const vector<double>& main_diag,
+                                     const vector<double>& upper_diag,
+                                     const vector<double>& b,
+                                     vector<double>&       x)
+{
+    ROUTINE_TRACE("linalg::host_tridiagonal_solver");
+
+    assert(main_diag.get_size() == m);
+    assert(lower_diag.get_size() == m);
+    assert(upper_diag.get_size() == m);
+
+    assert(b.get_size() == m * n);
+    assert(x.get_size() == m * n);
+
+    if(m == 2)
+    {
+        host_thomas_algorithm_impl<2>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 3)
+    {
+        // For larger systems, more advanced algorithms can be implemented
+        host_thomas_algorithm_impl<3>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 4)
+    {
+        host_thomas_algorithm_impl<4>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 5)
+    {
+        host_thomas_algorithm_impl<5>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 6)
+    {
+        host_thomas_algorithm_impl<6>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 7)
+    {
+        host_thomas_algorithm_impl<7>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
+    else if(m == 8)
+    {
+        host_thomas_algorithm_impl<8>(n,
+                                      lower_diag.get_vec(),
+                                      main_diag.get_vec(),
+                                      upper_diag.get_vec(),
+                                      b.get_vec(),
+                                      x.get_vec());
+    }
 }

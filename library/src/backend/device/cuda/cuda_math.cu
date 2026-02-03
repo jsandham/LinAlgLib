@@ -48,6 +48,7 @@
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
 #include "preconditioner_kernels.cuh"
+#include "tridiagonal_solver_kernels.cuh"
 
 #include "../../../trace.h"
 
@@ -2058,4 +2059,56 @@ void linalg::cuda_csrilu0_compute(int                  m,
     assert(descr->row_perm != nullptr);
 
     CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
+}
+
+void linalg::cuda_tridiagonal_solver(int           m,
+                                     int           n,
+                                     const double* lower_diag,
+                                     const double* main_diag,
+                                     const double* upper_diag,
+                                     const double* b,
+                                     double*       x)
+{
+    if(m == 2)
+    {
+        thomas_algorithm_kernel<256, 2>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 3)
+    {
+        thomas_algorithm_kernel<256, 3>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 4)
+    {
+        thomas_algorithm_kernel<256, 4>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 5)
+    {
+        thomas_algorithm_kernel<256, 5>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 6)
+    {
+        thomas_algorithm_kernel<256, 6>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 7)
+    {
+        thomas_algorithm_kernel<256, 7>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m == 8)
+    {
+        thomas_algorithm_kernel<256, 8>
+            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else
+    {
+        std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 8." << std::endl;
+        return;
+    }
+
+    CHECK_CUDA_LAUNCH_ERROR();
 }

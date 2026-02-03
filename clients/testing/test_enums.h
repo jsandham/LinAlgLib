@@ -60,6 +60,7 @@ namespace Testing
         Transpose,
         CSRIC0,
         CSRILU0,
+        TridiagonalSolver,
         ExclusiveScan,
         Unknown
     };
@@ -154,6 +155,8 @@ namespace Testing
             return "CSRIC0";
         case Fixture::CSRILU0:
             return "CSRILU0";
+        case Fixture::TridiagonalSolver:
+            return "TridiagonalSolver";
         case Fixture::ExclusiveScan:
             return "ExclusiveScan";
         }

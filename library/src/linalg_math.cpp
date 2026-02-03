@@ -455,3 +455,25 @@ void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
     return backend_dispatch(
         "linalg::csrilu0_compute", host_csrilu0_compute, device_csrilu0_compute, A, descr);
 }
+
+void linalg::tridiagonal_solver(int                   m,
+                                int                   n,
+                                const vector<double>& lower_diag,
+                                const vector<double>& main_diag,
+                                const vector<double>& upper_diag,
+                                const vector<double>& rhs,
+                                vector<double>&       solution)
+{
+    ROUTINE_TRACE("linalg::tridiagonal_solver");
+
+    return backend_dispatch("linalg::tridiagonal_solver",
+                            host_tridiagonal_solver,
+                            device_tridiagonal_solver,
+                            m,
+                            n,
+                            lower_diag,
+                            main_diag,
+                            upper_diag,
+                            rhs,
+                            solution);
+}

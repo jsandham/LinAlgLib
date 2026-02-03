@@ -86,6 +86,8 @@ namespace Testing
             return test_csric0(arg);
         case Fixture::CSRILU0:
             return test_csrilu0(arg);
+        case Fixture::TridiagonalSolver:
+            return test_tridiagonal_solver(arg);
         }
 
         return false;
@@ -108,6 +110,11 @@ namespace Testing
 bool Testing::test_dispatch(Arguments arg)
 {
     arg.filename = correct_filename(arg.filename);
+
+    std::cout << "test_dispatch: category = " << CategoryToString(arg.category)
+              << ", fixture = " << FixtureToString(arg.fixture) << std::endl;
+
+    std::cout << "arg.fixture: " << static_cast<int>(arg.fixture) << std::endl;
 
     switch(arg.category)
     {

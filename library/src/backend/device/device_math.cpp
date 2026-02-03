@@ -991,3 +991,31 @@ void linalg::device_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
         return;
     }
 }
+
+void linalg::device_tridiagonal_solver(int                   m,
+                                       int                   n,
+                                       const vector<double>& lower_diag,
+                                       const vector<double>& main_diag,
+                                       const vector<double>& upper_diag,
+                                       const vector<double>& b,
+                                       vector<double>&       x)
+{
+    ROUTINE_TRACE("linalg::device_tridiagonal_solver");
+
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_tridiagonal_solver(m,
+                                          n,
+                                          lower_diag.get_vec(),
+                                          main_diag.get_vec(),
+                                          upper_diag.get_vec(),
+                                          b.get_vec(),
+                                          x.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+        return;
+    }
+}

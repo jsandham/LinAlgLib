@@ -291,6 +291,7 @@ inline Testing::Fixture StringToFixture(const std::string& str)
            {"Transpose", Testing::Fixture::Transpose},
            {"CSRIC0", Testing::Fixture::CSRIC0},
            {"CSRILU0", Testing::Fixture::CSRILU0},
+           {"TridiagonalSolver", Testing::Fixture::TridiagonalSolver},
            {"ExclusiveScan", Testing::Fixture::ExclusiveScan}};
 
     // Find the string in the map
