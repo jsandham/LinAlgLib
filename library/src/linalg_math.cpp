@@ -456,13 +456,13 @@ void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
         "linalg::csrilu0_compute", host_csrilu0_compute, device_csrilu0_compute, A, descr);
 }
 
-void linalg::tridiagonal_solver(int                   m,
-                                int                   n,
-                                const vector<double>& lower_diag,
-                                const vector<double>& main_diag,
-                                const vector<double>& upper_diag,
-                                const vector<double>& rhs,
-                                vector<double>&       solution)
+void linalg::tridiagonal_solver(int                  m,
+                                int                  n,
+                                const vector<float>& lower_diag,
+                                const vector<float>& main_diag,
+                                const vector<float>& upper_diag,
+                                const vector<float>& rhs,
+                                vector<float>&       solution)
 {
     ROUTINE_TRACE("linalg::tridiagonal_solver");
 

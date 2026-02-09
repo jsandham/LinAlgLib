@@ -78,35 +78,42 @@ void linalg::cuda_fill(T* data, size_t size, T val)
 
 void linalg::cuda_sync()
 {
-    CHECK_CUDA(cudaDeviceSynchronize());
+    // CHECK_CUDA(cudaDeviceSynchronize());
+    CHECK_CUDA(cudaStreamSynchronize(0));
 }
 
 template void linalg::cuda_allocate<uint32_t>(uint32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int32_t>(int32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int64_t>(int64_t** ptr, size_t size);
+template void linalg::cuda_allocate<float>(float** ptr, size_t size);
 template void linalg::cuda_allocate<double>(double** ptr, size_t size);
 
 template void linalg::cuda_free<uint32_t>(uint32_t* ptr);
 template void linalg::cuda_free<int32_t>(int32_t* ptr);
 template void linalg::cuda_free<int64_t>(int64_t* ptr);
+template void linalg::cuda_free<float>(float* ptr);
 template void linalg::cuda_free<double>(double* ptr);
 
 template void linalg::cuda_copy_h2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
 template void linalg::cuda_copy_h2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
 template void linalg::cuda_copy_h2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::cuda_copy_h2d<float>(float* dest, const float* src, size_t size);
 template void linalg::cuda_copy_h2d<double>(double* dest, const double* src, size_t size);
 
 template void linalg::cuda_copy_d2h<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
 template void linalg::cuda_copy_d2h<int32_t>(int32_t* dest, const int32_t* src, size_t size);
 template void linalg::cuda_copy_d2h<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::cuda_copy_d2h<float>(float* dest, const float* src, size_t size);
 template void linalg::cuda_copy_d2h<double>(double* dest, const double* src, size_t size);
 
 template void linalg::cuda_copy_d2d<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
 template void linalg::cuda_copy_d2d<int32_t>(int32_t* dest, const int32_t* src, size_t size);
 template void linalg::cuda_copy_d2d<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::cuda_copy_d2d<float>(float* dest, const float* src, size_t size);
 template void linalg::cuda_copy_d2d<double>(double* dest, const double* src, size_t size);
 
 template void linalg::cuda_fill<uint32_t>(uint32_t* data, size_t size, uint32_t val);
 template void linalg::cuda_fill<int32_t>(int32_t* data, size_t size, int32_t val);
 template void linalg::cuda_fill<int64_t>(int64_t* data, size_t size, int64_t val);
+template void linalg::cuda_fill<float>(float* data, size_t size, float val);
 template void linalg::cuda_fill<double>(double* data, size_t size, double val);

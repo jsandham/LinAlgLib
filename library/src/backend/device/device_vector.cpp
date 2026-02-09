@@ -111,4 +111,5 @@ void device_vector<T>::resize(size_t size, T val)
 template class linalg::device_vector<uint32_t>;
 template class linalg::device_vector<int32_t>;
 template class linalg::device_vector<int64_t>;
+template class linalg::device_vector<float>;
 template class linalg::device_vector<double>;

@@ -36,7 +36,7 @@ __global__ void thomas_algorithm_kernel(int n,
                                         const T* __restrict__ lower_diag,
                                         const T* __restrict__ main_diag,
                                         const T* __restrict__ upper_diag,
-                                        const T* __restrict__ b,
+                                        const T* __restrict__ B,
                                         T* __restrict__ x)
 {
     const int tid = threadIdx.x;
@@ -51,89 +51,233 @@ __global__ void thomas_algorithm_kernel(int n,
     T c_prime[M];
     T d_prime[M];
 
-    T main_diag_local[M];
-    T lower_diag_local[M];
-    T upper_diag_local[M];
-
-#pragma unroll
-    for(int i = 0; i < M; i++)
-    {
-        main_diag_local[i]  = main_diag[i];
-        lower_diag_local[i] = lower_diag[i];
-        upper_diag_local[i] = upper_diag[i];
-    }
-
     // Each thread solves one tridiagonal system
     // Forward sweep
-    c_prime[0] = upper_diag_local[0] / main_diag_local[0];
-#pragma unroll
+    c_prime[0] = upper_diag[0] / main_diag[0];
     for(int i = 1; i < M - 1; i++)
     {
-        double denom = main_diag_local[i] - lower_diag_local[i] * c_prime[i - 1];
-        c_prime[i]   = upper_diag_local[i] / denom;
+        const T denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+        c_prime[i]    = upper_diag[i] / denom;
     }
 
-    d_prime[0] = b[M * gid + 0] / main_diag_local[0];
-#pragma unroll
+    d_prime[0] = B[M * gid + 0] / main_diag[0];
     for(int i = 1; i < M; i++)
     {
-        double num   = b[M * gid + i] - lower_diag_local[i] * d_prime[(i - 1)];
-        double denom = main_diag_local[i] - lower_diag_local[i] * c_prime[i - 1];
-        d_prime[i]   = num / denom;
+        const T num   = B[M * gid + i] - lower_diag[i] * d_prime[i - 1];
+        const T denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+        d_prime[i]    = num / denom;
     }
 
     // Back substitution
-    x[M * gid + (M - 1)] = d_prime[(M - 1)];
-#pragma unroll
+    x[M * gid + (M - 1)] = d_prime[M - 1];
     for(int i = M - 2; i >= 0; i--)
     {
         x[M * gid + i] = d_prime[i] - c_prime[i] * x[M * gid + (i + 1)];
     }
 }
 
-template <uint32_t BLOCKSIZE, uint32_t MAX_M, typename T>
-__global__ void thomas_algorithm_kernel2(int m,
-                                         int n,
-                                         const T* __restrict__ lower_diag,
-                                         const T* __restrict__ main_diag,
-                                         const T* __restrict__ upper_diag,
-                                         const T* __restrict__ b,
-                                         T* __restrict__ x)
+template <uint32_t BLOCKSIZE, uint32_t WF_SIZE, uint32_t TILE_X, typename T>
+__global__ void thomas_shared_transpose_kernel(int m,
+                                               int n,
+                                               const T* __restrict__ lower_diag,
+                                               const T* __restrict__ main_diag,
+                                               const T* __restrict__ upper_diag,
+                                               const T* __restrict__ B,
+                                               T* __restrict__ x)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
-    const int gid = bid * BLOCKSIZE + tid;
 
-    if(gid >= n)
+    const int lid = tid & (WF_SIZE - 1); // 0..WF_SIZE-1
+    const int wid = tid / WF_SIZE; // 0..7
+
+    const int lid_x = lid & (TILE_X - 1); // 0..TILE_X-1
+    const int wid_x = lid / TILE_X; // 0..3
+
+    __shared__ T total_shared[(BLOCKSIZE / WF_SIZE) * TILE_X * WF_SIZE];
+    T*           shared = &total_shared[TILE_X * WF_SIZE * wid];
+
+    int B_offset = m * WF_SIZE * ((BLOCKSIZE / WF_SIZE) * bid + wid);
+
+    // Loop over TILE_X and load 8x4=32 elements from B each iteration.
+    // In total this will load 8x(4*TILE_X) elements from B
+    for(int i = 0; i < TILE_X; i++)
     {
-        return;
+        shared[WF_SIZE * i + TILE_X * wid_x + lid_x]
+            = B[B_offset + WF_SIZE * i + TILE_X * wid_x + lid_x];
     }
 
-    T c_prime[MAX_M];
-    T d_prime[MAX_M];
+    T B_local[TILE_X];
 
-    // Each thread solves one tridiagonal system
+    __syncthreads();
+    for(int i = 0; i < TILE_X; i++)
+    {
+        B_local[i] = shared[TILE_X * lid + i];
+    }
+
+    T upper_prime[TILE_X];
+    T B_prime[TILE_X];
+
     // Forward sweep
-    c_prime[0] = upper_diag[0] / main_diag[0];
-    for(int i = 1; i < m - 1; i++)
+    upper_prime[0] = upper_diag[0] / main_diag[0];
+    for(int i = 1; i < TILE_X - 1; i++)
     {
-        double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-        c_prime[i]   = upper_diag[i] / denom;
+        T num          = upper_diag[i];
+        T denom        = main_diag[i] - lower_diag[i] * upper_prime[i - 1];
+        upper_prime[i] = num / denom;
     }
 
-    d_prime[0] = b[m * gid + 0] / main_diag[0];
-    for(int i = 1; i < m; i++)
+    B_prime[0] = B_local[0] / main_diag[0];
+    for(int i = 1; i < TILE_X; i++)
     {
-        double num   = b[m * gid + i] - lower_diag[i] * d_prime[(i - 1)];
-        double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-        d_prime[i]   = num / denom;
+        T num      = B_local[i] - lower_diag[i] * B_prime[i - 1];
+        T denom    = main_diag[i] - lower_diag[i] * upper_prime[i - 1];
+        B_prime[i] = num / denom;
     }
 
-    // Back substitution
-    x[m * gid + (m - 1)] = d_prime[(m - 1)];
-    for(int i = m - 2; i >= 0; i--)
+    // Backward sweep
+    B_local[TILE_X - 1] = B_prime[TILE_X - 1];
+    for(int i = TILE_X - 2; i >= 0; i--)
     {
-        x[m * gid + i] = d_prime[i] - c_prime[i] * x[m * gid + (i + 1)];
+        B_local[i] = B_prime[i] - upper_prime[i] * B_local[i + 1];
+    }
+
+    __syncthreads();
+    for(int i = 0; i < TILE_X; i++)
+    {
+        shared[TILE_X * lid + i] = B_local[i];
+    }
+    __syncthreads();
+
+    for(int i = 0; i < TILE_X; i++)
+    {
+        x[B_offset + WF_SIZE * i + TILE_X * wid_x + lid_x]
+            = shared[WF_SIZE * i + TILE_X * wid_x + lid_x];
+    }
+    // for(int i = 0; i < TILE_X; i++)
+    // {
+    //     x[B_offset + TILE_X * lid + i] = B_local[i];
+    // }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t WF_SIZE, uint32_t TILE_X, uint32_t TILE_Y, typename T>
+__global__ void thomas_shared_transpose_kernel2(int m,
+                                                int n,
+                                                const T* __restrict__ lower,
+                                                const T* __restrict__ main,
+                                                const T* __restrict__ upper,
+                                                const T* __restrict__ B,
+                                                T* __restrict__ x)
+{
+    constexpr uint32_t TILE_COUNT = WF_SIZE / TILE_Y;
+    constexpr uint32_t PAD_TILE_X = TILE_X + 1;
+
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    const int lid = tid & (WF_SIZE - 1);
+    const int wid = tid / WF_SIZE;
+
+    const int lid_x = lid & (TILE_X - 1);
+    const int wid_x = lid / TILE_X;
+
+    __shared__ T total_shared[(BLOCKSIZE / WF_SIZE) * PAD_TILE_X * TILE_Y * TILE_COUNT];
+    T*           shared = &total_shared[PAD_TILE_X * TILE_Y * TILE_COUNT * wid];
+
+    const T* B_ptr = &B[m * WF_SIZE * ((BLOCKSIZE / WF_SIZE) * bid + wid)];
+    T*       x_ptr = &x[m * WF_SIZE * ((BLOCKSIZE / WF_SIZE) * bid + wid)];
+
+    T cp_global[512];
+    T dp_global[512];
+
+    T temp1 = static_cast<T>(0);
+    T temp2 = static_cast<T>(0);
+    T temp3 = static_cast<T>(0);
+
+    // Forward sweep
+    for(int tile_start = 0; tile_start < 64; tile_start += TILE_X)
+    {
+        // Loop over TILE_X and load 8x4=32 elements from B each iteration.
+        // In total this will load 8x(4*TILE_X) elements from B
+        for(int i = 0; i < TILE_COUNT; i++)
+        {
+            shared[PAD_TILE_X * TILE_Y * i + PAD_TILE_X * wid_x + lid_x]
+                = B_ptr[m * TILE_Y * i + m * wid_x + lid_x + tile_start];
+        }
+
+        T cp_local[TILE_X];
+        T dp_local[TILE_X];
+        T B_local[TILE_X];
+
+        __syncthreads();
+        for(int i = 0; i < TILE_X; i++)
+        {
+            B_local[i] = shared[PAD_TILE_X * lid + i];
+        }
+        __syncthreads();
+
+        cp_local[0] = upper[tile_start] / (main[tile_start] - lower[tile_start] * temp1);
+        for(int i = 1; i < TILE_X; i++)
+        {
+            T num       = upper[tile_start + i];
+            T denom     = main[tile_start + i] - lower[tile_start + i] * cp_local[i - 1];
+            cp_local[i] = num / denom;
+        }
+
+        dp_local[0] = (B_local[0] - lower[tile_start] * temp2)
+                      / (main[tile_start] - lower[tile_start] * temp1);
+        for(int i = 1; i < TILE_X; i++)
+        {
+            T num       = B_local[i] - lower[tile_start + i] * dp_local[i - 1];
+            T denom     = main[tile_start + i] - lower[tile_start + i] * cp_local[i - 1];
+            dp_local[i] = num / denom;
+        }
+
+        temp1 = cp_local[TILE_X - 2];
+        temp2 = dp_local[TILE_X - 1];
+
+        // Write cp_local and dp_local to local memory arrays
+        for(int i = 0; i < TILE_X; i++)
+        {
+            cp_global[tile_start + i] = cp_local[i];
+            dp_global[tile_start + i] = dp_local[i];
+        }
+    }
+
+    // Backward sweep
+    for(int tile_start = 64 - TILE_X; tile_start >= 0; tile_start -= TILE_X)
+    {
+        T cp_local[TILE_X];
+        T dp_local[TILE_X];
+        T B_local[TILE_X];
+
+        // Read cp_local and dp_local
+        for(int i = 0; i < TILE_X; i++)
+        {
+            cp_local[i] = cp_global[tile_start + i];
+            dp_local[i] = dp_global[tile_start + i];
+        }
+
+        B_local[TILE_X - 1] = dp_local[TILE_X - 1] - cp_local[TILE_X - 1] * temp3;
+        for(int i = TILE_X - 2; i >= 0; i--)
+        {
+            B_local[i] = dp_local[i] - cp_local[i] * B_local[i + 1];
+        }
+
+        temp3 = B_local[0];
+
+        __syncthreads();
+        for(int i = 0; i < TILE_X; i++)
+        {
+            shared[PAD_TILE_X * lid + i] = B_local[i];
+        }
+        __syncthreads();
+
+        for(int i = 0; i < TILE_X; i++)
+        {
+            x_ptr[m * TILE_Y * i + m * wid_x + lid_x + tile_start]
+                = shared[PAD_TILE_X * TILE_Y * i + PAD_TILE_X * wid_x + lid_x];
+        }
     }
 }
 

@@ -87,4 +87,5 @@ void host_vector<T>::resize(size_t size, T val)
 template class linalg::host_vector<uint32_t>;
 template class linalg::host_vector<int32_t>;
 template class linalg::host_vector<int64_t>;
+template class linalg::host_vector<float>;
 template class linalg::host_vector<double>;

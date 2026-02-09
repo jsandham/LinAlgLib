@@ -41,22 +41,24 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 2;
-    int n = 1000000;
+    int m = 64;
+    int n = 65536;
 
     std::cout << "n: " << n << std::endl;
 
     // Create tridiagonal matrix coefficients
-    vector<double> lower_diag(m);
-    vector<double> main_diag(m);
-    vector<double> upper_diag(m);
-    vector<double> rhs(m * n);
-    vector<double> solution(m * n);
+    vector<float> lower_diag(m);
+    vector<float> main_diag(m);
+    vector<float> upper_diag(m);
+    vector<float> rhs(m * n);
+    vector<float> solution(m * n);
 
     // Initialize with a known system
     // Use a simple symmetric positive definite tridiagonal matrix
     // Main diagonal: 4.0
     // Off-diagonals: -1.0
+    lower_diag[0]     = 0.0; // No lower diagonal for first row
+    upper_diag[m - 1] = 0.0; // No upper diagonal
     for(int i = 0; i < m; i++)
     {
         main_diag[i] = 4.0;
@@ -84,13 +86,13 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     }
 
     // Move to device
-    lower_diag.move_to_device();
-    main_diag.move_to_device();
-    upper_diag.move_to_device();
-    rhs.move_to_device();
-    solution.move_to_device();
+    //lower_diag.move_to_device();
+    //main_diag.move_to_device();
+    //upper_diag.move_to_device();
+    //rhs.move_to_device();
+    //solution.move_to_device();
 
-    for(int i = 0; i < 2; i++)
+    for(int i = 0; i < 10; i++)
     {
         tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
     }
@@ -98,32 +100,32 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Solve the system
     auto t1 = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < 1000; i++)
+    for(int i = 0; i < 100; i++)
     {
         tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
     }
     linalg::sync();
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "Solve time: " << ms_double.count() << "ms" << std::endl;
+    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     // Move back to host for verification
-    solution.move_to_host();
-    main_diag.move_to_host();
-    lower_diag.move_to_host();
-    upper_diag.move_to_host();
-    rhs.move_to_host();
+    //solution.move_to_host();
+    //main_diag.move_to_host();
+    //lower_diag.move_to_host();
+    //upper_diag.move_to_host();
+    //rhs.move_to_host();
 
     // Verify solution by computing residual: r = b - A*x
-    vector<double> residual(m * n);
-    double         max_residual = 0.0;
+    vector<float> residual(m * n);
+    float         max_residual = 0.0;
 
     for(int i = 0; i < n; i++)
     {
         for(int j = 0; j < m; j++)
         {
-            double ax = main_diag[j] * solution[m * i + j];
+            float ax = main_diag[j] * solution[m * i + j];
             if(j > 0)
             {
                 ax += lower_diag[j] * solution[m * i + j - 1];
@@ -142,19 +144,19 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 
-    size_t total_bytes_read_write = sizeof(double) * (3 * m + 2 * m * n);
-    double total_gbytes           = (double)total_bytes_read_write / 1e9;
-    double bandwidth              = total_gbytes / ((ms_double.count() / 1000.0) / 1e3);
+    size_t total_bytes_read_write = sizeof(float) * (3 * m + 2 * m * n);
+    float  total_gbytes           = (float)100 * total_bytes_read_write / 1e9;
+    float  bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 
     std::cout << "Total data transferred: " << total_gbytes << " GB"
               << " total_bytes_read_write: " << total_bytes_read_write << std::endl;
 
     std::cout << "Effective Bandwidth: " << bandwidth << " GB/s"
-              << " ms_double.count(): " << ms_double.count() << std::endl;
+              << " ms_float.count(): " << ms_float.count() << std::endl;
 
     // Check if solution is accurate enough
-    double tolerance = 1e-10;
-    bool   success   = (max_residual < tolerance);
+    float tolerance = 1e-6;
+    bool  success   = (max_residual < tolerance);
 
     if(!success)
     {

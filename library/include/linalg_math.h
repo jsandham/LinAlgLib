@@ -531,13 +531,13 @@ namespace linalg
      * @param rhs The right-hand side vector of the linear system.
      * @param solution The output vector that will contain the solution to the system.
      */
-    LINALGLIB_API void tridiagonal_solver(int                   m,
-                                          int                   n,
-                                          const vector<double>& lower_diag,
-                                          const vector<double>& main_diag,
-                                          const vector<double>& upper_diag,
-                                          const vector<double>& rhs,
-                                          vector<double>&       solution);
+    LINALGLIB_API void tridiagonal_solver(int                  m,
+                                          int                  n,
+                                          const vector<float>& lower_diag,
+                                          const vector<float>& main_diag,
+                                          const vector<float>& upper_diag,
+                                          const vector<float>& rhs,
+                                          vector<float>&       solution);
 }
 
 #endif

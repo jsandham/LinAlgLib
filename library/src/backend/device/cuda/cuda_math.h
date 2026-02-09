@@ -354,13 +354,13 @@ namespace linalg
                               double*              csr_val,
                               const csrilu0_descr* descr);
 
-    void cuda_tridiagonal_solver(int           m,
-                                 int           n,
-                                 const double* lower_diag,
-                                 const double* main_diag,
-                                 const double* upper_diag,
-                                 const double* b,
-                                 double*       x);
+    void cuda_tridiagonal_solver(int          m,
+                                 int          n,
+                                 const float* lower_diag,
+                                 const float* main_diag,
+                                 const float* upper_diag,
+                                 const float* b,
+                                 float*       x);
 }
 
 #endif

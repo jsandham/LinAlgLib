@@ -271,4 +271,5 @@ void vector<T>::print_vector(const std::string name) const
 template class linalg::vector<uint32_t>;
 template class linalg::vector<int32_t>;
 template class linalg::vector<int64_t>;
+template class linalg::vector<float>;
 template class linalg::vector<double>;

@@ -84,9 +84,11 @@ void linalg::host_fill(T* data, size_t size, T val)
 template void linalg::copy_h2h<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
 template void linalg::copy_h2h<int32_t>(int32_t* dest, const int32_t* src, size_t size);
 template void linalg::copy_h2h<int64_t>(int64_t* dest, const int64_t* src, size_t size);
+template void linalg::copy_h2h<float>(float* dest, const float* src, size_t size);
 template void linalg::copy_h2h<double>(double* dest, const double* src, size_t size);
 
 template void linalg::host_fill<uint32_t>(uint32_t* data, size_t size, uint32_t val);
 template void linalg::host_fill<int32_t>(int32_t* data, size_t size, int32_t val);
 template void linalg::host_fill<int64_t>(int64_t* data, size_t size, int64_t val);
+template void linalg::host_fill<float>(float* data, size_t size, float val);
 template void linalg::host_fill<double>(double* data, size_t size, double val);

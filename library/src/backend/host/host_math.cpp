@@ -39,7 +39,8 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * x + y
     //-------------------------------------------------------------------------------
-    static void host_axpy_impl(int n, double alpha, const double* x, double* y)
+    template <typename T>
+    static void host_axpy_impl(int n, T alpha, const T* x, T* y)
     {
         ROUTINE_TRACE("host_axpy_impl");
 
@@ -68,7 +69,8 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * x + beta * y
     //-------------------------------------------------------------------------------
-    static void host_axpby_impl(int n, double alpha, const double* x, double beta, double* y)
+    template <typename T>
+    static void host_axpby_impl(int n, T alpha, const T* x, T beta, T* y)
     {
         ROUTINE_TRACE("host_axpby_impl");
 
@@ -127,8 +129,8 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute z = alpha * x + beta * y + gamma * z
     //-------------------------------------------------------------------------------
-    static void host_axpbypgz_impl(
-        int n, double alpha, const double* x, double beta, const double* y, double gamma, double* z)
+    template <typename T>
+    static void host_axpbypgz_impl(int n, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
     {
         ROUTINE_TRACE("host_axpbypgz_impl");
 
@@ -144,12 +146,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // sparse matrix-vector product y = A*x
     //-------------------------------------------------------------------------------
-    static void host_matrix_vector_product_impl(const int*    csr_row_ptr,
-                                                const int*    csr_col_ind,
-                                                const double* csr_val,
-                                                const double* x,
-                                                double*       y,
-                                                int           n)
+    template <typename T>
+    static void host_matrix_vector_product_impl(
+        const int* csr_row_ptr, const int* csr_col_ind, const T* csr_val, const T* x, T* y, int n)
     {
         ROUTINE_TRACE("host_matrix_vector_product_impl");
 
@@ -174,11 +173,12 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // dot product z = x*y
     //-------------------------------------------------------------------------------
-    static double host_dot_product_impl(const double* x, const double* y, int n)
+    template <typename T>
+    static T host_dot_product_impl(const T* x, const T* y, int n)
     {
         ROUTINE_TRACE("host_dot_product_impl");
 
-        double dot_prod = 0.0;
+        T dot_prod = 0.0;
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+ : dot_prod)
 #endif
@@ -193,13 +193,14 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute residual res = b - A * x
     //-------------------------------------------------------------------------------
-    static void host_compute_residual_impl(const int*    csr_row_ptr,
-                                           const int*    csr_col_ind,
-                                           const double* csr_val,
-                                           const double* x,
-                                           const double* b,
-                                           double*       res,
-                                           int           n)
+    template <typename T>
+    static void host_compute_residual_impl(const int* csr_row_ptr,
+                                           const int* csr_col_ind,
+                                           const T*   csr_val,
+                                           const T*   x,
+                                           const T*   b,
+                                           T*         res,
+                                           int        n)
     {
         ROUTINE_TRACE("host_compute_residual_impl");
 
@@ -211,7 +212,7 @@ namespace linalg
             int row_start = csr_row_ptr[i];
             int row_end   = csr_row_ptr[i + 1];
 
-            double s = 0.0;
+            T s = 0.0;
             for(int j = row_start; j < row_end; j++)
             {
                 s += csr_val[j] * x[csr_col_ind[j]];
@@ -224,8 +225,9 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // diagonal d = diag(A)
     //-------------------------------------------------------------------------------
+    template <typename T>
     static void host_diagonal_impl(
-        const int* csr_row_ptr, const int* csr_col_ind, const double* csr_val, double* d, int n)
+        const int* csr_row_ptr, const int* csr_col_ind, const T* csr_val, T* d, int n)
     {
         ROUTINE_TRACE("host_diagonal_impl");
 
@@ -294,18 +296,19 @@ namespace linalg
         *nnz_L = csr_row_ptr_L[m_A];
     }
 
-    static void host_extract_lower_triangular_impl(int           m_A,
-                                                   int           n_A,
-                                                   int           nnz_A,
-                                                   const int*    csr_row_ptr_A,
-                                                   const int*    csr_col_ind_A,
-                                                   const double* csr_val_A,
-                                                   int           m_L,
-                                                   int           n_L,
-                                                   int           nnz_L,
-                                                   int*          csr_row_ptr_L,
-                                                   int*          csr_col_ind_L,
-                                                   double*       csr_val_L)
+    template <typename T>
+    static void host_extract_lower_triangular_impl(int        m_A,
+                                                   int        n_A,
+                                                   int        nnz_A,
+                                                   const int* csr_row_ptr_A,
+                                                   const int* csr_col_ind_A,
+                                                   const T*   csr_val_A,
+                                                   int        m_L,
+                                                   int        n_L,
+                                                   int        nnz_L,
+                                                   int*       csr_row_ptr_L,
+                                                   int*       csr_col_ind_L,
+                                                   T*         csr_val_L)
     {
         ROUTINE_TRACE("host_extract_lower_triangular_impl");
 
@@ -378,18 +381,19 @@ namespace linalg
         *nnz_U = csr_row_ptr_U[m_A];
     }
 
-    static void host_extract_upper_triangular_impl(int           m_A,
-                                                   int           n_A,
-                                                   int           nnz_A,
-                                                   const int*    csr_row_ptr_A,
-                                                   const int*    csr_col_ind_A,
-                                                   const double* csr_val_A,
-                                                   int           m_U,
-                                                   int           n_U,
-                                                   int           nnz_U,
-                                                   int*          csr_row_ptr_U,
-                                                   int*          csr_col_ind_U,
-                                                   double*       csr_val_U)
+    template <typename T>
+    static void host_extract_upper_triangular_impl(int        m_A,
+                                                   int        n_A,
+                                                   int        nnz_A,
+                                                   const int* csr_row_ptr_A,
+                                                   const int* csr_col_ind_A,
+                                                   const T*   csr_val_A,
+                                                   int        m_U,
+                                                   int        n_U,
+                                                   int        nnz_U,
+                                                   int*       csr_row_ptr_U,
+                                                   int*       csr_col_ind_U,
+                                                   T*         csr_val_U)
     {
         ROUTINE_TRACE("host_extract_upper_triangular_impl");
 
@@ -416,8 +420,9 @@ namespace linalg
         }
     }
 
+    template <typename T>
     static void host_scale_diagonal_impl(
-        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int n, double scalar)
+        const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int n, T scalar)
     {
         ROUTINE_TRACE("host_scale_diagonal_impl");
 
@@ -440,8 +445,9 @@ namespace linalg
         }
     }
 
+    template <typename T>
     static void host_scale_by_inverse_diagonal_impl(
-        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int n, const double* diag)
+        const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int n, const T* diag)
     {
         ROUTINE_TRACE("host_scale_by_inverse_diagonal_impl");
 
@@ -463,11 +469,12 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // infinity norm
     //-------------------------------------------------------------------------------
-    static double host_norm_inf_impl(const double* array, int n)
+    template <typename T>
+    static T host_norm_inf_impl(const T* array, int n)
     {
         ROUTINE_TRACE("host_norm_inf_impl");
 
-        double norm = 0.0;
+        T norm = 0.0;
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(max : norm)
 #endif
@@ -482,7 +489,8 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // jacobi solve
     //-------------------------------------------------------------------------------
-    static void host_jacobi_solve_impl(const double* rhs, const double* diag, double* x, size_t n)
+    template <typename T>
+    static void host_jacobi_solve_impl(const T* rhs, const T* diag, T* x, size_t n)
     {
         ROUTINE_TRACE("host_jacobi_solve_impl");
 
@@ -498,26 +506,27 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // SSOR fill lower preconditioner L = (beta * D - E) * D^-1, beta = 1 / omega
     //-------------------------------------------------------------------------------
-    static void host_ssor_fill_lower_precond_impl(int           m_A,
-                                                  int           n_A,
-                                                  int           nnz_A,
-                                                  const int*    csr_row_ptr_A,
-                                                  const int*    csr_col_ind_A,
-                                                  const double* csr_val_A,
-                                                  int           m_L,
-                                                  int           n_L,
-                                                  int           nnz_L,
-                                                  const int*    csr_row_ptr_L,
-                                                  int*          csr_col_ind_L,
-                                                  double*       csr_val_L,
-                                                  double        omega)
+    template <typename T>
+    static void host_ssor_fill_lower_precond_impl(int        m_A,
+                                                  int        n_A,
+                                                  int        nnz_A,
+                                                  const int* csr_row_ptr_A,
+                                                  const int* csr_col_ind_A,
+                                                  const T*   csr_val_A,
+                                                  int        m_L,
+                                                  int        n_L,
+                                                  int        nnz_L,
+                                                  const int* csr_row_ptr_L,
+                                                  int*       csr_col_ind_L,
+                                                  T*         csr_val_L,
+                                                  T          omega)
     {
         ROUTINE_TRACE("host_ssor_fill_lower_precond_impl");
 
-        std::vector<double> diag(m_A, 0.0);
+        std::vector<T> diag(m_A, 0.0);
         host_diagonal_impl(csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag.data(), m_A);
 
-        double beta = 1.0 / omega;
+        T beta = 1.0 / omega;
 
         // beta = 1 / omega
         // L = (beta * D - E) * D^-1
@@ -559,23 +568,24 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // SSOR fill upper preconditioner U = (beta * D - F), beta = 1 / omega
     //-------------------------------------------------------------------------------
-    static void host_ssor_fill_upper_precond_impl(int           m_A,
-                                                  int           n_A,
-                                                  int           nnz_A,
-                                                  const int*    csr_row_ptr_A,
-                                                  const int*    csr_col_ind_A,
-                                                  const double* csr_val_A,
-                                                  int           m_U,
-                                                  int           n_U,
-                                                  int           nnz_U,
-                                                  const int*    csr_row_ptr_U,
-                                                  int*          csr_col_ind_U,
-                                                  double*       csr_val_U,
-                                                  double        omega)
+    template <typename T>
+    static void host_ssor_fill_upper_precond_impl(int        m_A,
+                                                  int        n_A,
+                                                  int        nnz_A,
+                                                  const int* csr_row_ptr_A,
+                                                  const int* csr_col_ind_A,
+                                                  const T*   csr_val_A,
+                                                  int        m_U,
+                                                  int        n_U,
+                                                  int        nnz_U,
+                                                  const int* csr_row_ptr_U,
+                                                  int*       csr_col_ind_U,
+                                                  T*         csr_val_U,
+                                                  T          omega)
     {
         ROUTINE_TRACE("host_ssor_fill_upper_precond_impl");
 
-        double beta = 1.0 / omega;
+        T beta = 1.0 / omega;
 
         // beta = 1 / omega
         // U = (beta * D - F)
@@ -616,16 +626,17 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute y = alpha * A * x + beta * y
     //-------------------------------------------------------------------------------
-    static void host_csrmv_impl(int           m,
-                                int           n,
-                                int           nnz,
-                                double        alpha,
-                                const int*    csr_row_ptr,
-                                const int*    csr_col_ind,
-                                const double* csr_val,
-                                const double* x,
-                                double        beta,
-                                double*       y)
+    template <typename T>
+    static void host_csrmv_impl(int        m,
+                                int        n,
+                                int        nnz,
+                                T          alpha,
+                                const int* csr_row_ptr,
+                                const int* csr_col_ind,
+                                const T*   csr_val,
+                                const T*   x,
+                                T          beta,
+                                T*         y)
     {
         ROUTINE_TRACE("host_csrmv");
 
@@ -657,18 +668,19 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute C = alpha * A * B + beta * D
     //-------------------------------------------------------------------------------
+    template <typename T>
     static void host_csrgemm_nnz_impl(int        m,
                                       int        n,
                                       int        k,
                                       int        nnz_A,
                                       int        nnz_B,
                                       int        nnz_D,
-                                      double     alpha,
+                                      T          alpha,
                                       const int* csr_row_ptr_A,
                                       const int* csr_col_ind_A,
                                       const int* csr_row_ptr_B,
                                       const int* csr_col_ind_B,
-                                      double     beta,
+                                      T          beta,
                                       const int* csr_row_ptr_D,
                                       const int* csr_col_ind_D,
                                       int*       csr_row_ptr_C,
@@ -734,26 +746,27 @@ namespace linalg
         *nnz_C = csr_row_ptr_C[m];
     }
 
-    static void host_csrgemm_impl(int           m,
-                                  int           n,
-                                  int           k,
-                                  int           nnz_A,
-                                  int           nnz_B,
-                                  int           nnz_D,
-                                  double        alpha,
-                                  const int*    csr_row_ptr_A,
-                                  const int*    csr_col_ind_A,
-                                  const double* csr_val_A,
-                                  const int*    csr_row_ptr_B,
-                                  const int*    csr_col_ind_B,
-                                  const double* csr_val_B,
-                                  double        beta,
-                                  const int*    csr_row_ptr_D,
-                                  const int*    csr_col_ind_D,
-                                  const double* csr_val_D,
-                                  const int*    csr_row_ptr_C,
-                                  int*          csr_col_ind_C,
-                                  double*       csr_val_C)
+    template <typename T>
+    static void host_csrgemm_impl(int        m,
+                                  int        n,
+                                  int        k,
+                                  int        nnz_A,
+                                  int        nnz_B,
+                                  int        nnz_D,
+                                  T          alpha,
+                                  const int* csr_row_ptr_A,
+                                  const int* csr_col_ind_A,
+                                  const T*   csr_val_A,
+                                  const int* csr_row_ptr_B,
+                                  const int* csr_col_ind_B,
+                                  const T*   csr_val_B,
+                                  T          beta,
+                                  const int* csr_row_ptr_D,
+                                  const int* csr_col_ind_D,
+                                  const T*   csr_val_D,
+                                  const int* csr_row_ptr_C,
+                                  int*       csr_col_ind_C,
+                                  T*         csr_val_C)
     {
         ROUTINE_TRACE("host_csrgemm_impl");
 
@@ -769,16 +782,16 @@ namespace linalg
 
             for(int j = row_begin_A; j < row_end_A; j++)
             {
-                int    col_A = csr_col_ind_A[j];
-                double val_A = alpha * csr_val_A[j];
+                int col_A = csr_col_ind_A[j];
+                T   val_A = alpha * csr_val_A[j];
 
                 int row_begin_B = csr_row_ptr_B[col_A];
                 int row_end_B   = csr_row_ptr_B[col_A + 1];
 
                 for(int p = row_begin_B; p < row_end_B; p++)
                 {
-                    int    col_B = csr_col_ind_B[p];
-                    double val_B = csr_val_B[p];
+                    int col_B = csr_col_ind_B[p];
+                    T   val_B = csr_val_B[p];
 
                     if(nnzs[col_B] < row_begin_C)
                     {
@@ -801,8 +814,8 @@ namespace linalg
 
                 for(int j = row_begin_D; j < row_end_D; j++)
                 {
-                    int    col_D = csr_col_ind_D[j];
-                    double val_D = beta * csr_val_D[j];
+                    int col_D = csr_col_ind_D[j];
+                    T   val_D = beta * csr_val_D[j];
 
                     // Check if a new nnz is generated or if the value is added
                     if(nnzs[col_D] < row_begin_C)
@@ -823,8 +836,8 @@ namespace linalg
 
         int nnz = csr_row_ptr_C[m];
 
-        std::vector<int>    cols(nnz);
-        std::vector<double> vals(nnz);
+        std::vector<int> cols(nnz);
+        std::vector<T>   vals(nnz);
 
         memcpy(cols.data(), csr_col_ind_C, sizeof(int) * nnz);
         memcpy(vals.data(), csr_val_C, sizeof(double) * nnz);
@@ -841,8 +854,8 @@ namespace linalg
                 perm[j] = j;
             }
 
-            int*    col_entry = cols.data() + row_begin;
-            double* val_entry = vals.data() + row_begin;
+            int* col_entry = cols.data() + row_begin;
+            T*   val_entry = vals.data() + row_begin;
 
             std::sort(perm.begin(), perm.end(), [&](const int& a, const int& b) {
                 return col_entry[a] < col_entry[b];
@@ -859,14 +872,15 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute C = alpha * A + beta * B
     //-------------------------------------------------------------------------------
+    template <typename T>
     static void host_csrgeam_nnz_impl(int        m,
                                       int        n,
                                       int        nnz_A,
                                       int        nnz_B,
-                                      double     alpha,
+                                      T          alpha,
                                       const int* csr_row_ptr_A,
                                       const int* csr_col_ind_A,
-                                      double     beta,
+                                      T          beta,
                                       const int* csr_row_ptr_B,
                                       const int* csr_col_ind_B,
                                       int*       csr_row_ptr_C,
@@ -915,21 +929,22 @@ namespace linalg
         *nnz_C = csr_row_ptr_C[m];
     }
 
-    static void host_csrgeam_impl(int           m,
-                                  int           n,
-                                  int           nnz_A,
-                                  int           nnz_B,
-                                  double        alpha,
-                                  const int*    csr_row_ptr_A,
-                                  const int*    csr_col_ind_A,
-                                  const double* csr_val_A,
-                                  double        beta,
-                                  const int*    csr_row_ptr_B,
-                                  const int*    csr_col_ind_B,
-                                  const double* csr_val_B,
-                                  const int*    csr_row_ptr_C,
-                                  int*          csr_col_ind_C,
-                                  double*       csr_val_C)
+    template <typename T>
+    static void host_csrgeam_impl(int        m,
+                                  int        n,
+                                  int        nnz_A,
+                                  int        nnz_B,
+                                  T          alpha,
+                                  const int* csr_row_ptr_A,
+                                  const int* csr_col_ind_A,
+                                  const T*   csr_val_A,
+                                  T          beta,
+                                  const int* csr_row_ptr_B,
+                                  const int* csr_col_ind_B,
+                                  const T*   csr_val_B,
+                                  const int* csr_row_ptr_C,
+                                  int*       csr_col_ind_C,
+                                  T*         csr_val_C)
     {
         ROUTINE_TRACE("host_csrgeam_impl");
 
@@ -986,8 +1001,8 @@ namespace linalg
                 perm[j] = j;
             }
 
-            std::vector<int>    columns(row_nnz);
-            std::vector<double> values(row_nnz);
+            std::vector<int> columns(row_nnz);
+            std::vector<T>   values(row_nnz);
 
             for(int j = 0; j < row_nnz; j++)
             {
@@ -1007,12 +1022,13 @@ namespace linalg
         }
     }
 
-    static double get_diagonal_value(
-        int col, int diag_index, const double* csr_val, int* structural_zero, int* numeric_zero)
+    template <typename T>
+    static T get_diagonal_value(
+        int col, int diag_index, const T* csr_val, int* structural_zero, int* numeric_zero)
     {
         ROUTINE_TRACE("get_diagonal_value");
 
-        double diag_val = 1.0;
+        T diag_val = 1.0;
         if(diag_index == -1)
         {
             // Structural zero. No diagonal value exist in matrix. Use diagonal value of 1
@@ -1035,12 +1051,13 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // Compute incomplete LU factorization inplace
     //-------------------------------------------------------------------------------
+    template <typename T>
     static void host_csrilu0_impl(int        m,
                                   int        n,
                                   int        nnz,
                                   const int* csr_row_ptr,
                                   const int* csr_col_ind,
-                                  double*    csr_val,
+                                  T*         csr_val,
                                   int*       structural_zero,
                                   int*       numeric_zero)
     {
@@ -1070,8 +1087,8 @@ namespace linalg
 
                 if(col_j < row)
                 {
-                    int    diag_index = diag_ptr[col_j];
-                    double diag_val   = get_diagonal_value(
+                    int diag_index = diag_ptr[col_j];
+                    T   diag_val   = get_diagonal_value(
                         col_j, diag_index, csr_val, structural_zero, numeric_zero);
 
                     int row_end_col_j = csr_row_ptr[col_j + 1];
@@ -1105,12 +1122,13 @@ namespace linalg
     //----------------------------------------------------------------------------------------
     // Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
     //----------------------------------------------------------------------------------------
+    template <typename T>
     static void host_csric0_impl(int        m,
                                  int        n,
                                  int        nnz,
                                  const int* csr_row_ptr,
                                  const int* csr_col_ind,
-                                 double*    csr_val,
+                                 T*         csr_val,
                                  int*       structural_zero,
                                  int*       numeric_zero)
     {
@@ -1136,7 +1154,7 @@ namespace linalg
                 col_offset_map[csr_col_ind[j]] = j;
             }
 
-            double sum = 0.0;
+            T sum = 0.0;
 
             for(int j = row_begin; j < row_end; j++)
             {
@@ -1147,7 +1165,7 @@ namespace linalg
                     int row_begin_col_j = csr_row_ptr[col_j];
                     int diag_index      = diag_ptr[col_j];
 
-                    double s = 0.0;
+                    T s = 0.0;
                     for(int k = row_begin_col_j; k < diag_index; k++)
                     {
                         int col_k = csr_col_ind[k];
@@ -1159,10 +1177,10 @@ namespace linalg
                         }
                     }
 
-                    double diag_val = get_diagonal_value(
+                    T diag_val = get_diagonal_value(
                         col_j, diag_index, csr_val, structural_zero, numeric_zero);
 
-                    double val = (csr_val[j] - s) / diag_val;
+                    T val = (csr_val[j] - s) / diag_val;
 
                     sum = sum + val * val;
 
@@ -1187,8 +1205,9 @@ namespace linalg
     // Given a matrix A with lower part L, fills the upper partof A with L^T
     // (assumes A is symmetric)
     //--------------------------------------------------------------------------------
+    template <typename T>
     static void host_fill_upper_with_lower_transpose_impl(
-        int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val)
+        int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, T* csr_val)
     {
         ROUTINE_TRACE("host_fill_upper_with_lower_transpose_impl");
 
@@ -1227,13 +1246,14 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // solve Lx = b where L is a lower triangular sparse matrix
     //-------------------------------------------------------------------------------
-    static void host_forward_solve_impl(const int*    csr_row_ptr,
-                                        const int*    csr_col_ind,
-                                        const double* csr_val,
-                                        const double* b,
-                                        double*       x,
-                                        int           n,
-                                        bool          unit_diag)
+    template <typename T>
+    static void host_forward_solve_impl(const int* csr_row_ptr,
+                                        const int* csr_col_ind,
+                                        const T*   csr_val,
+                                        const T*   b,
+                                        T*         x,
+                                        int        n,
+                                        bool       unit_diag)
     {
         ROUTINE_TRACE("host_forward_solve_impl");
 
@@ -1247,11 +1267,11 @@ namespace linalg
             assert(row_end >= 0);
             //assert(row_end <= nnz);
 
-            double diag_val = 1.0;
+            T diag_val = 1.0;
 
             //x[i] = b[i];
 
-            double sum = 0.0;
+            T sum = 0.0;
 
             for(int j = row_start; j < row_end; j++)
             {
@@ -1282,13 +1302,14 @@ namespace linalg
     //-------------------------------------------------------------------------------
     // solve Ux = b where U is a upper triangular sparse matrix
     //-------------------------------------------------------------------------------
-    static void host_backward_solve_impl(const int*    csr_row_ptr,
-                                         const int*    csr_col_ind,
-                                         const double* csr_val,
-                                         const double* b,
-                                         double*       x,
-                                         int           n,
-                                         bool          unit_diag)
+    template <typename T>
+    static void host_backward_solve_impl(const int* csr_row_ptr,
+                                         const int* csr_col_ind,
+                                         const T*   csr_val,
+                                         const T*   b,
+                                         T*         x,
+                                         int        n,
+                                         bool       unit_diag)
     {
         ROUTINE_TRACE("host_backward_solve_impl");
 
@@ -1297,7 +1318,7 @@ namespace linalg
             int row_start = csr_row_ptr[i];
             int row_end   = csr_row_ptr[i + 1];
 
-            double diag_val = 1.0;
+            T diag_val = 1.0;
 
             x[i] = b[i];
             for(int j = row_end - 1; j >= row_start; j--)
@@ -1317,24 +1338,20 @@ namespace linalg
         }
     }
 
-    template <uint32_t M>
-    static void host_thomas_algorithm_impl(int           n,
-                                           const double* lower_diag,
-                                           const double* main_diag,
-                                           const double* upper_diag,
-                                           const double* b,
-                                           double*       x)
+    template <uint32_t M, typename T>
+    static void host_thomas_algorithm_impl(
+        int n, const T* lower_diag, const T* main_diag, const T* upper_diag, const T* b, T* x)
     {
         ROUTINE_TRACE("host_thomas_algorithm_impl");
 
-        double c_prime[M];
+        T c_prime[M];
 
         // Forward sweep
         c_prime[0] = upper_diag[0] / main_diag[0];
         for(int i = 1; i < M - 1; i++)
         {
-            double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-            c_prime[i]   = upper_diag[i] / denom;
+            T denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+            c_prime[i] = upper_diag[i] / denom;
         }
 
 #if defined(_OPENMP)
@@ -1342,14 +1359,14 @@ namespace linalg
 #endif
         for(int j = 0; j < n; j++)
         {
-            double d_prime[M];
+            T d_prime[M];
 
             d_prime[0] = b[M * j + 0] / main_diag[0];
             for(int i = 1; i < M; i++)
             {
-                double num   = b[M * j + i] - lower_diag[i] * d_prime[(i - 1)];
-                double denom = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-                d_prime[i]   = num / denom;
+                T num      = b[M * j + i] - lower_diag[i] * d_prime[(i - 1)];
+                T denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
+                d_prime[i] = num / denom;
             }
 
             // Back substitution
@@ -1866,7 +1883,7 @@ void linalg::host_csrgemm_solve(double               alpha,
                       beta,
                       nullptr,
                       nullptr,
-                      nullptr,
+                      static_cast<double*>(nullptr),
                       C.get_row_ptr(),
                       C.get_col_ind(),
                       C.get_val());
@@ -1919,13 +1936,13 @@ void linalg::host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
                       nullptr);
 }
 
-void linalg::host_tridiagonal_solver(int                   m,
-                                     int                   n,
-                                     const vector<double>& lower_diag,
-                                     const vector<double>& main_diag,
-                                     const vector<double>& upper_diag,
-                                     const vector<double>& b,
-                                     vector<double>&       x)
+void linalg::host_tridiagonal_solver(int                  m,
+                                     int                  n,
+                                     const vector<float>& lower_diag,
+                                     const vector<float>& main_diag,
+                                     const vector<float>& upper_diag,
+                                     const vector<float>& b,
+                                     vector<float>&       x)
 {
     ROUTINE_TRACE("linalg::host_tridiagonal_solver");
 
@@ -1999,5 +2016,32 @@ void linalg::host_tridiagonal_solver(int                   m,
                                       upper_diag.get_vec(),
                                       b.get_vec(),
                                       x.get_vec());
+    }
+    else if(m == 16)
+    {
+        host_thomas_algorithm_impl<16>(n,
+                                       lower_diag.get_vec(),
+                                       main_diag.get_vec(),
+                                       upper_diag.get_vec(),
+                                       b.get_vec(),
+                                       x.get_vec());
+    }
+    else if(m == 32)
+    {
+        host_thomas_algorithm_impl<32>(n,
+                                       lower_diag.get_vec(),
+                                       main_diag.get_vec(),
+                                       upper_diag.get_vec(),
+                                       b.get_vec(),
+                                       x.get_vec());
+    }
+    else if(m == 64)
+    {
+        host_thomas_algorithm_impl<64>(n,
+                                       lower_diag.get_vec(),
+                                       main_diag.get_vec(),
+                                       upper_diag.get_vec(),
+                                       b.get_vec(),
+                                       x.get_vec());
     }
 }

@@ -2061,13 +2061,13 @@ void linalg::cuda_csrilu0_compute(int                  m,
     CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
 }
 
-void linalg::cuda_tridiagonal_solver(int           m,
-                                     int           n,
-                                     const double* lower_diag,
-                                     const double* main_diag,
-                                     const double* upper_diag,
-                                     const double* b,
-                                     double*       x)
+void linalg::cuda_tridiagonal_solver(int          m,
+                                     int          n,
+                                     const float* lower_diag,
+                                     const float* main_diag,
+                                     const float* upper_diag,
+                                     const float* b,
+                                     float*       x)
 {
     if(m == 2)
     {
@@ -2101,8 +2101,43 @@ void linalg::cuda_tridiagonal_solver(int           m,
     }
     else if(m == 8)
     {
-        thomas_algorithm_kernel<256, 8>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+        thomas_shared_transpose_kernel<256, 32, 8>
+            <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+        //thomas_algorithm_kernel<256, 8>
+        //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m % 8 == 0)
+    {
+        // std::vector<float> htemp_upper(16);
+        // std::vector<float> htemp_B(16);
+        // float*             dtemp_upper = nullptr;
+        // float*             dtemp_B     = nullptr;
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_upper, sizeof(float) * 16));
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_B, sizeof(float) * 16));
+
+        thomas_shared_transpose_kernel2<128, 32, 4, 8>
+            <<<((n - 1) / 128 + 1), 128>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+        //thomas_algorithm_kernel<256, 16>
+        //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+        // CHECK_CUDA(cudaMemcpy(
+        //     htemp_upper.data(), dtemp_upper, sizeof(float) * 16, cudaMemcpyDeviceToHost));
+        // CHECK_CUDA(cudaMemcpy(htemp_B.data(), dtemp_B, sizeof(float) * 16, cudaMemcpyDeviceToHost));
+
+        // std::cout << "htemp_upper" << std::endl;
+        // for(int i = 0; i < 16; i++)
+        // {
+        //     std::cout << htemp_upper[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+        // std::cout << "htemp_B" << std::endl;
+        // for(int i = 0; i < 16; i++)
+        // {
+        //     std::cout << htemp_B[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+
+        // CHECK_CUDA(cudaFree(dtemp_upper));
+        // CHECK_CUDA(cudaFree(dtemp_B));
     }
     else
     {
