@@ -2101,43 +2101,158 @@ void linalg::cuda_tridiagonal_solver(int          m,
     }
     else if(m == 8)
     {
-        thomas_shared_transpose_kernel<256, 32, 8>
+        thomas_shared_transpose_kernel2<256, 32, 8, 4>
             <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
         //thomas_algorithm_kernel<256, 8>
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
     }
+    // else if(m == 65536)
+    // {
+    //     std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
+    //     // Configuration
+    //     const int N          = 65536;
+    //     const int BLOCKSIZE  = 256;
+    //     const int num_blocks = N / BLOCKSIZE;
+    //     const int num_spikes = 2 * num_blocks; // 512
+    //     const int num_levels = 7; // log2(256) - 1
+
+    //     float* d_l_pyramid         = nullptr;
+    //     float* d_m_pyramid         = nullptr;
+    //     float* d_u_pyramid         = nullptr;
+    //     float* d_r_pyramid         = nullptr;
+    //     float* d_l_spike           = nullptr;
+    //     float* d_m_spike           = nullptr;
+    //     float* d_u_spike           = nullptr;
+    //     float* d_x_spike           = nullptr;
+    //     float* d_x_boundary_solved = nullptr;
+
+    //     CHECK_CUDA(cudaMalloc((void**)&d_l_pyramid, sizeof(float) * N * num_levels));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_m_pyramid, sizeof(float) * N * num_levels));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_u_pyramid, sizeof(float) * N * num_levels));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_r_pyramid, sizeof(float) * N * num_levels));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_l_spike, sizeof(float) * num_spikes));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_m_spike, sizeof(float) * num_spikes));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_u_spike, sizeof(float) * num_spikes));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_x_spike, sizeof(float) * num_spikes));
+    //     CHECK_CUDA(cudaMalloc((void**)&d_x_boundary_solved, sizeof(float) * 2 * num_blocks));
+
+    //     // 1. Forward Sweep
+    //     // pyramid_idx uses (level * N), so ensure pyramid arrays are N * num_levels in size
+    //     cr_forward_sweep_kernel<BLOCKSIZE, float><<<num_blocks, BLOCKSIZE>>>(N,
+    //                                                                          lower_diag,
+    //                                                                          main_diag,
+    //                                                                          upper_diag,
+    //                                                                          b,
+    //                                                                          d_l_pyramid,
+    //                                                                          d_m_pyramid,
+    //                                                                          d_u_pyramid,
+    //                                                                          d_r_pyramid,
+    //                                                                          d_l_spike,
+    //                                                                          d_m_spike,
+    //                                                                          d_u_spike,
+    //                                                                          d_x_spike);
+
+    //     // 2. Spike Solver (PCR)
+    //     // This solves the global boundary dependencies in a single block
+    //     size_t spike_smem = 4 * num_spikes * sizeof(float);
+    //     spike_solver_pcr_kernel<float><<<1, num_spikes, spike_smem>>>(
+    //         num_spikes,
+    //         d_l_spike,
+    //         d_m_spike,
+    //         d_u_spike,
+    //         d_x_spike,
+    //         d_x_boundary_solved // Output: corrected X values for 0, 255, 256...
+    //     );
+
+    //     // 3. Backward Sweep
+    //     // Uses the solved boundaries and the pyramid to fill in the middle
+    //     cr_backward_sweep_kernel<BLOCKSIZE, float><<<num_blocks, BLOCKSIZE>>>(
+    //         N, d_l_pyramid, d_m_pyramid, d_u_pyramid, d_r_pyramid, d_x_boundary_solved, x);
+
+    //     // Cleanup
+    //     CHECK_CUDA(cudaFree(d_l_pyramid));
+    //     CHECK_CUDA(cudaFree(d_m_pyramid));
+    //     CHECK_CUDA(cudaFree(d_u_pyramid));
+    //     CHECK_CUDA(cudaFree(d_r_pyramid));
+    //     CHECK_CUDA(cudaFree(d_l_spike));
+    //     CHECK_CUDA(cudaFree(d_m_spike));
+    //     CHECK_CUDA(cudaFree(d_u_spike));
+    //     CHECK_CUDA(cudaFree(d_x_spike));
+    //     CHECK_CUDA(cudaFree(d_x_boundary_solved));
+    // }
     else if(m % 8 == 0)
     {
-        // std::vector<float> htemp_upper(16);
-        // std::vector<float> htemp_B(16);
-        // float*             dtemp_upper = nullptr;
-        // float*             dtemp_B     = nullptr;
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_upper, sizeof(float) * 16));
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_B, sizeof(float) * 16));
+        //std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
+        constexpr int BLOCKSIZE      = 128;
+        constexpr int GROUPSIZE      = 128;
+        constexpr int WAVEFRONT_SIZE = 32;
+        constexpr int M              = 128;
 
-        thomas_shared_transpose_kernel2<128, 32, 4, 8>
-            <<<((n - 1) / 128 + 1), 128>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+        // std::vector<float> htemp_a(M);
+        // std::vector<float> htemp_b(M);
+        // std::vector<float> htemp_c(M);
+        // std::vector<float> htemp_d(M);
+        float* dtemp_a = nullptr;
+        float* dtemp_b = nullptr;
+        float* dtemp_c = nullptr;
+        float* dtemp_d = nullptr;
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_a, sizeof(float) * M));
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_b, sizeof(float) * M));
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_c, sizeof(float) * M));
+        // CHECK_CUDA(cudaMalloc((void**)&dtemp_d, sizeof(float) * M));
+
+        // thomas_pcr_wavefront_kernel<BLOCKSIZE, WAVEFRONT_SIZE, M><<<((n - 1) / (BLOCKSIZE / WAVEFRONT_SIZE) + 1), BLOCKSIZE>>>(
+        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        //thomas_pcr_wavefront_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M><<<((n - 1) / (BLOCKSIZE / WAVEFRONT_SIZE) + 1), BLOCKSIZE>>>(
+        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        // thomas_pcr_multiple_wavefront_kernel<BLOCKSIZE, GROUPSIZE, WAVEFRONT_SIZE, M>
+        //     <<<((n - 1) / (BLOCKSIZE / GROUPSIZE) + 1), BLOCKSIZE>>>(
+        //         m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        //pcr_shared_kernel<BLOCKSIZE, GROUPSIZE, WAVEFRONT_SIZE, M>
+        //    <<<((n - 1) / (BLOCKSIZE / GROUPSIZE) + 1), BLOCKSIZE>>>(
+        //        m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+
+        pcr_shared_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M, 8><<<((n - 1) / 8 + 1), BLOCKSIZE>>>(
+            m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        //thomas_shared_transpose_kernel2<256, 32, 32, 1>
+        //    <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
         //thomas_algorithm_kernel<256, 16>
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-        // CHECK_CUDA(cudaMemcpy(
-        //     htemp_upper.data(), dtemp_upper, sizeof(float) * 16, cudaMemcpyDeviceToHost));
-        // CHECK_CUDA(cudaMemcpy(htemp_B.data(), dtemp_B, sizeof(float) * 16, cudaMemcpyDeviceToHost));
 
-        // std::cout << "htemp_upper" << std::endl;
-        // for(int i = 0; i < 16; i++)
+        // CHECK_CUDA(cudaMemcpy(htemp_a.data(), dtemp_a, sizeof(float) * M, cudaMemcpyDeviceToHost));
+        // CHECK_CUDA(cudaMemcpy(htemp_b.data(), dtemp_b, sizeof(float) * M, cudaMemcpyDeviceToHost));
+        // CHECK_CUDA(cudaMemcpy(htemp_c.data(), dtemp_c, sizeof(float) * M, cudaMemcpyDeviceToHost));
+        // CHECK_CUDA(cudaMemcpy(htemp_d.data(), dtemp_d, sizeof(float) * M, cudaMemcpyDeviceToHost));
+
+        // std::cout << "htemp_a" << std::endl;
+        // for(int i = 0; i < M; i++)
         // {
-        //     std::cout << htemp_upper[i] << " ";
+        //     std::cout << htemp_a[i] << " ";
         // }
         // std::cout << "" << std::endl;
-        // std::cout << "htemp_B" << std::endl;
-        // for(int i = 0; i < 16; i++)
+        // std::cout << "htemp_b" << std::endl;
+        // for(int i = 0; i < M; i++)
         // {
-        //     std::cout << htemp_B[i] << " ";
+        //     std::cout << htemp_b[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+        // std::cout << "htemp_c" << std::endl;
+        // for(int i = 0; i < M; i++)
+        // {
+        //     std::cout << htemp_c[i] << " ";
+        // }
+        // std::cout << "" << std::endl;
+        // std::cout << "htemp_d" << std::endl;
+        // for(int i = 0; i < M; i++)
+        // {
+        //     std::cout << htemp_d[i] << " ";
         // }
         // std::cout << "" << std::endl;
 
-        // CHECK_CUDA(cudaFree(dtemp_upper));
-        // CHECK_CUDA(cudaFree(dtemp_B));
+        // CHECK_CUDA(cudaFree(dtemp_a));
+        // CHECK_CUDA(cudaFree(dtemp_b));
+        // CHECK_CUDA(cudaFree(dtemp_c));
+        // CHECK_CUDA(cudaFree(dtemp_d));
     }
     else
     {

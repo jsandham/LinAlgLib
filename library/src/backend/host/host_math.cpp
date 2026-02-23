@@ -1354,6 +1354,13 @@ namespace linalg
             c_prime[i] = upper_diag[i] / denom;
         }
 
+        std::cout << "c_prime" << std::endl;
+        for(int i = 0; i < M; i++)
+        {
+            std::cout << c_prime[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
@@ -1367,6 +1374,16 @@ namespace linalg
                 T num      = b[M * j + i] - lower_diag[i] * d_prime[(i - 1)];
                 T denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
                 d_prime[i] = num / denom;
+            }
+
+            if(j == 0)
+            {
+                std::cout << "d_prime" << std::endl;
+                for(int i = 0; i < M; i++)
+                {
+                    std::cout << d_prime[i] << " ";
+                }
+                std::cout << "" << std::endl;
             }
 
             // Back substitution
@@ -2043,5 +2060,14 @@ void linalg::host_tridiagonal_solver(int                  m,
                                        upper_diag.get_vec(),
                                        b.get_vec(),
                                        x.get_vec());
+    }
+    else if(m == 128)
+    {
+        host_thomas_algorithm_impl<128>(n,
+                                        lower_diag.get_vec(),
+                                        main_diag.get_vec(),
+                                        upper_diag.get_vec(),
+                                        b.get_vec(),
+                                        x.get_vec());
     }
 }

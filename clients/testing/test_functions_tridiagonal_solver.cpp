@@ -41,7 +41,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 64;
+    int m = 128;
     int n = 65536;
 
     std::cout << "n: " << n << std::endl;
@@ -71,6 +71,12 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
             upper_diag[i] = -1.0;
         }
     }
+    // for(size_t i = 0; i < m; i++)
+    // {
+    //     lower_diag[i] = i;
+    //     main_diag[i]  = i + m;
+    //     upper_diag[i] = i + 2 * m;
+    // }
 
     // RHS set to make solution = 1.0 everywhere
     for(int i = 0; i < n; i++)
@@ -86,11 +92,11 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     }
 
     // Move to device
-    //lower_diag.move_to_device();
-    //main_diag.move_to_device();
-    //upper_diag.move_to_device();
-    //rhs.move_to_device();
-    //solution.move_to_device();
+    lower_diag.move_to_device();
+    main_diag.move_to_device();
+    upper_diag.move_to_device();
+    rhs.move_to_device();
+    solution.move_to_device();
 
     for(int i = 0; i < 10; i++)
     {
@@ -111,11 +117,11 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     // Move back to host for verification
-    //solution.move_to_host();
-    //main_diag.move_to_host();
-    //lower_diag.move_to_host();
-    //upper_diag.move_to_host();
-    //rhs.move_to_host();
+    solution.move_to_host();
+    main_diag.move_to_host();
+    lower_diag.move_to_host();
+    upper_diag.move_to_host();
+    rhs.move_to_host();
 
     // Verify solution by computing residual: r = b - A*x
     vector<float> residual(m * n);
