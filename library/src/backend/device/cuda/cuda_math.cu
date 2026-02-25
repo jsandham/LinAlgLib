@@ -2212,12 +2212,16 @@ void linalg::cuda_tridiagonal_solver(int          m,
         //    <<<((n - 1) / (BLOCKSIZE / GROUPSIZE) + 1), BLOCKSIZE>>>(
         //        m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
 
-        pcr_shared_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M, 8><<<((n - 1) / 8 + 1), BLOCKSIZE>>>(
-            m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        //pcr_shared_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M, 8><<<((n - 1) / 8 + 1), BLOCKSIZE>>>(
+        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
         //thomas_shared_transpose_kernel2<256, 32, 32, 1>
         //    <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
         //thomas_algorithm_kernel<256, 16>
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+        //cr_pcr_unified_kernel<1024, 32><<<n, 1024>>>(
+        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        crpcr_pow2_shared_kernel<1024, 32><<<n, 1024>>>(
+            m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
 
         // CHECK_CUDA(cudaMemcpy(htemp_a.data(), dtemp_a, sizeof(float) * M, cudaMemcpyDeviceToHost));
         // CHECK_CUDA(cudaMemcpy(htemp_b.data(), dtemp_b, sizeof(float) * M, cudaMemcpyDeviceToHost));

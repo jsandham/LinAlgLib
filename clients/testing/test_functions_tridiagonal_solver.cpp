@@ -41,8 +41,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 128;
-    int n = 65536;
+    int m = 1024;
+    int n = 1;
 
     std::cout << "n: " << n << std::endl;
 

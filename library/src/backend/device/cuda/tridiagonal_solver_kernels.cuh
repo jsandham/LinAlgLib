@@ -1198,6 +1198,334 @@ __global__ void pcr_shared_kernel2(int m,
     // }
 }
 
+template <uint32_t BLOCKSIZE, uint32_t PCR_SIZE, typename T>
+__global__ void cr_pcr_unified_kernel(int m,
+                                      int n,
+                                      const T* __restrict__ lower,
+                                      const T* __restrict__ main,
+                                      const T* __restrict__ upper,
+                                      const T* __restrict__ B,
+                                      T* __restrict__ X,
+                                      T* __restrict__ temp_a,
+                                      T* __restrict__ temp_b,
+                                      T* __restrict__ temp_c,
+                                      T* __restrict__ temp_d)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    // Shared memory allocation (4 arrays of size n)
+    __shared__ T a_shared[BLOCKSIZE];
+    __shared__ T b_shared[BLOCKSIZE];
+    __shared__ T c_shared[BLOCKSIZE];
+    __shared__ T d_shared[BLOCKSIZE];
+
+    // 1. Load data into LDS
+    if(tid < m)
+    {
+        a_shared[tid] = lower[tid];
+        b_shared[tid] = main[tid];
+        c_shared[tid] = upper[tid];
+        d_shared[tid] = B[m * bid + tid];
+    }
+    __syncthreads();
+
+    // --- PHASE 1: FORWARD CYCLIC REDUCTION ---
+    int stride    = 1;
+    int current_m = m;
+
+    while(current_m > PCR_SIZE)
+    {
+        int delta = stride;
+        stride *= 2;
+        int active_threads = current_m / 2;
+
+        if(tid < active_threads)
+        {
+            int i     = (tid + 1) * stride - 1;
+            int left  = i - delta;
+            int right = i + delta;
+
+            T w1 = a_shared[i] / b_shared[left];
+            T w2 = c_shared[i] / b_shared[right];
+
+            b_shared[i] -= w1 * c_shared[left] + w2 * a_shared[right];
+            d_shared[i] -= w1 * d_shared[left] + w2 * d_shared[right];
+            a_shared[i] = -w1 * a_shared[left];
+            c_shared[i] = -w2 * c_shared[right];
+        }
+        current_m /= 2;
+        __syncthreads();
+    }
+
+    // --- PHASE 2: PCR ON THE REDUCED SYSTEM ---
+    // Every thread that was part of the last CR step remains active here
+    if(tid < current_m)
+    {
+        int i        = (tid + 1) * stride - 1; // Map tid to the reduced system indices
+        int p_stride = stride;
+
+        // PCR loop: continue until the p_stride covers the whole reduced range
+        while(p_stride < m)
+        {
+            T a_i = a_shared[i];
+            T b_i = b_shared[i];
+            T c_i = c_shared[i];
+            T d_i = d_shared[i];
+
+            int left  = i - p_stride;
+            int right = i + p_stride;
+
+            T alpha = 0.0f, gamma = 0.0f;
+            if(left >= 0)
+                alpha = -a_i / b_shared[left];
+            if(right < m)
+                gamma = -c_i / b_shared[right];
+
+            __syncthreads(); // Ensure all threads have read old b_shared/d_shared values
+
+            b_shared[i] = b_i + alpha * c_shared[left] + gamma * a_shared[right];
+            d_shared[i] = d_i + alpha * d_shared[left] + gamma * d_shared[right];
+            a_shared[i] = alpha * a_shared[left];
+            c_shared[i] = gamma * c_shared[right];
+
+            p_stride *= 2;
+            __syncthreads();
+        }
+        // At this point, the PCR indices are solved.
+        // We store the result in d_shared to be used as 'x' in the back-solve.
+        d_shared[i] = d_shared[i] / b_shared[i];
+    }
+    __syncthreads();
+
+    // --- PHASE 3: BACKWARD CYCLIC REDUCTION ---
+    // We expand back out to fill the rows skipped in Phase 1
+    // current_n and stride are restored from the end of Phase 1
+    while(stride > 1)
+    {
+        int delta          = stride / 2;
+        int active_threads = current_m;
+
+        // In each step of back-substitution, we fill the 'midpoints'
+        if(tid < active_threads)
+        {
+            int i = (tid * stride) + delta - 1;
+
+            // Only calculate if this index wasn't already solved by PCR
+            // (Standard CR logic: indices solved = indices ± delta)
+            T left_x  = (i - delta >= 0) ? d_shared[i - delta] : 0.0f;
+            T right_x = (i + delta < m) ? d_shared[i + delta] : 0.0f;
+
+            d_shared[i]
+                = (d_shared[i] - a_shared[i] * left_x - c_shared[i] * right_x) / b_shared[i];
+        }
+        stride /= 2;
+        current_m *= 2;
+        __syncthreads();
+    }
+
+    // 4. Final Write Out
+    if(tid < m)
+    {
+        X[m * bid + tid] = d_shared[tid];
+    }
+}
+
+// Combined Parallel cyclic reduction and cyclic reduction algorithm using shared memory
+template <uint32_t BLOCKSIZE, uint32_t PCR_SIZE, typename T>
+__global__ void crpcr_pow2_shared_kernel(int m,
+                                         int n,
+                                         const T* __restrict__ lower,
+                                         const T* __restrict__ main,
+                                         const T* __restrict__ upper,
+                                         const T* __restrict__ B,
+                                         T* __restrict__ X,
+                                         T* __restrict__ temp_a,
+                                         T* __restrict__ temp_b,
+                                         T* __restrict__ temp_c,
+                                         T* __restrict__ temp_d)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    int tot_iter = static_cast<int>(log2_int(BLOCKSIZE));
+    int pcr_iter = static_cast<int>(log2_int(PCR_SIZE / 2));
+    int cr_iter  = tot_iter - pcr_iter;
+    int stride   = 1;
+    int i        = BLOCKSIZE;
+
+    // Cyclic reduction shared memory
+    __shared__ T sa[2 * BLOCKSIZE];
+    __shared__ T sb[2 * BLOCKSIZE];
+    __shared__ T sc[2 * BLOCKSIZE];
+    __shared__ T srhs[2 * BLOCKSIZE];
+    __shared__ T sx[2 * BLOCKSIZE];
+
+    // Parallel cyclic reduction shared memory
+    __shared__ T spa[PCR_SIZE];
+    __shared__ T spb[PCR_SIZE];
+    __shared__ T spc[PCR_SIZE];
+    __shared__ T sprhs[PCR_SIZE];
+    __shared__ T spx[PCR_SIZE];
+
+    // Fill cyclic reduction shared memory
+    sa[tid]               = lower[tid];
+    sa[tid + BLOCKSIZE]   = lower[tid + BLOCKSIZE];
+    sb[tid]               = main[tid];
+    sb[tid + BLOCKSIZE]   = main[tid + BLOCKSIZE];
+    sc[tid]               = upper[tid];
+    sc[tid + BLOCKSIZE]   = upper[tid + BLOCKSIZE];
+    srhs[tid]             = B[tid + m * bid];
+    srhs[tid + BLOCKSIZE] = B[tid + BLOCKSIZE + m * bid];
+
+    // The first entry of the lower diagonal and the last entry of the upper
+    // diagonal should be treated as zero
+    if(tid == 0)
+    {
+        sa[tid] = static_cast<T>(0);
+    }
+    if(tid == (BLOCKSIZE - 1))
+    {
+        sc[tid + BLOCKSIZE] = static_cast<T>(0);
+    }
+
+    __syncthreads();
+
+    // Forward reduction using cyclic reduction
+    for(int j = 0; j < cr_iter; j++)
+    {
+        stride <<= 1; //stride *= 2;
+
+        if(tid < i)
+        {
+            int index = stride * tid + stride - 1;
+            int left  = index - (stride >> 1); //stride / 2;
+            int right = index + (stride >> 1); //stride / 2;
+
+            if(right >= 2 * BLOCKSIZE)
+            {
+                right = 2 * BLOCKSIZE - 1;
+            }
+
+            T k1 = sa[index] / sb[left];
+            T k2 = sc[index] / sb[right];
+
+            sb[index]   = sb[index] - sc[left] * k1 - sa[right] * k2;
+            srhs[index] = srhs[index] - srhs[left] * k1 - srhs[right] * k2;
+            sa[index]   = -sa[left] * k1;
+            sc[index]   = -sc[right] * k2;
+        }
+
+        i >>= 1; //i /= 2;
+
+        __syncthreads();
+    }
+
+    // Parallel cyclic reduction
+    if(tid < PCR_SIZE)
+    {
+        spa[tid]   = sa[tid * stride + stride - 1];
+        spb[tid]   = sb[tid * stride + stride - 1];
+        spc[tid]   = sc[tid * stride + stride - 1];
+        sprhs[tid] = srhs[tid * stride + stride - 1];
+    }
+
+    __syncthreads();
+
+    int pcr_stride = 1;
+    for(int j = 0; j < pcr_iter; j++)
+    {
+        T ta;
+        T tb;
+        T tc;
+        T trhs;
+
+        if(tid < PCR_SIZE)
+        {
+            int right = tid + pcr_stride;
+            if(right >= PCR_SIZE)
+                right = PCR_SIZE - 1;
+
+            int left = tid - pcr_stride;
+            if(left < 0)
+                left = 0;
+
+            T k1 = spa[tid] / spb[left];
+            T k2 = spc[tid] / spb[right];
+
+            tb   = spb[tid] - spc[left] * k1 - spa[right] * k2;
+            trhs = sprhs[tid] - sprhs[left] * k1 - sprhs[right] * k2;
+            ta   = -spa[left] * k1;
+            tc   = -spc[right] * k2;
+        }
+
+        __syncthreads();
+
+        if(tid < PCR_SIZE)
+        {
+            spb[tid]   = tb;
+            sprhs[tid] = trhs;
+            spa[tid]   = ta;
+            spc[tid]   = tc;
+        }
+
+        pcr_stride <<= 1; //pcr_stride *= 2;
+
+        __syncthreads();
+    }
+
+    if(tid < pcr_stride) // same as PCR_SIZE / 2
+    {
+        // Solve 2x2 systems
+        int i   = tid;
+        int j   = tid + pcr_stride;
+        T   det = spb[j] * spb[i] - spc[i] * spa[j];
+        det     = static_cast<T>(1) / det;
+
+        spx[i] = (spb[j] * sprhs[i] - spc[i] * sprhs[j]) * det;
+        spx[j] = (sprhs[j] * spb[i] - sprhs[i] * spa[j]) * det;
+    }
+
+    __syncthreads();
+
+    if(tid < PCR_SIZE)
+    {
+        sx[tid * stride + stride - 1] = spx[tid];
+    }
+
+    // Backward substitution using cyclic reduction
+    i = PCR_SIZE;
+    for(int j = 0; j < cr_iter; j++)
+    {
+        __syncthreads();
+
+        if(tid < i)
+        {
+            int index = stride * tid + stride / 2 - 1;
+            int left  = index - (stride >> 1); //stride / 2;
+            int right = index + (stride >> 1); //stride / 2;
+
+            if(left < 0)
+            {
+                sx[index] = (srhs[index] - sc[index] * sx[right]) / sb[index];
+            }
+            else
+            {
+                sx[index]
+                    = (srhs[index] - sa[index] * sx[left] - sc[index] * sx[right]) / sb[index];
+            }
+        }
+
+        (stride >>= 1); //stride /= 2;
+        i <<= 1; //i *= 2;
+    }
+
+    __syncthreads();
+
+    X[tid + m * bid]             = sx[tid];
+    X[tid + BLOCKSIZE + m * bid] = sx[tid + BLOCKSIZE];
+}
+
 // Cyclic reduction algorithm using shared memory
 // reduce system down to a 512x512 system, solve that system with
 // PCR in a single block, then back substitute to get the final solution
