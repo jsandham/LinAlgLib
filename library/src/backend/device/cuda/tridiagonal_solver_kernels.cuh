@@ -1394,13 +1394,13 @@ __global__ void crpcr_pow2_shared_kernel(int m,
     // Forward reduction using cyclic reduction
     for(int j = 0; j < cr_iter; j++)
     {
-        stride <<= 1; //stride *= 2;
+        stride *= 2;
 
         if(tid < i)
         {
             int index = stride * tid + stride - 1;
-            int left  = index - (stride >> 1); //stride / 2;
-            int right = index + (stride >> 1); //stride / 2;
+            int left  = index - stride / 2;
+            int right = index + stride / 2;
 
             if(right >= 2 * BLOCKSIZE)
             {
@@ -1416,10 +1416,20 @@ __global__ void crpcr_pow2_shared_kernel(int m,
             sc[index]   = -sc[right] * k2;
         }
 
-        i >>= 1; //i /= 2;
+        i /= 2;
 
         __syncthreads();
     }
+
+    // temp_a[tid]             = sa[tid];
+    // temp_a[tid + BLOCKSIZE] = sa[tid + BLOCKSIZE];
+    // temp_b[tid]             = sb[tid];
+    // temp_b[tid + BLOCKSIZE] = sb[tid + BLOCKSIZE];
+    // temp_c[tid]             = sc[tid];
+    // temp_c[tid + BLOCKSIZE] = sc[tid + BLOCKSIZE];
+    // temp_d[tid]             = srhs[tid];
+    // temp_d[tid + BLOCKSIZE] = srhs[tid + BLOCKSIZE];
+    // __syncthreads();
 
     // Parallel cyclic reduction
     if(tid < PCR_SIZE)
@@ -1429,7 +1439,15 @@ __global__ void crpcr_pow2_shared_kernel(int m,
         spc[tid]   = sc[tid * stride + stride - 1];
         sprhs[tid] = srhs[tid * stride + stride - 1];
     }
+    __syncthreads();
 
+    if(tid < PCR_SIZE)
+    {
+        temp_a[tid] = spa[tid];
+        temp_b[tid] = spb[tid];
+        temp_c[tid] = spc[tid];
+        temp_d[tid] = sprhs[tid];
+    }
     __syncthreads();
 
     int pcr_stride = 1;
@@ -1473,6 +1491,15 @@ __global__ void crpcr_pow2_shared_kernel(int m,
 
         __syncthreads();
     }
+
+    // if(tid < PCR_SIZE)
+    // {
+    //     temp_a[tid] = spa[tid];
+    //     temp_b[tid] = spb[tid];
+    //     temp_c[tid] = spc[tid];
+    //     temp_d[tid] = sprhs[tid];
+    // }
+    // __syncthreads();
 
     if(tid < pcr_stride) // same as PCR_SIZE / 2
     {
@@ -1526,298 +1553,423 @@ __global__ void crpcr_pow2_shared_kernel(int m,
     X[tid + BLOCKSIZE + m * bid] = sx[tid + BLOCKSIZE];
 }
 
-// Cyclic reduction algorithm using shared memory
-// reduce system down to a 512x512 system, solve that system with
-// PCR in a single block, then back substitute to get the final solution
-// That means we launch the first kernel with 512 blocks, and the second kernel with 1 block
-// So if m = 65536, we launch 512 blocks with each block having blocksize = 128, and then 1
-// block with blocksize = 2 * 512 = 1024 (because each block from the first stage produces 2
-// unknowns for the second stage)
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void cr_forward_sweep_kernel(int n,
-                                        const T* __restrict__ lower,
-                                        const T* __restrict__ main,
-                                        const T* __restrict__ upper,
-                                        const T* __restrict__ B,
-                                        T* __restrict__ lower_pyramid,
-                                        T* __restrict__ main_pyramid,
-                                        T* __restrict__ upper_pyramid,
-                                        T* __restrict__ rhs_pyramid,
-                                        T* __restrict__ lower_spike,
-                                        T* __restrict__ main_spike,
-                                        T* __restrict__ upper_spike,
-                                        T* __restrict__ X_spike)
+// Combined Parallel cyclic reduction and cyclic reduction algorithm using shared memory
+template <uint32_t BLOCKSIZE, uint32_t PCR_SIZE, typename T>
+__global__ void crpcr_pow2_shared_kernel2(int m,
+                                          int n,
+                                          const T* __restrict__ lower,
+                                          const T* __restrict__ main,
+                                          const T* __restrict__ upper,
+                                          const T* __restrict__ B,
+                                          T* __restrict__ X,
+                                          T* __restrict__ temp_a,
+                                          T* __restrict__ temp_b,
+                                          T* __restrict__ temp_c,
+                                          T* __restrict__ temp_d)
 {
+    static_assert((BLOCKSIZE & (BLOCKSIZE - 1)) == 0, "BLOCKSIZE must be a power of two");
+    static_assert((PCR_SIZE & (PCR_SIZE - 1)) == 0, "PCR_SIZE must be a power of two");
+    static_assert(PCR_SIZE <= BLOCKSIZE, "PCR_SIZE must be <= BLOCKSIZE");
+    static_assert(PCR_SIZE >= 2, "PCR_SIZE must be >= 2");
+
     const int tid = threadIdx.x;
-    const int bid = blockIdx.x;
-    const int gid = bid * BLOCKSIZE + tid;
 
-    // Shared memory for current working set
-    __shared__ T sa[BLOCKSIZE];
-    __shared__ T sb[BLOCKSIZE];
-    __shared__ T sc[BLOCKSIZE];
-    __shared__ T srhs[BLOCKSIZE];
+    const int tot_iter = static_cast<int>(log2_int((2 * BLOCKSIZE) / 2));
+    const int pcr_iter = static_cast<int>(log2_int(PCR_SIZE / 2));
+    const int cr_iter  = tot_iter - pcr_iter;
 
-    // 1. Load data from Global to Shared Memory
-    if(gid < n)
+    int stride         = 1;
+    int active_threads = BLOCKSIZE;
+
+    // Cyclic reduction shared memory
+    __shared__ T sa[2 * BLOCKSIZE];
+    __shared__ T sb[2 * BLOCKSIZE];
+    __shared__ T sc[2 * BLOCKSIZE];
+    __shared__ T srhs[2 * BLOCKSIZE];
+
+    // Fill cyclic reduction shared memory
+    sa[tid]             = (tid < m) ? lower[tid] : static_cast<T>(0);
+    sa[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? lower[tid + BLOCKSIZE] : static_cast<T>(0);
+    sb[tid]             = (tid < m) ? main[tid] : static_cast<T>(1);
+    sb[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? main[tid + BLOCKSIZE] : static_cast<T>(1);
+    sc[tid]             = (tid < m) ? upper[tid] : static_cast<T>(0);
+    sc[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? upper[tid + BLOCKSIZE] : static_cast<T>(0);
+    srhs[tid]           = (tid < m) ? B[tid + m * blockIdx.x] : static_cast<T>(0);
+    srhs[tid + BLOCKSIZE]
+        = (tid + BLOCKSIZE < m) ? B[tid + BLOCKSIZE + m * blockIdx.x] : static_cast<T>(0);
+
+    // The first entry of the lower diagonal and the last entry of the upper
+    // diagonal should be treated as zero
+    if(tid == 0)
     {
-        sa[tid]   = lower[gid];
-        sb[tid]   = main[gid];
-        sc[tid]   = upper[gid];
-        srhs[tid] = B[gid];
+        sa[tid] = static_cast<T>(0);
     }
-    else
+    if(tid == (BLOCKSIZE - 1))
     {
-        // Handle cases where n is not a multiple of BLOCKSIZE
-        sa[tid]   = 0;
-        sb[tid]   = 1;
-        sc[tid]   = 0;
-        srhs[tid] = 0;
+        sc[tid + BLOCKSIZE] = static_cast<T>(0);
     }
+
     __syncthreads();
 
-    // 2. CR Forward Sweep
-    int stride = 1;
-    int level  = 0;
-
-    // Reduce until only indices 0 and BLOCKSIZE-1 are active
-    for(int len = BLOCKSIZE / 2; len > 1; len /= 2)
+    // Forward reduction using cyclic reduction
+    for(int j = 0; j < cr_iter; j++)
     {
-        if(tid < len)
-        {
-            // 'elim' is the node being removed from the system at this level
-            int elim  = (tid * stride * 2) + stride;
-            int left  = elim - stride;
-            int right = elim + stride;
-
-            // Store the state of the node to be eliminated in the pyramid
-            // We need these exact values to solve for x[elim] in the backward sweep
-            int pyramid_idx            = (level * n) + (bid * BLOCKSIZE) + elim;
-            lower_pyramid[pyramid_idx] = sa[elim];
-            main_pyramid[pyramid_idx]  = sb[elim];
-            upper_pyramid[pyramid_idx] = sc[elim];
-            rhs_pyramid[pyramid_idx]   = srhs[elim];
-
-            // Elimination Math: Use 'elim' row to modify 'left' and 'right'
-            T k1 = sc[left] / sb[elim];
-            T k2 = sa[right] / sb[elim];
-
-            sb[left] -= k1 * sa[elim];
-            srhs[left] -= k1 * srhs[elim];
-            sc[left] = -k1 * sc[elim]; // Link 'left' to the node 'right' of elim
-
-            sb[right] -= k2 * sc[elim];
-            srhs[right] -= k2 * srhs[elim];
-            sa[right] = -k2 * sa[elim]; // Link 'right' to the node 'left' of elim
-        }
         stride *= 2;
-        level++;
+
+        if(tid < active_threads)
+        {
+            const int index = stride * tid + stride - 1;
+            const int left  = index - stride / 2;
+            const int right = index + stride / 2;
+
+            const bool left_valid  = (left >= 0);
+            const bool right_valid = (right < 2 * BLOCKSIZE);
+
+            const T k1 = left_valid ? (sa[index] / sb[left]) : static_cast<T>(0);
+            const T k2 = right_valid ? (sc[index] / sb[right]) : static_cast<T>(0);
+
+            const T a_left    = left_valid ? sa[left] : static_cast<T>(0);
+            const T c_left    = left_valid ? sc[left] : static_cast<T>(0);
+            const T rhs_left  = left_valid ? srhs[left] : static_cast<T>(0);
+            const T a_right   = right_valid ? sa[right] : static_cast<T>(0);
+            const T c_right   = right_valid ? sc[right] : static_cast<T>(0);
+            const T rhs_right = right_valid ? srhs[right] : static_cast<T>(0);
+
+            sb[index]   = sb[index] - c_left * k1 - a_right * k2;
+            srhs[index] = srhs[index] - rhs_left * k1 - rhs_right * k2;
+            sa[index]   = -a_left * k1;
+            sc[index]   = -c_right * k2;
+        }
+
+        active_threads /= 2;
+
         __syncthreads();
     }
 
-    // 3. Final Reduction: Couple Row 0 and Row (BLOCKSIZE-1)
-    // After the loop, the block is reduced to just two equations.
-    // We must link them so the Spike system sees a 2x2 block.
-    if(tid == 0)
+    // Parallel cyclic reduction
+    const int index      = stride * tid + stride - 1;
+    int       pcr_stride = stride;
+
+    for(int j = 0; j < pcr_iter; j++)
     {
-        int first = 0;
-        int last  = BLOCKSIZE - 1;
+        T ta;
+        T tb;
+        T tc;
+        T trhs;
 
-        // Take a snapshot of original values to avoid using
-        // partially updated results in the second half of the math
-        T f_a = sa[first], f_b = sb[first], f_c = sc[first], f_d = srhs[first];
-        T l_a = sa[last], l_b = sb[last], l_c = sc[last], l_d = srhs[last];
+        if(tid < PCR_SIZE)
+        {
+            const int right = index + pcr_stride;
+            const int left  = index - pcr_stride;
 
-        // Row 0 eliminates Row 'last'
-        T k_f       = f_c / l_b;
-        sb[first]   = f_b - k_f * l_a;
-        sc[first]   = -k_f * l_c;
-        srhs[first] = f_d - k_f * l_d;
+            const bool left_valid  = (left >= 0);
+            const bool right_valid = (right < 2 * BLOCKSIZE);
 
-        // Row 'last' eliminates Row 'first'
-        T k_l      = l_a / f_b;
-        sb[last]   = l_b - k_l * f_c;
-        sa[last]   = -k_l * f_a;
-        srhs[last] = l_d - k_l * f_d;
+            const T a_left    = left_valid ? sa[left] : static_cast<T>(0);
+            const T b_left    = left_valid ? sb[left] : static_cast<T>(0);
+            const T c_left    = left_valid ? sc[left] : static_cast<T>(0);
+            const T rhs_left  = left_valid ? srhs[left] : static_cast<T>(0);
+            const T a_right   = right_valid ? sa[right] : static_cast<T>(0);
+            const T b_right   = right_valid ? sb[right] : static_cast<T>(0);
+            const T c_right   = right_valid ? sc[right] : static_cast<T>(0);
+            const T rhs_right = right_valid ? srhs[right] : static_cast<T>(0);
+
+            const T k1 = (left_valid && b_left != static_cast<T>(0)) ? (sa[index] / b_left)
+                                                                     : static_cast<T>(0);
+            const T k2 = (right_valid && b_right != static_cast<T>(0)) ? (sc[index] / b_right)
+                                                                       : static_cast<T>(0);
+
+            tb   = sb[index] - c_left * k1 - a_right * k2;
+            trhs = srhs[index] - rhs_left * k1 - rhs_right * k2;
+            ta   = -a_left * k1;
+            tc   = -c_right * k2;
+        }
+
+        __syncthreads();
+        if(tid < PCR_SIZE)
+        {
+            sb[index]   = tb;
+            srhs[index] = trhs;
+            sa[index]   = ta;
+            sc[index]   = tc;
+        }
+        pcr_stride *= 2;
+        __syncthreads();
     }
+
+    if(tid < PCR_SIZE / 2)
+    {
+        const int index = stride * tid + stride - 1;
+
+        // Solve 2x2 systems
+        const int i         = index;
+        const int j         = index + pcr_stride;
+        const T   det       = static_cast<T>(1) / (sb[j] * sb[i] - sc[i] * sa[j]);
+        const T   rhs_i_old = srhs[i];
+        const T   rhs_j_old = srhs[j];
+
+        srhs[i] = (sb[j] * rhs_i_old - sc[i] * rhs_j_old) * det;
+        srhs[j] = (rhs_j_old * sb[i] - rhs_i_old * sa[j]) * det;
+    }
+
     __syncthreads();
 
-    // 4. Output to Spike Arrays
-    if(tid == 0)
+    // Backward substitution using cyclic reduction
+    active_threads = PCR_SIZE;
+    for(int j = 0; j < cr_iter; j++)
     {
-        int out_idx          = 2 * bid;
-        lower_spike[out_idx] = sa[0]; // Original lower[bid*BLOCKSIZE]
-        main_spike[out_idx]  = sb[0];
-        upper_spike[out_idx] = sc[0]; // Points to next block
-        X_spike[out_idx]     = srhs[0];
+        __syncthreads();
+
+        if(tid < active_threads)
+        {
+            const int index = stride * tid + stride / 2 - 1;
+            const int left  = index - stride / 2;
+            const int right = index + stride / 2;
+
+            const T x_left  = (left >= 0) ? srhs[left] : static_cast<T>(0);
+            const T x_right = (right < 2 * BLOCKSIZE) ? srhs[right] : static_cast<T>(0);
+
+            srhs[index] = (srhs[index] - sa[index] * x_left - sc[index] * x_right) / sb[index];
+        }
+
+        stride /= 2;
+        active_threads *= 2;
     }
-    else if(tid == BLOCKSIZE - 1)
+
+    __syncthreads();
+
+    if(tid < m)
     {
-        int out_idx          = 2 * bid + 1;
-        lower_spike[out_idx] = sa[BLOCKSIZE - 1]; // Points to prev block
-        main_spike[out_idx]  = sb[BLOCKSIZE - 1];
-        upper_spike[out_idx] = sc[BLOCKSIZE - 1]; // Original upper[...]
-        X_spike[out_idx]     = srhs[BLOCKSIZE - 1];
+        X[tid + m * blockIdx.x] = srhs[tid];
+    }
+    if(tid + BLOCKSIZE < m)
+    {
+        X[tid + BLOCKSIZE + m * blockIdx.x] = srhs[tid + BLOCKSIZE];
     }
 }
 
-template <typename T>
-__global__ void spike_solver_pcr_kernel(int num_spikes, // e.g., 512
-                                        const T* __restrict__ l_spike,
-                                        const T* __restrict__ m_spike,
-                                        const T* __restrict__ u_spike,
-                                        const T* __restrict__ d_spike,
-                                        T* __restrict__ x_spike_out)
+// Combined CR+PCR for multiple RHS: coefficient elimination is shared across all RHS
+// B/X layout per block: [rhs0 (m entries), rhs1 (m entries), ...]
+template <uint32_t BLOCKSIZE, uint32_t PCR_SIZE, uint32_t NUM_RHS, typename T>
+__global__ void crpcr_pow2_shared_multi_rhs_kernel(int m,
+                                                   int n,
+                                                   const T* __restrict__ lower,
+                                                   const T* __restrict__ main,
+                                                   const T* __restrict__ upper,
+                                                   const T* __restrict__ B,
+                                                   T* __restrict__ X,
+                                                   T* __restrict__ temp_a,
+                                                   T* __restrict__ temp_b,
+                                                   T* __restrict__ temp_c,
+                                                   T* __restrict__ temp_d)
 {
-    const int tid = threadIdx.x;
+    static_assert((BLOCKSIZE & (BLOCKSIZE - 1)) == 0, "BLOCKSIZE must be a power of two");
+    static_assert((PCR_SIZE & (PCR_SIZE - 1)) == 0, "PCR_SIZE must be a power of two");
+    static_assert(PCR_SIZE <= BLOCKSIZE, "PCR_SIZE must be <= BLOCKSIZE");
+    static_assert(PCR_SIZE >= 2, "PCR_SIZE must be >= 2");
+    static_assert(NUM_RHS >= 1, "NUM_RHS must be >= 1");
 
-    // Shared memory for the spike system (Size = num_spikes)
-    // For 512 spikes, this is only ~8KB for doubles
-    extern __shared__ char shared_mem[];
-    T*                     sa = (T*)shared_mem;
-    T*                     sb = sa + num_spikes;
-    T*                     sc = sb + num_spikes;
-    T*                     sd = sc + num_spikes;
-
-    // 1. Load the spike system into shared memory
-    if(tid < num_spikes)
-    {
-        sa[tid] = l_spike[tid];
-        sb[tid] = m_spike[tid];
-        sc[tid] = u_spike[tid];
-        sd[tid] = d_spike[tid];
-    }
-    __syncthreads();
-
-    // 2. PCR Algorithm
-    // For 512 elements, this loop runs 9 times (2^9 = 512)
-    for(int h = 1; h < num_spikes; h <<= 1)
-    {
-        T a = sa[tid];
-        T b = sb[tid];
-        T c = sc[tid];
-        T d = sd[tid];
-
-        int left  = tid - h;
-        int right = tid + h;
-
-        T k1 = 0, k2 = 0;
-
-        if(left >= 0)
-        {
-            k1 = a / sb[left];
-        }
-        if(right < num_spikes)
-        {
-            k2 = c / sb[right];
-        }
-
-        __syncthreads(); // Wait for all threads to finish reading 'old' values
-
-        // Update coefficients
-        // If k1/k2 are 0 (out of bounds), the original values are preserved
-        sb[tid] = b - (left >= 0 ? k1 * sc[left] : 0) - (right < num_spikes ? k2 * sa[right] : 0);
-        sd[tid] = d - (left >= 0 ? k1 * sd[left] : 0) - (right < num_spikes ? k2 * sd[right] : 0);
-        sa[tid] = (left >= 0 ? -k1 * sa[left] : 0);
-        sc[tid] = (right < num_spikes ? -k2 * sc[right] : 0);
-
-        __syncthreads(); // Wait for all threads to write 'new' values
-    }
-
-    // 3. Final Solution
-    // After log2(N) steps, the system is diagonalized: b_i * x_i = d_i
-    if(tid < num_spikes)
-    {
-        x_spike_out[tid] = sd[tid] / sb[tid];
-    }
-}
-
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void cr_backward_sweep_kernel(int n,
-                                         const T* __restrict__ lower_pyramid,
-                                         const T* __restrict__ main_pyramid,
-                                         const T* __restrict__ upper_pyramid,
-                                         const T* __restrict__ rhs_pyramid,
-                                         const T* __restrict__ x_spike_in,
-                                         T* __restrict__ X_final)
-{
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
-    const int gid = bid * BLOCKSIZE + tid;
 
-    // Shared memory to store the solving X values
-    __shared__ T sx[BLOCKSIZE];
+    constexpr int M_PAD = 2 * BLOCKSIZE;
 
-    // 1. Initialize shared memory with the boundary values from Phase 2
+    const int tot_iter = static_cast<int>(log2_int((2 * BLOCKSIZE) / 2));
+    const int pcr_iter = static_cast<int>(log2_int(PCR_SIZE / 2));
+    const int cr_iter  = tot_iter - pcr_iter;
+
+    int stride         = 1;
+    int active_threads = BLOCKSIZE;
+
+    __shared__ T sa[M_PAD];
+    __shared__ T sb[M_PAD];
+    __shared__ T sc[M_PAD];
+    __shared__ T srhs[NUM_RHS * M_PAD];
+
+    sa[tid]             = (tid < m) ? lower[tid] : static_cast<T>(0);
+    sa[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? lower[tid + BLOCKSIZE] : static_cast<T>(0);
+    sb[tid]             = (tid < m) ? main[tid] : static_cast<T>(1);
+    sb[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? main[tid + BLOCKSIZE] : static_cast<T>(1);
+    sc[tid]             = (tid < m) ? upper[tid] : static_cast<T>(0);
+    sc[tid + BLOCKSIZE] = (tid + BLOCKSIZE < m) ? upper[tid + BLOCKSIZE] : static_cast<T>(0);
+
+    const int rhs_block_base = bid * m * NUM_RHS;
+    for(int rhs = 0; rhs < NUM_RHS; rhs++)
+    {
+        const int rhs_base = rhs * m;
+        srhs[rhs * M_PAD + tid]
+            = (tid < m) ? B[rhs_block_base + rhs_base + tid] : static_cast<T>(0);
+        srhs[rhs * M_PAD + tid + BLOCKSIZE] = (tid + BLOCKSIZE < m)
+                                                  ? B[rhs_block_base + rhs_base + tid + BLOCKSIZE]
+                                                  : static_cast<T>(0);
+    }
+
     if(tid == 0)
     {
-        sx[0] = x_spike_in[2 * bid];
+        sa[0] = static_cast<T>(0);
     }
-    else if(tid == BLOCKSIZE - 1)
+    if(tid == (BLOCKSIZE - 1))
     {
-        sx[BLOCKSIZE - 1] = x_spike_in[2 * bid + 1];
+        sc[BLOCKSIZE + tid] = static_cast<T>(0);
     }
+
     __syncthreads();
 
-    // 2. Backward Sweep
-    // We start from the widest stride used in the forward sweep and shrink it
-    // If BLOCKSIZE is 256, the last forward len was 2, so we start backwards from there.
-    int stride = BLOCKSIZE / 2;
-    int level  = (int)log2f(BLOCKSIZE) - 2; // Match the level count from forward sweep
-
-    for(int len = 2; len <= BLOCKSIZE / 2; len <<= 1)
+    for(int j = 0; j < cr_iter; j++)
     {
-        // Only threads representing nodes to be 'filled in' are active
-        if(tid < len)
+        stride *= 2;
+
+        if(tid < active_threads)
         {
-            int elim  = (tid * stride * 2) + stride;
-            int left  = elim - stride;
-            int right = elim + stride;
+            const int index = stride * tid + stride - 1;
+            const int left  = index - stride / 2;
+            const int right = index + stride / 2;
 
-            // Load the coefficients that were used to eliminate this node
-            int pyramid_idx = (level * n) + (bid * BLOCKSIZE) + elim;
+            const bool left_valid  = (left >= 0);
+            const bool right_valid = (right < M_PAD);
 
-            T a = lower_pyramid[pyramid_idx];
-            T b = main_pyramid[pyramid_idx];
-            T c = upper_pyramid[pyramid_idx];
-            T d = rhs_pyramid[pyramid_idx];
+            const T k1 = left_valid ? (sa[index] / sb[left]) : static_cast<T>(0);
+            const T k2 = right_valid ? (sc[index] / sb[right]) : static_cast<T>(0);
 
-            // Solve for x[elim]:
-            // b*x_elim + a*x_left + c*x_right = d
-            // x_elim = (d - a*x_left - c*x_right) / b
-            sx[elim] = (d - a * sx[left] - c * sx[right]) / b;
+            const T a_left  = left_valid ? sa[left] : static_cast<T>(0);
+            const T c_left  = left_valid ? sc[left] : static_cast<T>(0);
+            const T a_right = right_valid ? sa[right] : static_cast<T>(0);
+            const T c_right = right_valid ? sc[right] : static_cast<T>(0);
+
+            sb[index] = sb[index] - c_left * k1 - a_right * k2;
+            sa[index] = -a_left * k1;
+            sc[index] = -c_right * k2;
+
+            for(int rhs = 0; rhs < NUM_RHS; rhs++)
+            {
+                T* const rhs_vec   = &srhs[rhs * M_PAD];
+                const T  rhs_left  = left_valid ? rhs_vec[left] : static_cast<T>(0);
+                const T  rhs_right = right_valid ? rhs_vec[right] : static_cast<T>(0);
+                rhs_vec[index]     = rhs_vec[index] - rhs_left * k1 - rhs_right * k2;
+            }
         }
-        stride >>= 1;
-        level--;
+
+        active_threads /= 2;
         __syncthreads();
     }
 
-    // 3. Final Step: Fill the Level 0 gaps
-    // The loop above fills the tree, but we have one last set of
-    // original 'odd' nodes (stride 1) to solve.
-    if(tid < (BLOCKSIZE / 2))
+    const int index      = stride * tid + stride - 1;
+    int       pcr_stride = stride;
+
+    for(int j = 0; j < pcr_iter; j++)
     {
-        int elim  = (tid * 2) + 1;
-        int left  = elim - 1;
-        int right = elim + 1;
+        T ta;
+        T tb;
+        T tc;
+        T trhs[NUM_RHS];
 
-        // Level 0 of pyramid
-        int pyramid_idx = (bid * BLOCKSIZE) + elim;
+        if(tid < PCR_SIZE)
+        {
+            const int right = index + pcr_stride;
+            const int left  = index - pcr_stride;
 
-        T a = lower_pyramid[pyramid_idx];
-        T b = main_pyramid[pyramid_idx];
-        T c = upper_pyramid[pyramid_idx];
-        T d = rhs_pyramid[pyramid_idx];
+            const bool left_valid  = (left >= 0);
+            const bool right_valid = (right < M_PAD);
 
-        sx[elim] = (d - a * sx[left] - c * sx[right]) / b;
+            const T a_left  = left_valid ? sa[left] : static_cast<T>(0);
+            const T b_left  = left_valid ? sb[left] : static_cast<T>(0);
+            const T c_left  = left_valid ? sc[left] : static_cast<T>(0);
+            const T a_right = right_valid ? sa[right] : static_cast<T>(0);
+            const T b_right = right_valid ? sb[right] : static_cast<T>(0);
+            const T c_right = right_valid ? sc[right] : static_cast<T>(0);
+
+            const T k1 = (left_valid && b_left != static_cast<T>(0)) ? (sa[index] / b_left)
+                                                                     : static_cast<T>(0);
+            const T k2 = (right_valid && b_right != static_cast<T>(0)) ? (sc[index] / b_right)
+                                                                       : static_cast<T>(0);
+
+            tb = sb[index] - c_left * k1 - a_right * k2;
+            ta = -a_left * k1;
+            tc = -c_right * k2;
+
+            for(int rhs = 0; rhs < NUM_RHS; rhs++)
+            {
+                T* const rhs_vec   = &srhs[rhs * M_PAD];
+                const T  rhs_left  = left_valid ? rhs_vec[left] : static_cast<T>(0);
+                const T  rhs_right = right_valid ? rhs_vec[right] : static_cast<T>(0);
+                trhs[rhs]          = rhs_vec[index] - rhs_left * k1 - rhs_right * k2;
+            }
+        }
+
+        __syncthreads();
+        if(tid < PCR_SIZE)
+        {
+            sb[index] = tb;
+            sa[index] = ta;
+            sc[index] = tc;
+            for(int rhs = 0; rhs < NUM_RHS; rhs++)
+            {
+                srhs[rhs * M_PAD + index] = trhs[rhs];
+            }
+        }
+        pcr_stride *= 2;
+        __syncthreads();
     }
+
+    if(tid < PCR_SIZE / 2)
+    {
+        const int base_index = stride * tid + stride - 1;
+        const int i          = base_index;
+        const int j          = base_index + pcr_stride;
+        const T   det        = static_cast<T>(1) / (sb[j] * sb[i] - sc[i] * sa[j]);
+
+        for(int rhs = 0; rhs < NUM_RHS; rhs++)
+        {
+            T* const rhs_vec = &srhs[rhs * M_PAD];
+            const T  rhs_i   = rhs_vec[i];
+            const T  rhs_j   = rhs_vec[j];
+
+            rhs_vec[i] = (sb[j] * rhs_i - sc[i] * rhs_j) * det;
+            rhs_vec[j] = (rhs_j * sb[i] - rhs_i * sa[j]) * det;
+        }
+    }
+
     __syncthreads();
 
-    // 4. Write final results to global memory
-    if(gid < n)
+    active_threads = PCR_SIZE;
+    for(int j = 0; j < cr_iter; j++)
     {
-        X_final[gid] = sx[tid];
+        __syncthreads();
+
+        if(tid < active_threads)
+        {
+            const int back_index = stride * tid + stride / 2 - 1;
+            const int left       = back_index - stride / 2;
+            const int right      = back_index + stride / 2;
+
+            for(int rhs = 0; rhs < NUM_RHS; rhs++)
+            {
+                T* const rhs_vec = &srhs[rhs * M_PAD];
+                const T  x_left  = (left >= 0) ? rhs_vec[left] : static_cast<T>(0);
+                const T  x_right = (right < M_PAD) ? rhs_vec[right] : static_cast<T>(0);
+
+                rhs_vec[back_index]
+                    = (rhs_vec[back_index] - sa[back_index] * x_left - sc[back_index] * x_right)
+                      / sb[back_index];
+            }
+        }
+
+        stride /= 2;
+        active_threads *= 2;
+    }
+
+    __syncthreads();
+
+    for(int rhs = 0; rhs < NUM_RHS; rhs++)
+    {
+        const int rhs_base = rhs_block_base + rhs * m;
+        if(tid < m)
+        {
+            X[rhs_base + tid] = srhs[rhs * M_PAD + tid];
+        }
+        if(tid + BLOCKSIZE < m)
+        {
+            X[rhs_base + tid + BLOCKSIZE] = srhs[rhs * M_PAD + tid + BLOCKSIZE];
+        }
     }
 }
-
-#endif // TRIDIAGONAL_SOLVER_KERNELS_H

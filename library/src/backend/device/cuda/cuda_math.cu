@@ -2106,6 +2106,63 @@ void linalg::cuda_tridiagonal_solver(int          m,
         //thomas_algorithm_kernel<256, 8>
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
     }
+    // else if(m == 512)
+    // {
+    //     constexpr int      BLOCKSIZE = 256;
+    //     std::vector<float> htemp_a(2 * BLOCKSIZE);
+    //     std::vector<float> htemp_b(2 * BLOCKSIZE);
+    //     std::vector<float> htemp_c(2 * BLOCKSIZE);
+    //     std::vector<float> htemp_d(2 * BLOCKSIZE);
+    //     float*             dtemp_a = nullptr;
+    //     float*             dtemp_b = nullptr;
+    //     float*             dtemp_c = nullptr;
+    //     float*             dtemp_d = nullptr;
+    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_a, sizeof(float) * 2 * BLOCKSIZE));
+    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_b, sizeof(float) * 2 * BLOCKSIZE));
+    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_c, sizeof(float) * 2 * BLOCKSIZE));
+    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_d, sizeof(float) * 2 * BLOCKSIZE));
+    //     crpcr_pow2_shared_kernel2<BLOCKSIZE, 64><<<n, BLOCKSIZE>>>(
+    //         m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+
+    //     CHECK_CUDA(cudaMemcpy(
+    //         htemp_a.data(), dtemp_a, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
+    //     CHECK_CUDA(cudaMemcpy(
+    //         htemp_b.data(), dtemp_b, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
+    //     CHECK_CUDA(cudaMemcpy(
+    //         htemp_c.data(), dtemp_c, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
+    //     CHECK_CUDA(cudaMemcpy(
+    //         htemp_d.data(), dtemp_d, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
+
+    //     std::cout << "htemp_a" << std::endl;
+    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
+    //     {
+    //         std::cout << htemp_a[i] << " ";
+    //     }
+    //     std::cout << "" << std::endl;
+    //     std::cout << "htemp_b" << std::endl;
+    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
+    //     {
+    //         std::cout << htemp_b[i] << " ";
+    //     }
+    //     std::cout << "" << std::endl;
+    //     std::cout << "htemp_c" << std::endl;
+    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
+    //     {
+    //         std::cout << htemp_c[i] << " ";
+    //     }
+    //     std::cout << "" << std::endl;
+    //     std::cout << "htemp_d" << std::endl;
+    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
+    //     {
+    //         std::cout << htemp_d[i] << " ";
+    //     }
+    //     std::cout << "" << std::endl;
+
+    //     CHECK_CUDA(cudaFree(dtemp_a));
+    //     CHECK_CUDA(cudaFree(dtemp_b));
+    //     CHECK_CUDA(cudaFree(dtemp_c));
+    //     CHECK_CUDA(cudaFree(dtemp_d));
+    // }
     // else if(m == 65536)
     // {
     //     std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
@@ -2180,7 +2237,7 @@ void linalg::cuda_tridiagonal_solver(int          m,
     //     CHECK_CUDA(cudaFree(d_x_spike));
     //     CHECK_CUDA(cudaFree(d_x_boundary_solved));
     // }
-    else if(m % 8 == 0)
+    else if(m <= 512 /*m % 8 == 0*/)
     {
         //std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
         constexpr int BLOCKSIZE      = 128;
@@ -2220,7 +2277,10 @@ void linalg::cuda_tridiagonal_solver(int          m,
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
         //cr_pcr_unified_kernel<1024, 32><<<n, 1024>>>(
         //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        crpcr_pow2_shared_kernel<1024, 32><<<n, 1024>>>(
+
+        //crpcr_pow2_shared_kernel2<256, 64><<<n, 256>>>(
+        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        crpcr_pow2_shared_multi_rhs_kernel<256, 128, 8><<<((n - 1) / 8 + 1), 256>>>(
             m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
 
         // CHECK_CUDA(cudaMemcpy(htemp_a.data(), dtemp_a, sizeof(float) * M, cudaMemcpyDeviceToHost));
