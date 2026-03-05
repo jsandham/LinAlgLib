@@ -1973,3 +1973,5 @@ __global__ void crpcr_pow2_shared_multi_rhs_kernel(int m,
         }
     }
 }
+
+#endif // TRIDIAGONAL_SOLVER_KERNELS_H

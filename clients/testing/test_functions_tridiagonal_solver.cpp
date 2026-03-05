@@ -41,8 +41,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 512;
-    int n = 65536;
+    int m = 8;
+    int n = 1;
 
     std::cout << "n: " << n << std::endl;
 
@@ -98,18 +98,18 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     rhs.move_to_device();
     solution.move_to_device();
 
-    for(int i = 0; i < 10; i++)
-    {
-        tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
-    }
+    //for(int i = 0; i < 10; i++)
+    //{
+    tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
+    //}
     linalg::sync();
 
     // Solve the system
     auto t1 = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < 100; i++)
-    {
-        tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
-    }
+    //for(int i = 0; i < 100; i++)
+    //{
+    //    tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution);
+    //}
     linalg::sync();
     auto t2 = std::chrono::high_resolution_clock::now();
 

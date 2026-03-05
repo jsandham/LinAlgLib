@@ -49,6 +49,7 @@
 #include "extract_diagonal_kernels.cuh"
 #include "preconditioner_kernels.cuh"
 #include "tridiagonal_solver_kernels.cuh"
+#include "tridiagonal_solver_large_kernels.cuh"
 
 #include "../../../trace.h"
 
@@ -2101,10 +2102,164 @@ void linalg::cuda_tridiagonal_solver(int          m,
     }
     else if(m == 8)
     {
-        thomas_shared_transpose_kernel2<256, 32, 8, 4>
-            <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+        // thomas_shared_transpose_kernel2<256, 32, 8, 4>
+        //     <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
         //thomas_algorithm_kernel<256, 8>
         //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
+
+        int nblocks    = ((m - 1) / 4 + 1);
+        int num_spikes = 2 * nblocks;
+
+        std::vector<float> hlower_mod(m);
+        std::vector<float> hmain_mod(m);
+        std::vector<float> hupper_mod(m);
+        std::vector<float> hb_mod(m);
+
+        std::vector<float> hspike_lower(2 * nblocks);
+        std::vector<float> hspike_main(2 * nblocks);
+        std::vector<float> hspike_upper(2 * nblocks);
+        std::vector<float> hspike_b(2 * nblocks);
+        std::vector<float> hspike_x(2 * nblocks);
+
+        float* dlower_mod = nullptr;
+        float* dmain_mod  = nullptr;
+        float* dupper_mod = nullptr;
+        float* db_mod     = nullptr;
+        CHECK_CUDA(cudaMalloc((void**)&dlower_mod, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&dmain_mod, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&dupper_mod, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&db_mod, sizeof(float) * m));
+
+        float* dspike_lower = nullptr;
+        float* dspike_main  = nullptr;
+        float* dspike_upper = nullptr;
+        float* dspike_b     = nullptr;
+        float* dspike_x     = nullptr;
+        CHECK_CUDA(cudaMalloc((void**)&dspike_lower, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&dspike_main, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&dspike_upper, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&dspike_b, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&dspike_x, sizeof(float) * 2 * nblocks));
+
+        pcr_tiled_forward_kernel<4><<<((m - 1) / 4 + 1), 4>>>(m,
+                                                              n,
+                                                              lower_diag,
+                                                              main_diag,
+                                                              upper_diag,
+                                                              b,
+                                                              dlower_mod,
+                                                              dmain_mod,
+                                                              dupper_mod,
+                                                              db_mod,
+                                                              dspike_lower,
+                                                              dspike_main,
+                                                              dspike_upper,
+                                                              dspike_b);
+
+        std::cout << "nblocks: " << nblocks << " num_spikes: " << num_spikes << std::endl;
+
+        if(num_spikes == 4)
+        {
+            spike_solver_pcr_kernel<4>
+                <<<1, 4>>>(num_spikes, dspike_lower, dspike_main, dspike_upper, dspike_b, dspike_x);
+        }
+
+        backward_sweep_kernel<4>
+            <<<((m - 1) / 4 + 1), 4>>>(m, dlower_mod, dmain_mod, dupper_mod, db_mod, dspike_b, x);
+
+        CHECK_CUDA(
+            cudaMemcpy(hlower_mod.data(), dlower_mod, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(
+            cudaMemcpy(hmain_mod.data(), dmain_mod, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(
+            cudaMemcpy(hupper_mod.data(), dupper_mod, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(hb_mod.data(), db_mod, sizeof(float) * m, cudaMemcpyDeviceToHost));
+
+        std::cout << "hlower_mod" << std::endl;
+        for(int i = 0; i < m; i++)
+        {
+            std::cout << hlower_mod[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        std::cout << "hmain_mod" << std::endl;
+        for(int i = 0; i < m; i++)
+        {
+            std::cout << hmain_mod[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        std::cout << "hupper_mod" << std::endl;
+        for(int i = 0; i < m; i++)
+        {
+            std::cout << hupper_mod[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        std::cout << "hb_mod" << std::endl;
+        for(int i = 0; i < m; i++)
+        {
+            std::cout << hb_mod[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        CHECK_CUDA(cudaMemcpy(hspike_lower.data(),
+                              dspike_lower,
+                              sizeof(float) * 2 * nblocks,
+                              cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+            hspike_main.data(), dspike_main, sizeof(float) * 2 * nblocks, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(hspike_upper.data(),
+                              dspike_upper,
+                              sizeof(float) * 2 * nblocks,
+                              cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+            hspike_b.data(), dspike_b, sizeof(float) * 2 * nblocks, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+            hspike_x.data(), dspike_x, sizeof(float) * 2 * nblocks, cudaMemcpyDeviceToHost));
+
+        std::cout << "hspike_lower" << std::endl;
+        for(int i = 0; i < 2 * nblocks; i++)
+        {
+            std::cout << hspike_lower[i] << " ";
+        }
+        std::cout << "" << std::endl;
+        std::cout << "hspike_main" << std::endl;
+        for(int i = 0; i < 2 * nblocks; i++)
+        {
+            std::cout << hspike_main[i] << " ";
+        }
+        std::cout << "" << std::endl;
+        std::cout << "hspike_upper" << std::endl;
+        for(int i = 0; i < 2 * nblocks; i++)
+        {
+            std::cout << hspike_upper[i] << " ";
+        }
+        std::cout << "" << std::endl;
+        std::cout << "hspike_b" << std::endl;
+        for(int i = 0; i < 2 * nblocks; i++)
+        {
+            std::cout << hspike_b[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        std::cout << "hspike_x" << std::endl;
+        for(int i = 0; i < 2 * nblocks; i++)
+        {
+            std::cout << hspike_x[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        CHECK_CUDA(cudaFree(dlower_mod));
+        CHECK_CUDA(cudaFree(dmain_mod));
+        CHECK_CUDA(cudaFree(dupper_mod));
+        CHECK_CUDA(cudaFree(db_mod));
+
+        CHECK_CUDA(cudaFree(dspike_lower));
+        CHECK_CUDA(cudaFree(dspike_main));
+        CHECK_CUDA(cudaFree(dspike_upper));
+        CHECK_CUDA(cudaFree(dspike_b));
+        CHECK_CUDA(cudaFree(dspike_x));
     }
     // else if(m == 512)
     // {
