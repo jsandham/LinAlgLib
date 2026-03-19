@@ -1953,13 +1953,30 @@ void linalg::host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
                       nullptr);
 }
 
-void linalg::host_tridiagonal_solver(int                  m,
-                                     int                  n,
-                                     const vector<float>& lower_diag,
-                                     const vector<float>& main_diag,
-                                     const vector<float>& upper_diag,
-                                     const vector<float>& b,
-                                     vector<float>&       x)
+void linalg::host_tridiagonal_analysis(int                  m,
+                                       int                  n,
+                                       const vector<float>& lower_diag,
+                                       const vector<float>& main_diag,
+                                       const vector<float>& upper_diag,
+                                       tridiagonal_descr*   descr)
+{
+    ROUTINE_TRACE("linalg::host_tridiagonal_allocate_buffers");
+
+    assert(m > 0);
+    assert(n > 0);
+    assert(main_diag.get_size() == m);
+    assert(lower_diag.get_size() == m);
+    assert(upper_diag.get_size() == m);
+}
+
+void linalg::host_tridiagonal_solver(int                      m,
+                                     int                      n,
+                                     const vector<float>&     lower_diag,
+                                     const vector<float>&     main_diag,
+                                     const vector<float>&     upper_diag,
+                                     const vector<float>&     b,
+                                     vector<float>&           x,
+                                     const tridiagonal_descr* descr)
 {
     ROUTINE_TRACE("linalg::host_tridiagonal_solver");
 

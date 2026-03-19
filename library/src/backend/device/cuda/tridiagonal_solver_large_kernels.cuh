@@ -32,6 +32,140 @@
 #include "common.cuh"
 
 template <uint32_t BLOCKSIZE, typename T>
+__global__ void test_spike_format_kernel(int m,
+                                         const T* __restrict__ spike_lower_in,
+                                         const T* __restrict__ spike_main_in,
+                                         const T* __restrict__ spike_upper_in,
+                                         const T* __restrict__ spike_B_in,
+                                         T* __restrict__ spike_lower_out,
+                                         T* __restrict__ spike_main_out,
+                                         T* __restrict__ spike_upper_out,
+                                         T* __restrict__ spike_B_out)
+{
+    const int tid = threadIdx.x;
+    const int gid = blockIdx.x * BLOCKSIZE + tid;
+
+    // Shared memory for the tile's coefficients
+    __shared__ T sa[BLOCKSIZE];
+    __shared__ T sb[BLOCKSIZE];
+    __shared__ T sc[BLOCKSIZE];
+    __shared__ T sd[BLOCKSIZE];
+
+    // 1. Load data from Global to Shared Memory
+    sa[tid] = (gid < m) ? spike_lower_in[gid] : static_cast<T>(0);
+    sb[tid] = (gid < m) ? spike_main_in[gid] : static_cast<T>(1);
+    sc[tid] = (gid < m) ? spike_upper_in[gid] : static_cast<T>(0);
+    sd[tid] = (gid < m) ? spike_B_in[gid] : static_cast<T>(0);
+    __syncthreads();
+
+    //if(gid < m)
+    //{
+    //    spike_lower_out[gid] = sa[tid];
+    //    spike_main_out[gid]  = sb[tid];
+    //    spike_upper_out[gid] = sc[tid];
+    //    spike_B_out[gid]     = sd[tid];
+    //}
+
+    if(tid == 0 || tid == BLOCKSIZE - 1)
+    {
+        const int first = 0;
+        const int last  = gridDim.x - 1;
+        const int row   = (tid == 0) ? (2 * blockIdx.x) : (2 * blockIdx.x + 1);
+
+        // Default to 0 to maintain sparse structure
+        spike_lower_out[row] = 0;
+        spike_main_out[row]  = 0;
+        spike_upper_out[row] = 0;
+
+        // Interior / Boundary Logic
+        if(blockIdx.x == first && tid == 0) // Row 0
+        {
+            spike_main_out[0]  = sb[0];
+            spike_upper_out[0] = sc[0];
+        }
+        else if(blockIdx.x == last && tid == BLOCKSIZE - 1) // Final Row (2*last + 1)
+        {
+            spike_lower_out[row] = sa[BLOCKSIZE - 1];
+            spike_main_out[row]  = sb[BLOCKSIZE - 1];
+        }
+        else if(tid == 0) // Start of middle/last tiles (Row 2, 4, 6...)
+        {
+            spike_lower_out[row] = sb[0]; // From previous tile's neighbor
+            spike_main_out[row]  = sa[0];
+            if(blockIdx.x != gridDim.x - 1)
+            {
+                spike_upper_out[row] = sc[0];
+            }
+        }
+        else // End of middle/first tiles (Row 1, 3, 5...)
+        {
+            if(blockIdx.x != 0)
+            {
+                spike_lower_out[row] = sa[BLOCKSIZE - 1];
+            }
+
+            spike_main_out[row]  = sc[BLOCKSIZE - 1];
+            spike_upper_out[row] = sb[BLOCKSIZE - 1];
+        }
+
+        //tid==3 bid==0 -> row 0
+        //tid==0 bid==0 -> row 1
+        //tid==3 bid==1 -> row 2
+        //tid==0 bid==1 -> row 3
+        //tid==3 bid==2 -> row 4
+        //tid==0 bid==2 -> row 5
+
+        // what I want is:
+        //tid==0 bid==0 -> row 0 <----first row is special
+        //tid==0 bid==1 -> row 1
+        //tid==3 bid==0 -> row 2
+        //tid==0 bid==2 -> row 3
+        //tid==3 bid==1 -> row 4
+        //tid==3 bid==2 -> row 5 <----last row is special
+
+        // what I want is:
+        //tid==0 bid==0 -> row 0 <----first row is special
+        //tid==0 bid==1 -> row 1
+        //tid==3 bid==0 -> row 2
+        //tid==0 bid==2 -> row 3
+        //tid==3 bid==1 -> row 4
+        //tid==0 bid==3 -> row 5
+        //tid==3 bid==2 -> row 6
+        //tid==3 bid==2 -> row 7 <----last row is special
+
+        int row_B;
+        if(tid == 0)
+        {
+            // Left boundaries (tid=0) fill rows: 0, 1, 3, 5, 7...
+            if(blockIdx.x == 0)
+            {
+                row_B = 0;
+            }
+            else
+            {
+                // Skips row 2, 4, 6... which are reserved for Right boundaries
+                row_B = 2 * blockIdx.x - 1;
+            }
+        }
+        else
+        {
+            // Right boundaries (tid=B-1) fill rows: 2, 4, 6...
+            // The last row is special-cased to 2*N - 1
+            if(blockIdx.x == gridDim.x - 1)
+            {
+                row_B = 2 * gridDim.x - 1;
+            }
+            else
+            {
+                row_B = 2 * (blockIdx.x + 1);
+            }
+        }
+
+        spike_B_out[row_B] = sd[tid];
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
 __global__ void pcr_tiled_forward_kernel(int m,
                                          int n,
                                          const T* __restrict__ lower,
@@ -48,19 +182,32 @@ __global__ void pcr_tiled_forward_kernel(int m,
                                          T* __restrict__ spike_B)
 {
     const int tid = threadIdx.x;
-    const int gid = blockIdx.x * BLOCKSIZE + tid;
+    const int bid = blockIdx.x;
+    const int gid = bid * BLOCKSIZE + tid;
+
+    T a = (gid < m) ? lower[gid] : static_cast<T>(0);
+    T b = (gid < m) ? main[gid] : static_cast<T>(1);
+    T c = (gid < m) ? upper[gid] : static_cast<T>(0);
+    T d[NUM_RHS];
+    for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+    {
+        d[rhs] = (gid < m && (NUM_RHS * blockIdx.y + rhs) < n) ? B[m * (NUM_RHS * blockIdx.y + rhs) + gid] : static_cast<T>(0);
+    }
 
     // Shared memory for the tile's coefficients
     __shared__ T sa[BLOCKSIZE];
     __shared__ T sb[BLOCKSIZE];
     __shared__ T sc[BLOCKSIZE];
-    __shared__ T sd[BLOCKSIZE];
+    __shared__ T sd[BLOCKSIZE * NUM_RHS];
 
     // 1. Load data from Global to Shared Memory
-    sa[tid] = (gid < m) ? lower[gid] : static_cast<T>(0);
-    sb[tid] = (gid < m) ? main[gid] : static_cast<T>(1);
-    sc[tid] = (gid < m) ? upper[gid] : static_cast<T>(0);
-    sd[tid] = (gid < m) ? B[gid] : static_cast<T>(0);
+    sa[tid] = a;
+    sb[tid] = b;
+    sc[tid] = c;
+    for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+    {
+        sd[BLOCKSIZE * rhs + tid] = d[rhs];
+    }
     __syncthreads();
 
     // 2. Perform Local PCR iterations (log2(BLOCKSIZE))
@@ -72,62 +219,117 @@ __global__ void pcr_tiled_forward_kernel(int m,
         const T a_left = (left >= 0) ? sa[left] : static_cast<T>(0);
         const T b_left = (left >= 0) ? sb[left] : static_cast<T>(1);
         const T c_left = (left >= 0) ? sc[left] : static_cast<T>(0);
-        const T d_left = (left >= 0) ? sd[left] : static_cast<T>(0);
 
         const T a_right = (right < BLOCKSIZE) ? sa[right] : static_cast<T>(0);
         const T b_right = (right < BLOCKSIZE) ? sb[right] : static_cast<T>(1);
         const T c_right = (right < BLOCKSIZE) ? sc[right] : static_cast<T>(0);
-        const T d_right = (right < BLOCKSIZE) ? sd[right] : static_cast<T>(0);
-
-        const T a = sa[tid];
-        const T b = sb[tid];
-        const T c = sc[tid];
-        const T d = sd[tid];
 
         // Elimination math
         const T alpha = (left >= 0) ? -a / b_left : static_cast<T>(0);
         const T gamma = (right < BLOCKSIZE) ? -c / b_right : static_cast<T>(0);
 
-        // If neighbors were out of tile, the alpha/gamma remains,
-        // effectively preserving the dependency for the Global Glue phase.
+        const T a_new = (left >= 0) ? alpha * a_left : a;
+        const T b_new = b + alpha * c_left + gamma * a_right;
+        const T c_new = (right < BLOCKSIZE) ? gamma * c_right : c;
 
-        __syncthreads(); // Ensure all reads are done before writing
+        __syncthreads();
 
-        sa[tid] = alpha * a_left;
-        sb[tid] = b + alpha * c_left + gamma * a_right;
-        sc[tid] = gamma * c_right;
-        sd[tid] = d + alpha * d_left + gamma * d_right;
+        sa[tid] = a_new;
+        sb[tid] = b_new;
+        sc[tid] = c_new;
 
-        __syncthreads(); // Sync for next iteration
+        a = a_new;
+        b = b_new;
+        c = c_new;
+
+        for(int rhs = 0; rhs < NUM_RHS; rhs++)
+        {
+            const T d_left = (left >= 0) ? sd[left + rhs * BLOCKSIZE] : static_cast<T>(0);
+            const T d_right
+                = (right < BLOCKSIZE) ? sd[right + rhs * BLOCKSIZE] : static_cast<T>(0);
+
+            const T d_new = d[rhs] + alpha * d_left + gamma * d_right;
+
+            __syncthreads();
+            sd[BLOCKSIZE * rhs + tid] = d_new;
+
+            d[rhs] = d_new;
+            __syncthreads();
+        }
     }
 
     // --- NEW: Write modified coefficients back to Global Memory ---
-    // These modified values represent the relationship:
-    // m[i]*x[i] = d[i] - l[i]*x[tile_start] - u[i]*x[tile_end]
     if(gid < m)
     {
         lower_modified[gid] = sa[tid];
         main_modified[gid]  = sb[tid];
         upper_modified[gid] = sc[tid];
-        B_modified[gid]     = sd[tid];
+        for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+        {
+            if((NUM_RHS * blockIdx.y + rhs) < n)
+            {
+                B_modified[m * (NUM_RHS * blockIdx.y + rhs) + gid] = d[rhs];
+            }
+        }
     }
 
-    // 3. Write Interface Rows to the Global Glue System
-    // Each tile contributes its first and last rows
+    // 3. Write Interface Rows to the Global spike System
     if(tid == 0 || tid == BLOCKSIZE - 1)
     {
-        // glue_idx: Tile 0 gives index 0,1; Tile 1 gives index 2,3...
-        int spike_idx = blockIdx.x * 2 + (tid == 0 ? 0 : 1);
+        const int first = 0;
+        const int last  = gridDim.x - 1;
+        const int row   = (tid == 0) ? (2 * blockIdx.x) : (2 * blockIdx.x + 1);
 
-        spike_lower[spike_idx] = sa[tid];
-        spike_main[spike_idx]  = sb[tid];
-        spike_upper[spike_idx] = sc[tid];
-        spike_B[spike_idx]     = sd[tid];
+        // Default to 0 to maintain sparse structure
+        spike_lower[row] = 0;
+        spike_main[row]  = 0;
+        spike_upper[row] = 0;
+
+        // Interior / Boundary Logic
+        if(blockIdx.x == first && tid == 0) // Row 0
+        {
+            spike_main[0]  = sb[0];
+            spike_upper[0] = sc[0];
+        }
+        else if(blockIdx.x == last && tid == BLOCKSIZE - 1) // Final Row (2*last + 1)
+        {
+            spike_lower[row] = sa[BLOCKSIZE - 1];
+            spike_main[row]  = sb[BLOCKSIZE - 1];
+        }
+        else if(tid == 0) // Start of middle/last tiles (Row 2, 4, 6...)
+        {
+            spike_lower[row] = sb[0]; // From previous tile's neighbor
+            spike_main[row]  = sa[0];
+
+            if(blockIdx.x != gridDim.x - 1)
+            {
+                spike_upper[row] = sc[0];
+            }
+        }
+        else // End of middle/first tiles (Row 1, 3, 5...)
+        {
+            if(blockIdx.x != 0)
+            {
+                spike_lower[row] = sa[BLOCKSIZE - 1];
+            }
+
+            spike_main[row]  = sc[BLOCKSIZE - 1];
+            spike_upper[row] = sb[BLOCKSIZE - 1];
+        }
+
+        for(int rhs = 0; rhs < NUM_RHS; rhs++)
+        {
+            if(gid < m && (NUM_RHS * blockIdx.y + rhs) < n)
+            {
+                spike_B[2 * gridDim.x * (NUM_RHS * blockIdx.y + rhs) + row] = sd[tid + rhs * BLOCKSIZE];
+            }
+        }
     }
 }
 
-template <uint32_t BLOCKSIZE, typename T>
+template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
 __global__ void spike_solver_pcr_kernel(int num_spikes, // e.g., 512
+                                        int n,
                                         const T* __restrict__ l_spike,
                                         const T* __restrict__ m_spike,
                                         const T* __restrict__ u_spike,
@@ -135,17 +337,29 @@ __global__ void spike_solver_pcr_kernel(int num_spikes, // e.g., 512
                                         T* __restrict__ X_spike_out)
 {
     const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    T a = (tid < num_spikes) ? l_spike[tid] : static_cast<T>(0);
+    T b = (tid < num_spikes) ? m_spike[tid] : static_cast<T>(1);
+    T c = (tid < num_spikes) ? u_spike[tid] : static_cast<T>(0);
+    T d[NUM_RHS];
+    for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+    {
+        d[rhs] = (tid < num_spikes && (NUM_RHS * bid + rhs) < n) ? B_spike[num_spikes * (NUM_RHS * bid + rhs) + tid] : static_cast<T>(0);
+    }
 
     __shared__ T sa[BLOCKSIZE];
     __shared__ T sb[BLOCKSIZE];
     __shared__ T sc[BLOCKSIZE];
-    __shared__ T sd[BLOCKSIZE];
+    __shared__ T sd[BLOCKSIZE * NUM_RHS];
 
-    // 1. Load the spike system into shared memory
-    sa[tid] = (tid < num_spikes) ? l_spike[tid] : static_cast<T>(0);
-    sb[tid] = (tid < num_spikes) ? m_spike[tid] : static_cast<T>(1);
-    sc[tid] = (tid < num_spikes) ? u_spike[tid] : static_cast<T>(0);
-    sd[tid] = (tid < num_spikes) ? B_spike[tid] : static_cast<T>(0);
+    sa[tid] = a;
+    sb[tid] = b;
+    sc[tid] = c;
+    for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+    {
+        sd[BLOCKSIZE * rhs + tid] = d[rhs];
+    }
     __syncthreads();
 
     // 2. PCR Algorithm
@@ -158,63 +372,110 @@ __global__ void spike_solver_pcr_kernel(int num_spikes, // e.g., 512
         const T a_left = (left >= 0) ? sa[left] : static_cast<T>(0);
         const T b_left = (left >= 0) ? sb[left] : static_cast<T>(1);
         const T c_left = (left >= 0) ? sc[left] : static_cast<T>(0);
-        const T d_left = (left >= 0) ? sd[left] : static_cast<T>(0);
 
         const T a_right = (right < BLOCKSIZE) ? sa[right] : static_cast<T>(0);
         const T b_right = (right < BLOCKSIZE) ? sb[right] : static_cast<T>(1);
         const T c_right = (right < BLOCKSIZE) ? sc[right] : static_cast<T>(0);
-        const T d_right = (right < BLOCKSIZE) ? sd[right] : static_cast<T>(0);
-
-        const T a = sa[tid];
-        const T b = sb[tid];
-        const T c = sc[tid];
-        const T d = sd[tid];
 
         const T k1 = (left >= 0) ? a / b_left : static_cast<T>(0);
         const T k2 = (right < BLOCKSIZE) ? c / b_right : static_cast<T>(0);
 
-        __syncthreads(); // Wait for all threads to finish reading 'old' values
+        const T a_new = -k1 * a_left;
+        const T b_new = b - k1 * c_left - k2 * a_right;
+        const T c_new = -k2 * c_right;
 
-        // Update coefficients
-        // If k1/k2 are 0 (out of bounds), the original values are preserved
-        sb[tid] = b - k1 * c_left - k2 * a_right;
-        sd[tid] = d - k1 * d_left - k2 * d_right;
-        sa[tid] = -k1 * a_left;
-        sc[tid] = -k2 * c_right;
+        __syncthreads();
 
-        __syncthreads(); // Wait for all threads to write 'new' values
+        sa[tid] = a_new;
+        sb[tid] = b_new;
+        sc[tid] = c_new;
+
+        a = a_new;
+        b = b_new;
+        c = c_new;
+
+        for(int rhs = 0; rhs < NUM_RHS; rhs++)
+        {
+            const T d_left  = (left >= 0) ? sd[left + rhs * BLOCKSIZE] : static_cast<T>(0);
+            const T d_right = (right < BLOCKSIZE) ? sd[right + rhs * BLOCKSIZE] : static_cast<T>(0);
+
+            const T d_new = d[rhs] - d_left * k1 - d_right * k2;
+
+            __syncthreads();
+            sd[tid + rhs * BLOCKSIZE] = d_new;
+
+            d[rhs] = d_new;
+            __syncthreads();
+        }
     }
 
     // 3. Final Solution
     // After log2(N) steps, the system is diagonalized: b_i * x_i = d_i
     if(tid < num_spikes)
     {
-        X_spike_out[tid] = sd[tid] / sb[tid];
+        for(int rhs = 0; rhs < NUM_RHS; ++rhs)
+        {
+            if((NUM_RHS * bid + rhs) < n)
+            {
+                X_spike_out[num_spikes * (NUM_RHS * bid + rhs) + tid] = sd[tid + rhs * BLOCKSIZE] / sb[tid];
+            }
+        }
     }
 }
 
-template <uint32_t BLOCKSIZE, typename T>
-__global__ void backward_sweep_kernel(int m, T* low, T* main, T* up, T* d, T* spike_res, T* X)
+template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
+__global__ void pcr_tiled_backward_kernel(int m,
+                                          int n,
+                                          int num_spikes,
+                                          const T* __restrict__ lower_modified,
+                                          const T* __restrict__ main_modified,
+                                          const T* __restrict__ upper_modified,
+                                          const T* __restrict__ B_modified,
+                                          const T* __restrict__ X_spike,
+                                          T* __restrict__ X_final)
 {
-    int tid = threadIdx.x;
-    int gid = blockIdx.x * BLOCKSIZE + tid;
-    if(gid >= m)
-        return;
+    const int tid = threadIdx.x;
+    const int gid = blockIdx.x * BLOCKSIZE + tid;
+    const int N = gridDim.x; // same as num_spikes
 
-    // Each internal node i needs its neighbors (i-stride) and (i+stride)
-    // In a tiled approach, the "neighbors" for the internal nodes
-    // were reduced to the spike values during the forward sweep.
+    if (gid >= m) return;
 
-    float sol_top    = spike_res[blockIdx.x * 2];
-    float sol_bottom = spike_res[blockIdx.x * 2 + 1];
+    // 1. Load the modified coefficients from the Forward phase
+    const T a_mod = lower_modified[gid];
+    const T b_mod = main_modified[gid];
+    const T c_mod = upper_modified[gid];
 
-    // Simple back-substitution using the local modified equations
-    // Note: In a production PCR, you'd store the intermediate
-    // forward sweep values to reconstruct x[gid] here.
+    // 2. Retrieve the solved interface variables from X_spike
+    // We need the solved values for this tile's boundaries to resolve internal rows.
+    // Note: We use the EXACT same row mapping logic as the Forward kernel.
 
-    // Example logic for intermediate rows:
-    // x[gid] = (d[gid] - l[gid]*sol_top - u[gid]*sol_bottom) / m[gid];
-    X[gid] = (d[gid] - low[gid] * sol_top - up[gid] * sol_bottom) / main[gid];
+    // int row_left  = (blockIdx.x == 0) ? 0 : (2 * blockIdx.x - 1);
+    // int row_right = (blockIdx.x == N - 1) ? (2 * N - 1) : (2 * (blockIdx.x + 1)); // I think this assumes x0 x3 x4 x7
+    const int row_left  = (blockIdx.x == 0) ? 0 : (2 * blockIdx.x);
+    const int row_right = (blockIdx.x == N - 1) ? (2 * N - 1) : (2 * blockIdx.x + 1);
+
+    for (int rhs = 0; rhs < NUM_RHS; rhs++)
+    {
+        if((NUM_RHS * blockIdx.y + rhs) < n)
+        {
+            const T d_mod = B_modified[m * (NUM_RHS * blockIdx.y + rhs) + gid];
+
+            // These are the solved x_interface values that affect this tile
+            const T x_interface_left  = X_spike[num_spikes * (NUM_RHS * blockIdx.y + rhs) + row_left];
+            const T x_interface_right = X_spike[num_spikes * (NUM_RHS * blockIdx.y + rhs) + row_right];
+
+            // 3. Final Substitution
+            // If tid is 0 or BLOCKSIZE-1, the result should ideally match the spike solver.
+            // However, we apply the formula to all threads to solve the internal rows.
+
+            // For internal threads, a_mod and c_mod represent the "spikes"
+            // pointing to the boundary variables of the tile.
+            const T x_final = (d_mod - (a_mod * x_interface_left) - (c_mod * x_interface_right)) / b_mod;
+
+            // 4. Store result to global memory
+            X_final[m * (NUM_RHS * blockIdx.y + rhs) + gid] = x_final;
+        }
+    }
 }
 
 // // Cyclic reduction algorithm using shared memory

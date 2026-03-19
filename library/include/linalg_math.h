@@ -517,6 +517,16 @@ namespace linalg
      */
     LINALGLIB_API void csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
 
+    LINALGLIB_API void create_tridiagonal_descr(tridiagonal_descr** descr);
+    LINALGLIB_API void destroy_tridiagonal_descr(tridiagonal_descr* descr);
+
+    LINALGLIB_API void tridiagonal_analysis(int                  m,
+                                            int                  n,
+                                            const vector<float>& lower_diag,
+                                            const vector<float>& main_diag,
+                                            const vector<float>& upper_diag,
+                                            tridiagonal_descr*   descr);
+
     /**
      * @brief Solves a tridiagonal system of equations using the Thomas algorithm.
      *
@@ -530,14 +540,16 @@ namespace linalg
      * @param upper_diag The vector representing the upper diagonal of the tridiagonal matrix.
      * @param rhs The right-hand side vector of the linear system.
      * @param solution The output vector that will contain the solution to the system.
+     * @param descr The descriptor containing analysis information for the tridiagonal system.
      */
-    LINALGLIB_API void tridiagonal_solver(int                  m,
-                                          int                  n,
-                                          const vector<float>& lower_diag,
-                                          const vector<float>& main_diag,
-                                          const vector<float>& upper_diag,
-                                          const vector<float>& rhs,
-                                          vector<float>&       solution);
+    LINALGLIB_API void tridiagonal_solver(int                      m,
+                                          int                      n,
+                                          const vector<float>&     lower_diag,
+                                          const vector<float>&     main_diag,
+                                          const vector<float>&     upper_diag,
+                                          const vector<float>&     rhs,
+                                          vector<float>&           solution,
+                                          const tridiagonal_descr* descr);
 }
 
 #endif

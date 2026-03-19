@@ -84,5 +84,7 @@ namespace linalg
      * destroyed with destroy_csrilu0_descr().
      */
     struct csrilu0_descr;
+
+    struct tridiagonal_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H

@@ -456,13 +456,67 @@ void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
         "linalg::csrilu0_compute", host_csrilu0_compute, device_csrilu0_compute, A, descr);
 }
 
-void linalg::tridiagonal_solver(int                  m,
-                                int                  n,
-                                const vector<float>& lower_diag,
-                                const vector<float>& main_diag,
-                                const vector<float>& upper_diag,
-                                const vector<float>& rhs,
-                                vector<float>&       solution)
+struct linalg::tridiagonal_descr
+{
+    float* lower_modified;
+    float* main_modified;
+    float* upper_modified;
+    float* b_modified;
+
+    float* spike_lower;
+    float* spike_main;
+    float* spike_upper;
+    float* spike_b;
+    float* spike_x;
+};
+
+void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
+{
+    ROUTINE_TRACE("linalg::create_tridiagonal_descr");
+
+    *descr = new tridiagonal_descr;
+    allocate_tridiagonal_device_data(*descr);
+}
+
+void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)
+{
+    ROUTINE_TRACE("linalg::destroy_tridiagonal_descr");
+
+    if(descr != nullptr)
+    {
+        free_tridiagonal_device_data(descr);
+        delete descr;
+    }
+}
+
+void linalg::tridiagonal_analysis(int                  m,
+                                  int                  n,
+                                  const vector<float>& lower_diag,
+                                  const vector<float>& main_diag,
+                                  const vector<float>& upper_diag,
+                                  tridiagonal_descr*   descr)
+{
+    ROUTINE_TRACE("linalg::tridiagonal_analysis");
+
+    backend_dispatch("linalg::tridiagonal_analysis",
+                     host_tridiagonal_analysis,
+                     device_tridiagonal_analysis,
+                     m,
+                     n,
+                     lower_diag,
+                     main_diag,
+                     upper_diag,
+                     descr);
+}
+
+void linalg::tridiagonal_solver(int                      m,
+                                int                      n,
+                                const vector<float>&     lower_diag,
+                                const vector<float>&     main_diag,
+                                const vector<float>&     upper_diag,
+                                const vector<float>&     rhs,
+                                vector<float>&           solution,
+                                const tridiagonal_descr* descr)
 {
     ROUTINE_TRACE("linalg::tridiagonal_solver");
 
@@ -475,5 +529,6 @@ void linalg::tridiagonal_solver(int                  m,
                             main_diag,
                             upper_diag,
                             rhs,
-                            solution);
+                            solution,
+                            descr);
 }

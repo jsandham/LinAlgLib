@@ -354,13 +354,26 @@ namespace linalg
                               double*              csr_val,
                               const csrilu0_descr* descr);
 
-    void cuda_tridiagonal_solver(int          m,
-                                 int          n,
-                                 const float* lower_diag,
-                                 const float* main_diag,
-                                 const float* upper_diag,
-                                 const float* b,
-                                 float*       x);
+    struct tridiagonal_descr;
+
+    void allocate_tridiagonal_cuda_data(tridiagonal_descr* descr);
+    void free_tridiagonal_cuda_data(tridiagonal_descr* descr);
+
+    void cuda_tridiagonal_analysis(int                m,
+                                   int                n,
+                                   const float*       lower_diag,
+                                   const float*       main_diag,
+                                   const float*       upper_diag,
+                                   tridiagonal_descr* descr);
+
+    void cuda_tridiagonal_solver(int                      m,
+                                 int                      n,
+                                 const float*             lower_diag,
+                                 const float*             main_diag,
+                                 const float*             upper_diag,
+                                 const float*             b,
+                                 float*                   x,
+                                 const tridiagonal_descr* descr);
 }
 
 #endif
