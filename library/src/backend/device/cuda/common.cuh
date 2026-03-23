@@ -96,6 +96,11 @@ namespace linalg
 #define CHECK_CUDA_LAUNCH_ERROR()
 #endif
 
+__device__ __forceinline__ int log2_int(unsigned int value)
+{
+    return 31 - __clz(value);
+}
+
 template <uint32_t WARPSIZE, typename T>
 __device__ __forceinline__ void warp_reduction_sum(T* __restrict__ data, int lid)
 {

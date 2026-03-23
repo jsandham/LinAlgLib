@@ -39,12 +39,16 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 {
     std::cout << "test_tridiagonal_solver" << std::endl;
 
+    // for(int m = 2; m <= 128; m++)
+    // {
+    // for(int n = 1; n <= 128; n++)
+    // {
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 131072;
-    int n = 256;
+    int m = 262144;
+    int n = 1024;
 
-    std::cout << "n: " << n << std::endl;
+    std::cout << "m: " << m << " n: " << n << std::endl;
 
     // Create tridiagonal matrix coefficients
     vector<float> lower_diag(m);
@@ -85,7 +89,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 0.001 * i + 1.0;
+            rhs[m * i + j] = 1.0;
         }
 
         // Adjust boundary conditions
@@ -175,6 +179,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     if(!success)
     {
         std::cout << "Test FAILED: residual exceeds tolerance" << std::endl;
+        // return false;
     }
     else
     {
@@ -182,4 +187,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     }
 
     return success;
+    // }
+    // }
+
+    // return true;
 }

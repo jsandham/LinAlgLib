@@ -27,6 +27,7 @@
 #include <cmath>
 #include <cuda_runtime.h>
 #include <iostream>
+#include <map>
 
 #include <thrust/copy.h>
 #include <thrust/device_vector.h>
@@ -48,8 +49,10 @@
 #include "dot_product_kernels.cuh"
 #include "extract_diagonal_kernels.cuh"
 #include "preconditioner_kernels.cuh"
+#include "tridiagonal_cyclic_reduction_kernels.cuh"
 #include "tridiagonal_solver_kernels.cuh"
-#include "tridiagonal_solver_large_kernels.cuh"
+#include "tridiagonal_thomas_algorithm_kernels.cuh"
+#include "tridiagonal_tiled_pcr_spike_kernels.cuh"
 
 #include "../../../trace.h"
 
@@ -2140,18 +2143,18 @@ void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
     }
 }
 
-void linalg::cuda_tridiagonal_analysis(int                  m,
-                                        int                  n,
-                                        const float*         lower_diag,
-                                        const float*         main_diag,
-                                        const float*         upper_diag,
-                                        tridiagonal_descr*   descr)
+void linalg::cuda_tridiagonal_analysis(int                m,
+                                       int                n,
+                                       const float*       lower_diag,
+                                       const float*       main_diag,
+                                       const float*       upper_diag,
+                                       tridiagonal_descr* descr)
 {
     // Re-analysis with different dimensions must release old buffers first.
     free_tridiagonal_cuda_data(descr);
 
     constexpr int BLOCKSIZE = 256;
-    int nblocks    = ((m - 1) / BLOCKSIZE + 1);
+    int           nblocks   = ((m - 1) / BLOCKSIZE + 1);
 
     CHECK_CUDA(cudaMalloc((void**)&descr->lower_modified, sizeof(float) * m));
     CHECK_CUDA(cudaMalloc((void**)&descr->main_modified, sizeof(float) * m));
@@ -2165,339 +2168,348 @@ void linalg::cuda_tridiagonal_analysis(int                  m,
     CHECK_CUDA(cudaMalloc((void**)&descr->spike_x, sizeof(float) * 2 * nblocks * n));
 }
 
-void linalg::cuda_tridiagonal_solver(int          m,
-                                     int          n,
-                                     const float* lower_diag,
-                                     const float* main_diag,
-                                     const float* upper_diag,
-                                     const float* b,
-                                     float*       x,
-                                     const tridiagonal_descr* descr)
+namespace linalg
 {
-    if(m == 2)
+    template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
+    static void launch_pcr_tiled_forward_elimination_kernel(int      m,
+                                                            int      n,
+                                                            const T* lower,
+                                                            const T* main,
+                                                            const T* upper,
+                                                            const T* B,
+                                                            T*       lower_modified,
+                                                            T*       main_modified,
+                                                            T*       upper_modified,
+                                                            T*       B_modified,
+                                                            T*       spike_lower,
+                                                            T*       spike_main,
+                                                            T*       spike_upper,
+                                                            T*       spike_B)
     {
-        thomas_algorithm_kernel<256, 2>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 3)
-    {
-        thomas_algorithm_kernel<256, 3>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 4)
-    {
-        thomas_algorithm_kernel<256, 4>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 5)
-    {
-        thomas_algorithm_kernel<256, 5>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 6)
-    {
-        thomas_algorithm_kernel<256, 6>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 7)
-    {
-        thomas_algorithm_kernel<256, 7>
-            <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m == 131072)
-    {
-        // thomas_shared_transpose_kernel2<256, 32, 8, 4>
-        //     <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
-        //thomas_algorithm_kernel<256, 8>
-        //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-
-        constexpr int BLOCKSIZE = 256; // remember to change in analysis as well!
-        constexpr int NUM_RHS = 8;
-        int nblocks    = ((m - 1) / BLOCKSIZE + 1);
-        int num_spikes = 2 * nblocks;
-
         dim3 grid((m - 1) / BLOCKSIZE + 1, (n - 1) / NUM_RHS + 1);
         dim3 block(BLOCKSIZE);
 
         pcr_tiled_forward_kernel<BLOCKSIZE, NUM_RHS><<<grid, block>>>(m,
                                                                       n,
-                                                                      lower_diag,
-                                                                      main_diag,
-                                                                      upper_diag,
-                                                                      b,
-                                                                      descr->lower_modified,
-                                                                      descr->main_modified,
-                                                                      descr->upper_modified,
-                                                                      descr->b_modified,
-                                                                      descr->spike_lower,
-                                                                      descr->spike_main,
-                                                                      descr->spike_upper,
-                                                                      descr->spike_b);
-
-        if(num_spikes == 4)
-        {
-            spike_solver_pcr_kernel<4, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 4>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 8)
-        {
-            spike_solver_pcr_kernel<8, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 8>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 16)
-        {
-            spike_solver_pcr_kernel<16, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 16>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 32)
-        {
-            spike_solver_pcr_kernel<32, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 32>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 64)
-        {
-            spike_solver_pcr_kernel<64, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 64>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 128)
-        {
-            spike_solver_pcr_kernel<128, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 128>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 256)
-        {
-            spike_solver_pcr_kernel<256, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 256>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 512)
-        {
-            spike_solver_pcr_kernel<512, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 512>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-        else if(num_spikes == 1024)
-        {
-            spike_solver_pcr_kernel<1024, NUM_RHS>
-                <<<(n - 1) / NUM_RHS + 1, 1024>>>(num_spikes, n, descr->spike_lower, descr->spike_main, descr->spike_upper, descr->spike_b, descr->spike_x);
-        }
-
-        pcr_tiled_backward_kernel<BLOCKSIZE, NUM_RHS>
-            <<<grid, block>>>(m, n, num_spikes, descr->lower_modified, descr->main_modified, descr->upper_modified, descr->b_modified, descr->spike_x, x);
+                                                                      lower,
+                                                                      main,
+                                                                      upper,
+                                                                      B,
+                                                                      lower_modified,
+                                                                      main_modified,
+                                                                      upper_modified,
+                                                                      B_modified,
+                                                                      spike_lower,
+                                                                      spike_main,
+                                                                      spike_upper,
+                                                                      spike_B);
     }
-    // else if(m == 512)
-    // {
-    //     constexpr int      BLOCKSIZE = 256;
-    //     std::vector<float> htemp_a(2 * BLOCKSIZE);
-    //     std::vector<float> htemp_b(2 * BLOCKSIZE);
-    //     std::vector<float> htemp_c(2 * BLOCKSIZE);
-    //     std::vector<float> htemp_d(2 * BLOCKSIZE);
-    //     float*             dtemp_a = nullptr;
-    //     float*             dtemp_b = nullptr;
-    //     float*             dtemp_c = nullptr;
-    //     float*             dtemp_d = nullptr;
-    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_a, sizeof(float) * 2 * BLOCKSIZE));
-    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_b, sizeof(float) * 2 * BLOCKSIZE));
-    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_c, sizeof(float) * 2 * BLOCKSIZE));
-    //     CHECK_CUDA(cudaMalloc((void**)&dtemp_d, sizeof(float) * 2 * BLOCKSIZE));
-    //     crpcr_pow2_shared_kernel2<BLOCKSIZE, 64><<<n, BLOCKSIZE>>>(
-    //         m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
 
-    //     CHECK_CUDA(cudaMemcpy(
-    //         htemp_a.data(), dtemp_a, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
-    //     CHECK_CUDA(cudaMemcpy(
-    //         htemp_b.data(), dtemp_b, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
-    //     CHECK_CUDA(cudaMemcpy(
-    //         htemp_c.data(), dtemp_c, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
-    //     CHECK_CUDA(cudaMemcpy(
-    //         htemp_d.data(), dtemp_d, sizeof(float) * 2 * BLOCKSIZE, cudaMemcpyDeviceToHost));
-
-    //     std::cout << "htemp_a" << std::endl;
-    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
-    //     {
-    //         std::cout << htemp_a[i] << " ";
-    //     }
-    //     std::cout << "" << std::endl;
-    //     std::cout << "htemp_b" << std::endl;
-    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
-    //     {
-    //         std::cout << htemp_b[i] << " ";
-    //     }
-    //     std::cout << "" << std::endl;
-    //     std::cout << "htemp_c" << std::endl;
-    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
-    //     {
-    //         std::cout << htemp_c[i] << " ";
-    //     }
-    //     std::cout << "" << std::endl;
-    //     std::cout << "htemp_d" << std::endl;
-    //     for(int i = 0; i < 2 * BLOCKSIZE; i++)
-    //     {
-    //         std::cout << htemp_d[i] << " ";
-    //     }
-    //     std::cout << "" << std::endl;
-
-    //     CHECK_CUDA(cudaFree(dtemp_a));
-    //     CHECK_CUDA(cudaFree(dtemp_b));
-    //     CHECK_CUDA(cudaFree(dtemp_c));
-    //     CHECK_CUDA(cudaFree(dtemp_d));
-    // }
-    // else if(m == 65536)
-    // {
-    //     std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
-    //     // Configuration
-    //     const int N          = 65536;
-    //     const int BLOCKSIZE  = 256;
-    //     const int num_blocks = N / BLOCKSIZE;
-    //     const int num_spikes = 2 * num_blocks; // 512
-    //     const int num_levels = 7; // log2(256) - 1
-
-    //     float* d_l_pyramid         = nullptr;
-    //     float* d_m_pyramid         = nullptr;
-    //     float* d_u_pyramid         = nullptr;
-    //     float* d_r_pyramid         = nullptr;
-    //     float* d_l_spike           = nullptr;
-    //     float* d_m_spike           = nullptr;
-    //     float* d_u_spike           = nullptr;
-    //     float* d_x_spike           = nullptr;
-    //     float* d_x_boundary_solved = nullptr;
-
-    //     CHECK_CUDA(cudaMalloc((void**)&d_l_pyramid, sizeof(float) * N * num_levels));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_m_pyramid, sizeof(float) * N * num_levels));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_u_pyramid, sizeof(float) * N * num_levels));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_r_pyramid, sizeof(float) * N * num_levels));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_l_spike, sizeof(float) * num_spikes));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_m_spike, sizeof(float) * num_spikes));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_u_spike, sizeof(float) * num_spikes));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_x_spike, sizeof(float) * num_spikes));
-    //     CHECK_CUDA(cudaMalloc((void**)&d_x_boundary_solved, sizeof(float) * 2 * num_blocks));
-
-    //     // 1. Forward Sweep
-    //     // pyramid_idx uses (level * N), so ensure pyramid arrays are N * num_levels in size
-    //     cr_forward_sweep_kernel<BLOCKSIZE, float><<<num_blocks, BLOCKSIZE>>>(N,
-    //                                                                          lower_diag,
-    //                                                                          main_diag,
-    //                                                                          upper_diag,
-    //                                                                          b,
-    //                                                                          d_l_pyramid,
-    //                                                                          d_m_pyramid,
-    //                                                                          d_u_pyramid,
-    //                                                                          d_r_pyramid,
-    //                                                                          d_l_spike,
-    //                                                                          d_m_spike,
-    //                                                                          d_u_spike,
-    //                                                                          d_x_spike);
-
-    //     // 2. Spike Solver (PCR)
-    //     // This solves the global boundary dependencies in a single block
-    //     size_t spike_smem = 4 * num_spikes * sizeof(float);
-    //     spike_solver_pcr_kernel<float><<<1, num_spikes, spike_smem>>>(
-    //         num_spikes,
-    //         d_l_spike,
-    //         d_m_spike,
-    //         d_u_spike,
-    //         d_x_spike,
-    //         d_x_boundary_solved // Output: corrected X values for 0, 255, 256...
-    //     );
-
-    //     // 3. Backward Sweep
-    //     // Uses the solved boundaries and the pyramid to fill in the middle
-    //     cr_backward_sweep_kernel<BLOCKSIZE, float><<<num_blocks, BLOCKSIZE>>>(
-    //         N, d_l_pyramid, d_m_pyramid, d_u_pyramid, d_r_pyramid, d_x_boundary_solved, x);
-
-    //     // Cleanup
-    //     CHECK_CUDA(cudaFree(d_l_pyramid));
-    //     CHECK_CUDA(cudaFree(d_m_pyramid));
-    //     CHECK_CUDA(cudaFree(d_u_pyramid));
-    //     CHECK_CUDA(cudaFree(d_r_pyramid));
-    //     CHECK_CUDA(cudaFree(d_l_spike));
-    //     CHECK_CUDA(cudaFree(d_m_spike));
-    //     CHECK_CUDA(cudaFree(d_u_spike));
-    //     CHECK_CUDA(cudaFree(d_x_spike));
-    //     CHECK_CUDA(cudaFree(d_x_boundary_solved));
-    // }
-    else if(m <= 512 /*m % 8 == 0*/)
+    template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
+    static void launch_spike_solver_pcr_kernel(int      num_spikes,
+                                               int      n,
+                                               const T* l_spike,
+                                               const T* m_spike,
+                                               const T* u_spike,
+                                               const T* B_spike,
+                                               T*       X_spike_out)
     {
-        //std::cout << "cuda_tridiagonal_solver m: " << m << " n: " << n << std::endl;
-        constexpr int BLOCKSIZE      = 128;
-        constexpr int GROUPSIZE      = 128;
-        constexpr int WAVEFRONT_SIZE = 32;
-        constexpr int M              = 128;
+        spike_solver_pcr_kernel<BLOCKSIZE, NUM_RHS>
+            <<<dim3((n - 1) / NUM_RHS + 1), dim3(BLOCKSIZE)>>>(
+                num_spikes, n, l_spike, m_spike, u_spike, B_spike, X_spike_out);
+    }
 
-        // std::vector<float> htemp_a(M);
-        // std::vector<float> htemp_b(M);
-        // std::vector<float> htemp_c(M);
-        // std::vector<float> htemp_d(M);
-        float* dtemp_a = nullptr;
-        float* dtemp_b = nullptr;
-        float* dtemp_c = nullptr;
-        float* dtemp_d = nullptr;
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_a, sizeof(float) * M));
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_b, sizeof(float) * M));
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_c, sizeof(float) * M));
-        // CHECK_CUDA(cudaMalloc((void**)&dtemp_d, sizeof(float) * M));
+    template <uint32_t BLOCKSIZE, uint32_t NUM_RHS, typename T>
+    static void launch_pcr_tiled_backward_substitution_kernel(int      m,
+                                                              int      n,
+                                                              int      num_spikes,
+                                                              const T* lower_modified,
+                                                              const T* main_modified,
+                                                              const T* upper_modified,
+                                                              const T* B_modified,
+                                                              const T* X_spike,
+                                                              T*       X_final)
+    {
+        dim3 grid((m - 1) / BLOCKSIZE + 1, (n - 1) / NUM_RHS + 1);
+        dim3 block(BLOCKSIZE);
 
-        // thomas_pcr_wavefront_kernel<BLOCKSIZE, WAVEFRONT_SIZE, M><<<((n - 1) / (BLOCKSIZE / WAVEFRONT_SIZE) + 1), BLOCKSIZE>>>(
-        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        //thomas_pcr_wavefront_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M><<<((n - 1) / (BLOCKSIZE / WAVEFRONT_SIZE) + 1), BLOCKSIZE>>>(
-        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        // thomas_pcr_multiple_wavefront_kernel<BLOCKSIZE, GROUPSIZE, WAVEFRONT_SIZE, M>
-        //     <<<((n - 1) / (BLOCKSIZE / GROUPSIZE) + 1), BLOCKSIZE>>>(
-        //         m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        //pcr_shared_kernel<BLOCKSIZE, GROUPSIZE, WAVEFRONT_SIZE, M>
-        //    <<<((n - 1) / (BLOCKSIZE / GROUPSIZE) + 1), BLOCKSIZE>>>(
-        //        m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        pcr_tiled_backward_kernel<BLOCKSIZE, NUM_RHS><<<grid, block>>>(m,
+                                                                       n,
+                                                                       num_spikes,
+                                                                       lower_modified,
+                                                                       main_modified,
+                                                                       upper_modified,
+                                                                       B_modified,
+                                                                       X_spike,
+                                                                       X_final);
+    }
 
-        //pcr_shared_kernel2<BLOCKSIZE, WAVEFRONT_SIZE, M, 8><<<((n - 1) / 8 + 1), BLOCKSIZE>>>(
-        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        //thomas_shared_transpose_kernel2<256, 32, 32, 1>
-        //    <<<((n - 1) / 256 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
-        //thomas_algorithm_kernel<256, 16>
-        //    <<<((n - 1) / 256 + 1), 256>>>(n, lower_diag, main_diag, upper_diag, b, x);
-        //cr_pcr_unified_kernel<1024, 32><<<n, 1024>>>(
-        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+    template <typename T>
+    static void tridiagonal_tile_pcr_spike_solver(int                      m,
+                                                  int                      n,
+                                                  const T*                 lower_diag,
+                                                  const T*                 main_diag,
+                                                  const T*                 upper_diag,
+                                                  const T*                 b,
+                                                  T*                       x,
+                                                  const tridiagonal_descr* descr)
+    {
+        constexpr int BLOCKSIZE  = 256; // remember to change in analysis as well!
+        constexpr int NUM_RHS    = 8;
+        int           nblocks    = ((m - 1) / BLOCKSIZE + 1);
+        int           num_spikes = 2 * nblocks;
 
-        //crpcr_pow2_shared_kernel2<256, 64><<<n, 256>>>(
-        //    m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
-        crpcr_pow2_shared_multi_rhs_kernel<256, 128, 8><<<((n - 1) / 8 + 1), 256>>>(
-            m, n, lower_diag, main_diag, upper_diag, b, x, dtemp_a, dtemp_b, dtemp_c, dtemp_d);
+        launch_pcr_tiled_forward_elimination_kernel<BLOCKSIZE, NUM_RHS>(m,
+                                                                        n,
+                                                                        lower_diag,
+                                                                        main_diag,
+                                                                        upper_diag,
+                                                                        b,
+                                                                        descr->lower_modified,
+                                                                        descr->main_modified,
+                                                                        descr->upper_modified,
+                                                                        descr->b_modified,
+                                                                        descr->spike_lower,
+                                                                        descr->spike_main,
+                                                                        descr->spike_upper,
+                                                                        descr->spike_b);
 
-        // CHECK_CUDA(cudaMemcpy(htemp_a.data(), dtemp_a, sizeof(float) * M, cudaMemcpyDeviceToHost));
-        // CHECK_CUDA(cudaMemcpy(htemp_b.data(), dtemp_b, sizeof(float) * M, cudaMemcpyDeviceToHost));
-        // CHECK_CUDA(cudaMemcpy(htemp_c.data(), dtemp_c, sizeof(float) * M, cudaMemcpyDeviceToHost));
-        // CHECK_CUDA(cudaMemcpy(htemp_d.data(), dtemp_d, sizeof(float) * M, cudaMemcpyDeviceToHost));
+        using spike_solver_pcr_launch_ptr
+            = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
 
-        // std::cout << "htemp_a" << std::endl;
-        // for(int i = 0; i < M; i++)
-        // {
-        //     std::cout << htemp_a[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
-        // std::cout << "htemp_b" << std::endl;
-        // for(int i = 0; i < M; i++)
-        // {
-        //     std::cout << htemp_b[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
-        // std::cout << "htemp_c" << std::endl;
-        // for(int i = 0; i < M; i++)
-        // {
-        //     std::cout << htemp_c[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
-        // std::cout << "htemp_d" << std::endl;
-        // for(int i = 0; i < M; i++)
-        // {
-        //     std::cout << htemp_d[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
+        static const std::map<int, spike_solver_pcr_launch_ptr> k_spike_solver_dispatch = {
+            {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, T>},
+            {8, launch_spike_solver_pcr_kernel<8, NUM_RHS, T>},
+            {16, launch_spike_solver_pcr_kernel<16, NUM_RHS, T>},
+            {32, launch_spike_solver_pcr_kernel<32, NUM_RHS, T>},
+            {64, launch_spike_solver_pcr_kernel<64, NUM_RHS, T>},
+            {128, launch_spike_solver_pcr_kernel<128, NUM_RHS, T>},
+            {256, launch_spike_solver_pcr_kernel<256, NUM_RHS, T>},
+            {512, launch_spike_solver_pcr_kernel<512, NUM_RHS, T>},
+            {1024, launch_spike_solver_pcr_kernel<1024, NUM_RHS, T>},
+        };
 
-        // CHECK_CUDA(cudaFree(dtemp_a));
-        // CHECK_CUDA(cudaFree(dtemp_b));
-        // CHECK_CUDA(cudaFree(dtemp_c));
-        // CHECK_CUDA(cudaFree(dtemp_d));
+        auto dispatch_it = k_spike_solver_dispatch.lower_bound(num_spikes);
+        if(dispatch_it != k_spike_solver_dispatch.end())
+        {
+            dispatch_it->second(num_spikes,
+                                n,
+                                descr->spike_lower,
+                                descr->spike_main,
+                                descr->spike_upper,
+                                descr->spike_b,
+                                descr->spike_x);
+        }
+
+        launch_pcr_tiled_backward_substitution_kernel<BLOCKSIZE, NUM_RHS>(m,
+                                                                          n,
+                                                                          num_spikes,
+                                                                          descr->lower_modified,
+                                                                          descr->main_modified,
+                                                                          descr->upper_modified,
+                                                                          descr->b_modified,
+                                                                          descr->spike_x,
+                                                                          x);
+    }
+
+    template <uint32_t BLOCKSIZE, uint32_t M, typename T>
+    static void launch_thomas_algorithm_kernel(
+        int n, const T* lower_diag, const T* main_diag, const T* upper_diag, const T* B, T* X)
+    {
+        thomas_algorithm_kernel<BLOCKSIZE, M>
+            <<<((n - 1) / BLOCKSIZE + 1), BLOCKSIZE>>>(n, lower_diag, main_diag, upper_diag, B, X);
+    }
+
+    template <typename T>
+    static void tridiagonal_thomas_algorithm_solver(int      m,
+                                                    int      n,
+                                                    const T* lower_diag,
+                                                    const T* main_diag,
+                                                    const T* upper_diag,
+                                                    const T* B,
+                                                    T*       X)
+    {
+        using thomas_algorithm_launch_ptr
+            = void (*)(int, const T*, const T*, const T*, const T*, T*);
+
+        static const std::map<int, thomas_algorithm_launch_ptr> k_thomas_algorithm_dispatch = {
+            {2, launch_thomas_algorithm_kernel<256, 2, T>},
+            {3, launch_thomas_algorithm_kernel<256, 3, T>},
+            {4, launch_thomas_algorithm_kernel<256, 4, T>},
+            {5, launch_thomas_algorithm_kernel<256, 5, T>},
+            {6, launch_thomas_algorithm_kernel<256, 6, T>},
+            {7, launch_thomas_algorithm_kernel<256, 7, T>},
+            {8, launch_thomas_algorithm_kernel<256, 8, T>},
+            {9, launch_thomas_algorithm_kernel<256, 9, T>},
+            {10, launch_thomas_algorithm_kernel<256, 10, T>},
+        };
+
+        auto dispatch_it = k_thomas_algorithm_dispatch.find(m);
+        if(dispatch_it != k_thomas_algorithm_dispatch.end())
+        {
+            dispatch_it->second(n, lower_diag, main_diag, upper_diag, B, X);
+        }
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m16_kernel(int      m,
+                                              int      n,
+                                              const T* lower_diag,
+                                              const T* main_diag,
+                                              const T* upper_diag,
+                                              const T* b,
+                                              T*       x)
+    {
+        constexpr int BLOCKSIZE = 256;
+        constexpr int WARP_SIZE = 16;
+        thomas_pcr_wavefront_kernel<BLOCKSIZE, WARP_SIZE>
+            <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+                m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m32_kernel(int      m,
+                                              int      n,
+                                              const T* lower_diag,
+                                              const T* main_diag,
+                                              const T* upper_diag,
+                                              const T* b,
+                                              T*       x)
+    {
+        constexpr int BLOCKSIZE = 256;
+        constexpr int WARP_SIZE = 16;
+        constexpr int M         = 32;
+        thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
+            <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+                m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m64_kernel(int      m,
+                                              int      n,
+                                              const T* lower_diag,
+                                              const T* main_diag,
+                                              const T* upper_diag,
+                                              const T* b,
+                                              T*       x)
+    {
+        constexpr int BLOCKSIZE = 256;
+        constexpr int WARP_SIZE = 32;
+        constexpr int M         = 64;
+        thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
+            <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+                m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m128_kernel(int      m,
+                                               int      n,
+                                               const T* lower_diag,
+                                               const T* main_diag,
+                                               const T* upper_diag,
+                                               const T* b,
+                                               T*       x)
+    {
+        constexpr int BLOCKSIZE = 128;
+        constexpr int WARP_SIZE = 32;
+        constexpr int M         = 128;
+
+        pcr_shared_kernel2<BLOCKSIZE, WARP_SIZE, M, 8>
+            <<<((n - 1) / 8 + 1), BLOCKSIZE>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m256_kernel(int      m,
+                                               int      n,
+                                               const T* lower_diag,
+                                               const T* main_diag,
+                                               const T* upper_diag,
+                                               const T* b,
+                                               T*       x)
+    {
+        crpcr_pow2_shared_multi_rhs_kernel<128, 64, 8>
+            <<<((n - 1) / 8 + 1), 128>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m512_kernel(int      m,
+                                               int      n,
+                                               const T* lower_diag,
+                                               const T* main_diag,
+                                               const T* upper_diag,
+                                               const T* b,
+                                               T*       x)
+    {
+        crpcr_pow2_shared_multi_rhs_kernel<256, 128, 8>
+            <<<((n - 1) / 8 + 1), 256>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void launch_tridiagonal_m1024_kernel(int      m,
+                                                int      n,
+                                                const T* lower_diag,
+                                                const T* main_diag,
+                                                const T* upper_diag,
+                                                const T* b,
+                                                T*       x)
+    {
+        crpcr_pow2_shared_multi_rhs_kernel<512, 256, 8>
+            <<<((n - 1) / 8 + 1), 512>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+
+    template <typename T>
+    static void tridiagonal_pcr_solver_dispatch(int      m,
+                                                int      n,
+                                                const T* lower_diag,
+                                                const T* main_diag,
+                                                const T* upper_diag,
+                                                const T* b,
+                                                T*       x)
+    {
+        using midrange_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
+
+        static const std::map<int, midrange_launch_ptr> k_midrange_dispatch = {
+            {16, launch_tridiagonal_m16_kernel<T>},
+            {32, launch_tridiagonal_m32_kernel<T>},
+            {64, launch_tridiagonal_m64_kernel<T>},
+            {128, launch_tridiagonal_m128_kernel<T>},
+            {256, launch_tridiagonal_m256_kernel<T>},
+            {512, launch_tridiagonal_m512_kernel<T>},
+            {1024, launch_tridiagonal_m1024_kernel<T>},
+        };
+
+        auto dispatch_it = k_midrange_dispatch.lower_bound(m);
+        if(dispatch_it != k_midrange_dispatch.end())
+        {
+            dispatch_it->second(m, n, lower_diag, main_diag, upper_diag, b, x);
+        }
+    }
+}
+
+void linalg::cuda_tridiagonal_solver(int                      m,
+                                     int                      n,
+                                     const float*             lower_diag,
+                                     const float*             main_diag,
+                                     const float*             upper_diag,
+                                     const float*             b,
+                                     float*                   x,
+                                     const tridiagonal_descr* descr)
+{
+    if(m <= 10)
+    {
+        tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m <= 1024)
+    {
+        tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, b, x);
+    }
+    else if(m <= 131072)
+    {
+        tridiagonal_tile_pcr_spike_solver(m, n, lower_diag, main_diag, upper_diag, b, x, descr);
     }
     else
     {
-        std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 8." << std::endl;
+        std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 131072." << std::endl;
         return;
     }
 

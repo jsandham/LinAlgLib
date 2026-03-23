@@ -179,9 +179,11 @@ if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     # Options for CUDA files (NVCC)
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3> # Pass /W3 to the host compiler (MSVC) for CUDA files
     $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>       # Enable relocatable device code (important for shared libraries)
-    $<$<COMPILE_LANGUAGE:CUDA>:-O3>             # Maximum optimization
-    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>  # Enable fast math operations
-    # $<$<COMPILE_LANGUAGE:CUDA>:-G>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Release>>:-O3>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:RelWithDebInfo>>:-O3>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:MinSizeRel>>:-O2>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<NOT:$<CONFIG:Debug>>>:-use_fast_math>
+    $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:Debug>>:-G>
   )
 endif()
 
