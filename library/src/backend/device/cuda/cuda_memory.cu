@@ -85,12 +85,14 @@ void linalg::cuda_sync()
 template void linalg::cuda_allocate<uint32_t>(uint32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int32_t>(int32_t** ptr, size_t size);
 template void linalg::cuda_allocate<int64_t>(int64_t** ptr, size_t size);
+template void linalg::cuda_allocate<unsigned char>(unsigned char** ptr, size_t size);
 template void linalg::cuda_allocate<float>(float** ptr, size_t size);
 template void linalg::cuda_allocate<double>(double** ptr, size_t size);
 
 template void linalg::cuda_free<uint32_t>(uint32_t* ptr);
 template void linalg::cuda_free<int32_t>(int32_t* ptr);
 template void linalg::cuda_free<int64_t>(int64_t* ptr);
+template void linalg::cuda_free<unsigned char>(unsigned char* ptr);
 template void linalg::cuda_free<float>(float* ptr);
 template void linalg::cuda_free<double>(double* ptr);
 

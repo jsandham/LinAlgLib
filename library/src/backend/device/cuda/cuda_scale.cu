@@ -24,31 +24,34 @@
 //
 //********************************************************************************
 
-#include <cmath>
 #include <cuda_runtime.h>
 
-#include "cuda_math.h"
-#include "cuda_primitives.h"
+#include "cuda_scale.h"
 
-#include "preconditioner_kernels.cuh"
+#include "extract_diagonal_kernels.cuh"
 
 #include "../../../trace.h"
 
 //-------------------------------------------------------------------------------
-// infinity norm
+// scale diagonal
 //-------------------------------------------------------------------------------
-double linalg::cuda_norm_inf(const double* array, int size)
+void linalg::cuda_scale_diagonal(
+    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double scalar)
 {
-    ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    return cuda_find_maximum(size, array);
+    ROUTINE_TRACE("linalg::cuda_scale_diagonal_impl");
+    scale_diagonal_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, scalar);
+    CHECK_CUDA_LAUNCH_ERROR();
 }
 
 //-------------------------------------------------------------------------------
-// jacobi solve
+// scale by inverse diagonal
 //-------------------------------------------------------------------------------
-void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
+void linalg::cuda_scale_by_inverse_diagonal(
+    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, const double* diag)
 {
-    ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
-    jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
+    ROUTINE_TRACE("linalg::cuda_scale_by_inverse_diagonal_impl");
+    scale_by_inverse_diagonal_kernel<256>
+        <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, diag);
     CHECK_CUDA_LAUNCH_ERROR();
 }

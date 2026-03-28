@@ -256,6 +256,8 @@ void linalg::csrmv_solve(double                alpha,
 
 struct linalg::csrgeam_descr
 {
+    int* perm;
+    int* bin_offsets;
 };
 
 void linalg::create_csrgeam_descr(csrgeam_descr** descr)
@@ -313,6 +315,8 @@ void linalg::csrgeam_solve(double               alpha,
 
 struct linalg::csrgemm_descr
 {
+    int* perm;
+    int* bin_offsets;
 };
 
 void linalg::create_csrgemm_descr(csrgemm_descr** descr)
@@ -342,7 +346,7 @@ void linalg::csrgemm_nnz(const csr_matrix& A,
                          csrgemm_algorithm alg,
                          csrgemm_descr*    descr)
 {
-    ROUTINE_TRACE("linalg::csrgeam_nnz");
+    ROUTINE_TRACE("linalg::csrgemm_nnz");
 
     return backend_dispatch(
         "linalg::csrgemm_nnz", host_csrgemm_nnz, device_csrgemm_nnz, A, B, D, C, alg, descr);

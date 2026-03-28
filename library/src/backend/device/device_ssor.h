@@ -23,32 +23,15 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef DEVICE_SSOR_H
+#define DEVICE_SSOR_H
 
-#include <cmath>
-#include <cuda_runtime.h>
+#include "csr_matrix.h"
 
-#include "cuda_math.h"
-#include "cuda_primitives.h"
-
-#include "preconditioner_kernels.cuh"
-
-#include "../../../trace.h"
-
-//-------------------------------------------------------------------------------
-// infinity norm
-//-------------------------------------------------------------------------------
-double linalg::cuda_norm_inf(const double* array, int size)
+namespace linalg
 {
-    ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    return cuda_find_maximum(size, array);
+    void device_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega);
+    void device_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega);
 }
 
-//-------------------------------------------------------------------------------
-// jacobi solve
-//-------------------------------------------------------------------------------
-void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
-{
-    ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
-    jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
-    CHECK_CUDA_LAUNCH_ERROR();
-}
+#endif

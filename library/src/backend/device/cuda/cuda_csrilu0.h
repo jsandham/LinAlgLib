@@ -23,33 +23,40 @@
 // SOFTWARE.
 //
 //********************************************************************************
-
-#ifndef HOST_MATH_H
-#define HOST_MATH_H
-
-#include <string>
-
-#include "host_axpy.h"
-#include "host_csr2csc.h"
-#include "host_csrgeam.h"
-#include "host_csrgemm.h"
-#include "host_csric0.h"
-#include "host_csrilu0.h"
-#include "host_csrtrsv.h"
-#include "host_extract.h"
-#include "host_matrix_vector.h"
-#include "host_scale.h"
-#include "host_ssor.h"
-#include "host_tridiagonal.h"
-
-#include "linalg_export.h"
+#ifndef CUDA_CSRILU0_H
+#define CUDA_CSRILU0_H
 
 namespace linalg
 {
-    double host_norm_euclid(const vector<double>& array);
-    double host_norm_inf(const vector<double>& array);
-    void
-        host_jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
+    void cuda_csrilu0(int        m,
+                      int        n,
+                      int        nnz,
+                      const int* csr_row_ptr,
+                      const int* csr_col_ind,
+                      double*    csr_val,
+                      int*       structural_zero,
+                      int*       numeric_zero);
+
+    struct csrilu0_descr;
+
+    void allocate_csrilu0_cuda_data(csrilu0_descr* descr);
+    void free_csrilu0_cuda_data(csrilu0_descr* descr);
+
+    void cuda_csrilu0_analysis(int            m,
+                               int            n,
+                               int            nnz,
+                               const int*     csr_row_ptr,
+                               const int*     csr_col_ind,
+                               const double*  csr_val,
+                               csrilu0_descr* descr);
+
+    void cuda_csrilu0_compute(int                  m,
+                              int                  n,
+                              int                  nnz,
+                              const int*           csr_row_ptr,
+                              const int*           csr_col_ind,
+                              double*              csr_val,
+                              const csrilu0_descr* descr);
 }
 
 #endif

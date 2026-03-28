@@ -23,32 +23,31 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef CUDA_TRIDIAGONAL_H
+#define CUDA_TRIDIAGONAL_H
 
-#include <cmath>
-#include <cuda_runtime.h>
-
-#include "cuda_math.h"
-#include "cuda_primitives.h"
-
-#include "preconditioner_kernels.cuh"
-
-#include "../../../trace.h"
-
-//-------------------------------------------------------------------------------
-// infinity norm
-//-------------------------------------------------------------------------------
-double linalg::cuda_norm_inf(const double* array, int size)
+namespace linalg
 {
-    ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    return cuda_find_maximum(size, array);
+    struct tridiagonal_descr;
+
+    void allocate_tridiagonal_cuda_data(tridiagonal_descr* descr);
+    void free_tridiagonal_cuda_data(tridiagonal_descr* descr);
+
+    void cuda_tridiagonal_analysis(int                m,
+                                   int                n,
+                                   const float*       lower_diag,
+                                   const float*       main_diag,
+                                   const float*       upper_diag,
+                                   tridiagonal_descr* descr);
+
+    void cuda_tridiagonal_solver(int                      m,
+                                 int                      n,
+                                 const float*             lower_diag,
+                                 const float*             main_diag,
+                                 const float*             upper_diag,
+                                 const float*             b,
+                                 float*                   x,
+                                 const tridiagonal_descr* descr);
 }
 
-//-------------------------------------------------------------------------------
-// jacobi solve
-//-------------------------------------------------------------------------------
-void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
-{
-    ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
-    jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
-    CHECK_CUDA_LAUNCH_ERROR();
-}
+#endif

@@ -23,32 +23,19 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef DEVICE_EXTRACT_H
+#define DEVICE_EXTRACT_H
 
-#include <cmath>
-#include <cuda_runtime.h>
+#include "csr_matrix.h"
+#include "vector.h"
 
-#include "cuda_math.h"
-#include "cuda_primitives.h"
-
-#include "preconditioner_kernels.cuh"
-
-#include "../../../trace.h"
-
-//-------------------------------------------------------------------------------
-// infinity norm
-//-------------------------------------------------------------------------------
-double linalg::cuda_norm_inf(const double* array, int size)
+namespace linalg
 {
-    ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    return cuda_find_maximum(size, array);
+    void device_diagonal(const csr_matrix& A, vector<double>& d);
+    void device_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L);
+    void device_extract_lower_triangular(const csr_matrix& A, csr_matrix& L);
+    void device_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U);
+    void device_extract_upper_triangular(const csr_matrix& A, csr_matrix& U);
 }
 
-//-------------------------------------------------------------------------------
-// jacobi solve
-//-------------------------------------------------------------------------------
-void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
-{
-    ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
-    jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
-    CHECK_CUDA_LAUNCH_ERROR();
-}
+#endif

@@ -60,12 +60,36 @@ set(LINALGLIB_SOURCE
   src/backend/host/host_amg_strength.cpp
   src/backend/host/host_primitives.cpp
   src/backend/host/host_math.cpp
+  src/backend/host/host_axpy.cpp
+  src/backend/host/host_matrix_vector.cpp
+  src/backend/host/host_extract.cpp
+  src/backend/host/host_scale.cpp
+  src/backend/host/host_ssor.cpp
+  src/backend/host/host_csr2csc.cpp
+  src/backend/host/host_csrtrsv.cpp
+  src/backend/host/host_csrgeam.cpp
+  src/backend/host/host_csrgemm.cpp
+  src/backend/host/host_csric0.cpp
+  src/backend/host/host_csrilu0.cpp
+  src/backend/host/host_tridiagonal.cpp
   src/backend/host/host_vector.cpp
   src/backend/host/host_memory.cpp
   src/backend/device/device_amg_aggregation.cpp
   src/backend/device/device_amg_strength.cpp
   src/backend/device/device_primitives.cpp
   src/backend/device/device_math.cpp
+  src/backend/device/device_axpy.cpp
+  src/backend/device/device_matrix_vector.cpp
+  src/backend/device/device_extract.cpp
+  src/backend/device/device_scale.cpp
+  src/backend/device/device_ssor.cpp
+  src/backend/device/device_csr2csc.cpp
+  src/backend/device/device_csrtrsv.cpp
+  src/backend/device/device_csrgeam.cpp
+  src/backend/device/device_csrgemm.cpp
+  src/backend/device/device_csric0.cpp
+  src/backend/device/device_csrilu0.cpp
+  src/backend/device/device_tridiagonal.cpp
   src/backend/device/device_vector.cpp
   src/backend/device/device_memory.cpp
   src/eigen_value_solvers/power_iteration.cpp
@@ -96,6 +120,18 @@ set(LINALGLIB_SOURCE
 set(LINALGLIB_CUDA_SOURCE
   src/backend/device/cuda/cuda_amg_aggregation.cu
   src/backend/device/cuda/cuda_amg_strength.cu
+  src/backend/device/cuda/cuda_axpy.cu
+  src/backend/device/cuda/cuda_matrix_vector.cu
+  src/backend/device/cuda/cuda_ssor.cu
+  src/backend/device/cuda/cuda_extract.cu
+  src/backend/device/cuda/cuda_scale.cu
+  src/backend/device/cuda/cuda_csric0.cu
+  src/backend/device/cuda/cuda_csrilu0.cu
+  src/backend/device/cuda/cuda_csr2csc.cu
+  src/backend/device/cuda/cuda_csrtrsv.cu
+  src/backend/device/cuda/cuda_csrgemm.cu
+  src/backend/device/cuda/cuda_csrgeam.cu
+  src/backend/device/cuda/cuda_tridiagonal.cu
   src/backend/device/cuda/cuda_math.cu
   src/backend/device/cuda/cuda_memory.cu
   src/backend/device/cuda/cuda_primitives.cu)

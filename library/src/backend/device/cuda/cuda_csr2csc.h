@@ -23,32 +23,31 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef CUDA_CSR2CSC_H
+#define CUDA_CSR2CSC_H
 
-#include <cmath>
-#include <cuda_runtime.h>
+#include <cstddef>
 
-#include "cuda_math.h"
-#include "cuda_primitives.h"
-
-#include "preconditioner_kernels.cuh"
-
-#include "../../../trace.h"
-
-//-------------------------------------------------------------------------------
-// infinity norm
-//-------------------------------------------------------------------------------
-double linalg::cuda_norm_inf(const double* array, int size)
+namespace linalg
 {
-    ROUTINE_TRACE("linalg::cuda_norm_inf_impl");
-    return cuda_find_maximum(size, array);
+    void cuda_csr2csc_buffer_size(int           m,
+                                  int           n,
+                                  int           nnz,
+                                  const int*    csr_row_ptr,
+                                  const int*    csr_col_ind,
+                                  const double* csr_val,
+                                  size_t*       buffer_size);
+
+    void cuda_csr2csc(int           m,
+                      int           n,
+                      int           nnz,
+                      const int*    csr_row_ptr,
+                      const int*    csr_col_ind,
+                      const double* csr_val,
+                      int*          csc_col_ptr,
+                      int*          csc_row_ind,
+                      double*       csc_val,
+                      void*         buffer);
 }
 
-//-------------------------------------------------------------------------------
-// jacobi solve
-//-------------------------------------------------------------------------------
-void linalg::cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size)
-{
-    ROUTINE_TRACE("linalg::cuda_jacobi_solve_impl");
-    jacobi_solve_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, rhs, diag, x);
-    CHECK_CUDA_LAUNCH_ERROR();
-}
+#endif
