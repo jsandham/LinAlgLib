@@ -79,6 +79,40 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
         break;
     }
 
+    Cycle cycle = Cycle::Vcycle;
+    switch(arg.cycle_type)
+    {
+    case cycle_type::Vcycle:
+        cycle = Cycle::Vcycle;
+        break;
+    case cycle_type::Wcycle:
+        cycle = Cycle::Wcycle;
+        break;
+    case cycle_type::Fcycle:
+        cycle = Cycle::Fcycle;
+        break;
+    }
+
+    Smoother smoother = Smoother::Jacobi;
+    switch(arg.smoother_type)
+    {
+    case smoother_type::Jacobi:
+        smoother = Smoother::Jacobi;
+        break;
+    case smoother_type::Gauss_Seidel:
+        smoother = Smoother::Gauss_Seidel;
+        break;
+    case smoother_type::Symm_Gauss_Seidel:
+        smoother = Smoother::Symm_Gauss_Seidel;
+        break;
+    case smoother_type::SOR:
+        smoother = Smoother::SOR;
+        break;
+    case smoother_type::SSOR:
+        smoother = Smoother::SSOR;
+        break;
+    }
+
     //mat_A.move_to_host();
     //vec_x.move_to_host();
     //vec_init_x.move_to_host();
@@ -88,21 +122,15 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 
     std::cout << "arg.presmoothing: " << arg.presmoothing
               << " arg.postsmoothing: " << arg.postsmoothing
-              << " arg.cycle: " << CycleToString(arg.cycle)
-              << " arg.smoother: " << SmootherToString(arg.smoother) << std::endl;
+              << " arg.cycle: " << CycleTypeToString(arg.cycle_type)
+              << " arg.smoother: " << SmootherTypeToString(arg.smoother_type) << std::endl;
 
     iter_control control;
     control.max_cycle = arg.max_iters;
 
     // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
-    int cycles = amg_solve(hierachy,
-                           vec_x,
-                           vec_b,
-                           arg.presmoothing,
-                           arg.postsmoothing,
-                           arg.cycle,
-                           arg.smoother,
-                           control);
+    int cycles = amg_solve(
+        hierachy, vec_x, vec_b, arg.presmoothing, arg.postsmoothing, cycle, smoother, control);
 
     std::cout << "cycles: " << cycles << std::endl;
 

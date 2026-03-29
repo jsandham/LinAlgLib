@@ -174,7 +174,7 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     }
 
     linalg::preconditioner* p = nullptr;
-    switch(arg.precond)
+    switch(arg.precond_type)
     {
     case Testing::preconditioner::Jacobi:
         p = new jacobi_precond;

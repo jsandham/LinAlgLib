@@ -100,6 +100,24 @@ namespace Testing
         None
     };
 
+    enum class cycle_type
+    {
+        Vcycle,
+        Wcycle,
+        Fcycle,
+        None
+    };
+
+    enum class smoother_type
+    {
+        Jacobi,
+        Gauss_Seidel,
+        Symm_Gauss_Seidel,
+        SOR,
+        SSOR,
+        None
+    };
+
     inline std::string CategoryToString(Category category)
     {
         switch(category)
@@ -198,6 +216,21 @@ namespace Testing
         return "Invalid";
     }
 
+    inline std::string AMGSolverToString(AMGSolver solver)
+    {
+        switch(solver)
+        {
+        case AMGSolver::UAAMG:
+            return "UAAMG";
+        case AMGSolver::SAAMG:
+            return "SAAMG";
+        case AMGSolver::RSAMG:
+            return "RSAMG";
+        }
+
+        return "Invalid";
+    }
+
     inline std::string PreconditionerToString(preconditioner precond)
     {
         switch(precond)
@@ -223,50 +256,39 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string AMGSolverToString(AMGSolver solver)
-    {
-        switch(solver)
-        {
-        case AMGSolver::UAAMG:
-            return "UAAMG";
-        case AMGSolver::SAAMG:
-            return "SAAMG";
-        case AMGSolver::RSAMG:
-            return "RSAMG";
-        }
-
-        return "Invalid";
-    }
-
-    inline std::string CycleToString(linalg::Cycle cycle)
+    inline std::string CycleTypeToString(cycle_type cycle)
     {
         switch(cycle)
         {
-        case linalg::Cycle::Vcycle:
+        case cycle_type::Vcycle:
             return "Vcycle";
-        case linalg::Cycle::Wcycle:
+        case cycle_type::Wcycle:
             return "Wcycle";
-        case linalg::Cycle::Fcycle:
+        case cycle_type::Fcycle:
             return "Fcycle";
+        case cycle_type::None:
+            return "None";
         }
 
         return "Invalid";
     }
 
-    inline std::string SmootherToString(linalg::Smoother smoother)
+    inline std::string SmootherTypeToString(smoother_type smoother)
     {
         switch(smoother)
         {
-        case linalg::Smoother::Jacobi:
+        case smoother_type::Jacobi:
             return "Jacobi";
-        case linalg::Smoother::Gauss_Seidel:
+        case smoother_type::Gauss_Seidel:
             return "Gauss_Seidel";
-        case linalg::Smoother::Symm_Gauss_Seidel:
+        case smoother_type::Symm_Gauss_Seidel:
             return "Symm_Gauss_Seidel";
-        case linalg::Smoother::SOR:
+        case smoother_type::SOR:
             return "SOR";
-        case linalg::Smoother::SSOR:
+        case smoother_type::SSOR:
             return "SSOR";
+        case smoother_type::None:
+            return "None";
         }
 
         return "Invalid";

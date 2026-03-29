@@ -29,7 +29,11 @@
 
 #include <chrono>
 #include <cmath>
+#include <functional>
 #include <iostream>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 #include "linalg.h"
 
@@ -45,8 +49,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     // {
     // Create a simple tridiagonal system for testing
     // System size
-    int m = 4096;
-    int n = 4096;
+    int m = arg.m;
+    int n = arg.n;
 
     std::cout << "m: " << m << " n: " << n << std::endl;
 

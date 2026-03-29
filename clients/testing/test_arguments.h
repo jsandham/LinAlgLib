@@ -27,9 +27,9 @@
 #ifndef TEST_ARGUMENTS_H__
 #define TEST_ARGUMENTS_H__
 
-#include <string>
 #include <iostream>
 #include <linalg.h>
+#include <string>
 
 #include "test_enums.h"
 
@@ -37,71 +37,106 @@ namespace Testing
 {
     struct Arguments
     {
-        Category category; // IterativeSolvers, Math, Primitive
-        Fixture fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
-        std::string group; // small, medium, large, etc
-        std::string filename; // bmwcra_1.mtx, shipsec1.mtx, etc
-        preconditioner precond;
-        linalg::Cycle cycle;
-        linalg::Smoother smoother;
-        int presmoothing;
-        int postsmoothing;
-        int max_iters;
-        double tol;
-        double omega;
+        Category       category; // IterativeSolvers, Math, Primitive
+        Fixture        fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
+        std::string    group; // small, medium, large, etc
+        std::string    filename; // bmwcra_1.mtx, shipsec1.mtx, etc
+        preconditioner precond_type;
+        cycle_type     cycle_type;
+        smoother_type  smoother_type;
+        int            presmoothing;
+        int            postsmoothing;
+        int            max_iters;
+        int            m;
+        int            n;
+        double         tol;
+        double         omega;
 
         std::string generate_test_name() const
         {
-            size_t index = 0;
-            for(size_t i = 0; i < filename.length(); i++)
+            std::string name = group;
+            if(this->precond_type != preconditioner::None)
             {
-                if(filename[i] == '/')
-                {
-                    index = i;
-                }
+                name += "_" + PreconditionerToString(this->precond_type);
             }
+            if(this->cycle_type != cycle_type::None)
+            {
+                name += "_" + CycleTypeToString(this->cycle_type);
+            }
+            if(this->smoother_type != smoother_type::None)
+            {
+                name += "_" + SmootherTypeToString(this->smoother_type);
+            }
+            if(this->presmoothing >= 0)
+            {
+                name += "_" + std::to_string(this->presmoothing);
+            }
+            if(this->postsmoothing >= 0)
+            {
+                name += "_" + std::to_string(this->postsmoothing);
+            }
+            if(this->max_iters >= 0)
+            {
+                name += "_" + std::to_string(this->max_iters);
+            }
+            if(this->m >= 0)
+            {
+                name += "_" + std::to_string(this->m);
+            }
+            if(this->n >= 0)
+            {
+                name += "_" + std::to_string(this->n);
+            }
+            if(this->tol >= 0)
+            {
+                std::string tol_str = std::to_string(this->tol);
+                for(size_t i = 0; i < tol_str.length(); i++)
+                {
+                    if(tol_str[i] == '.')
+                    {
+                        tol_str[i] = '_';
+                    }
+                }
+                name += "_" + tol_str;
+            }
+            if(this->omega >= 0)
+            {
+                std::string omega_str = std::to_string(this->omega);
+                for(size_t i = 0; i < omega_str.length(); i++)
+                {
+                    if(omega_str[i] == '.')
+                    {
+                        omega_str[i] = '_';
+                    }
+                }
+                name += "_" + omega_str;
+            }
+            if(!filename.empty())
+            {
+                size_t index = 0;
+                for(size_t i = 0; i < filename.length(); i++)
+                {
+                    if(filename[i] == '/')
+                    {
+                        index = i;
+                    }
+                }
 
-            std::string matrix(filename.length() - index - 1, '0');
-            for(size_t i = index + 1; i < filename.length(); i++)
-            {
-                if(filename[i] == '.')
+                std::string matrix(filename.length() - index - 1, '0');
+                for(size_t i = index + 1; i < filename.length(); i++)
                 {
-                    matrix[i - index - 1] = '_';
+                    if(filename[i] == '.')
+                    {
+                        matrix[i - index - 1] = '_';
+                    }
+                    else
+                    {
+                        matrix[i - index - 1] = filename[i];
+                    }
                 }
-                else
-                {
-                    matrix[i - index - 1] = filename[i];
-                }
-            }
 
-            std::string tol_str = std::to_string(this->tol);
-            for(size_t i = 0; i < tol_str.length(); i++)
-            {
-                if(tol_str[i] == '.')
-                {
-                    tol_str[i] = '_';
-                }
+                name += "_" + matrix;
             }
-
-            std::string omega_str = std::to_string(this->omega);
-            for(size_t i = 0; i < omega_str.length(); i++)
-            {
-                if(omega_str[i] == '.')
-                {
-                    omega_str[i] = '_';
-                }
-            }
-            
-            std::string name = group + "_"
-                             + PreconditionerToString(this->precond) + "_"
-                             + CycleToString(this->cycle) + "_"
-                             + SmootherToString(this->smoother) + "_"
-                             + std::to_string(this->presmoothing) + "_"
-                             + std::to_string(this->postsmoothing) + "_"
-                             + std::to_string(this->max_iters) + "_"
-                             + tol_str + "_"
-                             + omega_str + "_"
-                             + matrix;
 
             return name;
         }

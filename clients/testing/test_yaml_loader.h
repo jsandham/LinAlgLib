@@ -115,20 +115,20 @@ namespace YAML
     };
 
     template <>
-    struct convert<linalg::Cycle>
+    struct convert<Testing::cycle_type>
     {
-        static Node encode(const linalg::Cycle& rhs)
+        static Node encode(const Testing::cycle_type& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case linalg::Cycle::Fcycle:
+            case Testing::cycle_type::Fcycle:
                 node = "Fcycle";
                 break;
-            case linalg::Cycle::Vcycle:
+            case Testing::cycle_type::Vcycle:
                 node = "Vcycle";
                 break;
-            case linalg::Cycle::Wcycle:
+            case Testing::cycle_type::Wcycle:
                 node = "Wcycle";
                 break;
             }
@@ -136,20 +136,20 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, linalg::Cycle& rhs)
+        static bool decode(const Node& node, Testing::cycle_type& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Fcycle")
             {
-                rhs = linalg::Cycle::Fcycle;
+                rhs = Testing::cycle_type::Fcycle;
             }
             else if(type == "Vcycle")
             {
-                rhs = linalg::Cycle::Vcycle;
+                rhs = Testing::cycle_type::Vcycle;
             }
             else if(type == "Wcycle")
             {
-                rhs = linalg::Cycle::Wcycle;
+                rhs = Testing::cycle_type::Wcycle;
             }
 
             return true;
@@ -157,26 +157,26 @@ namespace YAML
     };
 
     template <>
-    struct convert<linalg::Smoother>
+    struct convert<Testing::smoother_type>
     {
-        static Node encode(const linalg::Smoother& rhs)
+        static Node encode(const Testing::smoother_type& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case linalg::Smoother::Jacobi:
+            case Testing::smoother_type::Jacobi:
                 node = "Jacobi";
                 break;
-            case linalg::Smoother::Gauss_Seidel:
+            case Testing::smoother_type::Gauss_Seidel:
                 node = "Gauss_Seidel";
                 break;
-            case linalg::Smoother::Symm_Gauss_Seidel:
+            case Testing::smoother_type::Symm_Gauss_Seidel:
                 node = "Symm_Gauss_Seidel";
                 break;
-            case linalg::Smoother::SOR:
+            case Testing::smoother_type::SOR:
                 node = "SOR";
                 break;
-            case linalg::Smoother::SSOR:
+            case Testing::smoother_type::SSOR:
                 node = "SSOR";
                 break;
             }
@@ -184,28 +184,28 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, linalg::Smoother& rhs)
+        static bool decode(const Node& node, Testing::smoother_type& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Jacobi")
             {
-                rhs = linalg::Smoother::Jacobi;
+                rhs = Testing::smoother_type::Jacobi;
             }
             else if(type == "Gauss_Seidel")
             {
-                rhs = linalg::Smoother::Gauss_Seidel;
+                rhs = Testing::smoother_type::Gauss_Seidel;
             }
             else if(type == "Symm_Gauss_Seidel")
             {
-                rhs = linalg::Smoother::Symm_Gauss_Seidel;
+                rhs = Testing::smoother_type::Symm_Gauss_Seidel;
             }
             else if(type == "SOR")
             {
-                rhs = linalg::Smoother::SOR;
+                rhs = Testing::smoother_type::SOR;
             }
             else if(type == "SSOR")
             {
-                rhs = linalg::Smoother::SSOR;
+                rhs = Testing::smoother_type::SSOR;
             }
 
             return true;
@@ -310,166 +310,149 @@ inline Testing::Fixture StringToFixture(const std::string& str)
 struct TestParameters
 {
     std::vector<std::string>             matrices;
-    std::vector<Testing::preconditioner> preconds;
-    std::vector<linalg::Cycle>           cycles;
-    std::vector<linalg::Smoother>        smoothers;
+    std::vector<Testing::preconditioner> precond_types;
+    std::vector<Testing::cycle_type>     cycle_types;
+    std::vector<Testing::smoother_type>  smoother_types;
     std::vector<int>                     presmoothings;
     std::vector<int>                     postsmoothings;
     std::vector<int>                     max_iters;
+    std::vector<int>                     m_values;
+    std::vector<int>                     n_values;
     std::vector<double>                  tols;
     std::vector<double>                  omegas;
 };
+
+template <std::size_t I = 0, typename F, typename Tuple, typename... Args>
+void for_each_combination_impl(F&& f, const Tuple& containers, Args&&... args)
+{
+    if constexpr(I == std::tuple_size_v<std::remove_reference_t<Tuple>>)
+    {
+        std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+    else
+    {
+        for(const auto& item : std::get<I>(containers))
+        {
+            for_each_combination_impl<I + 1>(
+                std::forward<F>(f), containers, std::forward<Args>(args)..., item);
+        }
+    }
+}
+
+template <typename F, typename... Containers>
+void for_each_combination(F&& f, const Containers&... containers)
+{
+    auto tupled = std::forward_as_tuple(containers...);
+    for_each_combination_impl(std::forward<F>(f), tupled);
+}
 
 inline std::vector<Testing::Arguments> generate_tests(const std::string category,
                                                       const std::string fixture,
                                                       const std::string filepath)
 {
-    YAML::Node                      root_node = YAML::LoadFile(correct_test_filepath(filepath));
+    const Testing::Category category_enum = StringToCategory(category);
+    const Testing::Fixture  fixture_enum  = StringToFixture(fixture);
+
+    const std::string resolved_filepath = correct_test_filepath(filepath);
+    YAML::Node        root_node         = YAML::LoadFile(resolved_filepath);
+    const YAML::Node  tests_node        = root_node["Tests"];
+
     std::vector<Testing::Arguments> tests;
 
     std::cout << "category: " << category << " fixture: " << fixture << " filepath: " << filepath
               << std::endl;
 
-    for(YAML::const_iterator it = root_node["Tests"].begin(); it != root_node["Tests"].end(); ++it)
+    if(!tests_node || !tests_node.IsMap())
     {
-        std::string group = it->first.as<std::string>();
+        return tests;
+    }
+
+    for(const auto& test_entry : tests_node)
+    {
+        std::string group = test_entry.first.as<std::string>();
+
+        std::cout << "group: " << group << std::endl;
+
+        auto read_group_values = [&](const std::string& label, auto default_value) {
+            using value_type = decltype(default_value);
+            return read_values<value_type>(group, label, tests_node, default_value);
+        };
 
         TestParameters params;
-        params.matrices = read_values<std::string>(group, "matrix_file", root_node["Tests"], "");
-        params.preconds = read_values<Testing::preconditioner>(
-            group, "precond", root_node["Tests"], Testing::preconditioner::None);
-        params.cycles
-            = read_values<linalg::Cycle>(group, "cycle", root_node["Tests"], linalg::Cycle::Vcycle);
-        params.smoothers = read_values<linalg::Smoother>(
-            group, "smoother", root_node["Tests"], linalg::Smoother::Jacobi);
-        params.presmoothings  = read_values<int>(group, "presmoothing", root_node["Tests"], 1);
-        params.postsmoothings = read_values<int>(group, "postsmoothing", root_node["Tests"], 1);
-        params.max_iters      = read_values<int>(group, "max_iters", root_node["Tests"], 1000);
-        params.tols           = read_values<double>(group, "tol", root_node["Tests"], 1e-06);
-        params.omegas         = read_values<double>(group, "omega", root_node["Tests"], 0.66667);
+        params.matrices       = read_group_values("matrix_file", std::string(""));
+        params.precond_types  = read_group_values("precond", Testing::preconditioner::None);
+        params.cycle_types    = read_group_values("cycle", Testing::cycle_type::None);
+        params.smoother_types = read_group_values("smoother", Testing::smoother_type::None);
+        params.presmoothings  = read_group_values("presmoothing", -1);
+        params.postsmoothings = read_group_values("postsmoothing", -1);
+        params.max_iters      = read_group_values("max_iters", -1);
+        params.m_values       = read_group_values("m", -1);
+        params.n_values       = read_group_values("n", -1);
+        params.tols           = read_group_values("tol", -1.0);
+        params.omegas         = read_group_values("omega", -1.0);
 
-        size_t total_tests = params.matrices.size() * params.preconds.size() * params.cycles.size()
-                             * params.smoothers.size() * params.presmoothings.size()
-                             * params.postsmoothings.size() * params.max_iters.size()
-                             * params.tols.size() * params.omegas.size();
+        size_t total_tests = 1;
+        total_tests *= params.matrices.size();
+        total_tests *= params.precond_types.size();
+        total_tests *= params.cycle_types.size();
+        total_tests *= params.smoother_types.size();
+        total_tests *= params.presmoothings.size();
+        total_tests *= params.postsmoothings.size();
+        total_tests *= params.max_iters.size();
+        total_tests *= params.m_values.size();
+        total_tests *= params.n_values.size();
+        total_tests *= params.tols.size();
+        total_tests *= params.omegas.size();
+
         std::cout << "total_tests: " << total_tests << std::endl;
 
-        // Reserve memory once to avoid multiple reallocations
+        // Reserve once per group to avoid repeated reallocations while appending.
         tests.reserve(tests.size() + total_tests);
 
-        // A tuple for each item on the stack: {current_args, depth}
-        using StackItem = std::tuple<Testing::Arguments, size_t>;
-        std::stack<StackItem> s;
+        for_each_combination(
+            [&](const std::string&      filename,
+                Testing::preconditioner precond,
+                Testing::cycle_type     cycle_type,
+                Testing::smoother_type  smoother_type,
+                int                     presmoothing,
+                int                     postsmoothing,
+                int                     max_iters,
+                int                     m,
+                int                     n,
+                double                  tol,
+                double                  omega) {
+                tests.emplace_back(Testing::Arguments{
+                    category_enum,
+                    fixture_enum,
+                    group,
+                    filename,
+                    precond,
+                    cycle_type,
+                    smoother_type,
+                    presmoothing,
+                    postsmoothing,
+                    max_iters,
+                    m,
+                    n,
+                    tol,
+                    omega,
+                });
+            },
+            params.matrices,
+            params.precond_types,
+            params.cycle_types,
+            params.smoother_types,
+            params.presmoothings,
+            params.postsmoothings,
+            params.max_iters,
+            params.m_values,
+            params.n_values,
+            params.tols,
+            params.omegas);
 
-        // Push the initial state onto the stack
-        Testing::Arguments initial_args;
-        initial_args.category = StringToCategory(category);
-        initial_args.fixture  = StringToFixture(fixture);
-        initial_args.group    = group;
-        s.push({initial_args, 0});
-
-        std::cout << "initial_args.category: " << (int)initial_args.category
-                  << " initial_args.fixture: " << (int)initial_args.fixture << std::endl;
-
-        // The main loop
-        while(!s.empty())
+        for(size_t i = 0; i < total_tests; i++)
         {
-            StackItem current_item = s.top();
-            s.pop();
-
-            Testing::Arguments current_args = std::get<0>(current_item);
-            size_t             depth        = std::get<1>(current_item);
-
-            // Base Case: A full combination is found
-            if(depth == 9 /*param_lists.size()*/)
-            {
-                tests.push_back(current_args);
-                continue;
-            }
-
-            // Recursive Step (Iterative): Expand to the next level
-            // This part is the tricky bit due to different types
-            if(depth == 0)
-            { // Matrix Files
-                for(const auto& matrix_file : params.matrices)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.filename           = matrix_file;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 1)
-            {
-                for(const auto& precond : params.preconds)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.precond            = precond;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 2)
-            {
-                for(const auto& cycle : params.cycles)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.cycle              = cycle;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 3)
-            {
-                for(const auto& smoother : params.smoothers)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.smoother           = smoother;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 4)
-            {
-                for(const auto& presmoothing : params.presmoothings)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.presmoothing       = presmoothing;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 5)
-            {
-                for(const auto& postsmoothing : params.postsmoothings)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.postsmoothing      = postsmoothing;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 6)
-            {
-                for(const auto& max_iters : params.max_iters)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.max_iters          = max_iters;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 7)
-            {
-                for(const auto& tol : params.tols)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.tol                = tol;
-                    s.push({next_args, depth + 1});
-                }
-            }
-            else if(depth == 8)
-            {
-                for(const auto& omega : params.omegas)
-                {
-                    Testing::Arguments next_args = current_args;
-                    next_args.omega              = omega;
-                    s.push({next_args, depth + 1});
-                }
-            }
+            std::cout << "Generated test name: " << tests[i].generate_test_name() << std::endl;
         }
     }
 
