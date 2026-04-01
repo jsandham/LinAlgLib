@@ -517,9 +517,43 @@ namespace linalg
      */
     LINALGLIB_API void csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
 
+    /**
+     * @brief Creates an opaque descriptor for tridiagonal analysis/solve operations.
+     *
+     * Allocates internal workspace and backend-specific metadata used by
+     * tridiagonal_analysis() and tridiagonal_solver().
+     *
+     * @param descr A pointer to a tridiagonal_descr* that will be initialized
+     * to point to a newly allocated descriptor.
+     * @see destroy_tridiagonal_descr
+     */
     LINALGLIB_API void create_tridiagonal_descr(tridiagonal_descr** descr);
+
+    /**
+     * @brief Destroys a tridiagonal analysis/solve descriptor.
+     *
+     * Frees all resources associated with the descriptor. After this call,
+     * the descr pointer should not be used.
+     *
+     * @param descr The descriptor to destroy. Can be nullptr.
+     * @see create_tridiagonal_descr
+     */
     LINALGLIB_API void destroy_tridiagonal_descr(tridiagonal_descr* descr);
 
+    /**
+     * @brief Performs analysis for tridiagonal solves.
+     *
+     * Preprocesses the tridiagonal system layout and caches data in descr for
+     * subsequent tridiagonal_solver() calls.
+     *
+     * @param m The number of rows in the tridiagonal system.
+     * @param n The number of right-hand-side columns/vectors to solve.
+     * @param lower_diag The lower diagonal entries (subdiagonal).
+     * @param main_diag The main diagonal entries.
+     * @param upper_diag The upper diagonal entries (superdiagonal).
+     * @param descr The descriptor to populate with analysis data.
+     * @see tridiagonal_solver
+     */
     LINALGLIB_API void tridiagonal_analysis(int                  m,
                                             int                  n,
                                             const vector<float>& lower_diag,

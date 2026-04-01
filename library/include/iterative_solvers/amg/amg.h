@@ -103,9 +103,28 @@ namespace linalg
 
         hierarchy();
 
+        /**
+         * @brief Returns whether the hierarchy data currently resides on host memory.
+         *
+         * @return `true` if hierarchy matrices/operators are stored on the host,
+         * `false` if they are stored on the device.
+         */
         bool is_on_host() const;
 
+        /**
+         * @brief Moves hierarchy matrices/operators from host memory to device memory.
+         *
+         * Transfers prolongation operators, restriction operators, and coarse matrices
+         * to the device backend and updates the internal residency state.
+         */
         void move_to_device();
+
+        /**
+         * @brief Moves hierarchy matrices/operators from device memory back to host memory.
+         *
+         * Transfers prolongation operators, restriction operators, and coarse matrices
+         * to the host backend and updates the internal residency state.
+         */
         void move_to_host();
     };
 

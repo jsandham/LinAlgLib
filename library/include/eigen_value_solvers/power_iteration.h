@@ -29,7 +29,9 @@
 
 #include "../linalg_export.h"
 
-/*! \ingroup iterative_solvers
+namespace linalg
+{
+    /*! \ingroup iterative_solvers
  * \brief Power iteration to find the dominant eigenvalue and corresponding eigenvector.
  *
  * \details
@@ -127,12 +129,13 @@
  * }
  * \endcode
  */
-double power_iteration(const int*    csr_row_ptr,
-                       const int*    csr_col_ind,
-                       const double* csr_val,
-                       double*       eigenVec,
-                       const double  tol,
-                       const int     n,
-                       const int     max_iter);
+    double power_iteration(const int*    csr_row_ptr,
+                           const int*    csr_col_ind,
+                           const double* csr_val,
+                           double*       eigenVec,
+                           const double  tol,
+                           const int     n,
+                           const int     max_iter);
+}
 
 #endif
