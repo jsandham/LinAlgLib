@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,7 @@
 #
 ##################################################################################
 
-add_subdirectory(examples)
-add_subdirectory(testing)
-add_subdirectory(common)
+target_sources(test_main
+  PRIVATE
+    utility.cpp
+)

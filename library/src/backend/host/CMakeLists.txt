@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,24 @@
 #
 ##################################################################################
 
-add_subdirectory(examples)
-add_subdirectory(testing)
-add_subdirectory(common)
+target_sources(linalglib
+  PRIVATE
+    host_amg_aggregation.cpp
+    host_amg_strength.cpp
+    host_primitives.cpp
+    host_math.cpp
+    host_axpy.cpp
+    host_matrix_vector.cpp
+    host_extract.cpp
+    host_scale.cpp
+    host_ssor.cpp
+    host_csr2csc.cpp
+    host_csrtrsv.cpp
+    host_csrgeam.cpp
+    host_csrgemm.cpp
+    host_csric0.cpp
+    host_csrilu0.cpp
+    host_tridiagonal.cpp
+    host_vector.cpp
+    host_memory.cpp
+)

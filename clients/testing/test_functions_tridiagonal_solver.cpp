@@ -41,18 +41,10 @@ using namespace linalg;
 
 bool Testing::test_tridiagonal_solver(Arguments arg)
 {
-    std::cout << "test_tridiagonal_solver" << std::endl;
-
-    // for(int m = 2; m <= 128; m++)
-    // {
-    // for(int n = 1; n <= 128; n++)
-    // {
     // Create a simple tridiagonal system for testing
     // System size
     int m = arg.m;
     int n = arg.n;
-
-    std::cout << "m: " << m << " n: " << n << std::endl;
 
     // Create tridiagonal matrix coefficients
     vector<float> lower_diag(m);
@@ -79,14 +71,6 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
             upper_diag[i] = -0.75;
         }
     }
-    // for(size_t i = 0; i < m; i++)
-    // {
-    //    lower_diag[i] = i;
-    //    main_diag[i]  = i + m;
-    //    upper_diag[i] = i + 2 * m;
-    // }
-    // lower_diag[0]     = 0.0; // No lower diagonal for first row
-    // upper_diag[m - 1] = 0.0; // No upper diagonal
 
     // RHS set to make solution = 1.0 everywhere
     for(int i = 0; i < n; i++)
@@ -97,8 +81,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
         }
 
         // Adjust boundary conditions
-        // rhs[m * i + 0]       = 3.0;
-        // rhs[m * i + (m - 1)] = 3.0;
+        rhs[m * i + 0]       = 3.0;
+        rhs[m * i + (m - 1)] = 3.0;
     }
 
     // Move to device
@@ -183,7 +167,6 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     if(!success)
     {
         std::cout << "Test FAILED: residual exceeds tolerance" << std::endl;
-        // return false;
     }
     else
     {
@@ -191,8 +174,4 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     }
 
     return success;
-    // }
-    // }
-
-    // return true;
 }

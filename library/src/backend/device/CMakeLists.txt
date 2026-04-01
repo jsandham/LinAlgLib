@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,28 @@
 #
 ##################################################################################
 
-add_subdirectory(examples)
-add_subdirectory(testing)
-add_subdirectory(common)
+target_sources(linalglib
+  PRIVATE
+    device_amg_aggregation.cpp
+    device_amg_strength.cpp
+    device_primitives.cpp
+    device_math.cpp
+    device_axpy.cpp
+    device_matrix_vector.cpp
+    device_extract.cpp
+    device_scale.cpp
+    device_ssor.cpp
+    device_csr2csc.cpp
+    device_csrtrsv.cpp
+    device_csrgeam.cpp
+    device_csrgemm.cpp
+    device_csric0.cpp
+    device_csrilu0.cpp
+    device_tridiagonal.cpp
+    device_vector.cpp
+    device_memory.cpp
+)
+
+if(BUILD_WITH_CUDA)
+  add_subdirectory(cuda)
+endif()

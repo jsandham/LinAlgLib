@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2024-2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -74,51 +74,26 @@ if(TARGET yaml-cpp::yaml-cpp)
   )
 endif()
 
-set(LINALGLIB_CLIENTS_TEST_SOURCE
-  test_functions_dispatch.cpp
+add_executable(test_main test_main.cpp)
 
-  test_functions_classical.cpp
-  test_functions_krylov.cpp
-  test_functions_amg.cpp
-  test_functions_spmv.cpp
-  test_functions_sptrsv.cpp
-  test_functions_spgemm.cpp
-  test_functions_spgeam.cpp
-  test_functions_transpose.cpp
-  test_functions_csric0.cpp
-  test_functions_csrilu0.cpp
-  test_functions_tridiagonal_solver.cpp
-  test_functions_exclusive_scan.cpp
-
-  tests/test_jacobi.cpp
-  tests/test_gauss_seidel.cpp
-  tests/test_symmetric_gauss_seidel.cpp
-  tests/test_SOR.cpp
-  tests/test_SSOR.cpp
-
-  tests/test_CG.cpp
-  tests/test_GMRES.cpp
-  tests/test_BICGSTAB.cpp
-
-  tests/test_UAAMG.cpp
-  tests/test_SAAMG.cpp
-  #tests/test_RSAMG.cpp
-
-  tests/test_SpMV.cpp
-  tests/test_SpTRSV.cpp
-  tests/test_SpGEMM.cpp
-  tests/test_csric0.cpp
-  tests/test_csrilu0.cpp
-  tests/test_transpose.cpp
-  tests/test_tridiagonal_solver.cpp
-  tests/test_exclusive_scan.cpp
+target_sources(test_main
+  PRIVATE
+    test_functions_dispatch.cpp
+    test_functions_classical.cpp
+    test_functions_krylov.cpp
+    test_functions_amg.cpp
+    test_functions_spmv.cpp
+    test_functions_sptrsv.cpp
+    test_functions_spgemm.cpp
+    test_functions_spgeam.cpp
+    test_functions_transpose.cpp
+    test_functions_csric0.cpp
+    test_functions_csrilu0.cpp
+    test_functions_tridiagonal_solver.cpp
+    test_functions_exclusive_scan.cpp
 )
 
-set(LINALGLIB_CLIENTS_COMMON_SOURCE
-  ../common/utility.cpp
-)
-
-add_executable(test_main test_main.cpp ${LINALGLIB_CLIENTS_TEST_SOURCE} ${LINALGLIB_CLIENTS_COMMON_SOURCE})
+add_subdirectory(tests)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
   target_compile_options(test_main PRIVATE -W4 -wd4201 -wd4100 -wd4996)

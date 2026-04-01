@@ -102,13 +102,13 @@ bool Testing::test_sptrsv(Arguments arg)
     for(int i = 0; i < mat_A.get_m(); i++)
     {
         max_error = std::max(max_error, std::abs(vec_y2[i] - vec_y1[i]));
-        // if(std::abs(vec_y2[i] - vec_y1[i]) > 1e-12)
-        // {
-        //     std::cout << "vec_y1[i]: " << vec_y1[i] << " vec_y2[i]: " << vec_y2[i]
-        //               << " std::abs(vec_y2[i] - vec_y1[i]): " << std::abs(vec_y2[i] - vec_y1[i])
-        //               << " i: " << i << std::endl;
-        //     break;
-        // }
+        if(std::abs(vec_y2[i] - vec_y1[i]) > 1e-12)
+        {
+            std::cout << "vec_y1[i]: " << vec_y1[i] << " vec_y2[i]: " << vec_y2[i]
+                      << " std::abs(vec_y2[i] - vec_y1[i]): " << std::abs(vec_y2[i] - vec_y1[i])
+                      << " i: " << i << std::endl;
+            break;
+        }
     }
 
     std::cout << "max_error: " << max_error << std::endl;

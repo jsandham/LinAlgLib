@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2024-2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -52,90 +52,6 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/linalg.h
 )
 
-set(LINALGLIB_SOURCE
-  src/linalg_primitives.cpp
-  src/linalg_math.cpp
-  src/linalg_memory.cpp
-  src/backend/host/host_amg_aggregation.cpp
-  src/backend/host/host_amg_strength.cpp
-  src/backend/host/host_primitives.cpp
-  src/backend/host/host_math.cpp
-  src/backend/host/host_axpy.cpp
-  src/backend/host/host_matrix_vector.cpp
-  src/backend/host/host_extract.cpp
-  src/backend/host/host_scale.cpp
-  src/backend/host/host_ssor.cpp
-  src/backend/host/host_csr2csc.cpp
-  src/backend/host/host_csrtrsv.cpp
-  src/backend/host/host_csrgeam.cpp
-  src/backend/host/host_csrgemm.cpp
-  src/backend/host/host_csric0.cpp
-  src/backend/host/host_csrilu0.cpp
-  src/backend/host/host_tridiagonal.cpp
-  src/backend/host/host_vector.cpp
-  src/backend/host/host_memory.cpp
-  src/backend/device/device_amg_aggregation.cpp
-  src/backend/device/device_amg_strength.cpp
-  src/backend/device/device_primitives.cpp
-  src/backend/device/device_math.cpp
-  src/backend/device/device_axpy.cpp
-  src/backend/device/device_matrix_vector.cpp
-  src/backend/device/device_extract.cpp
-  src/backend/device/device_scale.cpp
-  src/backend/device/device_ssor.cpp
-  src/backend/device/device_csr2csc.cpp
-  src/backend/device/device_csrtrsv.cpp
-  src/backend/device/device_csrgeam.cpp
-  src/backend/device/device_csrgemm.cpp
-  src/backend/device/device_csric0.cpp
-  src/backend/device/device_csrilu0.cpp
-  src/backend/device/device_tridiagonal.cpp
-  src/backend/device/device_vector.cpp
-  src/backend/device/device_memory.cpp
-  src/eigen_value_solvers/power_iteration.cpp
-  src/iterative_solvers/amg/amg_aggregation.cpp
-  src/iterative_solvers/amg/amg_strength.cpp
-  src/iterative_solvers/amg/amg_util.cpp
-  src/iterative_solvers/amg/amg.cpp
-  src/iterative_solvers/amg/rsamg_old.cpp
-  src/iterative_solvers/amg/rsamg.cpp
-  src/iterative_solvers/amg/saamg.cpp
-  src/iterative_solvers/amg/uaamg.cpp
-  src/iterative_solvers/classic/gauss_seidel.cpp
-  src/iterative_solvers/classic/jacobi.cpp
-  src/iterative_solvers/classic/richardson.cpp
-  src/iterative_solvers/classic/sor.cpp
-  src/iterative_solvers/classic/ssor.cpp
-  src/iterative_solvers/classic/symmetric_gauss_seidel.cpp
-  src/iterative_solvers/krylov/bicgstab.cpp
-  src/iterative_solvers/krylov/gmres.cpp
-  src/iterative_solvers/krylov/cg.cpp
-  src/iterative_solvers/preconditioner/preconditioner.cpp
-  src/iterative_solvers/iter_control.cpp
-  src/vector.cpp
-  src/csr_matrix.cpp
-  src/perfetto_trace.cpp
-)
-
-set(LINALGLIB_CUDA_SOURCE
-  src/backend/device/cuda/cuda_amg_aggregation.cu
-  src/backend/device/cuda/cuda_amg_strength.cu
-  src/backend/device/cuda/cuda_axpy.cu
-  src/backend/device/cuda/cuda_matrix_vector.cu
-  src/backend/device/cuda/cuda_ssor.cu
-  src/backend/device/cuda/cuda_extract.cu
-  src/backend/device/cuda/cuda_scale.cu
-  src/backend/device/cuda/cuda_csric0.cu
-  src/backend/device/cuda/cuda_csrilu0.cu
-  src/backend/device/cuda/cuda_csr2csc.cu
-  src/backend/device/cuda/cuda_csrtrsv.cu
-  src/backend/device/cuda/cuda_csrgemm.cu
-  src/backend/device/cuda/cuda_csrgeam.cu
-  src/backend/device/cuda/cuda_tridiagonal.cu
-  src/backend/device/cuda/cuda_math.cu
-  src/backend/device/cuda/cuda_memory.cu
-  src/backend/device/cuda/cuda_primitives.cu)
-
 # Provide an option for the user to enable CUDA
 option(ENABLE_CUDA "Enable CUDA compilation if NVIDIA CUDA Toolkit is available" ON)
 
@@ -161,8 +77,11 @@ if(ENABLE_CUDA)
     endif()
 endif()
 
+add_library(linalglib)
+
+target_sources(linalglib PRIVATE ${LINALGLIB_HEADERS_PUBLIC})
+
 if(BUILD_WITH_CUDA)
-  add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC} ${LINALGLIB_CUDA_SOURCE})
 
   set_target_properties(linalglib PROPERTIES CUDA_SEPARABLE_COMPILATION ON CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
@@ -172,9 +91,9 @@ if(BUILD_WITH_CUDA)
 
   # Add a definition for C++ code to know if CUDA is enabled within the library
   target_compile_definitions(linalglib PRIVATE LINALGLIB_HAS_CUDA)
-else()
-  add_library(linalglib ${LINALGLIB_SOURCE} ${LINALGLIB_HEADERS_PUBLIC})
 endif()
+
+add_subdirectory(src)
 
 if (WIN32)
   target_link_libraries(linalglib PUBLIC perfetto ws2_32)

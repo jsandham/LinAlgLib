@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,24 @@
 #
 ##################################################################################
 
-add_subdirectory(examples)
-add_subdirectory(testing)
-add_subdirectory(common)
+target_sources(test_main
+  PRIVATE
+    test_jacobi.cpp
+    test_gauss_seidel.cpp
+    test_symmetric_gauss_seidel.cpp
+    test_SOR.cpp
+    test_SSOR.cpp
+    test_CG.cpp
+    test_GMRES.cpp
+    test_BICGSTAB.cpp
+    test_UAAMG.cpp
+    test_SAAMG.cpp
+    test_SpMV.cpp
+    test_SpTRSV.cpp
+    test_SpGEMM.cpp
+    test_csric0.cpp
+    test_csrilu0.cpp
+    test_transpose.cpp
+    test_tridiagonal_solver.cpp
+    test_exclusive_scan.cpp
+)

@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2024 James Sandham
+# Copyright(c) 2026 James Sandham
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,23 @@
 #
 ##################################################################################
 
-add_subdirectory(examples)
-add_subdirectory(testing)
-add_subdirectory(common)
+target_sources(linalglib
+  PRIVATE
+    cuda_amg_aggregation.cu
+    cuda_amg_strength.cu
+    cuda_axpy.cu
+    cuda_matrix_vector.cu
+    cuda_ssor.cu
+    cuda_extract.cu
+    cuda_scale.cu
+    cuda_csric0.cu
+    cuda_csrilu0.cu
+    cuda_csr2csc.cu
+    cuda_csrtrsv.cu
+    cuda_csrgemm.cu
+    cuda_csrgeam.cu
+    cuda_tridiagonal.cu
+    cuda_math.cu
+    cuda_memory.cu
+    cuda_primitives.cu
+)

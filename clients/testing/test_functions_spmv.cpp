@@ -38,10 +38,6 @@ using namespace linalg;
 
 bool Testing::test_spmv(Arguments arg)
 {
-    vector<double> test(100);
-    test.move_to_device();
-    test.ones();
-
     csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 

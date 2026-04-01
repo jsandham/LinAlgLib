@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -37,20 +37,46 @@ using namespace linalg;
 
 bool Testing::test_exclusive_scan(Arguments arg)
 {
-    std::cout << "test_exclusive_scan" << std::endl;
-    
-    vector<double> vec(10);
-    vec.ones();
+    // Host solution
+    vector<double> vec_1(arg.m);
+    vec_1.ones();
 
-    exclusive_scan(vec);
+    exclusive_scan(vec_1);
 
-    std::cout << "vec" << std::endl;
-    for(int i = 0; i < vec.get_size(); i++)
+    // Device solution
+    vector<double> vec_2(arg.m);
+    vec_2.ones();
+
+    vec_2.move_to_device();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    for(int i = 0; i < 4; i++)
     {
-        std::cout << vec[i] << " ";
+        vec_2.ones();
+        exclusive_scan(vec_2);
     }
-    std::cout << "" << std::endl;
+    linalg::sync();
+    auto t2 = std::chrono::high_resolution_clock::now();
 
+    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    return true;
+    vec_2.move_to_host();
+
+    //vec_1.print_vector("Host solution");
+    //vec_2.print_vector("Device solution");
+
+    bool pass = true;
+    for(int i = 0; i < vec_2.get_size(); i++)
+    {
+        if(vec_2[i] != vec_1[i])
+        {
+            std::cout << "Mismatch at index " << i << ": " << vec_2[i] << " != " << vec_1[i]
+                      << std::endl;
+            pass = false;
+            break;
+        }
+    }
+
+    return pass;
 }
