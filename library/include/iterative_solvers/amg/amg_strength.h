@@ -45,13 +45,31 @@
 namespace linalg
 {
     /*! \ingroup iterative_solvers_amg
- *  \brief Compute smoothed aggregation strong connections
+ *  \brief Compute smoothed-aggregation strong connections.
+ *
+ *  \details
+ *  Determines which graph edges are considered strong for aggregation-based
+ *  coarsening. The output connection vector is then used by aggregation
+ *  routines to form coarse-grid aggregates.
+ *
+ *  \param A The system matrix whose connectivity graph is analyzed.
+ *  \param eps Strength threshold used to decide whether a connection is strong.
+ *  \param connections Output vector encoding the detected strong connections.
  */
     LINALGLIB_API void
         compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections);
 
     /*! \ingroup iterative_solvers_amg
- *  \brief Compute classical strength matrix
+ *  \brief Compute the classical AMG strength matrix.
+ *
+ *  \details
+ *  Builds the classical strength-of-connection matrix and, optionally, a
+ *  companion connection vector used by classical AMG coarsening/interpolation.
+ *
+ *  \param A The system matrix whose strong couplings are analyzed.
+ *  \param theta Classical AMG strength threshold parameter.
+ *  \param S Output CSR matrix storing the strength-of-connection pattern.
+ *  \param connections Output vector describing strong connections per node.
  */
     LINALGLIB_API void compute_classical_strong_connections(const csr_matrix& A,
                                                             double            theta,
