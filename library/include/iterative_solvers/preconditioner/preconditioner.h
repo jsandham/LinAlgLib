@@ -39,9 +39,14 @@
  *  \brief preconditioner.h provides different preconditioners that can be used with krylov solvers
  */
 
+/*! \defgroup iterative_solvers_preconditioner Preconditioner
+ *  \brief Preconditioner interfaces and implementations.
+ *  \ingroup iterative_solvers
+ */
+
 namespace linalg
 {
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Abstract base class for preconditioners.
  *
  * \details
@@ -93,7 +98,7 @@ namespace linalg
         virtual bool is_on_host() const = 0;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Jacobi preconditioner.
  *
  * \details
@@ -155,7 +160,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Gauss-Seidel preconditioner.
  *
  * \details
@@ -222,7 +227,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Successive Over-Relaxation (SOR) preconditioner.
  *
  * \details
@@ -289,7 +294,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Symmetric Gauss-Seidel preconditioner.
  *
  * \details
@@ -352,7 +357,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Symmetric Successive Over-Relaxation (SSOR) preconditioner.
  *
  * \details
@@ -419,7 +424,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Incomplete LU (ILU) preconditioner.
  *
  * \details
@@ -493,7 +498,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Incomplete Cholesky (IC) preconditioner.
  *
  * \details
@@ -567,7 +572,7 @@ namespace linalg
         bool is_on_host() const override;
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_preconditioner
  * \brief Iterative ILU (ITILU) preconditioner.
  *
  * \details

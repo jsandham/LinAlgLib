@@ -41,7 +41,8 @@
 
 namespace linalg
 {
-    /*! \brief A solver class implementing the Bi-Conjugate Gradient Stabilized (BiCGSTAB) method.
+    /*! \ingroup iterative_solvers_krylov
+ * \brief A solver class implementing the Bi-Conjugate Gradient Stabilized (BiCGSTAB) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, non-symmetric systems of linear

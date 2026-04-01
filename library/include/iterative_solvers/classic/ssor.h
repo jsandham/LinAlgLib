@@ -31,8 +31,8 @@
 
 #include "../iter_control.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
 
 /*! \file
  *  \brief ssor.h provides interface for ssor solver
@@ -40,7 +40,8 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Symmetric Successive Over-Relaxation (SSOR) iterative method.
+    /*! \ingroup iterative_solvers_classic
+ * \brief A solver class implementing the Symmetric Successive Over-Relaxation (SSOR) iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form
@@ -151,36 +152,36 @@ namespace linalg
  * }
  * \endcode
  */
-class ssor_solver
-{
-private:
-    /*! \brief Internal vector to store the residual during the solve process. */
-    vector<double> res;
+    class ssor_solver
+    {
+    private:
+        /*! \brief Internal vector to store the residual during the solve process. */
+        vector<double> res;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `ssor_solver` object.
      */
-    ssor_solver();
+        ssor_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `ssor_solver` object.
      */
-    ~ssor_solver();
+        ~ssor_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `ssor_solver` objects to avoid shallow copies and
      * ensure proper memory management.
      */
-    ssor_solver (const ssor_solver&) = delete;
+        ssor_solver(const ssor_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `ssor_solver` object to another to avoid shallow copies
      * and ensure proper memory management.
      */
-    ssor_solver& operator= (const ssor_solver&) = delete;
+        ssor_solver& operator=(const ssor_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the SSOR solver.
+        /*! \brief Builds necessary data structures for the SSOR solver.
      * \details
      * This method typically involves pre-processing the input matrix `A` to
      * prepare for both forward and backward SOR sweeps. This may include
@@ -188,9 +189,9 @@ public:
      * SSOR iteration.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Successive Over-Relaxation (SSOR) method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Successive Over-Relaxation (SSOR) method.
      *
      * This method iteratively updates the solution vector `x` by performing a
      * forward SOR sweep followed by a backward SOR sweep, until the convergence
@@ -208,8 +209,12 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., invalid omega, singular diagonal element).
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double omega);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  iter_control          control,
+                  double                omega);
+    };
 }
 
 #endif

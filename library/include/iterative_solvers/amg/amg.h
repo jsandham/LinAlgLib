@@ -42,9 +42,17 @@
  *  \brief amg.h provides interface for algebraic multigrid solver
  */
 
+/*! \defgroup iterative_solvers_amg AMG
+ *  \brief Algebraic multigrid APIs.
+ *  \ingroup iterative_solvers
+ */
+
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  * \brief Data structure for storing the matrix hierarchy used in algebraic multigrid solver
  *
  * \details
@@ -128,7 +136,7 @@ namespace linalg
         void move_to_host();
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  * \brief Cycle type used in algebraic multigrid solver
  *
  * \details
@@ -171,7 +179,7 @@ namespace linalg
         Fcycle
     };
 
-    /*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  * \brief Smoother type used in algebraic multigrid solver.
  *
  * \details
@@ -402,5 +410,7 @@ namespace linalg
                                 Smoother              smoother,
                                 iter_control          control);
 }
+
+/*! @} */
 
 #endif

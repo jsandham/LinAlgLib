@@ -27,8 +27,8 @@
 #ifndef SAAMG_H
 #define SAAMG_H
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 #include "amg.h"
 
@@ -37,9 +37,12 @@
  * multigrid
  */
 
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-/*! \brief Sets up the hierarchy for a Smoothed Aggregation Algebraic Multigrid (SAAMG) solver.
+    /*! \brief Sets up the hierarchy for a Smoothed Aggregation Algebraic Multigrid (SAAMG) solver.
  *
  * \details
  * This function constructs the multigrid hierarchy required for the Smoothed Aggregation
@@ -189,7 +192,9 @@ namespace linalg
  * }
  * \endcode
  */
-LINALGLIB_API void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy &hierarchy);
+    LINALGLIB_API void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hierarchy);
 }
+
+/*! @} */
 
 #endif

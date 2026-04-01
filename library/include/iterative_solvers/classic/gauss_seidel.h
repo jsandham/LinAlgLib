@@ -34,14 +34,14 @@
 #include "../../csr_matrix.h"
 #include "../../vector.h"
 
-
 /*! \file
  *  \brief gauss_seidel.h provides interface for gauss seidel solver
  */
 
 namespace linalg
 {
-    /*! \brief A solver class implementing the Gauss-Seidel iterative method.
+    /*! \ingroup iterative_solvers_classic
+ * \brief A solver class implementing the Gauss-Seidel iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form

@@ -29,9 +29,13 @@
 
 #include "../linalg_export.h"
 
+/*! \defgroup eigenvalue_solvers Eigenvalue Solvers
+ *  \brief Eigenvalue solver APIs.
+ */
+
 namespace linalg
 {
-    /*! \ingroup iterative_solvers
+    /*! \ingroup eigenvalue_solvers
  * \brief Power iteration to find the dominant eigenvalue and corresponding eigenvector.
  *
  * \details

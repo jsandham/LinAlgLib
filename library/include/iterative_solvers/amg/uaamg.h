@@ -27,8 +27,8 @@
 #ifndef UAAMG_H
 #define UAAMG_H
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 #include "amg.h"
 
@@ -37,9 +37,12 @@
  * algebraic multigrid
  */
 
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-/*! \brief Sets up the hierarchy for an Unsmoothed Aggregation Algebraic Multigrid (UAAMG) solver.
+    /*! \brief Sets up the hierarchy for an Unsmoothed Aggregation Algebraic Multigrid (UAAMG) solver.
  *
  * \details
  * This function constructs the multigrid hierarchy required for the Unsmoothed Aggregation
@@ -186,7 +189,9 @@ namespace linalg
  * }
  * \endcode
  */
-void uaamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy);
+    void uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy);
 }
+
+/*! @} */
 
 #endif

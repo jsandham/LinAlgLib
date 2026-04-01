@@ -39,9 +39,15 @@
  *  \brief cg.h provides interface for conjugate gradient solvers
  */
 
+/*! \defgroup iterative_solvers_krylov Krylov
+ *  \brief Krylov-subspace iterative solver APIs.
+ *  \ingroup iterative_solvers
+ */
+
 namespace linalg
 {
-    /*! \brief A solver class implementing the Conjugate Gradient (CG) method.
+    /*! \ingroup iterative_solvers_krylov
+ * \brief A solver class implementing the Conjugate Gradient (CG) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, **symmetric positive definite (SPD)**

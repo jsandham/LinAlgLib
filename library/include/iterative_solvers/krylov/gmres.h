@@ -41,7 +41,8 @@
 
 namespace linalg
 {
-    /*! \brief A solver class implementing the Generalized Minimum Residual (GMRES) method.
+    /*! \ingroup iterative_solvers_krylov
+ * \brief A solver class implementing the Generalized Minimum Residual (GMRES) method.
  *
  * \details
  * This class provides functionality to solve large, sparse, **non-symmetric** systems

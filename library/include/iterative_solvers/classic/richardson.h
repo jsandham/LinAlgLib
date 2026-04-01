@@ -31,8 +31,8 @@
 
 #include "../iter_control.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
 
 /*! \file
  *  \brief richardson.h provides interface for richardson solver
@@ -40,7 +40,8 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Richardson iterative method.
+    /*! \ingroup iterative_solvers_classic
+ * \brief A solver class implementing the Richardson iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form
@@ -158,44 +159,44 @@ namespace linalg
  * }
  * \endcode
  */
-class rich_solver
-{
-private:
-    /*! \brief Internal vector to store the residual during the solve process. */
-    vector<double> res;
+    class rich_solver
+    {
+    private:
+        /*! \brief Internal vector to store the residual during the solve process. */
+        vector<double> res;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `rich_solver` object.
      */
-    rich_solver();
+        rich_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `rich_solver` object.
      */
-    ~rich_solver();
+        ~rich_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `rich_solver` objects to avoid shallow copies and
      * ensure proper memory management.
      */
-    rich_solver (const rich_solver&) = delete;
+        rich_solver(const rich_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `rich_solver` object to another to avoid shallow copies
      * and ensure proper memory management.
      */
-    rich_solver& operator= (const rich_solver&) = delete;
+        rich_solver& operator=(const rich_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the Richardson solver.
+        /*! \brief Builds necessary data structures for the Richardson solver.
      * \details
      * For the Richardson method, this might involve simply storing a reference
      * or a copy of the matrix `A` if needed for residual computation.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Richardson method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Richardson method.
      *
      * This method iteratively updates the solution vector `x` using the Richardson
      * iteration formula until the convergence criteria specified by `control` are
@@ -212,8 +213,12 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., invalid input).
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control, double theta);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  iter_control          control,
+                  double                theta);
+    };
 }
 
 #endif

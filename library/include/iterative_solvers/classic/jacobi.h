@@ -34,14 +34,19 @@
 #include "../../csr_matrix.h"
 #include "../../vector.h"
 
-
 /*! \file
  *  \brief jacobi.h provides interface for jacobi solver
  */
 
+/*! \defgroup iterative_solvers_classic Classic
+ *  \brief Classic stationary iterative solver APIs.
+ *  \ingroup iterative_solvers
+ */
+
 namespace linalg
 {
-    /*! \brief A solver class implementing the Jacobi iterative method.
+    /*! \ingroup iterative_solvers_classic
+ * \brief A solver class implementing the Jacobi iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form

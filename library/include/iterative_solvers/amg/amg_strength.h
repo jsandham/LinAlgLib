@@ -29,8 +29,8 @@
 
 #include <vector>
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 #include "amg_util.h"
 
@@ -39,17 +39,26 @@
  * a matrix. Used algebraic multigrid solvers
  */
 
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  *  \brief Compute smoothed aggregation strong connections
  */
-LINALGLIB_API void compute_strong_connections(const csr_matrix &A, double eps, vector<int> &connections);
+    LINALGLIB_API void
+        compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections);
 
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  *  \brief Compute classical strength matrix
  */
-LINALGLIB_API void compute_classical_strong_connections(const csr_matrix &A, double theta, csr_matrix &S, vector<int> &connections);
+    LINALGLIB_API void compute_classical_strong_connections(const csr_matrix& A,
+                                                            double            theta,
+                                                            csr_matrix&       S,
+                                                            vector<int>&      connections);
 }
+
+/*! @} */
 
 #endif

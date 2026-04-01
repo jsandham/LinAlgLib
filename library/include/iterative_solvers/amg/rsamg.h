@@ -27,8 +27,8 @@
 #ifndef RSAMG_H
 #define RSAMG_H
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 #include "amg.h"
 
@@ -36,15 +36,18 @@
  *  \brief rsamg.h provides interface for classical algebraic multigrid
  */
 
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
  *  \brief Legacy Ruge Steuben algebraic multigrid setup
  */
-// LINALGLIB_API void rsamg_setup_legacy(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
-//                  int max_level, hierarchy &hierarchy);
+    // LINALGLIB_API void rsamg_setup_legacy(const int *csr_row_ptr, const int *csr_col_ind, const double *csr_val, int m, int n, int nnz,
+    //                  int max_level, hierarchy &hierarchy);
 
-/*! \brief Sets up the hierarchy for a Ruge-Stuben Algebraic Multigrid (RSAMG) solver.
+    /*! \brief Sets up the hierarchy for a Ruge-Stuben Algebraic Multigrid (RSAMG) solver.
  *
  * \details
  * This function constructs the multigrid hierarchy required for the Ruge-Stuben Algebraic Multigrid (RSAMG) method.
@@ -202,7 +205,9 @@ namespace linalg
  * }
  * \endcode
  */
-LINALGLIB_API void rsamg_setup(const csr_matrix& A, int max_level, hierarchy &hierarchy);
+    LINALGLIB_API void rsamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy);
 }
+
+/*! @} */
 
 #endif

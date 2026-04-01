@@ -31,8 +31,8 @@
 
 #include "../iter_control.h"
 
-#include "../../vector.h"
 #include "../../csr_matrix.h"
+#include "../../vector.h"
 
 /*! \file
  *  \brief symmetric_gauss_seidel.h provides interface for symmetric gauss
@@ -41,7 +41,8 @@
 
 namespace linalg
 {
-/*! \brief A solver class implementing the Symmetric Gauss-Seidel (SGS) iterative method.
+    /*! \ingroup iterative_solvers_classic
+ * \brief A solver class implementing the Symmetric Gauss-Seidel (SGS) iterative method.
  *
  * \details
  * This class provides functionality to solve linear systems of equations of the form
@@ -151,45 +152,45 @@ namespace linalg
  * }
  * \endcode
  */
-class sgs_solver
-{
-private:
-    /*! \brief Internal vector to store the residual during the solve process. */
-    vector<double> res;
+    class sgs_solver
+    {
+    private:
+        /*! \brief Internal vector to store the residual during the solve process. */
+        vector<double> res;
 
-public:
-    /*! \brief Default constructor.
+    public:
+        /*! \brief Default constructor.
      * Initializes a new `sgs_solver` object.
      */
-    sgs_solver();
+        sgs_solver();
 
-    /*! \brief Destructor.
+        /*! \brief Destructor.
      * Cleans up any resources allocated by the `sgs_solver` object.
      */
-    ~sgs_solver();
+        ~sgs_solver();
 
-    /*! \brief Deleted copy constructor.
+        /*! \brief Deleted copy constructor.
      * Prevents direct copying of `sgs_solver` objects to avoid shallow copies and
      * ensure proper memory management.
      */
-    sgs_solver (const sgs_solver&) = delete;
+        sgs_solver(const sgs_solver&) = delete;
 
-    /*! \brief Deleted copy assignment operator.
+        /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `sgs_solver` object to another to avoid shallow copies
      * and ensure proper memory management.
      */
-    sgs_solver& operator= (const sgs_solver&) = delete;
+        sgs_solver& operator=(const sgs_solver&) = delete;
 
-    /*! \brief Builds necessary data structures for the Symmetric Gauss-Seidel solver.
+        /*! \brief Builds necessary data structures for the Symmetric Gauss-Seidel solver.
      * \details
      * This method typically involves pre-processing the input matrix `A` to
      * facilitate efficient forward and backward Gauss-Seidel sweeps. This may
      * include extracting the diagonal elements and setting up for triangular solves.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-    void build(const csr_matrix& A);
+        void build(const csr_matrix& A);
 
-    /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Gauss-Seidel (SGS) method.
+        /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Symmetric Gauss-Seidel (SGS) method.
      *
      * This method iteratively updates the solution vector `x` by performing a
      * forward Gauss-Seidel sweep followed by a backward Gauss-Seidel sweep,
@@ -206,8 +207,11 @@ public:
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., singular diagonal element).
      */
-    int solve(const csr_matrix& A, vector<double>& x, const vector<double>& b, iter_control control);
-};
+        int solve(const csr_matrix&     A,
+                  vector<double>&       x,
+                  const vector<double>& b,
+                  iter_control          control);
+    };
 }
 
 #endif

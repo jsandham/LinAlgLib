@@ -29,16 +29,19 @@
 
 #include <vector>
 
-#include "../../linalg_export.h"
 #include "../../csr_matrix.h"
+#include "../../linalg_export.h"
 
 /*! \file
  *  \brief amg_util.h provides interface for algebraic multigrid solver
  */
 
+/*! \addtogroup iterative_solvers_amg
+ *  @{ */
+
 namespace linalg
 {
-/*! \ingroup iterative_solvers
+    /*! \ingroup iterative_solvers_amg
 * \brief Compute the Galerkin triple product for algebraic multigrid.
 *
 * \param R The restriction operator (CSR matrix).
@@ -58,7 +61,12 @@ namespace linalg
 * where \f$n_f\f$ is the number of degrees of freedom on the fine level and \f$n_c\f$ is the
 * number of degrees of freedom on the coarse level.
 */
-LINALGLIB_API void galarkin_triple_product(const csr_matrix &R, const csr_matrix &A, const csr_matrix &P, csr_matrix &A_coarse);
+    LINALGLIB_API void galarkin_triple_product(const csr_matrix& R,
+                                               const csr_matrix& A,
+                                               const csr_matrix& P,
+                                               csr_matrix&       A_coarse);
 }
+
+/*! @} */
 
 #endif
