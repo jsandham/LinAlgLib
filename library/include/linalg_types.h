@@ -93,9 +93,10 @@ namespace linalg
      * @brief Descriptor for tridiagonal linear system operations.
      *
      * Holds metadata and preprocessing data for algorithms that operate on
-     * tridiagonal matrices, such as specialized factorization and solve routines.
-     * Instances are managed by the corresponding create/destroy API functions,
-     * and users should treat this as an opaque type.
+     * tridiagonal matrices, such as Thomas, PCR, and tiled PCR-SPIKE based
+     * solve routines. It also stores solver options such as the selected
+     * pivoting strategy. Instances are managed by the corresponding
+     * create/destroy API functions, and users should treat this as an opaque type.
      */
     struct tridiagonal_descr;
 } // namespace linalg

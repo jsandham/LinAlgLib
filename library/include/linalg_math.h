@@ -521,11 +521,12 @@ namespace linalg
      * @brief Creates an opaque descriptor for tridiagonal analysis/solve operations.
      *
      * Allocates internal workspace and backend-specific metadata used by
-     * tridiagonal_analysis() and tridiagonal_solver().
+        * tridiagonal_analysis() and tridiagonal_solver(). The descriptor also stores
+        * solver configuration such as the selected pivoting strategy.
      *
      * @param descr A pointer to a tridiagonal_descr* that will be initialized
      * to point to a newly allocated descriptor.
-     * @see destroy_tridiagonal_descr
+        * @see destroy_tridiagonal_descr, set_pivoting_strategy
      */
     LINALGLIB_API void create_tridiagonal_descr(tridiagonal_descr** descr);
 
@@ -545,8 +546,9 @@ namespace linalg
      *
      * Configures whether the solver applies pivoting during the tridiagonal solve.
      * This must be called after create_tridiagonal_descr() and before
-     * tridiagonal_analysis(), as the analysis phase may use the strategy to
-     * prepare backend-specific data.
+        * tridiagonal_analysis(), as both analysis and solve dispatch may depend on
+        * the selected mode. This provides an explicit way to choose between the
+        * non-pivoting and pivoting variants of the tridiagonal solver.
      *
      * @param descr The tridiagonal descriptor to configure.
      * @param strategy The pivoting strategy to apply. Use pivoting_strategy::none
@@ -559,16 +561,18 @@ namespace linalg
     /**
      * @brief Performs analysis for tridiagonal solves.
      *
-     * Preprocesses the tridiagonal system layout and caches data in descr for
-     * subsequent tridiagonal_solver() calls.
+        * Preprocesses the tridiagonal system layout and caches data in descr for
+        * subsequent tridiagonal_solver() calls. Depending on the problem size,
+        * backend, and selected pivoting strategy, this may prepare workspace for
+        * Thomas, parallel cyclic reduction (PCR), or tiled PCR-SPIKE based solves.
      *
      * @param m The number of rows in the tridiagonal system.
      * @param n The number of right-hand-side columns/vectors to solve.
      * @param lower_diag The lower diagonal entries (subdiagonal).
      * @param main_diag The main diagonal entries.
      * @param upper_diag The upper diagonal entries (superdiagonal).
-     * @param descr The descriptor to populate with analysis data.
-     * @see tridiagonal_solver
+        * @param descr The descriptor to populate with analysis data and solver configuration.
+        * @see tridiagonal_solver, set_pivoting_strategy
      */
     LINALGLIB_API void tridiagonal_analysis(int                  m,
                                             int                  n,
@@ -578,10 +582,14 @@ namespace linalg
                                             tridiagonal_descr*   descr);
 
     /**
-     * @brief Solves a tridiagonal system of equations using the Thomas algorithm.
+        * @brief Solves a tridiagonal system using a specialized tridiagonal algorithm.
      *
      * This function solves the linear system defined by a tridiagonal matrix
-     * represented by its lower diagonal, main diagonal, and upper diagonal vectors.
+        * represented by its lower diagonal, main diagonal, and upper diagonal vectors.
+        * The implementation may dispatch to different solver families depending on
+        * the backend, matrix size, and descriptor configuration, including Thomas,
+        * PCR, and tiled PCR-SPIKE based methods. The descriptor also determines
+        * whether a pivoting strategy is requested for the solve.
      *
      * @param m The number of rows in the tridiagonal matrix.
      * @param n The number of columns in the right-hand-side matrix.
@@ -590,7 +598,8 @@ namespace linalg
      * @param upper_diag The vector representing the upper diagonal of the tridiagonal matrix.
      * @param rhs The right-hand side vector of the linear system.
      * @param solution The output vector that will contain the solution to the system.
-     * @param descr The descriptor containing analysis information for the tridiagonal system.
+        * @param descr The descriptor containing analysis information and the selected
+        * pivoting strategy for the tridiagonal system.
      */
     LINALGLIB_API void tridiagonal_solver(int                      m,
                                           int                      n,

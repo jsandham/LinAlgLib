@@ -28,8 +28,8 @@
  *  \brief Power iteration API for dominant eigenvalue/eigenvector computation.
  */
 
-#ifndef __POWER_ITERATION_H__
-#define __POWER_ITERATION_H__
+#ifndef POWER_ITERATION_H__
+#define POWER_ITERATION_H__
 
 #include "../linalg_export.h"
 
