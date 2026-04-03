@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -42,12 +42,6 @@ struct linalg::csrgeam_descr
     int* perm;
     int* bin_offsets;
 };
-
-void linalg::allocate_csrgeam_cuda_data(csrgeam_descr* descr)
-{
-    descr->perm        = nullptr;
-    descr->bin_offsets = nullptr;
-}
 
 void linalg::free_csrgeam_cuda_data(csrgeam_descr* descr)
 {

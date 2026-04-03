@@ -24,8 +24,8 @@
 //
 //********************************************************************************
 
-#ifndef TRIDIAGONAL_SOLVER_LARGE_KERNELS_H
-#define TRIDIAGONAL_SOLVER_LARGE_KERNELS_H
+#ifndef TRIDIAGONAL_TILED_PCR_SPIKE_KERNELS_H
+#define TRIDIAGONAL_TILED_PCR_SPIKE_KERNELS_H
 
 #include "common.cuh"
 
@@ -652,4 +652,4 @@ __global__ void pcr_tiled_backward_kernel(int m,
 //     }
 // }
 
-#endif // TRIDIAGONAL_SOLVER_LARGE_KERNELS_H
+#endif // TRIDIAGONAL_TILED_PCR_SPIKE_KERNELS_H

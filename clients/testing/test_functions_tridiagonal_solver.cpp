@@ -81,8 +81,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
         }
 
         // Adjust boundary conditions
-        rhs[m * i + 0]       = 3.0;
-        rhs[m * i + (m - 1)] = 3.0;
+        rhs[m * i + 0]       = 1.0;
+        rhs[m * i + (m - 1)] = 1.0;
     }
 
     // Move to device
@@ -145,8 +145,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
         }
     }
 
-    //solution.print_vector("Solution");
-    //residual.print_vector("Residual");
+    // solution.print_vector("Solution");
+    // residual.print_vector("Residual");
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 

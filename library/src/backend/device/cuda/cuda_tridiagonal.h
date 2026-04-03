@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,7 +30,6 @@ namespace linalg
 {
     struct tridiagonal_descr;
 
-    void allocate_tridiagonal_cuda_data(tridiagonal_descr* descr);
     void free_tridiagonal_cuda_data(tridiagonal_descr* descr);
 
     void cuda_tridiagonal_analysis(int                m,

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -60,14 +60,6 @@ struct linalg::csric0_descr
     int* row_perm;
     int* diag_ind;
 };
-
-void linalg::allocate_csric0_cuda_data(csric0_descr* descr)
-{
-    std::cout << "allocate_csric0_cuda_data" << std::endl;
-    descr->done_array = nullptr;
-    descr->row_perm   = nullptr;
-    descr->diag_ind   = nullptr;
-}
 
 void linalg::free_csric0_cuda_data(csric0_descr* descr)
 {

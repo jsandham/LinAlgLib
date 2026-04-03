@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -47,20 +47,6 @@ struct linalg::tridiagonal_descr
     float* spike_b;
     float* spike_x;
 };
-
-void linalg::allocate_tridiagonal_cuda_data(tridiagonal_descr* descr)
-{
-    descr->lower_modified = nullptr;
-    descr->main_modified  = nullptr;
-    descr->upper_modified = nullptr;
-    descr->b_modified     = nullptr;
-
-    descr->spike_lower = nullptr;
-    descr->spike_main  = nullptr;
-    descr->spike_upper = nullptr;
-    descr->spike_b     = nullptr;
-    descr->spike_x     = nullptr;
-}
 
 void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
 {
@@ -345,12 +331,19 @@ namespace linalg
                                               const T* b,
                                               T*       x)
     {
-        constexpr int BLOCKSIZE = 256;
-        constexpr int WARP_SIZE = 16;
+
+        // Something wrong with the thomas_pcr_wavefront_kernel2 kernel. Fails in debug but passes in release
+        // constexpr int BLOCKSIZE = 256;
+        // constexpr int WARP_SIZE = 16;
+        // constexpr int M         = 32;
+        // thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
+            // <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+                // m, n, lower_diag, main_diag, upper_diag, b, x);
+        constexpr int BLOCKSIZE = 32;
+        constexpr int WARP_SIZE = 32;
         constexpr int M         = 32;
-        thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
-            <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
-                m, n, lower_diag, main_diag, upper_diag, b, x);
+        pcr_shared_kernel2<BLOCKSIZE, WARP_SIZE, M, 8>
+            <<<((n - 1) / 8 + 1), BLOCKSIZE>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
     }
 
     template <typename T>
@@ -362,12 +355,18 @@ namespace linalg
                                               const T* b,
                                               T*       x)
     {
-        constexpr int BLOCKSIZE = 256;
+        // Something wrong with the thomas_pcr_wavefront_kernel2 kernel. Fails in debug but passes in release
+        // constexpr int BLOCKSIZE = 256;
+        // constexpr int WARP_SIZE = 32;
+        // constexpr int M         = 64;
+        //thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
+        //    <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+        //        m, n, lower_diag, main_diag, upper_diag, b, x);
+        constexpr int BLOCKSIZE = 64;
         constexpr int WARP_SIZE = 32;
         constexpr int M         = 64;
-        thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
-            <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
-                m, n, lower_diag, main_diag, upper_diag, b, x);
+        pcr_shared_kernel2<BLOCKSIZE, WARP_SIZE, M, 8>
+            <<<((n - 1) / 8 + 1), BLOCKSIZE>>>(m, n, lower_diag, main_diag, upper_diag, b, x);
     }
 
     template <typename T>

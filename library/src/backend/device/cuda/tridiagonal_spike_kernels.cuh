@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,29 +24,10 @@
 //
 //********************************************************************************
 
-#ifndef HOST_TRIDIAGONAL_H
-#define HOST_TRIDIAGONAL_H
+#ifndef TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
+#define TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
 
-#include "vector.h"
+#include "common.cuh"
 
-namespace linalg
-{
-    struct tridiagonal_descr;
 
-    void host_tridiagonal_analysis(int                  m,
-                                   int                  n,
-                                   const vector<float>& lower_diag,
-                                   const vector<float>& main_diag,
-                                   const vector<float>& upper_diag,
-                                   tridiagonal_descr*   descr);
-    void host_tridiagonal_solver(int                      m,
-                                 int                      n,
-                                 const vector<float>&     lower_diag,
-                                 const vector<float>&     main_diag,
-                                 const vector<float>&     upper_diag,
-                                 const vector<float>&     b,
-                                 vector<float>&           x,
-                                 const tridiagonal_descr* descr);
-}
-
-#endif
+#endif TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H

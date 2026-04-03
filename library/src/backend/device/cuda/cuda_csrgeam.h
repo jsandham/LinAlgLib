@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,7 +30,6 @@ namespace linalg
 {
     struct csrgeam_descr;
 
-    void allocate_csrgeam_cuda_data(csrgeam_descr* descr);
     void free_csrgeam_cuda_data(csrgeam_descr* descr);
 
     void cuda_csrgeam_nnz(int            m,

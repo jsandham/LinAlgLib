@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -146,8 +146,10 @@ void linalg::create_csrtrsv_descr(csrtrsv_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrtrsv_descr");
 
-    *descr = new csrtrsv_descr;
-    allocate_csrtrsv_device_data(*descr);
+    *descr               = new csrtrsv_descr;
+    (*descr)->done_array = nullptr;
+    (*descr)->row_perm   = nullptr;
+    (*descr)->diag_ind   = nullptr;
 }
 
 void linalg::destroy_csrtrsv_descr(csrtrsv_descr* descr)
@@ -209,7 +211,6 @@ void linalg::create_csrmv_descr(csrmv_descr** descr)
     ROUTINE_TRACE("linalg::create_csrmv_descr");
 
     *descr = new csrmv_descr;
-    allocate_csrmv_device_data(*descr);
 }
 
 void linalg::destroy_csrmv_descr(csrmv_descr* descr)
@@ -264,9 +265,11 @@ void linalg::create_csrgeam_descr(csrgeam_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrgeam_descr");
 
-    *descr = new csrgeam_descr;
-    allocate_csrgeam_device_data(*descr);
+    *descr                = new csrgeam_descr;
+    (*descr)->perm        = nullptr;
+    (*descr)->bin_offsets = nullptr;
 }
+
 void linalg::destroy_csrgeam_descr(csrgeam_descr* descr)
 {
     ROUTINE_TRACE("linalg::destroy_csrgeam_descr");
@@ -323,8 +326,9 @@ void linalg::create_csrgemm_descr(csrgemm_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrgemm_descr");
 
-    *descr = new csrgemm_descr;
-    allocate_csrgemm_device_data(*descr);
+    *descr                = new csrgemm_descr;
+    (*descr)->perm        = nullptr;
+    (*descr)->bin_offsets = nullptr;
 }
 
 void linalg::destroy_csrgemm_descr(csrgemm_descr* descr)
@@ -386,8 +390,10 @@ void linalg::create_csric0_descr(csric0_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csric0_descr");
 
-    *descr = new csric0_descr;
-    allocate_csric0_device_data(*descr);
+    *descr               = new csric0_descr;
+    (*descr)->done_array = nullptr;
+    (*descr)->row_perm   = nullptr;
+    (*descr)->diag_ind   = nullptr;
 }
 
 void linalg::destroy_csric0_descr(csric0_descr* descr)
@@ -429,8 +435,10 @@ void linalg::create_csrilu0_descr(csrilu0_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrilu0_descr");
 
-    *descr = new csrilu0_descr;
-    allocate_csrilu0_device_data(*descr);
+    *descr               = new csrilu0_descr;
+    (*descr)->done_array = nullptr;
+    (*descr)->row_perm   = nullptr;
+    (*descr)->diag_ind   = nullptr;
 }
 
 void linalg::destroy_csrilu0_descr(csrilu0_descr* descr)
@@ -479,7 +487,17 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
     ROUTINE_TRACE("linalg::create_tridiagonal_descr");
 
     *descr = new tridiagonal_descr;
-    allocate_tridiagonal_device_data(*descr);
+
+    (*descr)->lower_modified = nullptr;
+    (*descr)->main_modified  = nullptr;
+    (*descr)->upper_modified = nullptr;
+    (*descr)->b_modified     = nullptr;
+
+    (*descr)->spike_lower = nullptr;
+    (*descr)->spike_main  = nullptr;
+    (*descr)->spike_upper = nullptr;
+    (*descr)->spike_b     = nullptr;
+    (*descr)->spike_x     = nullptr;
 }
 
 void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)

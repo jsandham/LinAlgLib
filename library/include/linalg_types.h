@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -85,6 +85,14 @@ namespace linalg
      */
     struct csrilu0_descr;
 
+    /**
+     * @brief Descriptor for tridiagonal linear system operations.
+     *
+     * Holds metadata and preprocessing data for algorithms that operate on
+     * tridiagonal matrices, such as specialized factorization and solve routines.
+     * Instances are managed by the corresponding create/destroy API functions,
+     * and users should treat this as an opaque type.
+     */
     struct tridiagonal_descr;
 } // namespace linalg
 #endif // LINEAR_TYPES_H
