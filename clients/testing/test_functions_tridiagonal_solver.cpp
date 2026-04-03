@@ -81,8 +81,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
         }
 
         // Adjust boundary conditions
-        rhs[m * i + 0]       = 1.0;
-        rhs[m * i + (m - 1)] = 1.0;
+        rhs[m * i + 0]       = 3.0;
+        rhs[m * i + (m - 1)] = 3.0;
     }
 
     // Move to device

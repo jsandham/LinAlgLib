@@ -541,6 +541,22 @@ namespace linalg
     LINALGLIB_API void destroy_tridiagonal_descr(tridiagonal_descr* descr);
 
     /**
+     * @brief Sets the pivoting strategy used by the tridiagonal solver.
+     *
+     * Configures whether the solver applies pivoting during the tridiagonal solve.
+     * This must be called after create_tridiagonal_descr() and before
+     * tridiagonal_analysis(), as the analysis phase may use the strategy to
+     * prepare backend-specific data.
+     *
+     * @param descr The tridiagonal descriptor to configure.
+     * @param strategy The pivoting strategy to apply. Use pivoting_strategy::none
+     *                 for maximum performance on diagonally dominant systems, or
+     *                 pivoting_strategy::partial for improved numerical stability.
+     * @see create_tridiagonal_descr, tridiagonal_analysis, pivoting_strategy
+     */
+    LINALGLIB_API void set_pivoting_strategy(tridiagonal_descr* descr, pivoting_strategy strategy);
+
+    /**
      * @brief Performs analysis for tridiagonal solves.
      *
      * Preprocesses the tridiagonal system layout and caches data in descr for

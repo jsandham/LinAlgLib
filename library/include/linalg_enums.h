@@ -43,6 +43,18 @@ namespace linalg
         unit /*!< Unit diagonal */
     };
 
+    /*! \brief Enumeration for pivoting strategies used in the tridiagonal solver.
+     *
+     * Controls whether pivoting is applied during the tridiagonal solve to
+     * improve numerical stability. Pivoting may incur additional overhead but
+     * can be essential for ill-conditioned or nearly-singular tridiagonal systems.
+     */
+    enum class pivoting_strategy
+    {
+        none, /*!< No pivoting; fastest but only suitable for diagonally dominant tridiagonal systems */
+        partial, /*!< Partial pivoting; improves stability at the cost of additional row swaps */
+    };
+
     /*! \brief Enumeration for CSR matrix-vector multiplication algorithms. */
     enum class csrmv_algorithm
     {
@@ -52,14 +64,24 @@ namespace linalg
         nnzsplit
     };
 
+    /*! \brief Enumeration for CSR matrix-matrix addition algorithms.
+     *
+     * Selects the algorithm used by csrgeam_nnz() and csrgeam_solve() when
+     * computing \f$C = \alpha A + \beta B\f$ in CSR format.
+     */
     enum class csrgeam_algorithm
     {
-        default_algorithm /*!< Default algorithm */
+        default_algorithm /*!< Default algorithm selected by the library */
     };
 
+    /*! \brief Enumeration for CSR matrix-matrix multiplication algorithms.
+     *
+     * Selects the algorithm used by csrgemm_nnz() and csrgemm_solve() when
+     * computing \f$C = \alpha A \cdot B + \beta D\f$ in CSR format.
+     */
     enum class csrgemm_algorithm
     {
-        default_algorithm /*!< Default algorithm */
+        default_algorithm /*!< Default algorithm selected by the library */
     };
 } // namespace linalg
 

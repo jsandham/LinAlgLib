@@ -470,6 +470,8 @@ void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
 
 struct linalg::tridiagonal_descr
 {
+    pivoting_strategy pivoting_strategy;
+
     float* lower_modified;
     float* main_modified;
     float* upper_modified;
@@ -487,6 +489,8 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
     ROUTINE_TRACE("linalg::create_tridiagonal_descr");
 
     *descr = new tridiagonal_descr;
+
+    (*descr)->pivoting_strategy = pivoting_strategy::none;
 
     (*descr)->lower_modified = nullptr;
     (*descr)->main_modified  = nullptr;
@@ -508,6 +512,16 @@ void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)
     {
         free_tridiagonal_device_data(descr);
         delete descr;
+    }
+}
+
+void linalg::set_pivoting_strategy(tridiagonal_descr* descr, pivoting_strategy strategy)
+{
+    ROUTINE_TRACE("linalg::set_pivoting_strategy");
+
+    if(descr != nullptr)
+    {
+        descr->pivoting_strategy = strategy;
     }
 }
 

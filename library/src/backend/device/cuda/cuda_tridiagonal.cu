@@ -27,6 +27,8 @@
 #include <iostream>
 #include <map>
 
+#include "linalg_enums.h"
+
 #include "cuda_tridiagonal.h"
 
 #include "tridiagonal_cyclic_reduction_kernels.cuh"
@@ -36,6 +38,8 @@
 
 struct linalg::tridiagonal_descr
 {
+    pivoting_strategy pivoting_strategy;
+
     float* lower_modified;
     float* main_modified;
     float* upper_modified;
@@ -337,8 +341,8 @@ namespace linalg
         // constexpr int WARP_SIZE = 16;
         // constexpr int M         = 32;
         // thomas_pcr_wavefront_kernel2<BLOCKSIZE, WARP_SIZE, M>
-            // <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
-                // m, n, lower_diag, main_diag, upper_diag, b, x);
+        // <<<((n - 1) / (BLOCKSIZE / WARP_SIZE) + 1), BLOCKSIZE>>>(
+        // m, n, lower_diag, main_diag, upper_diag, b, x);
         constexpr int BLOCKSIZE = 32;
         constexpr int WARP_SIZE = 32;
         constexpr int M         = 32;
@@ -452,6 +456,50 @@ namespace linalg
             dispatch_it->second(m, n, lower_diag, main_diag, upper_diag, b, x);
         }
     }
+
+    static void tridiagonal_nonpivoting_solver_dispatch(int                      m,
+                                                        int                      n,
+                                                        const float*             lower_diag,
+                                                        const float*             main_diag,
+                                                        const float*             upper_diag,
+                                                        const float*             b,
+                                                        float*                   x,
+                                                        const tridiagonal_descr* descr)
+    {
+        if(m <= 10)
+        {
+            tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, b, x);
+        }
+        else if(m <= 1024)
+        {
+            tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, b, x);
+        }
+        else if(m <= 131072)
+        {
+            tridiagonal_tile_pcr_spike_solver(m, n, lower_diag, main_diag, upper_diag, b, x, descr);
+        }
+        else
+        {
+            std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 131072."
+                      << std::endl;
+            return;
+        }
+
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    static void tridiagonal_partial_pivoting_solver_dispatch(int                      m,
+                                                             int                      n,
+                                                             const float*             lower_diag,
+                                                             const float*             main_diag,
+                                                             const float*             upper_diag,
+                                                             const float*             b,
+                                                             float*                   x,
+                                                             const tridiagonal_descr* descr)
+    {
+
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
 }
 
 void linalg::cuda_tridiagonal_solver(int                      m,
@@ -463,23 +511,15 @@ void linalg::cuda_tridiagonal_solver(int                      m,
                                      float*                   x,
                                      const tridiagonal_descr* descr)
 {
-    if(m <= 10)
+    switch(descr->pivoting_strategy)
     {
-        tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, b, x);
+    case pivoting_strategy::none:
+        tridiagonal_nonpivoting_solver_dispatch(
+            m, n, lower_diag, main_diag, upper_diag, b, x, descr);
+        break;
+    case pivoting_strategy::partial:
+        tridiagonal_partial_pivoting_solver_dispatch(
+            m, n, lower_diag, main_diag, upper_diag, b, x, descr);
+        break;
     }
-    else if(m <= 1024)
-    {
-        tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, b, x);
-    }
-    else if(m <= 131072)
-    {
-        tridiagonal_tile_pcr_spike_solver(m, n, lower_diag, main_diag, upper_diag, b, x, descr);
-    }
-    else
-    {
-        std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 131072." << std::endl;
-        return;
-    }
-
-    CHECK_CUDA_LAUNCH_ERROR();
 }
