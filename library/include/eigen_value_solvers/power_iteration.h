@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -23,6 +23,10 @@
 // SOFTWARE.
 //
 //********************************************************************************
+
+/*! \file
+ *  \brief Power iteration API for dominant eigenvalue/eigenvector computation.
+ */
 
 #ifndef __POWER_ITERATION_H__
 #define __POWER_ITERATION_H__

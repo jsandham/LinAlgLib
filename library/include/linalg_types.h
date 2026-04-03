@@ -24,6 +24,10 @@
 //
 //********************************************************************************
 
+/*! \file
+ *  \brief Opaque descriptor type declarations for LinAlgLib APIs.
+ */
+
 #ifndef LINEAR_TYPES_H
 #define LINEAR_TYPES_H
 
