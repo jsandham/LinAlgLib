@@ -472,6 +472,7 @@ struct linalg::tridiagonal_descr
 {
     pivoting_strategy pivoting_strategy;
 
+    // Buffers for non-pivoting approach
     float* lower_modified;
     float* main_modified;
     float* upper_modified;
@@ -482,6 +483,14 @@ struct linalg::tridiagonal_descr
     float* spike_upper;
     float* spike_b;
     float* spike_x;
+
+    // Buffers for partial pivoting approach (to be implemented)
+    float* lower_pad;
+    float* main_pad;
+    float* upper_pad;
+
+    float* w_pad;
+    float* v_pad;
 };
 
 void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)

@@ -61,7 +61,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     upper_diag[m - 1] = 0.0; // No upper diagonal
     for(int i = 0; i < m; i++)
     {
-        main_diag[i] = 2.0;
+        main_diag[i] = i; //2.0;
         if(i > 0)
         {
             lower_diag[i] = -0.5;
@@ -73,16 +73,23 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     }
 
     // RHS set to make solution = 1.0 everywhere
+    // for(int i = 0; i < n; i++)
+    // {
+    //     for(int j = 0; j < m; j++)
+    //     {
+    //         rhs[m * i + j] = 1.0;
+    //     }
+
+    //     // Adjust boundary conditions
+    //     rhs[m * i + 0]       = 3.0;
+    //     rhs[m * i + (m - 1)] = 3.0;
+    // }
     for(int i = 0; i < n; i++)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0;
+            rhs[m * i + j] = m * i + j;
         }
-
-        // Adjust boundary conditions
-        rhs[m * i + 0]       = 3.0;
-        rhs[m * i + (m - 1)] = 3.0;
     }
 
     // Move to device
@@ -94,9 +101,12 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     tridiagonal_descr* descr = nullptr;
     create_tridiagonal_descr(&descr);
+    // set_pivoting_strategy(descr, pivoting_strategy::none);
+    set_pivoting_strategy(descr, pivoting_strategy::partial);
+
     tridiagonal_analysis(m, n, lower_diag, main_diag, upper_diag, descr);
 
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 1; i++)
     {
         tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution, descr);
     }
@@ -104,11 +114,11 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     // Solve the system
     auto t1 = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < 100; i++)
-    {
-        tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution, descr);
-    }
-    linalg::sync();
+    // for(int i = 0; i < 100; i++)
+    // {
+    //     tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution, descr);
+    // }
+    // linalg::sync();
     auto t2 = std::chrono::high_resolution_clock::now();
 
     destroy_tridiagonal_descr(descr);

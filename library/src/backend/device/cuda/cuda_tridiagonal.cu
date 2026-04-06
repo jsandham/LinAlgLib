@@ -24,6 +24,7 @@
 //
 //********************************************************************************
 
+#include <Vector>
 #include <iostream>
 #include <map>
 
@@ -36,10 +37,13 @@
 #include "tridiagonal_thomas_algorithm_kernels.cuh"
 #include "tridiagonal_tiled_pcr_spike_kernels.cuh"
 
+#include "tridiagonal_spike_kernels.cuh"
+
 struct linalg::tridiagonal_descr
 {
     pivoting_strategy pivoting_strategy;
 
+    // Buffers for non-pivoting approach
     float* lower_modified;
     float* main_modified;
     float* upper_modified;
@@ -50,6 +54,14 @@ struct linalg::tridiagonal_descr
     float* spike_upper;
     float* spike_b;
     float* spike_x;
+
+    // Buffers for partial pivoting approach (to be implemented)
+    float* lower_pad;
+    float* main_pad;
+    float* upper_pad;
+
+    float* w_pad;
+    float* v_pad;
 };
 
 void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
@@ -100,6 +112,97 @@ void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
         CHECK_CUDA(cudaFree(descr->spike_x));
         descr->spike_x = nullptr;
     }
+
+    if(descr->lower_pad != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->lower_pad));
+        descr->lower_pad = nullptr;
+    }
+    if(descr->main_pad != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->main_pad));
+        descr->main_pad = nullptr;
+    }
+    if(descr->upper_pad != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->upper_pad));
+        descr->upper_pad = nullptr;
+    }
+
+    if(descr->w_pad != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->w_pad));
+        descr->w_pad = nullptr;
+    }
+    if(descr->v_pad != nullptr)
+    {
+        CHECK_CUDA(cudaFree(descr->v_pad));
+        descr->v_pad = nullptr;
+    }
+}
+
+namespace linalg
+{
+    static uint64_t next_power_of_two(uint64_t m)
+    {
+        // If m is already a power of 2 or 0, return m (or 1 if you prefer 2^0)
+        if(m == 0)
+            return 1;
+
+        // Decrement m so that if it is already a power of 2,
+        // the operations below don't jump it to the next one.
+        m--;
+
+        // Fill all bits to the right of the most significant bit with 1s
+        m |= m >> 1;
+        m |= m >> 2;
+        m |= m >> 4;
+        m |= m >> 8;
+        m |= m >> 16;
+        m |= m >> 32; // Include this if using 64-bit integers
+
+        // Adding 1 results in a single bit set at the next power of 2
+        return m + 1;
+    }
+
+    static void tridiagonal_nonpivoting_analysis_dispatch(int                m,
+                                                          int                n,
+                                                          const float*       lower_diag,
+                                                          const float*       main_diag,
+                                                          const float*       upper_diag,
+                                                          tridiagonal_descr* descr)
+    {
+        constexpr int BLOCKSIZE = 256;
+        int           nblocks   = ((m - 1) / BLOCKSIZE + 1);
+
+        CHECK_CUDA(cudaMalloc((void**)&descr->lower_modified, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&descr->main_modified, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&descr->upper_modified, sizeof(float) * m));
+        CHECK_CUDA(cudaMalloc((void**)&descr->b_modified, sizeof(float) * m * n));
+
+        CHECK_CUDA(cudaMalloc((void**)&descr->spike_lower, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&descr->spike_main, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&descr->spike_upper, sizeof(float) * 2 * nblocks));
+        CHECK_CUDA(cudaMalloc((void**)&descr->spike_b, sizeof(float) * 2 * nblocks * n));
+        CHECK_CUDA(cudaMalloc((void**)&descr->spike_x, sizeof(float) * 2 * nblocks * n));
+    }
+
+    static void tridiagonal_partial_pivoting_analysis_dispatch(int                m,
+                                                               int                n,
+                                                               const float*       lower_diag,
+                                                               const float*       main_diag,
+                                                               const float*       upper_diag,
+                                                               tridiagonal_descr* descr)
+    {
+        int m_pad = next_power_of_two(m);
+
+        CHECK_CUDA(cudaMalloc((void**)&descr->lower_pad, sizeof(float) * m_pad));
+        CHECK_CUDA(cudaMalloc((void**)&descr->main_pad, sizeof(float) * m_pad));
+        CHECK_CUDA(cudaMalloc((void**)&descr->upper_pad, sizeof(float) * m_pad));
+
+        CHECK_CUDA(cudaMalloc((void**)&descr->w_pad, sizeof(float) * m_pad));
+        CHECK_CUDA(cudaMalloc((void**)&descr->v_pad, sizeof(float) * m_pad));
+    }
 }
 
 void linalg::cuda_tridiagonal_analysis(int                m,
@@ -112,19 +215,16 @@ void linalg::cuda_tridiagonal_analysis(int                m,
     // Re-analysis with different dimensions must release old buffers first.
     free_tridiagonal_cuda_data(descr);
 
-    constexpr int BLOCKSIZE = 256;
-    int           nblocks   = ((m - 1) / BLOCKSIZE + 1);
-
-    CHECK_CUDA(cudaMalloc((void**)&descr->lower_modified, sizeof(float) * m));
-    CHECK_CUDA(cudaMalloc((void**)&descr->main_modified, sizeof(float) * m));
-    CHECK_CUDA(cudaMalloc((void**)&descr->upper_modified, sizeof(float) * m));
-    CHECK_CUDA(cudaMalloc((void**)&descr->b_modified, sizeof(float) * m * n));
-
-    CHECK_CUDA(cudaMalloc((void**)&descr->spike_lower, sizeof(float) * 2 * nblocks));
-    CHECK_CUDA(cudaMalloc((void**)&descr->spike_main, sizeof(float) * 2 * nblocks));
-    CHECK_CUDA(cudaMalloc((void**)&descr->spike_upper, sizeof(float) * 2 * nblocks));
-    CHECK_CUDA(cudaMalloc((void**)&descr->spike_b, sizeof(float) * 2 * nblocks * n));
-    CHECK_CUDA(cudaMalloc((void**)&descr->spike_x, sizeof(float) * 2 * nblocks * n));
+    switch(descr->pivoting_strategy)
+    {
+    case pivoting_strategy::none:
+        tridiagonal_nonpivoting_analysis_dispatch(m, n, lower_diag, main_diag, upper_diag, descr);
+        break;
+    case pivoting_strategy::partial:
+        tridiagonal_partial_pivoting_analysis_dispatch(
+            m, n, lower_diag, main_diag, upper_diag, descr);
+        break;
+    }
 }
 
 namespace linalg
@@ -497,8 +597,122 @@ namespace linalg
                                                              float*                   x,
                                                              const tridiagonal_descr* descr)
     {
+        std::vector<float> h_lower(m);
+        std::vector<float> h_main(m);
+        std::vector<float> h_upper(m);
+        std::vector<float> h_b(m * n);
+        CHECK_CUDA(
+            cudaMemcpy(h_lower.data(), lower_diag, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(h_main.data(), main_diag, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(
+            cudaMemcpy(h_upper.data(), upper_diag, sizeof(float) * m, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(h_b.data(), b, sizeof(float) * m * n, cudaMemcpyDeviceToHost));
 
+        std::cout << "h_main" << std::endl;
+        for(int i = 0; i < m; i++)
+        {
+            std::cout << h_main[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        int m_pad = next_power_of_two(m);
+
+        std::cout << "m: " << m << ", m_pad: " << m_pad << std::endl;
+
+        data_marshaling_kernel<1024, 32><<<(m - 1) / 1024 + 1, 1024>>>(m,
+                                                                       m_pad,
+                                                                       lower_diag,
+                                                                       main_diag,
+                                                                       upper_diag,
+                                                                       descr->lower_pad,
+                                                                       descr->main_pad,
+                                                                       descr->upper_pad);
         CHECK_CUDA_LAUNCH_ERROR();
+
+        std::vector<float> h_lower_pad(m_pad);
+        std::vector<float> h_main_pad(m_pad);
+        std::vector<float> h_upper_pad(m_pad);
+        CHECK_CUDA(cudaMemcpy(h_lower_pad.data(),
+                              descr->lower_pad,
+                              sizeof(float) * m_pad,
+                              cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(h_main_pad.data(),
+                              descr->main_pad,
+                              sizeof(float) * m_pad,
+                              cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(h_upper_pad.data(),
+                              descr->upper_pad,
+                              sizeof(float) * m_pad,
+                              cudaMemcpyDeviceToHost));
+        std::cout << "h_lower_pad" << std::endl;
+        for(int i = 0; i < m_pad; i++)
+        {
+            std::cout << h_lower_pad[i] << " ";
+        }
+        std::cout << "" << std::endl;
+        std::cout << "h_main_pad" << std::endl;
+        for(int i = 0; i < m_pad; i++)
+        {
+            std::cout << h_main_pad[i] << " ";
+        }
+        std::cout << "" << std::endl;
+        std::cout << "h_upper_pad" << std::endl;
+        for(int i = 0; i < m_pad; i++)
+        {
+            std::cout << h_upper_pad[i] << " ";
+        }
+        std::cout << "" << std::endl;
+
+        CHECK_CUDA(cudaMemset(descr->w_pad, 0, sizeof(float) * m_pad));
+        CHECK_CUDA(cudaMemset(descr->v_pad, 0, sizeof(float) * m_pad));
+
+        //     constexpr uint32_t BLOCKSIZE = 8;
+
+        //     int block_dim = 2;
+        //     int m_pad     = ((m - 1) / (block_dim * BLOCKSIZE) + 1) * (block_dim * BLOCKSIZE);
+        //     int gridsize  = ((m_pad / block_dim - 1) / BLOCKSIZE + 1);
+
+        //     while(gridsize > 16)
+        //     {
+        //         block_dim *= 2;
+        //         m_pad    = ((m - 1) / (block_dim * BLOCKSIZE) + 1) * (block_dim * BLOCKSIZE);
+        //         gridsize = ((m_pad / block_dim - 1) / BLOCKSIZE + 1);
+        //     }
+        //     // round up to next power of 2
+        //     //gridsize = fnp2(gridsize);
+
+        //     std::cout << "gridsize: " << gridsize << ", block_dim: " << block_dim << ", m_pad: " << m_pad
+        //               << std::endl;
+
+        //     float* db_pad = nullptr;
+        //     CHECK_CUDA(cudaMalloc((void**)&db_pad, sizeof(float) * m_pad * n));
+
+        //     //Call transpose kernel
+        //     dim3          grid(((m_pad - 1) / BLOCKSIZE + 1), n);
+        //     dim3          block(BLOCKSIZE);
+        //     if(block_dim == 2)
+        //     {
+        //         transpose_and_pad_array_shared_kernel<BLOCKSIZE, 2><<<grid, block>>>(m, m_pad, m, b, db_pad, 0.0f);
+        //     }
+        //     else if(block_dim == 4)
+        //     {
+        //         transpose_and_pad_array_shared_kernel<BLOCKSIZE, 4><<<grid, block>>>(m, m_pad, m, b, db_pad, 0.0f);
+        //     }
+
+        //     // Copy b back to host for pivoting and factorization
+        //     std::vector<float> hb_pad(m_pad * n);
+        //     CHECK_CUDA(cudaMemcpy(hb_pad.data(), db_pad, sizeof(float) * m_pad * n, cudaMemcpyDeviceToHost));
+
+        //     std::cout << "hb_pad after transpose" << std::endl;
+        //     for(int i = 0; i < m_pad * n; i++)
+        //     {
+        //         std::cout << hb_pad[i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
+
+        //     CHECK_CUDA(cudaFree(db_pad));
+
+        //     CHECK_CUDA_LAUNCH_ERROR();
     }
 }
 
