@@ -39,21 +39,23 @@
 
 #include "tridiagonal_spike_kernels.cuh"
 
+static constexpr int MAX_RECURSION_LEVELS = 3;
+
 struct linalg::tridiagonal_descr
 {
     pivoting_strategy pivoting_strategy;
 
-    // Buffers for non-pivoting approach
-    float* lower_modified;
-    float* main_modified;
-    float* upper_modified;
-    float* b_modified;
+    // Buffers for non-pivoting approach (one per recursion level)
+    float* lower_modified[MAX_RECURSION_LEVELS];
+    float* main_modified[MAX_RECURSION_LEVELS];
+    float* upper_modified[MAX_RECURSION_LEVELS];
+    float* b_modified[MAX_RECURSION_LEVELS];
 
-    float* spike_lower;
-    float* spike_main;
-    float* spike_upper;
-    float* spike_b;
-    float* spike_x;
+    float* spike_lower[MAX_RECURSION_LEVELS];
+    float* spike_main[MAX_RECURSION_LEVELS];
+    float* spike_upper[MAX_RECURSION_LEVELS];
+    float* spike_b[MAX_RECURSION_LEVELS];
+    float* spike_x[MAX_RECURSION_LEVELS];
 
     // Buffers for partial pivoting approach (to be implemented)
     float* lower_pad;
@@ -66,51 +68,54 @@ struct linalg::tridiagonal_descr
 
 void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
 {
-    if(descr->lower_modified != nullptr)
+    for(int level = 0; level < MAX_RECURSION_LEVELS; level++)
     {
-        CHECK_CUDA(cudaFree(descr->lower_modified));
-        descr->lower_modified = nullptr;
-    }
-    if(descr->main_modified != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->main_modified));
-        descr->main_modified = nullptr;
-    }
-    if(descr->upper_modified != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->upper_modified));
-        descr->upper_modified = nullptr;
-    }
-    if(descr->b_modified != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->b_modified));
-        descr->b_modified = nullptr;
-    }
+        if(descr->lower_modified[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->lower_modified[level]));
+            descr->lower_modified[level] = nullptr;
+        }
+        if(descr->main_modified[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->main_modified[level]));
+            descr->main_modified[level] = nullptr;
+        }
+        if(descr->upper_modified[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->upper_modified[level]));
+            descr->upper_modified[level] = nullptr;
+        }
+        if(descr->b_modified[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->b_modified[level]));
+            descr->b_modified[level] = nullptr;
+        }
 
-    if(descr->spike_lower != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->spike_lower));
-        descr->spike_lower = nullptr;
-    }
-    if(descr->spike_main != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->spike_main));
-        descr->spike_main = nullptr;
-    }
-    if(descr->spike_upper != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->spike_upper));
-        descr->spike_upper = nullptr;
-    }
-    if(descr->spike_b != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->spike_b));
-        descr->spike_b = nullptr;
-    }
-    if(descr->spike_x != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->spike_x));
-        descr->spike_x = nullptr;
+        if(descr->spike_lower[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->spike_lower[level]));
+            descr->spike_lower[level] = nullptr;
+        }
+        if(descr->spike_main[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->spike_main[level]));
+            descr->spike_main[level] = nullptr;
+        }
+        if(descr->spike_upper[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->spike_upper[level]));
+            descr->spike_upper[level] = nullptr;
+        }
+        if(descr->spike_b[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->spike_b[level]));
+            descr->spike_b[level] = nullptr;
+        }
+        if(descr->spike_x[level] != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->spike_x[level]));
+            descr->spike_x[level] = nullptr;
+        }
     }
 
     if(descr->lower_pad != nullptr)
@@ -173,18 +178,29 @@ namespace linalg
                                                           tridiagonal_descr* descr)
     {
         constexpr int BLOCKSIZE = 256;
-        int           nblocks   = ((m - 1) / BLOCKSIZE + 1);
 
-        CHECK_CUDA(cudaMalloc((void**)&descr->lower_modified, sizeof(float) * m));
-        CHECK_CUDA(cudaMalloc((void**)&descr->main_modified, sizeof(float) * m));
-        CHECK_CUDA(cudaMalloc((void**)&descr->upper_modified, sizeof(float) * m));
-        CHECK_CUDA(cudaMalloc((void**)&descr->b_modified, sizeof(float) * m * n));
+        int current_m = m;
+        for(int level = 0; level < MAX_RECURSION_LEVELS; level++)
+        {
+            if(current_m <= 1024)
+                break;
 
-        CHECK_CUDA(cudaMalloc((void**)&descr->spike_lower, sizeof(float) * 2 * nblocks));
-        CHECK_CUDA(cudaMalloc((void**)&descr->spike_main, sizeof(float) * 2 * nblocks));
-        CHECK_CUDA(cudaMalloc((void**)&descr->spike_upper, sizeof(float) * 2 * nblocks));
-        CHECK_CUDA(cudaMalloc((void**)&descr->spike_b, sizeof(float) * 2 * nblocks * n));
-        CHECK_CUDA(cudaMalloc((void**)&descr->spike_x, sizeof(float) * 2 * nblocks * n));
+            int nblocks    = ((current_m - 1) / BLOCKSIZE + 1);
+            int num_spikes = 2 * nblocks;
+
+            CHECK_CUDA(cudaMalloc((void**)&descr->lower_modified[level], sizeof(float) * current_m));
+            CHECK_CUDA(cudaMalloc((void**)&descr->main_modified[level], sizeof(float) * current_m));
+            CHECK_CUDA(cudaMalloc((void**)&descr->upper_modified[level], sizeof(float) * current_m));
+            CHECK_CUDA(cudaMalloc((void**)&descr->b_modified[level], sizeof(float) * current_m * n));
+
+            CHECK_CUDA(cudaMalloc((void**)&descr->spike_lower[level], sizeof(float) * num_spikes));
+            CHECK_CUDA(cudaMalloc((void**)&descr->spike_main[level], sizeof(float) * num_spikes));
+            CHECK_CUDA(cudaMalloc((void**)&descr->spike_upper[level], sizeof(float) * num_spikes));
+            CHECK_CUDA(cudaMalloc((void**)&descr->spike_b[level], sizeof(float) * num_spikes * n));
+            CHECK_CUDA(cudaMalloc((void**)&descr->spike_x[level], sizeof(float) * num_spikes * n));
+
+            current_m = num_spikes;
+        }
     }
 
     static void tridiagonal_partial_pivoting_analysis_dispatch(int                m,
@@ -203,6 +219,16 @@ namespace linalg
         CHECK_CUDA(cudaMalloc((void**)&descr->w_pad, sizeof(float) * m_pad));
         CHECK_CUDA(cudaMalloc((void**)&descr->v_pad, sizeof(float) * m_pad));
     }
+
+    static void tridiagonal_nonpivoting_solver_dispatch(int                      m,
+                                                        int                      n,
+                                                        const float*             lower_diag,
+                                                        const float*             main_diag,
+                                                        const float*             upper_diag,
+                                                        const float*             b,
+                                                        float*                   x,
+                                                        const tridiagonal_descr* descr,
+                                                        int                      level = 0);
 }
 
 void linalg::cuda_tridiagonal_analysis(int                m,
@@ -311,7 +337,8 @@ namespace linalg
                                                   const T*                 upper_diag,
                                                   const T*                 b,
                                                   T*                       x,
-                                                  const tridiagonal_descr* descr)
+                                                  const tridiagonal_descr* descr,
+                                                  int                      level)
     {
         constexpr int BLOCKSIZE  = 256; // remember to change in analysis as well!
         constexpr int NUM_RHS    = 8;
@@ -324,14 +351,14 @@ namespace linalg
                                                                         main_diag,
                                                                         upper_diag,
                                                                         b,
-                                                                        descr->lower_modified,
-                                                                        descr->main_modified,
-                                                                        descr->upper_modified,
-                                                                        descr->b_modified,
-                                                                        descr->spike_lower,
-                                                                        descr->spike_main,
-                                                                        descr->spike_upper,
-                                                                        descr->spike_b);
+                                                                        descr->lower_modified[level],
+                                                                        descr->main_modified[level],
+                                                                        descr->upper_modified[level],
+                                                                        descr->b_modified[level],
+                                                                        descr->spike_lower[level],
+                                                                        descr->spike_main[level],
+                                                                        descr->spike_upper[level],
+                                                                        descr->spike_b[level]);
 
         using spike_solver_pcr_launch_ptr
             = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
@@ -353,21 +380,33 @@ namespace linalg
         {
             dispatch_it->second(num_spikes,
                                 n,
-                                descr->spike_lower,
-                                descr->spike_main,
-                                descr->spike_upper,
-                                descr->spike_b,
-                                descr->spike_x);
+                                descr->spike_lower[level],
+                                descr->spike_main[level],
+                                descr->spike_upper[level],
+                                descr->spike_b[level],
+                                descr->spike_x[level]);
+        }
+        else
+        {
+            tridiagonal_nonpivoting_solver_dispatch(num_spikes,
+                                                    n,
+                                                    descr->spike_lower[level],
+                                                    descr->spike_main[level],
+                                                    descr->spike_upper[level],
+                                                    descr->spike_b[level],
+                                                    descr->spike_x[level],
+                                                    descr,
+                                                    level + 1);
         }
 
         launch_pcr_tiled_backward_substitution_kernel<BLOCKSIZE, NUM_RHS>(m,
                                                                           n,
                                                                           num_spikes,
-                                                                          descr->lower_modified,
-                                                                          descr->main_modified,
-                                                                          descr->upper_modified,
-                                                                          descr->b_modified,
-                                                                          descr->spike_x,
+                                                                          descr->lower_modified[level],
+                                                                          descr->main_modified[level],
+                                                                          descr->upper_modified[level],
+                                                                          descr->b_modified[level],
+                                                                          descr->spike_x[level],
                                                                           x);
     }
 
@@ -564,8 +603,11 @@ namespace linalg
                                                         const float*             upper_diag,
                                                         const float*             b,
                                                         float*                   x,
-                                                        const tridiagonal_descr* descr)
+                                                        const tridiagonal_descr* descr,
+                                                        int                      level)
     {
+        // std::cout << "tridiagonal_nonpivoting_solver_dispatch called with m: " << m << ", n: " << n
+        //           << ", level: " << level << std::endl;
         if(m <= 10)
         {
             tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, b, x);
@@ -574,15 +616,9 @@ namespace linalg
         {
             tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, b, x);
         }
-        else if(m <= 131072)
-        {
-            tridiagonal_tile_pcr_spike_solver(m, n, lower_diag, main_diag, upper_diag, b, x, descr);
-        }
         else
         {
-            std::cerr << "Error: cuda_tridiagonal_solver only supports m = 2 to 131072."
-                      << std::endl;
-            return;
+            tridiagonal_tile_pcr_spike_solver(m, n, lower_diag, main_diag, upper_diag, b, x, descr, level);
         }
 
         CHECK_CUDA_LAUNCH_ERROR();

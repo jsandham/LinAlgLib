@@ -468,21 +468,23 @@ void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
         "linalg::csrilu0_compute", host_csrilu0_compute, device_csrilu0_compute, A, descr);
 }
 
+static constexpr int MAX_RECURSION_LEVELS = 3;
+
 struct linalg::tridiagonal_descr
 {
     pivoting_strategy pivoting_strategy;
 
-    // Buffers for non-pivoting approach
-    float* lower_modified;
-    float* main_modified;
-    float* upper_modified;
-    float* b_modified;
+    // Buffers for non-pivoting approach (one per recursion level)
+    float* lower_modified[MAX_RECURSION_LEVELS];
+    float* main_modified[MAX_RECURSION_LEVELS];
+    float* upper_modified[MAX_RECURSION_LEVELS];
+    float* b_modified[MAX_RECURSION_LEVELS];
 
-    float* spike_lower;
-    float* spike_main;
-    float* spike_upper;
-    float* spike_b;
-    float* spike_x;
+    float* spike_lower[MAX_RECURSION_LEVELS];
+    float* spike_main[MAX_RECURSION_LEVELS];
+    float* spike_upper[MAX_RECURSION_LEVELS];
+    float* spike_b[MAX_RECURSION_LEVELS];
+    float* spike_x[MAX_RECURSION_LEVELS];
 
     // Buffers for partial pivoting approach (to be implemented)
     float* lower_pad;
@@ -501,16 +503,19 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
 
     (*descr)->pivoting_strategy = pivoting_strategy::none;
 
-    (*descr)->lower_modified = nullptr;
-    (*descr)->main_modified  = nullptr;
-    (*descr)->upper_modified = nullptr;
-    (*descr)->b_modified     = nullptr;
+    for(int level = 0; level < MAX_RECURSION_LEVELS; level++)
+    {
+        (*descr)->lower_modified[level] = nullptr;
+        (*descr)->main_modified[level]  = nullptr;
+        (*descr)->upper_modified[level] = nullptr;
+        (*descr)->b_modified[level]     = nullptr;
 
-    (*descr)->spike_lower = nullptr;
-    (*descr)->spike_main  = nullptr;
-    (*descr)->spike_upper = nullptr;
-    (*descr)->spike_b     = nullptr;
-    (*descr)->spike_x     = nullptr;
+        (*descr)->spike_lower[level] = nullptr;
+        (*descr)->spike_main[level]  = nullptr;
+        (*descr)->spike_upper[level] = nullptr;
+        (*descr)->spike_b[level]     = nullptr;
+        (*descr)->spike_x[level]     = nullptr;
+    }
 }
 
 void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)
