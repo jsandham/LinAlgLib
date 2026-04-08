@@ -138,7 +138,7 @@
  * ```
  * 2. Run Doxygen using the provided configuration file (named `Doxyfile`).
  * ```bash
- * doxygen Doxyfile
+ * doxygen docs/Doxyfile
  * ```
  *
  * This will generate the documentation in the directory specified in the `OUTPUT_DIRECTORY` setting of the `Doxyfile` (usually `doc` or `documentation`). You can then open the `index.html` file in your web browser to view the documentation.
@@ -227,6 +227,12 @@
 
 // Eigenvalues solvers
 #include "eigen_value_solvers/power_iteration.h"
+
+/*! \defgroup direct_solvers Direct Solvers
+ *  \brief Classes and functions for direct linear system solvers
+ */
+// Direct solvers
+#include "direct_solvers/tridiagonal/tridiagonal.h"
 
 #include "linalg_math.h"
 #include "linalg_memory.h"

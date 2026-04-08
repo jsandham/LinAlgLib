@@ -47,6 +47,7 @@ set(LINALGLIB_HEADERS_PUBLIC
   include/iterative_solvers/krylov/gmres.h
   include/iterative_solvers/krylov/cg.h
   include/iterative_solvers/preconditioner/preconditioner.h
+  include/direct_solvers/tridiagonal/tridiagonal.h
   include/vector.h
   include/csr_matrix.h
   include/linalg.h

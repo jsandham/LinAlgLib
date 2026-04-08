@@ -950,6 +950,8 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = library/include \
+                         library/include/direct_solvers \
+                         library/include/direct_solvers/tridiagonal \
                          library/include/iterative_solvers \
                          library/include/iterative_solvers/amg \
                          library/include/iterative_solvers/classic \

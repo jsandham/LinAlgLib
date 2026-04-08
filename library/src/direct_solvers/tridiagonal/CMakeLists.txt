@@ -26,15 +26,5 @@
 
 target_sources(linalglib
   PRIVATE
-    linalg_primitives.cpp
-    linalg_math.cpp
-    linalg_memory.cpp
-    vector.cpp
-    csr_matrix.cpp
-    perfetto_trace.cpp
+    tridiagonal.cpp
 )
-
-add_subdirectory(backend)
-add_subdirectory(direct_solvers)
-add_subdirectory(eigen_value_solvers)
-add_subdirectory(iterative_solvers)
