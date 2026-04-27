@@ -42,21 +42,25 @@ struct linalg::tridiagonal_descr
     float* lower_modified[MAX_RECURSION_LEVELS];
     float* main_modified[MAX_RECURSION_LEVELS];
     float* upper_modified[MAX_RECURSION_LEVELS];
-    float* b_modified[MAX_RECURSION_LEVELS];
+    float* B_modified[MAX_RECURSION_LEVELS];
 
     float* spike_lower[MAX_RECURSION_LEVELS];
     float* spike_main[MAX_RECURSION_LEVELS];
     float* spike_upper[MAX_RECURSION_LEVELS];
-    float* spike_b[MAX_RECURSION_LEVELS];
-    float* spike_x[MAX_RECURSION_LEVELS];
+    float* spike_B[MAX_RECURSION_LEVELS];
+    float* spike_X[MAX_RECURSION_LEVELS];
 
     // Buffers for partial pivoting approach (to be implemented)
     float* lower_pad;
     float* main_pad;
     float* upper_pad;
+    float* B_pad;
 
     float* w_pad;
     float* v_pad;
+
+    int*   pivot;
+    float* mt;
 };
 
 void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
@@ -72,14 +76,24 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
         (*descr)->lower_modified[level] = nullptr;
         (*descr)->main_modified[level]  = nullptr;
         (*descr)->upper_modified[level] = nullptr;
-        (*descr)->b_modified[level]     = nullptr;
+        (*descr)->B_modified[level]     = nullptr;
 
         (*descr)->spike_lower[level] = nullptr;
         (*descr)->spike_main[level]  = nullptr;
         (*descr)->spike_upper[level] = nullptr;
-        (*descr)->spike_b[level]     = nullptr;
-        (*descr)->spike_x[level]     = nullptr;
+        (*descr)->spike_B[level]     = nullptr;
+        (*descr)->spike_X[level]     = nullptr;
     }
+
+    (*descr)->lower_pad = nullptr;
+    (*descr)->main_pad  = nullptr;
+    (*descr)->upper_pad = nullptr;
+    (*descr)->B_pad     = nullptr;
+    (*descr)->w_pad     = nullptr;
+    (*descr)->v_pad     = nullptr;
+
+    (*descr)->pivot = nullptr;
+    (*descr)->mt    = nullptr;
 }
 
 void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)

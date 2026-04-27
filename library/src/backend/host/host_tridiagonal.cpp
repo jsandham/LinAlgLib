@@ -33,14 +33,20 @@
 
 namespace linalg
 {
-    template <uint32_t M, typename T>
-    static void host_thomas_algorithm_impl(
-        int n, const T* lower_diag, const T* main_diag, const T* upper_diag, const T* b, T* x)
+    template <typename T>
+    static void host_thomas_algorithm_impl(int      m,
+                                           int      n,
+                                           const T* lower_diag,
+                                           const T* main_diag,
+                                           const T* upper_diag,
+                                           const T* b,
+                                           T*       x)
     {
         ROUTINE_TRACE("host_thomas_algorithm_impl");
-        T c_prime[M];
+        // T c_prime[M];
+        std::vector<T> c_prime(m);
         c_prime[0] = upper_diag[0] / main_diag[0];
-        for(int i = 1; i < M - 1; i++)
+        for(int i = 1; i < m - 1; i++)
         {
             T denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
             c_prime[i] = upper_diag[i] / denom;
@@ -50,17 +56,18 @@ namespace linalg
 #endif
         for(int j = 0; j < n; j++)
         {
-            T d_prime[M];
-            d_prime[0] = b[M * j + 0] / main_diag[0];
-            for(int i = 1; i < M; i++)
+            //T d_prime[M];
+            std::vector<T> d_prime(m);
+            d_prime[0] = b[m * j + 0] / main_diag[0];
+            for(int i = 1; i < m; i++)
             {
-                T num      = b[M * j + i] - lower_diag[i] * d_prime[i - 1];
+                T num      = b[m * j + i] - lower_diag[i] * d_prime[i - 1];
                 T denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
                 d_prime[i] = num / denom;
             }
-            x[M * j + (M - 1)] = d_prime[M - 1];
-            for(int i = M - 2; i >= 0; i--)
-                x[M * j + i] = d_prime[i] - c_prime[i] * x[M * j + (i + 1)];
+            x[m * j + (m - 1)] = d_prime[m - 1];
+            for(int i = m - 2; i >= 0; i--)
+                x[m * j + i] = d_prime[i] - c_prime[i] * x[m * j + (i + 1)];
         }
     }
 }
@@ -95,97 +102,105 @@ void linalg::host_tridiagonal_solver(int                      m,
     assert(upper_diag.get_size() == m);
     assert(b.get_size() == m * n);
     assert(x.get_size() == m * n);
-    switch(m)
-    {
-    case 2:
-        host_thomas_algorithm_impl<2>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 3:
-        host_thomas_algorithm_impl<3>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 4:
-        host_thomas_algorithm_impl<4>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 5:
-        host_thomas_algorithm_impl<5>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 6:
-        host_thomas_algorithm_impl<6>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 7:
-        host_thomas_algorithm_impl<7>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 8:
-        host_thomas_algorithm_impl<8>(n,
-                                      lower_diag.get_vec(),
-                                      main_diag.get_vec(),
-                                      upper_diag.get_vec(),
-                                      b.get_vec(),
-                                      x.get_vec());
-        break;
-    case 16:
-        host_thomas_algorithm_impl<16>(n,
-                                       lower_diag.get_vec(),
-                                       main_diag.get_vec(),
-                                       upper_diag.get_vec(),
-                                       b.get_vec(),
-                                       x.get_vec());
-        break;
-    case 32:
-        host_thomas_algorithm_impl<32>(n,
-                                       lower_diag.get_vec(),
-                                       main_diag.get_vec(),
-                                       upper_diag.get_vec(),
-                                       b.get_vec(),
-                                       x.get_vec());
-        break;
-    case 64:
-        host_thomas_algorithm_impl<64>(n,
-                                       lower_diag.get_vec(),
-                                       main_diag.get_vec(),
-                                       upper_diag.get_vec(),
-                                       b.get_vec(),
-                                       x.get_vec());
-        break;
-    case 128:
-        host_thomas_algorithm_impl<128>(n,
-                                        lower_diag.get_vec(),
-                                        main_diag.get_vec(),
-                                        upper_diag.get_vec(),
-                                        b.get_vec(),
-                                        x.get_vec());
-        break;
-    default:
-        break;
-    }
+    host_thomas_algorithm_impl(m,
+                               n,
+                               lower_diag.get_vec(),
+                               main_diag.get_vec(),
+                               upper_diag.get_vec(),
+                               b.get_vec(),
+                               x.get_vec());
+
+    // switch(m)
+    // {
+    // case 2:
+    //     host_thomas_algorithm_impl<2>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 3:
+    //     host_thomas_algorithm_impl<3>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 4:
+    //     host_thomas_algorithm_impl<4>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 5:
+    //     host_thomas_algorithm_impl<5>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 6:
+    //     host_thomas_algorithm_impl<6>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 7:
+    //     host_thomas_algorithm_impl<7>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 8:
+    //     host_thomas_algorithm_impl<8>(n,
+    //                                   lower_diag.get_vec(),
+    //                                   main_diag.get_vec(),
+    //                                   upper_diag.get_vec(),
+    //                                   b.get_vec(),
+    //                                   x.get_vec());
+    //     break;
+    // case 16:
+    //     host_thomas_algorithm_impl<16>(n,
+    //                                    lower_diag.get_vec(),
+    //                                    main_diag.get_vec(),
+    //                                    upper_diag.get_vec(),
+    //                                    b.get_vec(),
+    //                                    x.get_vec());
+    //     break;
+    // case 32:
+    //     host_thomas_algorithm_impl<32>(n,
+    //                                    lower_diag.get_vec(),
+    //                                    main_diag.get_vec(),
+    //                                    upper_diag.get_vec(),
+    //                                    b.get_vec(),
+    //                                    x.get_vec());
+    //     break;
+    // case 64:
+    //     host_thomas_algorithm_impl<64>(n,
+    //                                    lower_diag.get_vec(),
+    //                                    main_diag.get_vec(),
+    //                                    upper_diag.get_vec(),
+    //                                    b.get_vec(),
+    //                                    x.get_vec());
+    //     break;
+    // case 128:
+    //     host_thomas_algorithm_impl<128>(n,
+    //                                     lower_diag.get_vec(),
+    //                                     main_diag.get_vec(),
+    //                                     upper_diag.get_vec(),
+    //                                     b.get_vec(),
+    //                                     x.get_vec());
+    //     break;
+    // default:
+    //     break;
+    // }
 }
