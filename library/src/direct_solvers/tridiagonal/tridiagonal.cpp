@@ -39,28 +39,33 @@ struct linalg::tridiagonal_descr
     pivoting_strategy pivoting_strategy;
 
     // Buffers for non-pivoting approach (one per recursion level)
-    float* lower_modified[MAX_RECURSION_LEVELS];
-    float* main_modified[MAX_RECURSION_LEVELS];
-    float* upper_modified[MAX_RECURSION_LEVELS];
-    float* B_modified[MAX_RECURSION_LEVELS];
+    double* lower_modified[MAX_RECURSION_LEVELS];
+    double* main_modified[MAX_RECURSION_LEVELS];
+    double* upper_modified[MAX_RECURSION_LEVELS];
+    double* B_modified[MAX_RECURSION_LEVELS];
 
-    float* spike_lower[MAX_RECURSION_LEVELS];
-    float* spike_main[MAX_RECURSION_LEVELS];
-    float* spike_upper[MAX_RECURSION_LEVELS];
-    float* spike_B[MAX_RECURSION_LEVELS];
-    float* spike_X[MAX_RECURSION_LEVELS];
+    double* spike_lower[MAX_RECURSION_LEVELS];
+    double* spike_main[MAX_RECURSION_LEVELS];
+    double* spike_upper[MAX_RECURSION_LEVELS];
+    double* spike_B[MAX_RECURSION_LEVELS];
+    double* spike_X[MAX_RECURSION_LEVELS];
 
     // Buffers for partial pivoting approach (to be implemented)
-    float* lower_pad;
-    float* main_pad;
-    float* upper_pad;
-    float* B_pad;
+    double* lower_pad;
+    double* main_pad;
+    double* upper_pad;
+    double* B_pad;
 
-    float* w_pad;
-    float* v_pad;
+    double* w_pad;
+    double* v_pad;
 
-    int*   pivot;
-    float* mt;
+    int*    pivot;
+    double* mt;
+
+    double* S_lower;
+    double* S_main;
+    double* S_upper;
+    double* S_B;
 };
 
 void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
@@ -94,6 +99,11 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
 
     (*descr)->pivot = nullptr;
     (*descr)->mt    = nullptr;
+
+    (*descr)->S_lower = nullptr;
+    (*descr)->S_main  = nullptr;
+    (*descr)->S_upper = nullptr;
+    (*descr)->S_B     = nullptr;
 }
 
 void linalg::destroy_tridiagonal_descr(tridiagonal_descr* descr)
@@ -117,12 +127,12 @@ void linalg::set_pivoting_strategy(tridiagonal_descr* descr, pivoting_strategy s
     }
 }
 
-void linalg::tridiagonal_analysis(int                  m,
-                                  int                  n,
-                                  const vector<float>& lower_diag,
-                                  const vector<float>& main_diag,
-                                  const vector<float>& upper_diag,
-                                  tridiagonal_descr*   descr)
+void linalg::tridiagonal_analysis(int                   m,
+                                  int                   n,
+                                  const vector<double>& lower_diag,
+                                  const vector<double>& main_diag,
+                                  const vector<double>& upper_diag,
+                                  tridiagonal_descr*    descr)
 {
     ROUTINE_TRACE("linalg::tridiagonal_analysis");
 
@@ -139,11 +149,11 @@ void linalg::tridiagonal_analysis(int                  m,
 
 void linalg::tridiagonal_solver(int                      m,
                                 int                      n,
-                                const vector<float>&     lower_diag,
-                                const vector<float>&     main_diag,
-                                const vector<float>&     upper_diag,
-                                const vector<float>&     rhs,
-                                vector<float>&           solution,
+                                const vector<double>&    lower_diag,
+                                const vector<double>&    main_diag,
+                                const vector<double>&    upper_diag,
+                                const vector<double>&    rhs,
+                                vector<double>&          solution,
                                 const tridiagonal_descr* descr)
 {
     ROUTINE_TRACE("linalg::tridiagonal_solver");

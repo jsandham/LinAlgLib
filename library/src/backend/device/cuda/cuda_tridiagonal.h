@@ -34,18 +34,18 @@ namespace linalg
 
     void cuda_tridiagonal_analysis(int                m,
                                    int                n,
-                                   const float*       lower_diag,
-                                   const float*       main_diag,
-                                   const float*       upper_diag,
+                                   const double*      lower_diag,
+                                   const double*      main_diag,
+                                   const double*      upper_diag,
                                    tridiagonal_descr* descr);
 
     void cuda_tridiagonal_solver(int                      m,
                                  int                      n,
-                                 const float*             lower_diag,
-                                 const float*             main_diag,
-                                 const float*             upper_diag,
-                                 const float*             b,
-                                 float*                   x,
+                                 const double*            lower_diag,
+                                 const double*            main_diag,
+                                 const double*            upper_diag,
+                                 const double*            b,
+                                 double*                  x,
                                  const tridiagonal_descr* descr);
 }
 

@@ -47,11 +47,11 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     int n = arg.n;
 
     // Create tridiagonal matrix coefficients
-    vector<float> lower_diag(m);
-    vector<float> main_diag(m);
-    vector<float> upper_diag(m);
-    vector<float> rhs(m * n);
-    vector<float> solution(m * n);
+    vector<double> lower_diag(m);
+    vector<double> main_diag(m);
+    vector<double> upper_diag(m);
+    vector<double> rhs(m * n);
+    vector<double> solution(m * n);
 
     // //1 3 0 0
     // //2 4 6 0
@@ -152,14 +152,14 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     for(int i = 0; i < m; i++)
     {
         // main_diag[i] = i % 8;
-        main_diag[i] = 2.0;
+        main_diag[i] = 1.0;
         if(i > 0)
         {
-            lower_diag[i] = 1.0;
+            lower_diag[i] = 2.0;
         }
         if(i < m - 1)
         {
-            upper_diag[i] = 1.0;
+            upper_diag[i] = 2.0;
         }
     }
 
@@ -168,7 +168,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0;
+            rhs[m * i + j] = 1.0 + j;
         }
 
         // Adjust boundary conditions
@@ -214,7 +214,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     destroy_tridiagonal_descr(descr);
 
-    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::chrono::duration<double, std::milli> ms_float = t2 - t1;
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     // Move back to host for verification
@@ -225,14 +225,14 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     rhs.move_to_host();
 
     // Verify solution by computing residual: r = b - A*x
-    vector<float> residual(m * n);
-    float         max_residual = 0.0;
+    vector<double> residual(m * n);
+    double         max_residual = 0.0;
 
     for(int i = 0; i < n; i++)
     {
         for(int j = 0; j < m; j++)
         {
-            float ax = main_diag[j] * solution[m * i + j];
+            double ax = main_diag[j] * solution[m * i + j];
             if(j > 0)
             {
                 ax += lower_diag[j] * solution[m * i + j - 1];
@@ -251,9 +251,9 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 
-    size_t total_bytes_read_write = sizeof(float) * (3 * m + 2 * m * n);
-    float  total_gbytes           = (float)100 * total_bytes_read_write / 1e9;
-    float  bandwidth              = total_gbytes / (ms_float.count() / 1e3);
+    size_t total_bytes_read_write = sizeof(double) * (3 * m + 2 * m * n);
+    double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
+    double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 
     std::cout << "Total data transferred: " << total_gbytes << " GB"
               << " total_bytes_read_write: " << total_bytes_read_write << std::endl;
@@ -262,8 +262,8 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
               << " ms_float.count(): " << ms_float.count() << std::endl;
 
     // Check if solution is accurate enough
-    float tolerance = 1e-6;
-    bool  success   = (max_residual < tolerance);
+    double tolerance = 1e-6;
+    bool   success   = (max_residual < tolerance);
 
     if(!success)
     {

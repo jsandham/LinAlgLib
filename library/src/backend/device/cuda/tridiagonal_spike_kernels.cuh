@@ -27,6 +27,8 @@
 #ifndef TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
 #define TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
 
+#include <assert.h>
+
 #include "common.cuh"
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
@@ -55,10 +57,8 @@ __global__ void data_marshaling_kernel(int m,
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void data_marshaling_kernel2(int m,
-                                       int m_pad,
-                                       const T* __restrict__ B_pad,
-                                       T* __restrict__ B)
+__global__ void
+    data_marshaling_kernel2(int m, int m_pad, const T* __restrict__ B_pad, T* __restrict__ B)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -70,12 +70,12 @@ __global__ void data_marshaling_kernel2(int m,
     // B[gid]     = (gid < m) ? B_pad[BLOCKDIM * glid + gwid] : static_cast<T>(0);
     if(gid < m)
     {
-        B[BLOCKDIM * glid + gwid]     = B_pad[gid];
+        B[BLOCKDIM * glid + gwid] = B_pad[gid];
     }
 }
 
 template <typename T>
-__device__ T bunch_kaufman_criterion(T ak_1, T ak_2, T bk_1, T ck, T ck_1)
+__device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
 {
     double kappa = double(0.5) * (sqrt(double(5.0)) - double(1.0));
 
@@ -85,7 +85,7 @@ __device__ T bunch_kaufman_criterion(T ak_1, T ak_2, T bk_1, T ck, T ck_1)
     sigma        = max(double(abs(ck)), sigma);
     sigma        = max(double(abs(ck_1)), sigma);
 
-    return abs(bk_1) * sigma - kappa * abs(ak_1 * ck);
+    return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
@@ -98,10 +98,7 @@ __global__ void LBMT_solve_kernel(int m_pad,
                                   T* __restrict__ v,
                                   T* __restrict__ mt,
                                   T* __restrict__ rhs,
-                                  int* __restrict__ pivot,
-                                  T* __restrict__ temp_a,
-                                  T* __restrict__ temp_b,
-                                  T* __restrict__ temp_c)
+                                  int* __restrict__ pivot)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -113,9 +110,6 @@ __global__ void LBMT_solve_kernel(int m_pad,
     {
         return;
     }
-
-    T ak = static_cast<T>(0);
-    T bk_old = static_cast<T>(0);
 
     T bk = main[gid];
 
@@ -133,42 +127,38 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
         // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
         // pivoting criteria
-        const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk_1, ck, ck_1);
+        const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
 
         // 1x1 pivoting
         if(use_1x1_pivot || k == (BLOCKDIM - 1))
         {
             const T inv_bk = static_cast<T>(1) / bk;
 
-            bk_1 = bk_1 - ak_1 * ck * inv_bk;
-
-            ak_1 = ak_1 * inv_bk;
-            ck   = ck * inv_bk;
-
             T wk = w[nblocks * k + gid];
             T vk = v[nblocks * k + gid];
 
             w[nblocks * k + gid]     = wk * inv_bk;
             v[nblocks * k + gid]     = vk * inv_bk;
-            mt[nblocks * k + gid]    = ck;
+            mt[nblocks * k + gid]    = ck * inv_bk;
             pivot[nblocks * k + gid] = 1;
 
             if(k < (BLOCKDIM - 1))
             {
-               w[nblocks * (k + 1) + gid] += -ak_1 * wk;
+                w[nblocks * (k + 1) + gid] += -ak_1 * wk * inv_bk;
             }
 
-            if(k == 0)
+            // L * B * x = y
+            T rhsk = rhs[nblocks * k + gid] * inv_bk;
+
+            rhs[nblocks * k + gid] = rhsk;
+
+            if(k < (BLOCKDIM - 1))
             {
-                rhs[nblocks * k + gid] = rhs[nblocks * k + gid] * inv_bk;
-            }
-            else
-            {
-                rhs[nblocks * k + gid] = (rhs[nblocks * k + gid] - ak * bk_old * rhs[nblocks * (k - 1) + gid]) * inv_bk;
+                rhs[nblocks * (k + 1) + gid] += -(ak_1 * rhsk);
+
+                bk_1 = bk_1 - ak_1 * ck * inv_bk;
             }
 
-            bk_old = bk;
-            ak = ak_1;
             bk = bk_1;
 
             k += 1;
@@ -199,7 +189,25 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
             if(k < (BLOCKDIM - 2))
             {
-                w[nblocks * (k + 2) + gid] += -(-ak_1 * ak_2 * det) * wk - (bk * ak_2 * det) * wk_1;
+                w[nblocks * (k + 2) + gid] += -(-ak_1 * ak_2 * wk + ak_2 * bk * wk_1) * det;
+            }
+
+            // |bk   ck  ||xk  |   |rhsk   |
+            // |ak_1 bk_1||xk_1| = |rhsk _1|
+            //
+            //inv = 1 / (bk * bk_1 - ak_1 * ck) |bk_1 -ck  |
+            //                                  |-ak_1  bk |
+
+            // L * B * x = y
+            T rhsk   = rhs[nblocks * k + gid] * det;
+            T rhsk_1 = rhs[nblocks * (k + 1) + gid] * det;
+
+            rhs[nblocks * k + gid]       = (bk_1 * rhsk - ck * rhsk_1);
+            rhs[nblocks * (k + 1) + gid] = (-ak_1 * rhsk + bk * rhsk_1);
+
+            if(k < (BLOCKDIM - 2))
+            {
+                rhs[nblocks * (k + 2) + gid] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
 
                 bk_2 = main[nblocks * (k + 2) + gid];
                 bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
@@ -209,41 +217,88 @@ __global__ void LBMT_solve_kernel(int m_pad,
             k += 2;
         }
     }
-    __threadfence();
+    __threadfence(); // I dont think I need this here since each thread is working on independent data.
+    // I think this is only necessary if we have inter-thread dependencies, which we dont in this case.
 
+    assert(k == BLOCKDIM);
     // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
     k--;
 
     k -= pivot[nblocks * k + gid];
 
-    // backward solve (M^T * w = w and M^T * v = v)
+    // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
     while(k >= 0)
     {
         if(pivot[nblocks * k + gid] == 1)
         {
             const T tmp = mt[nblocks * k + gid];
+
+            // I think k will always be less than BLOCKDIM - 1 here??
             w[nblocks * k + gid] += -tmp * w[nblocks * (k + 1) + gid];
             v[nblocks * k + gid] += -tmp * v[nblocks * (k + 1) + gid];
-
-            if(k < (BLOCKDIM - 1))
-            {
-                rhs[nblocks * k + gid] = rhs[nblocks * k + gid] - tmp * rhs[nblocks * (k + 1) + gid];
-            }
+            rhs[nblocks * k + gid] += -tmp * rhs[nblocks * (k + 1) + gid];
 
             k -= 1;
         }
         else
         {
-           const T tmp1 = mt[nblocks * k + gid];
-           const T tmp2 = mt[nblocks * (k - 1) + gid];
+            const T tmp1 = mt[nblocks * k + gid];
+            const T tmp2 = mt[nblocks * (k - 1) + gid];
 
-           w[nblocks * k + gid] += -tmp1 * w[nblocks * (k + 1) + gid];
-           w[nblocks * (k - 1) + gid] += -tmp2 * w[nblocks * (k + 1) + gid];
-           v[nblocks * k + gid] += -tmp1 * v[nblocks * (k + 1) + gid];
-           v[nblocks * (k - 1) + gid] += -tmp2 * v[nblocks * (k + 1) + gid];
+            // I think k will always be less than BLOCKDIM - 2 here??
+            w[nblocks * k + gid] += -tmp1 * w[nblocks * (k + 1) + gid];
+            w[nblocks * (k - 1) + gid] += -tmp2 * w[nblocks * (k + 1) + gid];
+            v[nblocks * k + gid] += -tmp1 * v[nblocks * (k + 1) + gid];
+            v[nblocks * (k - 1) + gid] += -tmp2 * v[nblocks * (k + 1) + gid];
+            rhs[nblocks * k + gid] += -tmp1 * rhs[nblocks * (k + 1) + gid];
+            rhs[nblocks * (k - 1) + gid] += -tmp2 * rhs[nblocks * (k + 1) + gid];
 
-           k -= 2;
+            k -= 2;
         }
+    }
+}
+
+
+
+// Complete Sx = B_pad
+// for(int i = 0; i < m_pad / BLOCKDIM; i++)
+// {
+//     double x1 = (i >= 1) ? h_B_pad[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : 0.0f;
+//     double x2 = (i < (m_pad / BLOCKDIM - 1)) ? h_B_pad[i + 1] : 0.0f;
+
+//     for(int j = 1; j < BLOCKDIM - 1; j++)
+//     {
+//         h_B_pad[(m_pad / BLOCKDIM) * j + i] = h_B_pad[(m_pad / BLOCKDIM) * j + i]
+//                                             - h_w_pad[(m_pad / BLOCKDIM) * j + i] * x1
+//                                             - h_v_pad[(m_pad / BLOCKDIM) * j + i] * x2;
+//     }
+// }
+
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void backward_solve_kernel(
+    int m_pad, int n, const T* __restrict__ w, const T* __restrict__ v, T* __restrict__ rhs)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    const int nblocks = m_pad / BLOCKDIM;
+
+    if(gid >= nblocks)
+    {
+        return;
+    }
+
+    // backward solve (S * x = B_pad)
+    double x1 = (gid >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (gid - 1)] : 0.0f;
+    double x2 = (gid < (m_pad / BLOCKDIM - 1)) ? rhs[gid + 1] : 0.0f;
+
+    for(int j = 1; j < BLOCKDIM - 1; j++)
+    {
+        rhs[(m_pad / BLOCKDIM) * j + gid] = rhs[(m_pad / BLOCKDIM) * j + gid]
+                                            - w[(m_pad / BLOCKDIM) * j + gid] * x1
+                                            - v[(m_pad / BLOCKDIM) * j + gid] * x2;
     }
 }
 

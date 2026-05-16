@@ -100,12 +100,12 @@ namespace linalg
         * @param descr The descriptor to populate with analysis data and solver configuration.
         * @see tridiagonal_solver, set_pivoting_strategy
      */
-    LINALGLIB_API void tridiagonal_analysis(int                  m,
-                                            int                  n,
-                                            const vector<float>& lower_diag,
-                                            const vector<float>& main_diag,
-                                            const vector<float>& upper_diag,
-                                            tridiagonal_descr*   descr);
+    LINALGLIB_API void tridiagonal_analysis(int                   m,
+                                            int                   n,
+                                            const vector<double>& lower_diag,
+                                            const vector<double>& main_diag,
+                                            const vector<double>& upper_diag,
+                                            tridiagonal_descr*    descr);
 
     /*! \ingroup tridiagonal_solvers
         * @brief Solves a tridiagonal system using a specialized tridiagonal algorithm.
@@ -129,11 +129,11 @@ namespace linalg
      */
     LINALGLIB_API void tridiagonal_solver(int                      m,
                                           int                      n,
-                                          const vector<float>&     lower_diag,
-                                          const vector<float>&     main_diag,
-                                          const vector<float>&     upper_diag,
-                                          const vector<float>&     rhs,
-                                          vector<float>&           solution,
+                                          const vector<double>&    lower_diag,
+                                          const vector<double>&    main_diag,
+                                          const vector<double>&    upper_diag,
+                                          const vector<double>&    rhs,
+                                          vector<double>&          solution,
                                           const tridiagonal_descr* descr);
 }
 

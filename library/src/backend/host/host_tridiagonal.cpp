@@ -72,12 +72,12 @@ namespace linalg
     }
 }
 
-void linalg::host_tridiagonal_analysis(int                  m,
-                                       int                  n,
-                                       const vector<float>& lower_diag,
-                                       const vector<float>& main_diag,
-                                       const vector<float>& upper_diag,
-                                       tridiagonal_descr*   descr)
+void linalg::host_tridiagonal_analysis(int                   m,
+                                       int                   n,
+                                       const vector<double>& lower_diag,
+                                       const vector<double>& main_diag,
+                                       const vector<double>& upper_diag,
+                                       tridiagonal_descr*    descr)
 {
     ROUTINE_TRACE("linalg::host_tridiagonal_allocate_buffers");
     assert(m > 0);
@@ -89,11 +89,11 @@ void linalg::host_tridiagonal_analysis(int                  m,
 
 void linalg::host_tridiagonal_solver(int                      m,
                                      int                      n,
-                                     const vector<float>&     lower_diag,
-                                     const vector<float>&     main_diag,
-                                     const vector<float>&     upper_diag,
-                                     const vector<float>&     b,
-                                     vector<float>&           x,
+                                     const vector<double>&    lower_diag,
+                                     const vector<double>&    main_diag,
+                                     const vector<double>&    upper_diag,
+                                     const vector<double>&    b,
+                                     vector<double>&          x,
                                      const tridiagonal_descr* descr)
 {
     ROUTINE_TRACE("linalg::host_tridiagonal_solver");
