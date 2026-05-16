@@ -88,6 +88,30 @@ __device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck
     return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
 }
 
+template <int WORDS>
+struct PivotMask
+{
+    unsigned int bits[WORDS];
+
+    // Sets bit k to 0 to record a 1x1 pivot at row k.
+    __device__ __forceinline__ void set_pivoting_to_1x1(int k)
+    {
+        bits[k >> 5] &= ~(1u << (k & 31));
+    }
+
+    // Sets bit k to 1 to record 2x2 pivoting at row k.
+    __device__ __forceinline__ void set_pivoting_to2x2(int k)
+    {
+        bits[k >> 5] |= (1u << (k & 31));
+    }
+
+    // Returns 1 if row k used 1x1 pivoting, 2 if row k is part of a 2x2 pivot.
+    __device__ __forceinline__ int get_pivoting(int k) const
+    {
+        return ((bits[k >> 5] >> (k & 31)) & 1u) ? 2 : 1;
+    }
+};
+
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void LBMT_solve_kernel(int m_pad,
                                   int n,
@@ -100,6 +124,8 @@ __global__ void LBMT_solve_kernel(int m_pad,
                                   T* __restrict__ rhs,
                                   int* __restrict__ pivot)
 {
+    static_assert(BLOCKDIM >= 2);
+
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
     const int gid = tid + BLOCKSIZE * bid;
@@ -112,6 +138,9 @@ __global__ void LBMT_solve_kernel(int m_pad,
     }
 
     T bk = main[gid];
+
+    constexpr int PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
+    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
 
     w[gid]                            = lower[gid];
     v[gid + (BLOCKDIM - 1) * nblocks] = upper[gid + (BLOCKDIM - 1) * nblocks];
@@ -140,7 +169,8 @@ __global__ void LBMT_solve_kernel(int m_pad,
             w[nblocks * k + gid]     = wk * inv_bk;
             v[nblocks * k + gid]     = vk * inv_bk;
             mt[nblocks * k + gid]    = ck * inv_bk;
-            pivot[nblocks * k + gid] = 1;
+            // pivot[nblocks * k + gid] = 1;
+            pivot_mask.set_pivoting_to_1x1(k);
 
             if(k < (BLOCKDIM - 1))
             {
@@ -175,14 +205,16 @@ __global__ void LBMT_solve_kernel(int m_pad,
             w[nblocks * k + gid]     = (bk_1 * wk - ck * wk_1) * det;
             v[nblocks * k + gid]     = (bk_1 * vk - ck * vk_1) * det;
             mt[nblocks * k + gid]    = -ck * ck_1 * det;
-            pivot[nblocks * k + gid] = 2;
+            // pivot[nblocks * k + gid] = 2;
+            pivot_mask.set_pivoting_to2x2(k);
 
             if(k < (BLOCKDIM - 1))
             {
                 w[nblocks * (k + 1) + gid]     = (-ak_1 * wk + bk * wk_1) * det;
                 v[nblocks * (k + 1) + gid]     = (-ak_1 * vk + bk * vk_1) * det;
                 mt[nblocks * (k + 1) + gid]    = bk * ck_1 * det;
-                pivot[nblocks * (k + 1) + gid] = 2;
+                // pivot[nblocks * (k + 1) + gid] = 2;
+                pivot_mask.set_pivoting_to2x2(k + 1);
             }
 
             T bk_2 = static_cast<T>(0);
@@ -217,19 +249,19 @@ __global__ void LBMT_solve_kernel(int m_pad,
             k += 2;
         }
     }
-    __threadfence(); // I dont think I need this here since each thread is working on independent data.
-    // I think this is only necessary if we have inter-thread dependencies, which we dont in this case.
 
     assert(k == BLOCKDIM);
     // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
     k--;
 
-    k -= pivot[nblocks * k + gid];
+    // k -= pivot[nblocks * k + gid];
+    k -= pivot_mask.get_pivoting(k);
 
     // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
     while(k >= 0)
     {
-        if(pivot[nblocks * k + gid] == 1)
+        // if(pivot[nblocks * k + gid] == 1)
+        if(pivot_mask.get_pivoting(k) == 1)
         {
             const T tmp = mt[nblocks * k + gid];
 

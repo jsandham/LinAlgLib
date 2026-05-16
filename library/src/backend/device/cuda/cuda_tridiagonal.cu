@@ -904,8 +904,8 @@ namespace linalg
         DEBUG_PRINT_ARRAY(h_pivot_pad.data(), m_pad, "After LBM h_pivot_pad");
         //DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "After LBM h_B_pad");
 
-        DEBUG_PRINT_TRIDIAG_MATRIX_VECTOR_PRODUCT(
-            h_lower_pad, h_main_pad, h_upper_pad, h_B_pad, m_pad, BLOCKDIM, "After LBM h_temp");
+        //DEBUG_PRINT_TRIDIAG_MATRIX_VECTOR_PRODUCT(
+        //    h_lower_pad, h_main_pad, h_upper_pad, h_B_pad, m_pad, BLOCKDIM, "After LBM h_temp");
 
         // Create tridiagonal S matrix
         int                 s_size = 2 * m_pad / BLOCKDIM;
