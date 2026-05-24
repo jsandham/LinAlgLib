@@ -67,7 +67,6 @@ __global__ void
     const int gwid = gid / (m_pad / BLOCKDIM);
     const int glid = gid % (m_pad / BLOCKDIM);
 
-    // B[gid]     = (gid < m) ? B_pad[BLOCKDIM * glid + gwid] : static_cast<T>(0);
     if(gid < m)
     {
         B[BLOCKDIM * glid + gwid] = B_pad[gid];
@@ -75,7 +74,7 @@ __global__ void
 }
 
 template <typename T>
-__device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
+__host__ __device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
 {
     double kappa = double(0.5) * (sqrt(double(5.0)) - double(1.0));
 
@@ -121,8 +120,7 @@ __global__ void LBMT_solve_kernel(int m_pad,
                                   T* __restrict__ w,
                                   T* __restrict__ v,
                                   T* __restrict__ mt,
-                                  T* __restrict__ rhs,
-                                  int* __restrict__ pivot)
+                                  T* __restrict__ rhs)
 {
     static_assert(BLOCKDIM >= 2);
 
@@ -139,7 +137,7 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
     T bk = main[gid];
 
-    constexpr int PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
+    constexpr int               PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
     PivotMask<PIVOT_MASK_WORDS> pivot_mask;
 
     w[gid]                            = lower[gid];
@@ -166,10 +164,10 @@ __global__ void LBMT_solve_kernel(int m_pad,
             T wk = w[nblocks * k + gid];
             T vk = v[nblocks * k + gid];
 
-            w[nblocks * k + gid]     = wk * inv_bk;
-            v[nblocks * k + gid]     = vk * inv_bk;
-            mt[nblocks * k + gid]    = ck * inv_bk;
-            // pivot[nblocks * k + gid] = 1;
+            w[nblocks * k + gid]  = wk * inv_bk;
+            v[nblocks * k + gid]  = vk * inv_bk;
+            mt[nblocks * k + gid] = ck * inv_bk;
+
             pivot_mask.set_pivoting_to_1x1(k);
 
             if(k < (BLOCKDIM - 1))
@@ -202,18 +200,18 @@ __global__ void LBMT_solve_kernel(int m_pad,
             T vk   = v[nblocks * k + gid];
             T vk_1 = v[nblocks * (k + 1) + gid];
 
-            w[nblocks * k + gid]     = (bk_1 * wk - ck * wk_1) * det;
-            v[nblocks * k + gid]     = (bk_1 * vk - ck * vk_1) * det;
-            mt[nblocks * k + gid]    = -ck * ck_1 * det;
-            // pivot[nblocks * k + gid] = 2;
+            w[nblocks * k + gid]  = (bk_1 * wk - ck * wk_1) * det;
+            v[nblocks * k + gid]  = (bk_1 * vk - ck * vk_1) * det;
+            mt[nblocks * k + gid] = -ck * ck_1 * det;
+
             pivot_mask.set_pivoting_to2x2(k);
 
             if(k < (BLOCKDIM - 1))
             {
-                w[nblocks * (k + 1) + gid]     = (-ak_1 * wk + bk * wk_1) * det;
-                v[nblocks * (k + 1) + gid]     = (-ak_1 * vk + bk * vk_1) * det;
-                mt[nblocks * (k + 1) + gid]    = bk * ck_1 * det;
-                // pivot[nblocks * (k + 1) + gid] = 2;
+                w[nblocks * (k + 1) + gid]  = (-ak_1 * wk + bk * wk_1) * det;
+                v[nblocks * (k + 1) + gid]  = (-ak_1 * vk + bk * vk_1) * det;
+                mt[nblocks * (k + 1) + gid] = bk * ck_1 * det;
+
                 pivot_mask.set_pivoting_to2x2(k + 1);
             }
 
@@ -254,18 +252,15 @@ __global__ void LBMT_solve_kernel(int m_pad,
     // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
     k--;
 
-    // k -= pivot[nblocks * k + gid];
     k -= pivot_mask.get_pivoting(k);
 
     // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
     while(k >= 0)
     {
-        // if(pivot[nblocks * k + gid] == 1)
         if(pivot_mask.get_pivoting(k) == 1)
         {
             const T tmp = mt[nblocks * k + gid];
 
-            // I think k will always be less than BLOCKDIM - 1 here??
             w[nblocks * k + gid] += -tmp * w[nblocks * (k + 1) + gid];
             v[nblocks * k + gid] += -tmp * v[nblocks * (k + 1) + gid];
             rhs[nblocks * k + gid] += -tmp * rhs[nblocks * (k + 1) + gid];
@@ -277,7 +272,6 @@ __global__ void LBMT_solve_kernel(int m_pad,
             const T tmp1 = mt[nblocks * k + gid];
             const T tmp2 = mt[nblocks * (k - 1) + gid];
 
-            // I think k will always be less than BLOCKDIM - 2 here??
             w[nblocks * k + gid] += -tmp1 * w[nblocks * (k + 1) + gid];
             w[nblocks * (k - 1) + gid] += -tmp2 * w[nblocks * (k + 1) + gid];
             v[nblocks * k + gid] += -tmp1 * v[nblocks * (k + 1) + gid];
@@ -290,21 +284,212 @@ __global__ void LBMT_solve_kernel(int m_pad,
     }
 }
 
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void fill_s_matrix_kernel(int m_pad,
+                                    int n,
+                                    const T* __restrict__ w,
+                                    const T* __restrict__ v,
+                                    const T* __restrict__ rhs,
+                                    T* __restrict__ S_lower,
+                                    T* __restrict__ S_main,
+                                    T* __restrict__ S_upper,
+                                    T* __restrict__ S_rhs)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    const int s_size = 2 * m_pad / BLOCKDIM;
+
+    if(gid < s_size)
+    {
+        S_upper[gid] = (gid % 2 == 0) ? v[gid / 2] : static_cast<T>(1);
+        S_lower[gid] = (gid % 2 == 0) ? static_cast<T>(1)
+                                      : w[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+    }
+
+    if(gid == 0)
+    {
+        S_lower[0]          = static_cast<T>(0);
+        S_lower[1]          = static_cast<T>(0);
+        S_upper[s_size - 2] = static_cast<T>(0);
+        S_upper[s_size - 1] = static_cast<T>(0);
+        S_main[0]          = static_cast<T>(1);
+        S_main[s_size - 1] = static_cast<T>(1);
+    }
+
+    if(gid >= 1 && gid < s_size - 1)
+    {
+        S_main[gid] = (gid % 2 == 0) ? w[gid / 2]
+                                     : v[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+    }
+
+    if(gid < s_size / 2)
+    {
+        S_rhs[2 * gid]     = rhs[gid];
+        S_rhs[2 * gid + 1] = rhs[gid + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+    }
+}
 
 
-// Complete Sx = B_pad
-// for(int i = 0; i < m_pad / BLOCKDIM; i++)
-// {
-//     double x1 = (i >= 1) ? h_B_pad[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : 0.0f;
-//     double x2 = (i < (m_pad / BLOCKDIM - 1)) ? h_B_pad[i + 1] : 0.0f;
 
-//     for(int j = 1; j < BLOCKDIM - 1; j++)
-//     {
-//         h_B_pad[(m_pad / BLOCKDIM) * j + i] = h_B_pad[(m_pad / BLOCKDIM) * j + i]
-//                                             - h_w_pad[(m_pad / BLOCKDIM) * j + i] * x1
-//                                             - h_v_pad[(m_pad / BLOCKDIM) * j + i] * x2;
-//     }
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template <uint32_t S_SIZE, typename T>
+__global__ void S_solve_kernel(int n,
+                                  const T* __restrict__ S_lower,
+                                  const T* __restrict__ S_main,
+                                  const T* __restrict__ S_upper,
+                                  T* __restrict__ rhs)
+{
+    static_assert(S_SIZE >= 2);
+
+    T mt[S_SIZE];
+
+    constexpr int               PIVOT_MASK_WORDS = (S_SIZE + 31) / 32;
+    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+
+    int k = 0;
+    T bk = S_main[k];
+
+    while(k < S_SIZE)
+    {
+        T ck   = S_upper[k];
+        T ck_1 = (k < (S_SIZE - 1)) ? S_upper[k + 1] : static_cast<T>(0);
+        T bk_1 = (k < (S_SIZE - 1)) ? S_main[k + 1] : static_cast<T>(0);
+        T ak_1 = (k < (S_SIZE - 1)) ? S_lower[k + 1] : static_cast<T>(0);
+        T ak_2 = (k < (S_SIZE - 2)) ? S_lower[k + 2] : static_cast<T>(0);
+
+        // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+        // pivoting criteria
+        const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
+
+        // 1x1 pivoting
+        if(use_1x1_pivot || k == (S_SIZE - 1))
+        {
+            const T inv_bk = static_cast<T>(1) / bk;
+
+            mt[k] = ck * inv_bk;
+
+            pivot_mask.set_pivoting_to_1x1(k);
+
+            // L * B * x = y
+            T rhsk = rhs[k] * inv_bk;
+
+            rhs[k] = rhsk;
+
+            if(k < (S_SIZE - 1))
+            {
+                rhs[k + 1] += -(ak_1 * rhsk);
+
+                bk_1 = bk_1 - ak_1 * ck * inv_bk;
+            }
+
+            bk = bk_1;
+
+            k += 1;
+        }
+        else
+        {
+            const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+
+            mt[k] = -ck * ck_1 * det;
+
+            pivot_mask.set_pivoting_to2x2(k);
+
+            if(k < (S_SIZE - 1))
+            {
+                mt[k + 1] = bk * ck_1 * det;
+
+                pivot_mask.set_pivoting_to2x2(k + 1);
+            }
+
+            T bk_2 = static_cast<T>(0);
+
+            // L * B * x = y
+            T rhsk   = rhs[k] * det;
+            T rhsk_1 = rhs[k + 1] * det;
+
+            rhs[k]       = (bk_1 * rhsk - ck * rhsk_1);
+            rhs[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+
+            if(k < (S_SIZE - 2))
+            {
+                rhs[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+
+                bk_2 = S_main[k + 2];
+                bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+            }
+
+            bk = bk_2;
+            k += 2;
+        }
+    }
+
+    assert(k == S_SIZE);
+    // at this point k = S_SIZE. Could just set k = S_SIZE - 1 here
+    k--;
+
+    k -= pivot_mask.get_pivoting(k);
+
+    // backward solve (M^T * rhs = rhs)
+    while(k >= 0)
+    {
+        if(pivot_mask.get_pivoting(k) == 1)
+        {
+            const T tmp = mt[k];
+
+            rhs[k] += -tmp * rhs[k + 1];
+
+            k -= 1;
+        }
+        else
+        {
+            const T tmp1 = mt[k];
+            const T tmp2 = mt[k - 1];
+
+            rhs[k] += -tmp1 * rhs[k + 1];
+            rhs[k - 1] += -tmp2 * rhs[k + 1];
+
+            k -= 2;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>

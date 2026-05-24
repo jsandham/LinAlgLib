@@ -40,6 +40,7 @@
 #include "tridiagonal_spike_kernels.cuh"
 
 static constexpr int MAX_RECURSION_LEVELS = 3;
+static constexpr int BLOCKDIM = 256;
 
 struct linalg::tridiagonal_descr
 {
@@ -66,7 +67,6 @@ struct linalg::tridiagonal_descr
     double* w_pad;
     double* v_pad;
 
-    int*    pivot;
     double* mt;
 
     double* S_lower;
@@ -157,11 +157,6 @@ void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
     {
         CHECK_CUDA(cudaFree(descr->v_pad));
         descr->v_pad = nullptr;
-    }
-    if(descr->pivot != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->pivot));
-        descr->pivot = nullptr;
     }
     if(descr->mt != nullptr)
     {
@@ -267,11 +262,7 @@ namespace linalg
 
         CHECK_CUDA(cudaMalloc((void**)&descr->w_pad, sizeof(double) * m_pad));
         CHECK_CUDA(cudaMalloc((void**)&descr->v_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->pivot, sizeof(int) * m_pad));
         CHECK_CUDA(cudaMalloc((void**)&descr->mt, sizeof(double) * m_pad));
-
-        // Needs to match BLOCKDIM defined in tridiagonal_partial_pivoting_solver_dispatch
-        constexpr int BLOCKDIM = 8;
 
         const int S_size = 2 * m_pad / BLOCKDIM;
 
@@ -694,36 +685,114 @@ namespace linalg
                                       const double* lower_diag,
                                       const double* main_diag,
                                       const double* upper_diag,
-                                      const double* b,
-                                      double*       x)
+                                      double*       y)
     {
+        std::vector<double> mt(m);
+        std::vector<int> pivot_mask(m);
 
-        std::vector<double> c_prime(m);
-        c_prime[0] = upper_diag[0] / main_diag[0];
-        for(int i = 1; i < m - 1; i++)
+        int k = 0;
+        double bk = main_diag[k];
+
+        while(k < m)
         {
-            //double denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-            double denum = std::fma(-lower_diag[i], c_prime[i - 1], main_diag[i]);
-            c_prime[i]   = upper_diag[i] / denum;
+            double ck   = upper_diag[k];
+            double ck_1 = (k < (m - 1)) ? upper_diag[k + 1] : static_cast<double>(0);
+            double bk_1 = (k < (m - 1)) ? main_diag[k + 1] : static_cast<double>(0);
+            double ak_1 = (k < (m - 1)) ? lower_diag[k + 1] : static_cast<double>(0);
+            double ak_2 = (k < (m - 2)) ? lower_diag[k + 2] : static_cast<double>(0);
+
+            // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+            // pivoting criteria
+            const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
+
+            // 1x1 pivoting
+            if(use_1x1_pivot || k == (m - 1))
+            {
+                const double inv_bk = static_cast<double>(1) / bk;
+
+                mt[k] = ck * inv_bk;
+
+                pivot_mask[k] = 1; // mark this pivot as 1x1
+
+                // L * B * x = y
+                double rhsk = y[k] * inv_bk;
+
+                y[k] = rhsk;
+
+                if(k < (m - 1))
+                {
+                    y[k + 1] += -(ak_1 * rhsk);
+
+                    bk_1 = bk_1 - ak_1 * ck * inv_bk;
+                }
+
+                bk = bk_1;
+
+                k += 1;
+            }
+            else
+            {
+                const double det = static_cast<double>(1) / (bk * bk_1 - ak_1 * ck);
+
+                mt[k] = -ck * ck_1 * det;
+
+                pivot_mask[k] = 2;
+
+                if(k < (m - 1))
+                {
+                    mt[k + 1] = bk * ck_1 * det;
+
+                    pivot_mask[k + 1] = 2;
+                }
+
+                double bk_2 = static_cast<double>(0);
+
+                // L * B * x = y
+                double rhsk   = y[k] * det;
+                double rhsk_1 = y[k + 1] * det;
+
+                y[k]       = (bk_1 * rhsk - ck * rhsk_1);
+                y[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+
+                if(k < (m - 2))
+                {
+                    y[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+
+                    bk_2 = main_diag[k + 2];
+                    bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+                }
+
+                bk = bk_2;
+                k += 2;
+            }
         }
 
-        for(int j = 0; j < n; j++)
+        assert(k == m);
+        // at this point k = m. Could just set k = m - 1 here
+        k--;
+
+        k -= pivot_mask[k];
+
+        // backward solve (M^T * y = y)
+        while(k >= 0)
         {
-            std::vector<double> d_prime(m);
-            d_prime[0] = b[m * j + 0] / main_diag[0];
-            for(int i = 1; i < m; i++)
+            if(pivot_mask[k] == 1)
             {
-                //double num      = b[m * j + i] - lower_diag[i] * d_prime[i - 1];
-                //double denom    = main_diag[i] - lower_diag[i] * c_prime[i - 1];
-                double num   = std::fma(-lower_diag[i], d_prime[i - 1], b[m * j + i]);
-                double denom = std::fma(-lower_diag[i], c_prime[i - 1], main_diag[i]);
-                d_prime[i]   = num / denom;
+                const double tmp = mt[k];
+
+                y[k] += -tmp * y[k + 1];
+
+                k -= 1;
             }
-            x[m * j + (m - 1)] = d_prime[m - 1];
-            for(int i = m - 2; i >= 0; i--)
+            else
             {
-                //x[m * j + i] = d_prime[i] - c_prime[i] * x[m * j + (i + 1)];
-                x[m * j + i] = std::fma(-c_prime[i], x[m * j + (i + 1)], d_prime[i]);
+                const double tmp1 = mt[k];
+                const double tmp2 = mt[k - 1];
+
+                y[k] += -tmp1 * y[k + 1];
+                y[k - 1] += -tmp2 * y[k + 1];
+
+                k -= 2;
             }
         }
     }
@@ -803,6 +872,16 @@ namespace linalg
         }                                                                                \
     } while(0)
 
+    template <typename T, uint32_t S_SIZE>
+    static void launch_s_solve_kernel(int n,
+                                      const T* __restrict__ S_lower,
+                                      const T* __restrict__ S_main,
+                                      const T* __restrict__ S_upper,
+                                      T* __restrict__ rhs)
+    {
+        S_solve_kernel<S_SIZE><<<1, 1>>>(n, S_lower, S_main, S_upper, rhs);
+    }
+
     static void tridiagonal_partial_pivoting_solver_dispatch(int                      m,
                                                              int                      n,
                                                              const double*            lower_diag,
@@ -813,25 +892,8 @@ namespace linalg
                                                              const tridiagonal_descr* descr)
     {
         constexpr int BLOCKSIZE = 256;
-        constexpr int BLOCKDIM  = 8;
 
         const int m_pad = next_power_of_two(m);
-        std::cout << "m: " << m << ", m_pad: " << m_pad << " BLOCKDIM: " << BLOCKDIM << std::endl;
-
-        std::vector<double> h_lower(m);
-        std::vector<double> h_main(m);
-        std::vector<double> h_upper(m);
-        std::vector<double> h_B(m * n);
-        CHECK_CUDA(
-            cudaMemcpy(h_lower.data(), lower_diag, sizeof(double) * m, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(
-            cudaMemcpy(h_main.data(), main_diag, sizeof(double) * m, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(
-            cudaMemcpy(h_upper.data(), upper_diag, sizeof(double) * m, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(h_B.data(), B, sizeof(double) * m * n, cudaMemcpyDeviceToHost));
-
-        //DEBUG_PRINT_ARRAY(h_main.data(), m, "h_main");
-        //DEBUG_PRINT_ARRAY(h_B.data(), m * n, "h_B");
 
         data_marshaling_kernel<BLOCKSIZE, BLOCKDIM>
             <<<(m - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(m,
@@ -846,32 +908,12 @@ namespace linalg
                                                      descr->B_pad);
         CHECK_CUDA_LAUNCH_ERROR();
 
-        std::vector<double> h_lower_pad(m_pad);
-        std::vector<double> h_main_pad(m_pad);
-        std::vector<double> h_upper_pad(m_pad);
-        std::vector<double> h_B_pad(m_pad * n);
-        CHECK_CUDA(cudaMemcpy(
-            h_lower_pad.data(), descr->lower_pad, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_main_pad.data(), descr->main_pad, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_upper_pad.data(), descr->upper_pad, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
-        //DEBUG_PRINT_ARRAY(h_lower_pad.data(), m_pad, "h_lower_pad");
-        //DEBUG_PRINT_ARRAY(h_main_pad.data(), m_pad, "h_main_pad");
-        //DEBUG_PRINT_ARRAY(h_upper_pad.data(), m_pad, "h_upper_pad");
-        //DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "h_B_pad");
-
         CHECK_CUDA(cudaMemset(descr->w_pad, 0, sizeof(double) * m_pad));
         CHECK_CUDA(cudaMemset(descr->v_pad, 0, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMemset(descr->pivot, 0, sizeof(int) * m_pad));
 
         const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
 
-        std::cout << "Launching LBMT_solve_kernel with grid: " << grid << ", block: " << BLOCKSIZE
-                  << std::endl;
-
+        // LBM^T solve
         LBMT_solve_kernel<BLOCKSIZE, BLOCKDIM><<<grid, BLOCKSIZE>>>(m_pad,
                                                                     n,
                                                                     descr->lower_pad,
@@ -880,85 +922,92 @@ namespace linalg
                                                                     descr->w_pad,
                                                                     descr->v_pad,
                                                                     descr->mt,
-                                                                    descr->B_pad,
-                                                                    descr->pivot);
+                                                                    descr->B_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
 
-        std::vector<double> h_w_pad(m_pad);
-        std::vector<double> h_v_pad(m_pad);
-        std::vector<double> h_mt_pad(m_pad);
-        std::vector<int>    h_pivot_pad(m_pad);
-        CHECK_CUDA(cudaMemcpy(
-            h_w_pad.data(), descr->w_pad, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_v_pad.data(), descr->v_pad, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(
-            cudaMemcpy(h_mt_pad.data(), descr->mt, sizeof(double) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_pivot_pad.data(), descr->pivot, sizeof(int) * m_pad, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
-
-        //DEBUG_PRINT_ARRAY(h_w_pad.data(), m_pad, "After LBM h_w_pad");
-        //DEBUG_PRINT_ARRAY(h_v_pad.data(), m_pad, "After LBM h_v_pad");
-        //DEBUG_PRINT_ARRAY(h_mt_pad.data(), m_pad, "After LBM h_mt_pad");
-        DEBUG_PRINT_ARRAY(h_pivot_pad.data(), m_pad, "After LBM h_pivot_pad");
-        //DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "After LBM h_B_pad");
-
-        //DEBUG_PRINT_TRIDIAG_MATRIX_VECTOR_PRODUCT(
-        //    h_lower_pad, h_main_pad, h_upper_pad, h_B_pad, m_pad, BLOCKDIM, "After LBM h_temp");
+        const int s_grid = ((2 * m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
 
         // Create tridiagonal S matrix
+        fill_s_matrix_kernel<BLOCKSIZE, BLOCKDIM><<<s_grid, BLOCKSIZE>>>(m_pad,
+                                                                         n,
+                                                                         descr->w_pad,
+                                                                         descr->v_pad,
+                                                                         descr->B_pad,
+                                                                         descr->S_lower,
+                                                                         descr->S_main,
+                                                                         descr->S_upper,
+                                                                         descr->S_B);
+        CHECK_CUDA_LAUNCH_ERROR();
+
         int                 s_size = 2 * m_pad / BLOCKDIM;
+
+        std::cout << "s_size: " << s_size << std::endl;
+
+        using S_solve_launch_ptr
+            = void (*)(int, const double*, const double*, const double*, double*);
+
+        static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
+            {2, launch_s_solve_kernel<double, 2>},
+            {4, launch_s_solve_kernel<double, 4>},
+            {8, launch_s_solve_kernel<double, 8>},
+            {16, launch_s_solve_kernel<double, 16>},
+            {32, launch_s_solve_kernel<double, 32>},
+            {64, launch_s_solve_kernel<double, 64>},
+            {128, launch_s_solve_kernel<double, 128>},
+            {256, launch_s_solve_kernel<double, 256>},
+            {512, launch_s_solve_kernel<double, 512>},
+            {1024, launch_s_solve_kernel<double, 1024>},
+        };
+
+        // auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
+        // if(dispatch_it != s_solve_dispatch.end())
+        // {
+        //    dispatch_it->second(n, descr->S_lower, descr->S_main, descr->S_upper, descr->S_B);
+        // }
+        // std::vector<double> h_y(s_size * n);
+        // CHECK_CUDA(cudaMemcpy(
+        //    h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
+
+        // std::vector<double> h_B_pad(m_pad * n);
+        // CHECK_CUDA(cudaMemcpy(
+        //    h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
+        // CHECK_CUDA(cudaMemcpy(
+        //   h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
+
+        // Solve Sx = y on host for debugging
         std::vector<double> h_S_lower(s_size);
         std::vector<double> h_S_main(s_size);
         std::vector<double> h_S_upper(s_size);
         std::vector<double> h_y(s_size * n);
-        for(int i = 0; i < s_size; i++)
-        {
-            h_S_upper[i] = (i % 2 == 0) ? h_v_pad[i / 2] : 1.0f;
-            h_S_lower[i]
-                = (i % 2 == 0) ? 1.0f : h_w_pad[i / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
-        }
-        h_S_lower[0]          = 0.0f;
-        h_S_lower[1]          = 0.0f;
-        h_S_upper[s_size - 2] = 0.0f;
-        h_S_upper[s_size - 1] = 0.0f;
+        CHECK_CUDA(cudaMemcpy(
+           h_S_lower.data(), descr->S_lower, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+           h_S_main.data(), descr->S_main, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+           h_S_upper.data(), descr->S_upper, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+            h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
 
-        h_S_main[0]          = 1.0f;
-        h_S_main[s_size - 1] = 1.0f;
-        for(int i = 1; i < s_size - 1; i++)
-        {
-            h_S_main[i] = (i % 2 == 0) ? h_w_pad[i / 2]
-                                       : h_v_pad[i / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
-        }
-
-        for(int i = 0; i < s_size / 2; i++)
-        {
-            h_y[2 * i]     = h_B_pad[i];
-            h_y[2 * i + 1] = h_B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
-        }
-
-        //DEBUG_PRINT_TRIDIAG_MATRIX(
-        //    h_S_lower.data(), h_S_main.data(), h_S_upper.data(), s_size, "S matrix:");
-        //DEBUG_PRINT_ARRAY(h_S_lower.data(), s_size, "h_S_lower");
-        //DEBUG_PRINT_ARRAY(h_S_main.data(), s_size, "h_S_main");
-        //DEBUG_PRINT_ARRAY(h_S_upper.data(), s_size, "h_S_upper");
-        //DEBUG_PRINT_ARRAY(h_y.data(), s_size, "h_y");
-
-        std::cout << "m: " << m << " m_pad: " << m_pad << " s_size: " << s_size << std::endl;
-
-        // Solve Sx = y on host for debugging
+        std::vector<double> h_B_pad(m_pad * n);
+        CHECK_CUDA(cudaMemcpy(
+            h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
         {
             host_thomas_algorithm(s_size,
-                                  n,
-                                  h_S_lower.data(),
-                                  h_S_main.data(),
-                                  h_S_upper.data(),
-                                  h_y.data(),
-                                  h_y.data());
+                                n,
+                                h_S_lower.data(),
+                                h_S_main.data(),
+                                h_S_upper.data(),
+                                h_y.data());
         }
-
         //DEBUG_PRINT_ARRAY(h_y.data(), s_size * n, "Thomas solution h_y");
+
+
+
+
+
+
+
+
 
         // Write y back to B_pad
         for(int i = 1; i < s_size - 1; i += 2)
@@ -976,23 +1025,10 @@ namespace linalg
 
         //DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "h_B_pad"); // 32 correct up to here
 
-        // Complete Sx = B_pad
-        // for(int i = 0; i < m_pad / BLOCKDIM; i++)
-        // {
-        //     double x1 = (i >= 1) ? h_B_pad[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : 0.0f;
-        //     double x2 = (i < (m_pad / BLOCKDIM - 1)) ? h_B_pad[i + 1] : 0.0f;
-
-        //     for(int j = 1; j < BLOCKDIM - 1; j++)
-        //     {
-        //         h_B_pad[(m_pad / BLOCKDIM) * j + i] = h_B_pad[(m_pad / BLOCKDIM) * j + i]
-        //                                               - h_w_pad[(m_pad / BLOCKDIM) * j + i] * x1
-        //                                               - h_v_pad[(m_pad / BLOCKDIM) * j + i] * x2;
-        //     }
-        // }
-        // DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "Before transform back h_B_pad");
         CHECK_CUDA(cudaMemcpy(
             descr->B_pad, h_B_pad.data(), sizeof(double) * m_pad * n, cudaMemcpyHostToDevice));
 
+        // Complete Sx = B_pad
         backward_solve_kernel<BLOCKSIZE, BLOCKDIM>
             <<<grid, BLOCKSIZE>>>(m_pad, n, descr->w_pad, descr->v_pad, descr->B_pad);
         CHECK_CUDA_LAUNCH_ERROR();

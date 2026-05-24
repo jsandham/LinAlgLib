@@ -28,8 +28,44 @@
 #include <iostream>
 
 #include "../../trace.h"
+#include "linalg_enums.h"
 
 #include "host_tridiagonal.h"
+
+static constexpr int MAX_RECURSION_LEVELS = 3;
+
+struct linalg::tridiagonal_descr
+{
+    pivoting_strategy pivoting_strategy;
+
+    // Buffers for non-pivoting approach (one per recursion level)
+    double* lower_modified[MAX_RECURSION_LEVELS];
+    double* main_modified[MAX_RECURSION_LEVELS];
+    double* upper_modified[MAX_RECURSION_LEVELS];
+    double* B_modified[MAX_RECURSION_LEVELS];
+
+    double* spike_lower[MAX_RECURSION_LEVELS];
+    double* spike_main[MAX_RECURSION_LEVELS];
+    double* spike_upper[MAX_RECURSION_LEVELS];
+    double* spike_B[MAX_RECURSION_LEVELS];
+    double* spike_X[MAX_RECURSION_LEVELS];
+
+    // Buffers for partial pivoting approach (to be implemented)
+    double* lower_pad;
+    double* main_pad;
+    double* upper_pad;
+    double* B_pad;
+
+    double* w_pad;
+    double* v_pad;
+
+    double* mt;
+
+    double* S_lower;
+    double* S_main;
+    double* S_upper;
+    double* S_B;
+};
 
 namespace linalg
 {
@@ -70,6 +106,170 @@ namespace linalg
                 x[m * j + i] = d_prime[i] - c_prime[i] * x[m * j + (i + 1)];
         }
     }
+
+    template <typename T>
+    bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
+    {
+        double kappa = double(0.5) * (sqrt(double(5.0)) - double(1.0));
+
+        double sigma = double(0);
+        sigma        = std::max(double(abs(ak_1)), double(abs(ak_2)));
+        sigma        = std::max(double(abs(bk_1)), sigma);
+        sigma        = std::max(double(abs(ck)), sigma);
+        sigma        = std::max(double(abs(ck_1)), sigma);
+
+        return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
+    }
+
+    template <typename T>
+    static void host_spike_algorithm_impl(int      m,
+                                          int      n,
+                                          const T* lower_diag,
+                                          const T* main_diag,
+                                          const T* upper_diag,
+                                          const T* b,
+                                          T*       x)
+    {
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m * n; i++)
+        {
+            x[i] = b[i];
+        }
+
+        std::vector<T>   mt(m);
+        std::vector<int> pivot_mask(m);
+
+        int k  = 0;
+        T   bk = main_diag[k];
+
+        while(k < m)
+        {
+            T ck   = upper_diag[k];
+            T ck_1 = (k < (m - 1)) ? upper_diag[k + 1] : static_cast<T>(0);
+            T bk_1 = (k < (m - 1)) ? main_diag[k + 1] : static_cast<T>(0);
+            T ak_1 = (k < (m - 1)) ? lower_diag[k + 1] : static_cast<T>(0);
+            T ak_2 = (k < (m - 2)) ? lower_diag[k + 2] : static_cast<T>(0);
+
+            // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+            // pivoting criteria
+            const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
+
+            // 1x1 pivoting
+            if(use_1x1_pivot || k == (m - 1))
+            {
+                const T inv_bk = static_cast<T>(1) / bk;
+
+                mt[k] = ck * inv_bk;
+
+                pivot_mask[k] = 1; // mark this pivot as 1x1
+
+                // L * B * x = y
+                for(int i = 0; i < n; i++)
+                {
+                    T rhsk = x[k + m * i] * inv_bk;
+
+                    x[k + m * i] = rhsk;
+
+                    if(k < (m - 1))
+                    {
+                        x[k + 1 + m * i] += -(ak_1 * rhsk);
+                    }
+                }
+
+                if(k < (m - 1))
+                {
+                    bk_1 = bk_1 - ak_1 * ck * inv_bk;
+                }
+
+                bk = bk_1;
+
+                k += 1;
+            }
+            else
+            {
+                const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+
+                mt[k] = -ck * ck_1 * det;
+
+                pivot_mask[k] = 2;
+
+                if(k < (m - 1))
+                {
+                    mt[k + 1] = bk * ck_1 * det;
+
+                    pivot_mask[k + 1] = 2;
+                }
+
+                T bk_2 = static_cast<T>(0);
+
+                // L * B * M^T * x = b
+
+                // y = M^T * x
+                // L * B * y = b
+
+                // L * B * x = y
+                for(int i = 0; i < n; i++)
+                {
+                    T rhsk   = x[k + m * i] * det;
+                    T rhsk_1 = x[k + 1 + m * i] * det;
+
+                    x[k + m * i]     = (bk_1 * rhsk - ck * rhsk_1);
+                    x[k + 1 + m * i] = (-ak_1 * rhsk + bk * rhsk_1);
+
+                    if(k < (m - 2))
+                    {
+                        x[k + 2 + m * i] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                    }
+                }
+
+                if(k < (m - 2))
+                {
+                    bk_2 = main_diag[k + 2];
+                    bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+                }
+
+                bk = bk_2;
+                k += 2;
+            }
+        }
+
+        assert(k == m);
+        // at this point k = m. Could just set k = m - 1 here
+        k--;
+
+        k -= pivot_mask[k];
+
+        // backward solve (M^T * x = x)
+        while(k >= 0)
+        {
+            if(pivot_mask[k] == 1)
+            {
+                const T tmp = mt[k];
+
+                for(int i = 0; i < n; i++)
+                {
+                    x[k + m * i] += -tmp * x[k + 1 + m * i];
+                }
+
+                k -= 1;
+            }
+            else
+            {
+                const T tmp1 = mt[k];
+                const T tmp2 = mt[k - 1];
+
+                for(int i = 0; i < n; i++)
+                {
+                    x[k + m * i] += -tmp1 * x[k + 1 + m * i];
+                    x[k - 1 + m * i] += -tmp2 * x[k + 1 + m * i];
+                }
+
+                k -= 2;
+            }
+        }
+    }
 }
 
 void linalg::host_tridiagonal_analysis(int                   m,
@@ -102,105 +302,30 @@ void linalg::host_tridiagonal_solver(int                      m,
     assert(upper_diag.get_size() == m);
     assert(b.get_size() == m * n);
     assert(x.get_size() == m * n);
-    host_thomas_algorithm_impl(m,
-                               n,
-                               lower_diag.get_vec(),
-                               main_diag.get_vec(),
-                               upper_diag.get_vec(),
-                               b.get_vec(),
-                               x.get_vec());
 
-    // switch(m)
-    // {
-    // case 2:
-    //     host_thomas_algorithm_impl<2>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 3:
-    //     host_thomas_algorithm_impl<3>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 4:
-    //     host_thomas_algorithm_impl<4>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 5:
-    //     host_thomas_algorithm_impl<5>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 6:
-    //     host_thomas_algorithm_impl<6>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 7:
-    //     host_thomas_algorithm_impl<7>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 8:
-    //     host_thomas_algorithm_impl<8>(n,
-    //                                   lower_diag.get_vec(),
-    //                                   main_diag.get_vec(),
-    //                                   upper_diag.get_vec(),
-    //                                   b.get_vec(),
-    //                                   x.get_vec());
-    //     break;
-    // case 16:
-    //     host_thomas_algorithm_impl<16>(n,
-    //                                    lower_diag.get_vec(),
-    //                                    main_diag.get_vec(),
-    //                                    upper_diag.get_vec(),
-    //                                    b.get_vec(),
-    //                                    x.get_vec());
-    //     break;
-    // case 32:
-    //     host_thomas_algorithm_impl<32>(n,
-    //                                    lower_diag.get_vec(),
-    //                                    main_diag.get_vec(),
-    //                                    upper_diag.get_vec(),
-    //                                    b.get_vec(),
-    //                                    x.get_vec());
-    //     break;
-    // case 64:
-    //     host_thomas_algorithm_impl<64>(n,
-    //                                    lower_diag.get_vec(),
-    //                                    main_diag.get_vec(),
-    //                                    upper_diag.get_vec(),
-    //                                    b.get_vec(),
-    //                                    x.get_vec());
-    //     break;
-    // case 128:
-    //     host_thomas_algorithm_impl<128>(n,
-    //                                     lower_diag.get_vec(),
-    //                                     main_diag.get_vec(),
-    //                                     upper_diag.get_vec(),
-    //                                     b.get_vec(),
-    //                                     x.get_vec());
-    //     break;
-    // default:
-    //     break;
-    // }
+    switch(descr->pivoting_strategy)
+    {
+    case pivoting_strategy::none:
+    {
+        host_thomas_algorithm_impl(m,
+                                   n,
+                                   lower_diag.get_vec(),
+                                   main_diag.get_vec(),
+                                   upper_diag.get_vec(),
+                                   b.get_vec(),
+                                   x.get_vec());
+        break;
+    }
+    case pivoting_strategy::partial:
+    {
+        host_spike_algorithm_impl(m,
+                                  n,
+                                  lower_diag.get_vec(),
+                                  main_diag.get_vec(),
+                                  upper_diag.get_vec(),
+                                  b.get_vec(),
+                                  x.get_vec());
+        break;
+    }
+    }
 }

@@ -59,7 +59,6 @@ struct linalg::tridiagonal_descr
     double* w_pad;
     double* v_pad;
 
-    int*    pivot;
     double* mt;
 
     double* S_lower;
@@ -97,8 +96,7 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
     (*descr)->w_pad     = nullptr;
     (*descr)->v_pad     = nullptr;
 
-    (*descr)->pivot = nullptr;
-    (*descr)->mt    = nullptr;
+    (*descr)->mt = nullptr;
 
     (*descr)->S_lower = nullptr;
     (*descr)->S_main  = nullptr;
