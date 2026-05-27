@@ -34,6 +34,9 @@
 #include "backend/device/device_math.h"
 #include "backend/host/host_math.h"
 
+#include "descriptors/csrgeam_descr_internal.h"
+#include "descriptors/csrgemm_descr_internal.h"
+
 // Compute y = alpha * x + y
 void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
 {
@@ -255,12 +258,6 @@ void linalg::csrmv_solve(double                alpha,
                             descr);
 }
 
-struct linalg::csrgeam_descr
-{
-    int* perm;
-    int* bin_offsets;
-};
-
 void linalg::create_csrgeam_descr(csrgeam_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrgeam_descr");
@@ -315,12 +312,6 @@ void linalg::csrgeam_solve(double               alpha,
                             alg,
                             descr);
 }
-
-struct linalg::csrgemm_descr
-{
-    int* perm;
-    int* bin_offsets;
-};
 
 void linalg::create_csrgemm_descr(csrgemm_descr** descr)
 {

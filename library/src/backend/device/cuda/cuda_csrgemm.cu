@@ -36,11 +36,7 @@
 #include "csr2coo_kernels.cuh"
 #include "csrgemm_kernels.cuh"
 
-struct linalg::csrgemm_descr
-{
-    int* perm;
-    int* bin_offsets;
-};
+#include "../../../descriptors/csrgemm_descr_internal.h"
 
 void linalg::free_csrgemm_cuda_data(csrgemm_descr* descr)
 {

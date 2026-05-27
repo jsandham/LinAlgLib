@@ -39,45 +39,13 @@
 
 #include "tridiagonal_spike_kernels.cuh"
 
-static constexpr int MAX_RECURSION_LEVELS = 3;
+#include "../../../descriptors/tridiagonal_descr_internal.h"
+
 static constexpr int BLOCKDIM = 256;
-
-struct linalg::tridiagonal_descr
-{
-    pivoting_strategy pivoting_strategy;
-
-    // Buffers for non-pivoting approach (one per recursion level)
-    double* lower_modified[MAX_RECURSION_LEVELS];
-    double* main_modified[MAX_RECURSION_LEVELS];
-    double* upper_modified[MAX_RECURSION_LEVELS];
-    double* B_modified[MAX_RECURSION_LEVELS];
-
-    double* spike_lower[MAX_RECURSION_LEVELS];
-    double* spike_main[MAX_RECURSION_LEVELS];
-    double* spike_upper[MAX_RECURSION_LEVELS];
-    double* spike_B[MAX_RECURSION_LEVELS];
-    double* spike_X[MAX_RECURSION_LEVELS];
-
-    // Buffers for partial pivoting approach (to be implemented)
-    double* lower_pad;
-    double* main_pad;
-    double* upper_pad;
-    double* B_pad;
-
-    double* w_pad;
-    double* v_pad;
-
-    double* mt;
-
-    double* S_lower;
-    double* S_main;
-    double* S_upper;
-    double* S_B;
-};
 
 void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
 {
-    for(int level = 0; level < MAX_RECURSION_LEVELS; level++)
+    for(int level = 0; level < tridiagonal_max_recursion_levels; level++)
     {
         if(descr->lower_modified[level] != nullptr)
         {
@@ -219,7 +187,7 @@ namespace linalg
         constexpr int BLOCKSIZE = 256;
 
         int current_m = m;
-        for(int level = 0; level < MAX_RECURSION_LEVELS; level++)
+        for(int level = 0; level < tridiagonal_max_recursion_levels; level++)
         {
             if(current_m <= 1024)
                 break;

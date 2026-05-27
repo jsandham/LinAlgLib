@@ -30,42 +30,9 @@
 #include "../../trace.h"
 #include "linalg_enums.h"
 
+#include "../../descriptors/tridiagonal_descr_internal.h"
+
 #include "host_tridiagonal.h"
-
-static constexpr int MAX_RECURSION_LEVELS = 3;
-
-struct linalg::tridiagonal_descr
-{
-    pivoting_strategy pivoting_strategy;
-
-    // Buffers for non-pivoting approach (one per recursion level)
-    double* lower_modified[MAX_RECURSION_LEVELS];
-    double* main_modified[MAX_RECURSION_LEVELS];
-    double* upper_modified[MAX_RECURSION_LEVELS];
-    double* B_modified[MAX_RECURSION_LEVELS];
-
-    double* spike_lower[MAX_RECURSION_LEVELS];
-    double* spike_main[MAX_RECURSION_LEVELS];
-    double* spike_upper[MAX_RECURSION_LEVELS];
-    double* spike_B[MAX_RECURSION_LEVELS];
-    double* spike_X[MAX_RECURSION_LEVELS];
-
-    // Buffers for partial pivoting approach (to be implemented)
-    double* lower_pad;
-    double* main_pad;
-    double* upper_pad;
-    double* B_pad;
-
-    double* w_pad;
-    double* v_pad;
-
-    double* mt;
-
-    double* S_lower;
-    double* S_main;
-    double* S_upper;
-    double* S_B;
-};
 
 namespace linalg
 {
