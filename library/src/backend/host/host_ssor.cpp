@@ -37,6 +37,7 @@ namespace linalg
     static void host_diagonal_local(
         const int* csr_row_ptr, const int* csr_col_ind, const T* csr_val, T* d, int n)
     {
+        ROUTINE_TRACE("host_diagonal_local");
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif

@@ -34,6 +34,7 @@ void linalg::host_compute_strong_connections(const csr_matrix& A,
                                              double            eps,
                                              vector<int>&      connections)
 {
+    ROUTINE_TRACE("linalg::host_compute_strong_connections");
     const int*    csr_row_ptr_A = A.get_row_ptr();
     const int*    csr_col_ind_A = A.get_col_ind();
     const double* csr_val_A     = A.get_val();
@@ -73,6 +74,7 @@ void linalg::host_compute_classical_strong_connections(const csr_matrix& A,
                                                        csr_matrix&       S,
                                                        vector<int>&      connections)
 {
+    ROUTINE_TRACE("linalg::host_compute_classical_strong_connections");
     //S.m = A.m;
     //S.n = A.n;
     //S.csr_row_ptr.resize(S.m + 1);

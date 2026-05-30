@@ -99,7 +99,10 @@ void linalg::host_compute_residual(const csr_matrix&     A,
                                A.get_m());
 }
 
-void linalg::host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr) {}
+void linalg::host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr)
+{
+    ROUTINE_TRACE("linalg::host_csrmv_analysis");
+}
 
 void linalg::host_csrmv_solve(double                alpha,
                               const csr_matrix&     A,

@@ -41,6 +41,8 @@ target_sources(linalglib
     host_csrgemm.cpp
     host_csric0.cpp
     host_csrilu0.cpp
+    spike_algorithm.cpp
+    thomas_algorithm.cpp
     host_tridiagonal.cpp
     host_vector.cpp
     host_memory.cpp

@@ -72,12 +72,14 @@ namespace linalg
 template <typename T>
 void linalg::copy_h2h(T* dest, const T* src, size_t size)
 {
+    ROUTINE_TRACE("linalg::copy_h2h");
     host_copy_impl(dest, src, size);
 }
 
 template <typename T>
 void linalg::host_fill(T* data, size_t size, T val)
 {
+    ROUTINE_TRACE("linalg::host_fill");
     host_fill_impl(data, size, val);
 }
 
