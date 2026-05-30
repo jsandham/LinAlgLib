@@ -32,15 +32,10 @@
 
 #include "cuda_csrtrsv.h"
 
+#include "../../../descriptors/csrtrsv_descr_internal.h"
+
 #include "csr2coo_kernels.cuh"
 #include "csrtrsv_kernels.cuh"
-
-struct linalg::csrtrsv_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
 
 void linalg::free_csrtrsv_cuda_data(csrtrsv_descr* descr)
 {

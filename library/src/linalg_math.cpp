@@ -36,6 +36,10 @@
 
 #include "descriptors/csrgeam_descr_internal.h"
 #include "descriptors/csrgemm_descr_internal.h"
+#include "descriptors/csric0_descr_internal.h"
+#include "descriptors/csrilu0_descr_internal.h"
+#include "descriptors/csrmv_descr_internal.h"
+#include "descriptors/csrtrsv_descr_internal.h"
 
 // Compute y = alpha * x + y
 void linalg::axpy(double alpha, const vector<double>& x, vector<double>& y)
@@ -138,13 +142,6 @@ double linalg::norm_inf(const vector<double>& array)
     return backend_dispatch("linalg::norm_inf", host_norm_inf, device_norm_inf, array);
 }
 
-struct linalg::csrtrsv_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
-
 void linalg::create_csrtrsv_descr(csrtrsv_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrtrsv_descr");
@@ -204,10 +201,6 @@ void linalg::csrtrsv_solve(const csr_matrix&     A,
                             diag_type,
                             descr);
 }
-
-struct linalg::csrmv_descr
-{
-};
 
 void linalg::create_csrmv_descr(csrmv_descr** descr)
 {
@@ -370,13 +363,6 @@ void linalg::csrgemm_solve(double               alpha,
                             descr);
 }
 
-struct linalg::csric0_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
-
 void linalg::create_csric0_descr(csric0_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csric0_descr");
@@ -414,13 +400,6 @@ void linalg::csric0_compute(csr_matrix& A, const csric0_descr* descr)
     return backend_dispatch(
         "linalg::csric0_compute", host_csric0_compute, device_csric0_compute, A, descr);
 }
-
-struct linalg::csrilu0_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
 
 void linalg::create_csrilu0_descr(csrilu0_descr** descr)
 {

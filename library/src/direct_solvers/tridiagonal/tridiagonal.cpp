@@ -40,7 +40,17 @@ void linalg::create_tridiagonal_descr(tridiagonal_descr** descr)
 
     *descr = new tridiagonal_descr;
 
-    (*descr)->pivoting_strategy = pivoting_strategy::none;
+    (*descr)->strategy = pivoting_strategy::none;
+
+    (*descr)->host_analysis_valid    = false;
+    (*descr)->host_analysis_m        = -1;
+    (*descr)->host_analysis_n        = -1;
+    (*descr)->host_analysis_strategy = pivoting_strategy::none;
+
+    (*descr)->device_analysis_valid    = false;
+    (*descr)->device_analysis_m        = -1;
+    (*descr)->device_analysis_n        = -1;
+    (*descr)->device_analysis_strategy = pivoting_strategy::none;
 
     for(int level = 0; level < tridiagonal_max_recursion_levels; level++)
     {
@@ -88,7 +98,18 @@ void linalg::set_pivoting_strategy(tridiagonal_descr* descr, pivoting_strategy s
 
     if(descr != nullptr)
     {
-        descr->pivoting_strategy = strategy;
+        if(descr->strategy != strategy)
+        {
+            descr->strategy = strategy;
+
+            // Any strategy change invalidates cached analysis state for both backends.
+            descr->host_analysis_valid   = false;
+            descr->host_analysis_m       = -1;
+            descr->host_analysis_n       = -1;
+            descr->device_analysis_valid = false;
+            descr->device_analysis_m     = -1;
+            descr->device_analysis_n     = -1;
+        }
     }
 }
 

@@ -27,15 +27,46 @@
 #ifndef TRIDIAGONAL_DESCR_INTERNAL_H
 #define TRIDIAGONAL_DESCR_INTERNAL_H
 
+#include <vector>
+
 #include "../../include/linalg_enums.h"
 
 namespace linalg
 {
     constexpr int tridiagonal_max_recursion_levels = 3;
 
+    struct tridiagonal_host_data
+    {
+        std::vector<double> lower_pad;
+        std::vector<double> main_pad;
+        std::vector<double> upper_pad;
+        std::vector<double> B_pad;
+
+        std::vector<double> w_pad;
+        std::vector<double> v_pad;
+        std::vector<double> mt;
+
+        std::vector<double> S_lower;
+        std::vector<double> S_main;
+        std::vector<double> S_upper;
+        std::vector<double> S_B;
+    };
+
     struct tridiagonal_descr
     {
-        pivoting_strategy pivoting_strategy;
+        pivoting_strategy strategy;
+
+        // Tracks host-side analysis state.
+        bool                        host_analysis_valid;
+        int                         host_analysis_m;
+        int                         host_analysis_n;
+        ::linalg::pivoting_strategy host_analysis_strategy;
+
+        // Tracks device-side analysis state.
+        bool                        device_analysis_valid;
+        int                         device_analysis_m;
+        int                         device_analysis_n;
+        ::linalg::pivoting_strategy device_analysis_strategy;
 
         // Buffers for non-pivoting approach (one per recursion level)
         double* lower_modified[tridiagonal_max_recursion_levels];
@@ -64,6 +95,8 @@ namespace linalg
         double* S_main;
         double* S_upper;
         double* S_B;
+
+        mutable tridiagonal_host_data host_data;
     };
 }
 

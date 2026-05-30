@@ -164,14 +164,20 @@ namespace linalg
                     }
 
                     // L * B * x = y
-                    T rhsk = rhs[nblocks * k + i] * inv_bk;
+                    for(int j = 0; j < n; j++)
+                    {
+                        T rhsk = rhs[nblocks * k + i + m_pad * j] * inv_bk;
 
-                    rhs[nblocks * k + i] = rhsk;
+                        rhs[nblocks * k + i + m_pad * j] = rhsk;
+
+                        if(k < (BLOCKDIM - 1))
+                        {
+                            rhs[nblocks * (k + 1) + i + m_pad * j] += -(ak_1 * rhsk);
+                        }
+                    }
 
                     if(k < (BLOCKDIM - 1))
                     {
-                        rhs[nblocks * (k + 1) + i] += -(ak_1 * rhsk);
-
                         bk_1 = bk_1 - ak_1 * ck * inv_bk;
                     }
 
@@ -217,16 +223,23 @@ namespace linalg
                     //                                  |-ak_1  bk |
 
                     // L * B * x = y
-                    T rhsk   = rhs[nblocks * k + i] * det;
-                    T rhsk_1 = rhs[nblocks * (k + 1) + i] * det;
+                    for(int j = 0; j < n; j++)
+                    {
+                        T rhsk   = rhs[nblocks * k + i + m_pad * j] * det;
+                        T rhsk_1 = rhs[nblocks * (k + 1) + i + m_pad * j] * det;
 
-                    rhs[nblocks * k + i]       = (bk_1 * rhsk - ck * rhsk_1);
-                    rhs[nblocks * (k + 1) + i] = (-ak_1 * rhsk + bk * rhsk_1);
+                        rhs[nblocks * k + i + m_pad * j]       = (bk_1 * rhsk - ck * rhsk_1);
+                        rhs[nblocks * (k + 1) + i + m_pad * j] = (-ak_1 * rhsk + bk * rhsk_1);
+
+                        if(k < (BLOCKDIM - 2))
+                        {
+                            rhs[nblocks * (k + 2) + i + m_pad * j]
+                                += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                        }
+                    }
 
                     if(k < (BLOCKDIM - 2))
                     {
-                        rhs[nblocks * (k + 2) + i] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
-
                         bk_2 = main[nblocks * (k + 2) + i];
                         bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
                     }
@@ -251,7 +264,12 @@ namespace linalg
 
                     w[nblocks * k + i] += -tmp * w[nblocks * (k + 1) + i];
                     v[nblocks * k + i] += -tmp * v[nblocks * (k + 1) + i];
-                    rhs[nblocks * k + i] += -tmp * rhs[nblocks * (k + 1) + i];
+
+                    for(int j = 0; j < n; j++)
+                    {
+                        rhs[nblocks * k + i + m_pad * j]
+                            += -tmp * rhs[nblocks * (k + 1) + i + m_pad * j];
+                    }
 
                     k -= 1;
                 }
@@ -264,8 +282,14 @@ namespace linalg
                     w[nblocks * (k - 1) + i] += -tmp2 * w[nblocks * (k + 1) + i];
                     v[nblocks * k + i] += -tmp1 * v[nblocks * (k + 1) + i];
                     v[nblocks * (k - 1) + i] += -tmp2 * v[nblocks * (k + 1) + i];
-                    rhs[nblocks * k + i] += -tmp1 * rhs[nblocks * (k + 1) + i];
-                    rhs[nblocks * (k - 1) + i] += -tmp2 * rhs[nblocks * (k + 1) + i];
+
+                    for(int j = 0; j < n; j++)
+                    {
+                        rhs[nblocks * k + i + m_pad * j]
+                            += -tmp1 * rhs[nblocks * (k + 1) + i + m_pad * j];
+                        rhs[nblocks * (k - 1) + i + m_pad * j]
+                            += -tmp2 * rhs[nblocks * (k + 1) + i + m_pad * j];
+                    }
 
                     k -= 2;
                 }
@@ -298,44 +322,58 @@ namespace linalg
     template <typename T, uint32_t BLOCKDIM>
     static void data_marshalling(int      m,
                                  int      m_pad,
-                                 const T* lower_in,
-                                 const T* main_in,
-                                 const T* upper_in,
-                                 const T* B_in,
-                                 T*       lower_out,
-                                 T*       main_out,
-                                 T*       upper_out,
-                                 T*       B_out)
+                                 int      n,
+                                 const T* lower,
+                                 const T* main,
+                                 const T* upper,
+                                 const T* B,
+                                 T*       lower_pad,
+                                 T*       main_pad,
+                                 T*       upper_pad,
+                                 T*       B_pad)
     {
         // Perform data marshalling with padding
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-        for(int i = 0; i < m; i++)
+        for(int i = 0; i < m_pad; i++)
         {
             const int gwid = i / (m_pad / BLOCKDIM);
             const int glid = i % (m_pad / BLOCKDIM);
 
-            lower_out[i] = lower_in[BLOCKDIM * glid + gwid];
-            main_out[i]  = main_in[BLOCKDIM * glid + gwid];
-            upper_out[i] = upper_in[BLOCKDIM * glid + gwid];
-            B_out[i]     = B_in[BLOCKDIM * glid + gwid];
+            if(BLOCKDIM * glid + gwid < m)
+            {
+                lower_pad[i] = lower[BLOCKDIM * glid + gwid];
+                main_pad[i]  = main[BLOCKDIM * glid + gwid];
+                upper_pad[i] = upper[BLOCKDIM * glid + gwid];
+
+                for(int j = 0; j < n; j++)
+                {
+                    B_pad[i + m_pad * j] = B[BLOCKDIM * glid + gwid + m * j];
+                }
+            }
         }
     }
 
     template <typename T, uint32_t BLOCKDIM>
-    static void data_marshalling2(int m, int m_pad, const T* B_in, T* B_out)
+    static void data_marshalling2(int m, int m_pad, int n, const T* B_pad, T* B)
     {
         // Perform data marshalling with padding
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-        for(int i = 0; i < m; i++)
+        for(int i = 0; i < m_pad; i++)
         {
             const int gwid = i / (m_pad / BLOCKDIM);
             const int glid = i % (m_pad / BLOCKDIM);
 
-            B_out[BLOCKDIM * glid + gwid] = B_in[i];
+            if(BLOCKDIM * glid + gwid < m)
+            {
+                for(int j = 0; j < n; j++)
+                {
+                    B[BLOCKDIM * glid + gwid + m * j] = B_pad[i + m_pad * j];
+                }
+            }
         }
     }
 
@@ -380,8 +418,12 @@ namespace linalg
 
             if(i < S_size / 2)
             {
-                S_rhs[2 * i]     = rhs[i];
-                S_rhs[2 * i + 1] = rhs[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+                for(int j = 0; j < n; j++)
+                {
+                    S_rhs[2 * i + S_size * j] = rhs[i + m_pad * j];
+                    S_rhs[2 * i + 1 + S_size * j]
+                        = rhs[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * j];
+                }
             }
         }
     }
@@ -418,15 +460,15 @@ namespace linalg
                 pivot_mask[k] = 1; // mark this pivot as 1x1
 
                 // L * B * x = y
-                for(int i = 0; i < n; i++)
+                for(int j = 0; j < n; j++)
                 {
-                    T rhsk = rhs[k + m * i] * inv_bk;
+                    T rhsk = rhs[k + m * j] * inv_bk;
 
-                    rhs[k + m * i] = rhsk;
+                    rhs[k + m * j] = rhsk;
 
                     if(k < (m - 1))
                     {
-                        rhs[k + 1 + m * i] += -(ak_1 * rhsk);
+                        rhs[k + 1 + m * j] += -(ak_1 * rhsk);
                     }
                 }
 
@@ -462,17 +504,17 @@ namespace linalg
                 // L * B * y = b
 
                 // L * B * x = y
-                for(int i = 0; i < n; i++)
+                for(int j = 0; j < n; j++)
                 {
-                    T rhsk   = rhs[k + m * i] * det;
-                    T rhsk_1 = rhs[k + 1 + m * i] * det;
+                    T rhsk   = rhs[k + m * j] * det;
+                    T rhsk_1 = rhs[k + 1 + m * j] * det;
 
-                    rhs[k + m * i]     = (bk_1 * rhsk - ck * rhsk_1);
-                    rhs[k + 1 + m * i] = (-ak_1 * rhsk + bk * rhsk_1);
+                    rhs[k + m * j]     = (bk_1 * rhsk - ck * rhsk_1);
+                    rhs[k + 1 + m * j] = (-ak_1 * rhsk + bk * rhsk_1);
 
                     if(k < (m - 2))
                     {
-                        rhs[k + 2 + m * i] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                        rhs[k + 2 + m * j] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
                     }
                 }
 
@@ -500,9 +542,9 @@ namespace linalg
             {
                 const T tmp = mt[k];
 
-                for(int i = 0; i < n; i++)
+                for(int j = 0; j < n; j++)
                 {
-                    rhs[k + m * i] += -tmp * rhs[k + 1 + m * i];
+                    rhs[k + m * j] += -tmp * rhs[k + 1 + m * j];
                 }
 
                 k -= 1;
@@ -512,10 +554,10 @@ namespace linalg
                 const T tmp1 = mt[k];
                 const T tmp2 = mt[k - 1];
 
-                for(int i = 0; i < n; i++)
+                for(int j = 0; j < n; j++)
                 {
-                    rhs[k + m * i] += -tmp1 * rhs[k + 1 + m * i];
-                    rhs[k - 1 + m * i] += -tmp2 * rhs[k + 1 + m * i];
+                    rhs[k + m * j] += -tmp1 * rhs[k + 1 + m * j];
+                    rhs[k - 1 + m * j] += -tmp2 * rhs[k + 1 + m * j];
                 }
 
                 k -= 2;
@@ -538,103 +580,128 @@ namespace linalg
 
             for(int j = 1; j < BLOCKDIM - 1; j++)
             {
-                rhs[(m_pad / BLOCKDIM) * j + i] = rhs[(m_pad / BLOCKDIM) * j + i]
-                                                  - w[(m_pad / BLOCKDIM) * j + i] * x1
-                                                  - v[(m_pad / BLOCKDIM) * j + i] * x2;
+                for(int k = 0; k < n; k++)
+                {
+                    rhs[(m_pad / BLOCKDIM) * j + i + m_pad * k]
+                        = rhs[(m_pad / BLOCKDIM) * j + i + m_pad * k]
+                          - w[(m_pad / BLOCKDIM) * j + i] * x1 - v[(m_pad / BLOCKDIM) * j + i] * x2;
+                }
             }
         }
     }
 
     template <typename T>
-    static void host_spike_algorithm_impl(int      m,
-                                          int      n,
-                                          const T* lower_diag,
-                                          const T* main_diag,
-                                          const T* upper_diag,
-                                          const T* B,
-                                          T*       X)
+    static void host_spike_algorithm_impl(int                      m,
+                                          int                      n,
+                                          const T*                 lower_diag,
+                                          const T*                 main_diag,
+                                          const T*                 upper_diag,
+                                          const T*                 B,
+                                          T*                       X,
+                                          const tridiagonal_descr* descr)
     {
-        constexpr int BLOCKDIM = 32;
+        constexpr int BLOCKDIM = 8;
 
         const int m_pad = next_power_of_two(m);
 
-        std::vector<T> lower_pad(m_pad, static_cast<T>(0));
-        std::vector<T> main_pad(m_pad, static_cast<T>(1));
-        std::vector<T> upper_pad(m_pad, static_cast<T>(0));
-        std::vector<T> B_pad(m_pad * n, static_cast<T>(0));
+        for(size_t i = 0; i < m_pad; i++)
+        {
+            descr->host_data.lower_pad[i] = static_cast<T>(0);
+            descr->host_data.main_pad[i]  = static_cast<T>(1);
+            descr->host_data.upper_pad[i] = static_cast<T>(0);
+
+            for(int j = 0; j < n; j++)
+            {
+                descr->host_data.B_pad[i + m_pad * j] = static_cast<T>(0);
+            }
+        }
 
         // Perform data marshalling with padding
         data_marshalling<T, BLOCKDIM>(m,
                                       m_pad,
+                                      n,
                                       lower_diag,
                                       main_diag,
                                       upper_diag,
                                       B,
-                                      lower_pad.data(),
-                                      main_pad.data(),
-                                      upper_pad.data(),
-                                      B_pad.data());
+                                      descr->host_data.lower_pad.data(),
+                                      descr->host_data.main_pad.data(),
+                                      descr->host_data.upper_pad.data(),
+                                      descr->host_data.B_pad.data());
 
-        std::vector<T> w(m_pad, static_cast<T>(0));
-        std::vector<T> v(m_pad, static_cast<T>(0));
-        std::vector<T> mt(m_pad, static_cast<T>(0));
+        for(int i = 0; i < m_pad; i++)
+        {
+            descr->host_data.w_pad[i] = static_cast<T>(0);
+            descr->host_data.v_pad[i] = static_cast<T>(0);
+            descr->host_data.mt[i]    = static_cast<T>(0);
+        }
 
         LBMT_solve<T, BLOCKDIM>(m_pad,
                                 n,
-                                lower_pad.data(),
-                                main_pad.data(),
-                                upper_pad.data(),
-                                w.data(),
-                                v.data(),
-                                mt.data(),
-                                B_pad.data());
+                                descr->host_data.lower_pad.data(),
+                                descr->host_data.main_pad.data(),
+                                descr->host_data.upper_pad.data(),
+                                descr->host_data.w_pad.data(),
+                                descr->host_data.v_pad.data(),
+                                descr->host_data.mt.data(),
+                                descr->host_data.B_pad.data());
 
         const int S_size = 2 * m_pad / BLOCKDIM;
 
-        std::vector<T> S_lower(S_size, static_cast<T>(0));
-        std::vector<T> S_main(S_size, static_cast<T>(0));
-        std::vector<T> S_upper(S_size, static_cast<T>(0));
-        std::vector<T> S_B(S_size * n, static_cast<T>(0));
+        for(int i = 0; i < S_size; i++)
+        {
+            descr->host_data.S_lower[i] = static_cast<T>(0);
+            descr->host_data.S_main[i]  = static_cast<T>(0);
+            descr->host_data.S_upper[i] = static_cast<T>(0);
+
+            for(int j = 0; j < n; j++)
+            {
+                descr->host_data.S_B[i + S_size * j] = static_cast<T>(0);
+            }
+        }
 
         fill_S_matrix<T, BLOCKDIM>(m_pad,
                                    n,
-                                   w.data(),
-                                   v.data(),
-                                   B_pad.data(),
-                                   S_lower.data(),
-                                   S_main.data(),
-                                   S_upper.data(),
-                                   S_B.data());
+                                   descr->host_data.w_pad.data(),
+                                   descr->host_data.v_pad.data(),
+                                   descr->host_data.B_pad.data(),
+                                   descr->host_data.S_lower.data(),
+                                   descr->host_data.S_main.data(),
+                                   descr->host_data.S_upper.data(),
+                                   descr->host_data.S_B.data());
 
-        S_solve<T>(S_size, n, S_lower.data(), S_main.data(), S_upper.data(), S_B.data());
+        S_solve<T>(S_size,
+                   n,
+                   descr->host_data.S_lower.data(),
+                   descr->host_data.S_main.data(),
+                   descr->host_data.S_upper.data(),
+                   descr->host_data.S_B.data());
 
         // Write S_B back to B_pad
-        for(int i = 1; i < S_size - 1; i += 2)
+        for(int j = 0; j < n; j++)
         {
-            double temp = S_B[i];
-            S_B[i]      = S_B[i + 1];
-            S_B[i + 1]  = temp;
+            for(int i = 1; i < S_size - 1; i += 2)
+            {
+                double temp                              = descr->host_data.S_B[i + S_size * j];
+                descr->host_data.S_B[i + S_size * j]     = descr->host_data.S_B[i + 1 + S_size * j];
+                descr->host_data.S_B[i + 1 + S_size * j] = temp;
+            }
+
+            for(int i = 0; i < S_size / 2; i++)
+            {
+                descr->host_data.B_pad[i + m_pad * j] = descr->host_data.S_B[2 * i + S_size * j];
+                descr->host_data.B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * j]
+                    = descr->host_data.S_B[2 * i + 1 + S_size * j];
+            }
         }
-        for(int i = 0; i < S_size / 2; i++)
-        {
-            B_pad[i]                                       = S_B[2 * i];
-            B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)] = S_B[2 * i + 1];
-        }
 
-        backward_solve<T, BLOCKDIM>(m_pad, n, w.data(), v.data(), B_pad.data());
+        backward_solve<T, BLOCKDIM>(m_pad,
+                                    n,
+                                    descr->host_data.w_pad.data(),
+                                    descr->host_data.v_pad.data(),
+                                    descr->host_data.B_pad.data());
 
-        data_marshalling2<T, BLOCKDIM>(m, m_pad, B_pad.data(), X);
-
-        // #if defined(_OPENMP)
-        // #pragma omp parallel for schedule(dynamic, 1024)
-        // #endif
-        //         for(int i = 0; i < m * n; i++)
-        //         {
-        //             x[i] = b[i];
-        //         }
-
-        //         S_solve(m, n, lower_diag, main_diag, upper_diag, x);
-        //     }
+        data_marshalling2<T, BLOCKDIM>(m, m_pad, n, descr->host_data.B_pad.data(), X);
     }
 }
 
@@ -651,6 +718,45 @@ void linalg::host_tridiagonal_analysis(int                   m,
     assert(main_diag.get_size() == m);
     assert(lower_diag.get_size() == m);
     assert(upper_diag.get_size() == m);
+
+    descr->host_analysis_valid    = true;
+    descr->host_analysis_m        = m;
+    descr->host_analysis_n        = n;
+    descr->host_analysis_strategy = descr->strategy;
+
+    switch(descr->strategy)
+    {
+    case pivoting_strategy::none:
+    {
+        // No additional buffers needed for Thomas algorithm
+        break;
+    }
+    case pivoting_strategy::partial:
+    {
+        const int m_pad = next_power_of_two(m);
+
+        std::cout << "analysis m: " << m << ", m_pad: " << m_pad << std::endl;
+
+        descr->host_data.lower_pad.resize(m_pad, 0.0);
+        descr->host_data.main_pad.resize(m_pad, 1.0);
+        descr->host_data.upper_pad.resize(m_pad, 0.0);
+        descr->host_data.B_pad.resize(m_pad * n, 0.0);
+
+        // For the spike algorithm, we need to allocate buffers for the padded system
+        descr->host_data.w_pad.resize(m_pad, 0.0);
+        descr->host_data.v_pad.resize(m_pad, 0.0);
+        descr->host_data.mt.resize(m_pad, 0.0);
+
+        constexpr int BLOCKDIM = 8;
+        const int     S_size   = 2 * m_pad / BLOCKDIM;
+
+        descr->host_data.S_lower.resize(S_size, 0.0);
+        descr->host_data.S_main.resize(S_size, 1.0);
+        descr->host_data.S_upper.resize(S_size, 0.0);
+        descr->host_data.S_B.resize(S_size * n, 0.0);
+        break;
+    }
+    }
 }
 
 void linalg::host_tridiagonal_solver(int                      m,
@@ -669,7 +775,7 @@ void linalg::host_tridiagonal_solver(int                      m,
     assert(b.get_size() == m * n);
     assert(x.get_size() == m * n);
 
-    switch(descr->pivoting_strategy)
+    switch(descr->strategy)
     {
     case pivoting_strategy::none:
     {
@@ -690,7 +796,8 @@ void linalg::host_tridiagonal_solver(int                      m,
                                   main_diag.get_vec(),
                                   upper_diag.get_vec(),
                                   b.get_vec(),
-                                  x.get_vec());
+                                  x.get_vec(),
+                                  descr);
         break;
     }
     }

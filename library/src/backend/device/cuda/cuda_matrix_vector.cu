@@ -26,6 +26,8 @@
 
 #include "cuda_matrix_vector.h"
 
+#include "../../../descriptors/csrmv_descr_internal.h"
+
 #include "compute_residual_kernels.cuh"
 #include "csrmv_kernels.cuh"
 
@@ -88,10 +90,6 @@ void linalg::cuda_compute_residual(int           m,
         m, n, nnz, csr_row_ptr, csr_col_ind, csr_val, x, b, res);
     CHECK_CUDA_LAUNCH_ERROR();
 }
-
-struct linalg::csrmv_descr
-{
-};
 
 void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
 {

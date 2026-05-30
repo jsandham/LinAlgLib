@@ -102,7 +102,7 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
 
     tridiagonal_descr* descr = nullptr;
     create_tridiagonal_descr(&descr);
-    // set_pivoting_strategy(descr, pivoting_strategy::none);
+    //set_pivoting_strategy(descr, pivoting_strategy::none);
     set_pivoting_strategy(descr, pivoting_strategy::partial);
 
     tridiagonal_analysis(m, n, lower_diag, main_diag, upper_diag, descr);

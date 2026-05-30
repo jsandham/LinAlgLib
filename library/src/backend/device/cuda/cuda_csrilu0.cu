@@ -32,6 +32,8 @@
 
 #include "cuda_csrilu0.h"
 
+#include "../../../descriptors/csrilu0_descr_internal.h"
+
 #include "csr2coo_kernels.cuh"
 #include "csrtrsv_kernels.cuh"
 
@@ -52,13 +54,6 @@ void linalg::cuda_csrilu0(int        m,
 //-------------------------------------------------------------------------------
 // Compute Incomplete LU ILU0: A = L * U
 //-------------------------------------------------------------------------------
-struct linalg::csrilu0_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
-
 void linalg::free_csrilu0_cuda_data(csrilu0_descr* descr)
 {
     if(descr != nullptr)

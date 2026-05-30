@@ -33,6 +33,8 @@
 
 #include "cuda_csric0.h"
 
+#include "../../../descriptors/csric0_descr_internal.h"
+
 #include "csr2coo_kernels.cuh"
 #include "csric0_kernels.cuh"
 #include "csrtrsv_kernels.cuh"
@@ -54,13 +56,6 @@ void linalg::cuda_csric0(int        m,
 //-------------------------------------------------------------------------------
 // Compute Incomplete Cholesky IC0: A = L * L^T
 //-------------------------------------------------------------------------------
-struct linalg::csric0_descr
-{
-    int* done_array;
-    int* row_perm;
-    int* diag_ind;
-};
-
 void linalg::free_csric0_cuda_data(csric0_descr* descr)
 {
     if(descr != nullptr)

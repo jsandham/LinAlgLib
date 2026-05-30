@@ -25,6 +25,7 @@
 //********************************************************************************
 
 #include <Vector>
+#include <cassert>
 #include <iostream>
 #include <map>
 
@@ -151,6 +152,11 @@ void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
         CHECK_CUDA(cudaFree(descr->S_B));
         descr->S_B = nullptr;
     }
+
+    descr->device_analysis_valid    = false;
+    descr->device_analysis_m        = -1;
+    descr->device_analysis_n        = -1;
+    descr->device_analysis_strategy = pivoting_strategy::none;
 }
 
 namespace linalg
@@ -258,10 +264,21 @@ void linalg::cuda_tridiagonal_analysis(int                m,
                                        const double*      upper_diag,
                                        tridiagonal_descr* descr)
 {
+    const bool can_reuse_device_analysis = descr->device_analysis_valid
+                                           && descr->device_analysis_m == m
+                                           && descr->device_analysis_n == n
+                                           && descr->device_analysis_strategy
+                                 == descr->strategy;
+
+    if(can_reuse_device_analysis)
+    {
+        return;
+    }
+
     // Re-analysis with different dimensions must release old buffers first.
     free_tridiagonal_cuda_data(descr);
 
-    switch(descr->pivoting_strategy)
+    switch(descr->strategy)
     {
     case pivoting_strategy::none:
         tridiagonal_nonpivoting_analysis_dispatch(m, n, lower_diag, main_diag, upper_diag, descr);
@@ -271,6 +288,11 @@ void linalg::cuda_tridiagonal_analysis(int                m,
             m, n, lower_diag, main_diag, upper_diag, descr);
         break;
     }
+
+    descr->device_analysis_valid    = true;
+    descr->device_analysis_m        = m;
+    descr->device_analysis_n        = n;
+    descr->device_analysis_strategy = descr->strategy;
 }
 
 namespace linalg
@@ -1016,7 +1038,12 @@ void linalg::cuda_tridiagonal_solver(int                      m,
                                      double*                  X,
                                      const tridiagonal_descr* descr)
 {
-    switch(descr->pivoting_strategy)
+    assert(descr->device_analysis_valid);
+    assert(descr->device_analysis_m == m);
+    assert(descr->device_analysis_n == n);
+    assert(descr->device_analysis_strategy == descr->strategy);
+
+    switch(descr->strategy)
     {
     case pivoting_strategy::none:
         tridiagonal_nonpivoting_solver_dispatch(
