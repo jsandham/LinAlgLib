@@ -39,9 +39,8 @@
 
 using namespace linalg;
 
-bool Testing::test_tridiagonal_solver(Arguments arg)
+bool Testing::test_tridiagonal_class_solver(Arguments arg)
 {
-    // Create a simple tridiagonal system for testing
     // System size
     int m = arg.m;
     int n = arg.n;
@@ -53,91 +52,73 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     vector<double> rhs(m * n);
     vector<double> solution(m * n);
 
-    // Initialize with a known system
-    // Use a simple symmetric positive definite tridiagonal matrix
-    // Main diagonal: 2.0
-    // Off-diagonals: -0.5
-    lower_diag[0]     = 0.0; // No lower diagonal for first row
-    upper_diag[m - 1] = 0.0; // No upper diagonal
+    // Initialize with the same system as test_tridiagonal_solver
+    lower_diag[0]     = 0.0;
+    upper_diag[m - 1] = 0.0;
     for(int i = 0; i < m; i++)
     {
-        // main_diag[i] = i % 8;
-        main_diag[i] = 1.0;
+        main_diag[i] = 3.0;
         if(i > 0)
         {
-            lower_diag[i] = 2.0;
+            lower_diag[i] = 1.0;
         }
         if(i < m - 1)
         {
-            upper_diag[i] = 2.0;
+            upper_diag[i] = 1.2;
         }
     }
 
-    // RHS set to make solution = 1.0 everywhere
     for(int i = 0; i < n; i++)
     {
         for(int j = 0; j < m; j++)
         {
             rhs[m * i + j] = 1.0 + j;
         }
-
-        // Adjust boundary conditions
         rhs[m * i + 0]       = 1.0;
         rhs[m * i + (m - 1)] = 1.0;
     }
-    // for(int i = 0; i < n; i++)
-    // {
-    //     for(int j = 0; j < m; j++)
-    //     {
-    //         rhs[m * i + j] = m * i + j;
-    //     }
-    // }
 
-    // Move to device
+    // Create the OO solver
+    // tridiagonal_solver solver(m, n, pivoting_strategy::none);
+    tridiagonal_solver solver(m, n, pivoting_strategy::partial);
+
+    // To run on device: move data and solver workspace to device
     //lower_diag.move_to_device();
     //main_diag.move_to_device();
     //upper_diag.move_to_device();
     //rhs.move_to_device();
     //solution.move_to_device();
+    //solver.move_to_device();
 
-    tridiagonal_descr* descr = nullptr;
-    create_tridiagonal_descr(&descr);
-    //set_pivoting_strategy(descr, pivoting_strategy::none);
-    set_pivoting_strategy(descr, pivoting_strategy::partial);
-
-    tridiagonal_analysis(m, n, lower_diag, main_diag, upper_diag, descr);
-
+    // Warmup
     for(int i = 0; i < 10; i++)
     {
-        tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution, descr);
+        solver.solve(lower_diag, main_diag, upper_diag, rhs, solution);
     }
     linalg::sync();
 
-    // Solve the system
+    // Timed solve
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 100; i++)
     {
-        tridiagonal_solver(m, n, lower_diag, main_diag, upper_diag, rhs, solution, descr);
+        solver.solve(lower_diag, main_diag, upper_diag, rhs, solution);
     }
     linalg::sync();
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    destroy_tridiagonal_descr(descr);
-
     std::chrono::duration<double, std::milli> ms_float = t2 - t1;
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    // Move back to host for verification
+    // Move back to host for verification (no-op if already on host)
     //solution.move_to_host();
-    //main_diag.move_to_host();
     //lower_diag.move_to_host();
+    //main_diag.move_to_host();
     //upper_diag.move_to_host();
     //rhs.move_to_host();
+    //solver.move_to_host();
 
     // Verify solution by computing residual: r = b - A*x
-    vector<double> residual(m * n);
-    double         max_residual = 0.0;
-
+    double max_residual = 0.0;
     for(int i = 0; i < n; i++)
     {
         for(int j = 0; j < m; j++)
@@ -151,13 +132,9 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
             {
                 ax += upper_diag[j] * solution[m * i + j + 1];
             }
-            residual[m * i + j] = std::abs(rhs[m * i + j] - ax);
-            max_residual        = std::max(max_residual, residual[m * i + j]);
+            max_residual = std::max(max_residual, std::abs(rhs[m * i + j] - ax));
         }
     }
-
-    //solution.print_vector("Solution");
-    //residual.print_vector("Residual");
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 
@@ -171,7 +148,6 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     std::cout << "Effective Bandwidth: " << bandwidth << " GB/s"
               << " ms_float.count(): " << ms_float.count() << std::endl;
 
-    // Check if solution is accurate enough
     double tolerance = 1e-6;
     bool   success   = (max_residual < tolerance);
 

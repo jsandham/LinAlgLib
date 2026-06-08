@@ -40,124 +40,7 @@
 
 #include "tridiagonal_spike_kernels.cuh"
 
-#include "../../../descriptors/tridiagonal_descr_internal.h"
-
 static constexpr int BLOCKDIM = 256;
-
-void linalg::free_tridiagonal_cuda_data(tridiagonal_descr* descr)
-{
-    for(int level = 0; level < tridiagonal_max_recursion_levels; level++)
-    {
-        if(descr->lower_modified[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->lower_modified[level]));
-            descr->lower_modified[level] = nullptr;
-        }
-        if(descr->main_modified[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->main_modified[level]));
-            descr->main_modified[level] = nullptr;
-        }
-        if(descr->upper_modified[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->upper_modified[level]));
-            descr->upper_modified[level] = nullptr;
-        }
-        if(descr->B_modified[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->B_modified[level]));
-            descr->B_modified[level] = nullptr;
-        }
-
-        if(descr->spike_lower[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->spike_lower[level]));
-            descr->spike_lower[level] = nullptr;
-        }
-        if(descr->spike_main[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->spike_main[level]));
-            descr->spike_main[level] = nullptr;
-        }
-        if(descr->spike_upper[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->spike_upper[level]));
-            descr->spike_upper[level] = nullptr;
-        }
-        if(descr->spike_B[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->spike_B[level]));
-            descr->spike_B[level] = nullptr;
-        }
-        if(descr->spike_X[level] != nullptr)
-        {
-            CHECK_CUDA(cudaFree(descr->spike_X[level]));
-            descr->spike_X[level] = nullptr;
-        }
-    }
-
-    if(descr->lower_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->lower_pad));
-        descr->lower_pad = nullptr;
-    }
-    if(descr->main_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->main_pad));
-        descr->main_pad = nullptr;
-    }
-    if(descr->upper_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->upper_pad));
-        descr->upper_pad = nullptr;
-    }
-    if(descr->B_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->B_pad));
-        descr->B_pad = nullptr;
-    }
-
-    if(descr->w_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->w_pad));
-        descr->w_pad = nullptr;
-    }
-    if(descr->v_pad != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->v_pad));
-        descr->v_pad = nullptr;
-    }
-    if(descr->mt != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->mt));
-        descr->mt = nullptr;
-    }
-    if(descr->S_lower != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->S_lower));
-        descr->S_lower = nullptr;
-    }
-    if(descr->S_main != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->S_main));
-        descr->S_main = nullptr;
-    }
-    if(descr->S_upper != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->S_upper));
-        descr->S_upper = nullptr;
-    }
-    if(descr->S_B != nullptr)
-    {
-        CHECK_CUDA(cudaFree(descr->S_B));
-        descr->S_B = nullptr;
-    }
-
-    descr->device_analysis_valid    = false;
-    descr->device_analysis_m        = -1;
-    descr->device_analysis_n        = -1;
-    descr->device_analysis_strategy = pivoting_strategy::none;
-}
 
 namespace linalg
 {
@@ -182,117 +65,6 @@ namespace linalg
         // Adding 1 results in a single bit set at the next power of 2
         return m + 1;
     }
-
-    static void tridiagonal_nonpivoting_analysis_dispatch(int                m,
-                                                          int                n,
-                                                          const double*      lower_diag,
-                                                          const double*      main_diag,
-                                                          const double*      upper_diag,
-                                                          tridiagonal_descr* descr)
-    {
-        constexpr int BLOCKSIZE = 256;
-
-        int current_m = m;
-        for(int level = 0; level < tridiagonal_max_recursion_levels; level++)
-        {
-            if(current_m <= 1024)
-                break;
-
-            int nblocks    = ((current_m - 1) / BLOCKSIZE + 1);
-            int num_spikes = 2 * nblocks;
-
-            CHECK_CUDA(
-                cudaMalloc((void**)&descr->lower_modified[level], sizeof(double) * current_m));
-            CHECK_CUDA(
-                cudaMalloc((void**)&descr->main_modified[level], sizeof(double) * current_m));
-            CHECK_CUDA(
-                cudaMalloc((void**)&descr->upper_modified[level], sizeof(double) * current_m));
-            CHECK_CUDA(
-                cudaMalloc((void**)&descr->B_modified[level], sizeof(double) * current_m * n));
-
-            CHECK_CUDA(cudaMalloc((void**)&descr->spike_lower[level], sizeof(double) * num_spikes));
-            CHECK_CUDA(cudaMalloc((void**)&descr->spike_main[level], sizeof(double) * num_spikes));
-            CHECK_CUDA(cudaMalloc((void**)&descr->spike_upper[level], sizeof(double) * num_spikes));
-            CHECK_CUDA(cudaMalloc((void**)&descr->spike_B[level], sizeof(double) * num_spikes * n));
-            CHECK_CUDA(cudaMalloc((void**)&descr->spike_X[level], sizeof(double) * num_spikes * n));
-
-            current_m = num_spikes;
-        }
-    }
-
-    static void tridiagonal_partial_pivoting_analysis_dispatch(int                m,
-                                                               int                n,
-                                                               const double*      lower_diag,
-                                                               const double*      main_diag,
-                                                               const double*      upper_diag,
-                                                               tridiagonal_descr* descr)
-    {
-        const int m_pad = next_power_of_two(m);
-
-        CHECK_CUDA(cudaMalloc((void**)&descr->lower_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->main_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->upper_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->B_pad, sizeof(double) * m_pad * n));
-
-        CHECK_CUDA(cudaMalloc((void**)&descr->w_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->v_pad, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMalloc((void**)&descr->mt, sizeof(double) * m_pad));
-
-        const int S_size = 2 * m_pad / BLOCKDIM;
-
-        CHECK_CUDA(cudaMalloc((void**)&descr->S_lower, sizeof(double) * S_size));
-        CHECK_CUDA(cudaMalloc((void**)&descr->S_main, sizeof(double) * S_size));
-        CHECK_CUDA(cudaMalloc((void**)&descr->S_upper, sizeof(double) * S_size));
-        CHECK_CUDA(cudaMalloc((void**)&descr->S_B, sizeof(double) * S_size * n));
-    }
-
-    static void tridiagonal_nonpivoting_solver_dispatch(int                      m,
-                                                        int                      n,
-                                                        const double*            lower_diag,
-                                                        const double*            main_diag,
-                                                        const double*            upper_diag,
-                                                        const double*            B,
-                                                        double*                  X,
-                                                        const tridiagonal_descr* descr,
-                                                        int                      level = 0);
-}
-
-void linalg::cuda_tridiagonal_analysis(int                m,
-                                       int                n,
-                                       const double*      lower_diag,
-                                       const double*      main_diag,
-                                       const double*      upper_diag,
-                                       tridiagonal_descr* descr)
-{
-    const bool can_reuse_device_analysis = descr->device_analysis_valid
-                                           && descr->device_analysis_m == m
-                                           && descr->device_analysis_n == n
-                                           && descr->device_analysis_strategy
-                                 == descr->strategy;
-
-    if(can_reuse_device_analysis)
-    {
-        return;
-    }
-
-    // Re-analysis with different dimensions must release old buffers first.
-    free_tridiagonal_cuda_data(descr);
-
-    switch(descr->strategy)
-    {
-    case pivoting_strategy::none:
-        tridiagonal_nonpivoting_analysis_dispatch(m, n, lower_diag, main_diag, upper_diag, descr);
-        break;
-    case pivoting_strategy::partial:
-        tridiagonal_partial_pivoting_analysis_dispatch(
-            m, n, lower_diag, main_diag, upper_diag, descr);
-        break;
-    }
-
-    descr->device_analysis_valid    = true;
-    descr->device_analysis_m        = m;
-    descr->device_analysis_n        = n;
-    descr->device_analysis_strategy = descr->strategy;
 }
 
 namespace linalg
@@ -369,90 +141,6 @@ namespace linalg
                                                                        B_modified,
                                                                        X_spike,
                                                                        X_final);
-    }
-
-    template <typename T>
-    static void tridiagonal_tile_pcr_spike_solver(int                      m,
-                                                  int                      n,
-                                                  const T*                 lower_diag,
-                                                  const T*                 main_diag,
-                                                  const T*                 upper_diag,
-                                                  const T*                 B,
-                                                  T*                       X,
-                                                  const tridiagonal_descr* descr,
-                                                  int                      level)
-    {
-        constexpr int BLOCKSIZE = 256; // remember to change in analysis as well!
-        constexpr int NUM_RHS
-            = 1; //8; // dont forget to change this back when using float data type
-        int nblocks    = ((m - 1) / BLOCKSIZE + 1);
-        int num_spikes = 2 * nblocks;
-
-        launch_pcr_tiled_forward_elimination_kernel<BLOCKSIZE, NUM_RHS>(
-            m,
-            n,
-            lower_diag,
-            main_diag,
-            upper_diag,
-            B,
-            descr->lower_modified[level],
-            descr->main_modified[level],
-            descr->upper_modified[level],
-            descr->B_modified[level],
-            descr->spike_lower[level],
-            descr->spike_main[level],
-            descr->spike_upper[level],
-            descr->spike_B[level]);
-
-        using spike_solver_pcr_launch_ptr
-            = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
-
-        static const std::map<int, spike_solver_pcr_launch_ptr> k_spike_solver_dispatch = {
-            {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, T>},
-            {8, launch_spike_solver_pcr_kernel<8, NUM_RHS, T>},
-            {16, launch_spike_solver_pcr_kernel<16, NUM_RHS, T>},
-            {32, launch_spike_solver_pcr_kernel<32, NUM_RHS, T>},
-            {64, launch_spike_solver_pcr_kernel<64, NUM_RHS, T>},
-            {128, launch_spike_solver_pcr_kernel<128, NUM_RHS, T>},
-            {256, launch_spike_solver_pcr_kernel<256, NUM_RHS, T>},
-            {512, launch_spike_solver_pcr_kernel<512, NUM_RHS, T>},
-            {1024, launch_spike_solver_pcr_kernel<1024, NUM_RHS, T>},
-        };
-
-        auto dispatch_it = k_spike_solver_dispatch.lower_bound(num_spikes);
-        if(dispatch_it != k_spike_solver_dispatch.end())
-        {
-            dispatch_it->second(num_spikes,
-                                n,
-                                descr->spike_lower[level],
-                                descr->spike_main[level],
-                                descr->spike_upper[level],
-                                descr->spike_B[level],
-                                descr->spike_X[level]);
-        }
-        else
-        {
-            tridiagonal_nonpivoting_solver_dispatch(num_spikes,
-                                                    n,
-                                                    descr->spike_lower[level],
-                                                    descr->spike_main[level],
-                                                    descr->spike_upper[level],
-                                                    descr->spike_B[level],
-                                                    descr->spike_X[level],
-                                                    descr,
-                                                    level + 1);
-        }
-
-        launch_pcr_tiled_backward_substitution_kernel<BLOCKSIZE, NUM_RHS>(
-            m,
-            n,
-            num_spikes,
-            descr->lower_modified[level],
-            descr->main_modified[level],
-            descr->upper_modified[level],
-            descr->B_modified[level],
-            descr->spike_X[level],
-            X);
     }
 
     template <uint32_t BLOCKSIZE, uint32_t M, typename T>
@@ -609,6 +297,7 @@ namespace linalg
                                                 const T* B,
                                                 T*       X)
     {
+        // Dont forget to change back for float
         // crpcr_pow2_shared_multi_rhs_kernel<512, 256, 8>
         //     <<<((n - 1) / 8 + 1), 512>>>(m, n, lower_diag, main_diag, upper_diag, B, X);
         crpcr_pow2_shared_multi_rhs_kernel<512, 256, 1>
@@ -640,150 +329,6 @@ namespace linalg
         if(dispatch_it != k_midrange_dispatch.end())
         {
             dispatch_it->second(m, n, lower_diag, main_diag, upper_diag, B, X);
-        }
-    }
-
-    static void tridiagonal_nonpivoting_solver_dispatch(int                      m,
-                                                        int                      n,
-                                                        const double*            lower_diag,
-                                                        const double*            main_diag,
-                                                        const double*            upper_diag,
-                                                        const double*            B,
-                                                        double*                  X,
-                                                        const tridiagonal_descr* descr,
-                                                        int                      level)
-    {
-        if(m <= 10)
-        {
-            tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, B, X);
-        }
-        else if(m <= 1024)
-        {
-            tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, B, X);
-        }
-        else
-        {
-            tridiagonal_tile_pcr_spike_solver(
-                m, n, lower_diag, main_diag, upper_diag, B, X, descr, level);
-        }
-
-        CHECK_CUDA_LAUNCH_ERROR();
-    }
-
-    static void host_thomas_algorithm(int           m,
-                                      int           n,
-                                      const double* lower_diag,
-                                      const double* main_diag,
-                                      const double* upper_diag,
-                                      double*       y)
-    {
-        std::vector<double> mt(m);
-        std::vector<int> pivot_mask(m);
-
-        int k = 0;
-        double bk = main_diag[k];
-
-        while(k < m)
-        {
-            double ck   = upper_diag[k];
-            double ck_1 = (k < (m - 1)) ? upper_diag[k + 1] : static_cast<double>(0);
-            double bk_1 = (k < (m - 1)) ? main_diag[k + 1] : static_cast<double>(0);
-            double ak_1 = (k < (m - 1)) ? lower_diag[k + 1] : static_cast<double>(0);
-            double ak_2 = (k < (m - 2)) ? lower_diag[k + 2] : static_cast<double>(0);
-
-            // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
-            // pivoting criteria
-            const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
-
-            // 1x1 pivoting
-            if(use_1x1_pivot || k == (m - 1))
-            {
-                const double inv_bk = static_cast<double>(1) / bk;
-
-                mt[k] = ck * inv_bk;
-
-                pivot_mask[k] = 1; // mark this pivot as 1x1
-
-                // L * B * x = y
-                double rhsk = y[k] * inv_bk;
-
-                y[k] = rhsk;
-
-                if(k < (m - 1))
-                {
-                    y[k + 1] += -(ak_1 * rhsk);
-
-                    bk_1 = bk_1 - ak_1 * ck * inv_bk;
-                }
-
-                bk = bk_1;
-
-                k += 1;
-            }
-            else
-            {
-                const double det = static_cast<double>(1) / (bk * bk_1 - ak_1 * ck);
-
-                mt[k] = -ck * ck_1 * det;
-
-                pivot_mask[k] = 2;
-
-                if(k < (m - 1))
-                {
-                    mt[k + 1] = bk * ck_1 * det;
-
-                    pivot_mask[k + 1] = 2;
-                }
-
-                double bk_2 = static_cast<double>(0);
-
-                // L * B * x = y
-                double rhsk   = y[k] * det;
-                double rhsk_1 = y[k + 1] * det;
-
-                y[k]       = (bk_1 * rhsk - ck * rhsk_1);
-                y[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
-
-                if(k < (m - 2))
-                {
-                    y[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
-
-                    bk_2 = main_diag[k + 2];
-                    bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
-                }
-
-                bk = bk_2;
-                k += 2;
-            }
-        }
-
-        assert(k == m);
-        // at this point k = m. Could just set k = m - 1 here
-        k--;
-
-        k -= pivot_mask[k];
-
-        // backward solve (M^T * y = y)
-        while(k >= 0)
-        {
-            if(pivot_mask[k] == 1)
-            {
-                const double tmp = mt[k];
-
-                y[k] += -tmp * y[k + 1];
-
-                k -= 1;
-            }
-            else
-            {
-                const double tmp1 = mt[k];
-                const double tmp2 = mt[k - 1];
-
-                y[k] += -tmp1 * y[k + 1];
-                y[k - 1] += -tmp2 * y[k + 1];
-
-                k -= 2;
-            }
         }
     }
 
@@ -863,195 +408,304 @@ namespace linalg
     } while(0)
 
     template <typename T, uint32_t S_SIZE>
-    static void launch_s_solve_kernel(int n,
+    static void launch_s_solve_kernel(int m,
+                                      int n,
                                       const T* __restrict__ S_lower,
                                       const T* __restrict__ S_main,
                                       const T* __restrict__ S_upper,
                                       T* __restrict__ rhs)
     {
-        S_solve_kernel<S_SIZE><<<1, 1>>>(n, S_lower, S_main, S_upper, rhs);
+        S_solve_kernel<S_SIZE><<<n, 1>>>(m, n, S_lower, S_main, S_upper, rhs);
+    }
+}
+
+void linalg::cuda_partial_pivoting_solver(int           m,
+                                          int           n,
+                                          const double* lower_diag,
+                                          const double* main_diag,
+                                          const double* upper_diag,
+                                          const double* B,
+                                          double*       X,
+                                          double*       lower_pad,
+                                          double*       main_pad,
+                                          double*       upper_pad,
+                                          double*       B_pad,
+                                          double*       w_pad,
+                                          double*       v_pad,
+                                          double*       mt,
+                                          double*       S_lower,
+                                          double*       S_main,
+                                          double*       S_upper,
+                                          double*       S_B)
+{
+    constexpr int BLOCKSIZE = 256;
+
+    const int m_pad = next_power_of_two(m);
+
+    data_marshaling_kernel<BLOCKSIZE, BLOCKDIM><<<(m_pad - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(
+        m, m_pad, lower_diag, main_diag, upper_diag, lower_pad, main_pad, upper_pad);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    data_marshaling_B_kernel<BLOCKSIZE, BLOCKDIM>
+        <<<dim3((m_pad - 1) / BLOCKSIZE + 1, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(m, m_pad, B, B_pad);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
+    for(int batch = 0; batch < n; batch++)
+    {
+        CHECK_CUDA(cudaMemset(w_pad, 0, sizeof(double) * m_pad));
+        CHECK_CUDA(cudaMemset(v_pad, 0, sizeof(double) * m_pad));
+
+        LBMT_solve_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(grid, 1, 1), dim3(BLOCKSIZE, 1, 1)>>>(
+            m_pad, 1, lower_pad, main_pad, upper_pad, w_pad, v_pad, mt, B_pad + batch * m_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
     }
 
-    static void tridiagonal_partial_pivoting_solver_dispatch(int                      m,
-                                                             int                      n,
-                                                             const double*            lower_diag,
-                                                             const double*            main_diag,
-                                                             const double*            upper_diag,
-                                                             const double*            B,
-                                                             double*                  X,
-                                                             const tridiagonal_descr* descr)
+    const int s_size = 2 * m_pad / BLOCKDIM;
+    const int s_grid = (s_size - 1) / BLOCKSIZE + 1;
+
+    fill_s_matrix_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(s_grid, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(
+        m_pad, n, w_pad, v_pad, B_pad, S_lower, S_main, S_upper, S_B);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    using S_solve_launch_ptr
+        = void (*)(int, int, const double*, const double*, const double*, double*);
+
+    static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
+        {2, launch_s_solve_kernel<double, 2>},
+        {4, launch_s_solve_kernel<double, 4>},
+        {8, launch_s_solve_kernel<double, 8>},
+        {16, launch_s_solve_kernel<double, 16>},
+        {32, launch_s_solve_kernel<double, 32>},
+        {64, launch_s_solve_kernel<double, 64>},
+        {128, launch_s_solve_kernel<double, 128>},
+        {256, launch_s_solve_kernel<double, 256>},
+        {512, launch_s_solve_kernel<double, 512>},
+        {1024, launch_s_solve_kernel<double, 1024>},
+        {2048, launch_s_solve_kernel<double, 2048>},
+        {4096, launch_s_solve_kernel<double, 4096>},
+        {8192, launch_s_solve_kernel<double, 8192>},
+    };
+
+    auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
+    if(dispatch_it != s_solve_dispatch.end())
+    {
+       dispatch_it->second(s_size, n, S_lower, S_main, S_upper, S_B);
+    }
+
+    dim3 scatter_grid((s_size / 2 + BLOCKSIZE - 1) / BLOCKSIZE, n);
+    scatter_S_B_to_B_pad_kernel<BLOCKDIM, BLOCKSIZE>
+        <<<scatter_grid, BLOCKSIZE>>>(s_size, m_pad, S_B, B_pad);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    backward_solve_kernel<BLOCKSIZE, BLOCKDIM>
+        <<<dim3(grid, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, n, w_pad, v_pad, B_pad);
+    CHECK_CUDA_LAUNCH_ERROR();
+
+    data_marshaling_kernel2<BLOCKSIZE, BLOCKDIM>
+        <<<dim3((m_pad - 1) / BLOCKSIZE + 1, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(m, m_pad, B_pad, X);
+    CHECK_CUDA_LAUNCH_ERROR();
+}
+
+namespace linalg
+{
+    static void tridiagonal_nonpivoting_solver_dispatch(int           m,
+                                                        int           n,
+                                                        const double* lower_diag,
+                                                        const double* main_diag,
+                                                        const double* upper_diag,
+                                                        const double* B,
+                                                        double*       X,
+                                                        double**      lower_modified,
+                                                        double**      main_modified,
+                                                        double**      upper_modified,
+                                                        double**      B_modified,
+                                                        double**      spike_lower,
+                                                        double**      spike_main,
+                                                        double**      spike_upper,
+                                                        double**      spike_B,
+                                                        double**      spike_X,
+                                                        int           level = 0);
+
+    static void tridiagonal_tile_pcr_spike_solver(int           m,
+                                                  int           n,
+                                                  const double* lower_diag,
+                                                  const double* main_diag,
+                                                  const double* upper_diag,
+                                                  const double* B,
+                                                  double*       X,
+                                                  double**      lower_modified,
+                                                  double**      main_modified,
+                                                  double**      upper_modified,
+                                                  double**      B_modified,
+                                                  double**      spike_lower,
+                                                  double**      spike_main,
+                                                  double**      spike_upper,
+                                                  double**      spike_B,
+                                                  double**      spike_X,
+                                                  int           level)
     {
         constexpr int BLOCKSIZE = 256;
+        constexpr int NUM_RHS
+            = 1; //8; // dont forget to change this back when using float data type
+        int nblocks    = ((m - 1) / BLOCKSIZE + 1);
+        int num_spikes = 2 * nblocks;
 
-        const int m_pad = next_power_of_two(m);
+        launch_pcr_tiled_forward_elimination_kernel<BLOCKSIZE, NUM_RHS>(m,
+                                                                        n,
+                                                                        lower_diag,
+                                                                        main_diag,
+                                                                        upper_diag,
+                                                                        B,
+                                                                        lower_modified[level],
+                                                                        main_modified[level],
+                                                                        upper_modified[level],
+                                                                        B_modified[level],
+                                                                        spike_lower[level],
+                                                                        spike_main[level],
+                                                                        spike_upper[level],
+                                                                        spike_B[level]);
 
-        data_marshaling_kernel<BLOCKSIZE, BLOCKDIM>
-            <<<(m - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(m,
-                                                     m_pad,
-                                                     lower_diag,
-                                                     main_diag,
-                                                     upper_diag,
-                                                     B,
-                                                     descr->lower_pad,
-                                                     descr->main_pad,
-                                                     descr->upper_pad,
-                                                     descr->B_pad);
-        CHECK_CUDA_LAUNCH_ERROR();
+        using spike_solver_pcr_launch_ptr = void (*)(
+            int, int, const double*, const double*, const double*, const double*, double*);
 
-        CHECK_CUDA(cudaMemset(descr->w_pad, 0, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMemset(descr->v_pad, 0, sizeof(double) * m_pad));
-
-        const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
-
-        // LBM^T solve
-        LBMT_solve_kernel<BLOCKSIZE, BLOCKDIM><<<grid, BLOCKSIZE>>>(m_pad,
-                                                                    n,
-                                                                    descr->lower_pad,
-                                                                    descr->main_pad,
-                                                                    descr->upper_pad,
-                                                                    descr->w_pad,
-                                                                    descr->v_pad,
-                                                                    descr->mt,
-                                                                    descr->B_pad);
-        CHECK_CUDA_LAUNCH_ERROR();
-
-        const int s_grid = ((2 * m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
-
-        // Create tridiagonal S matrix
-        fill_s_matrix_kernel<BLOCKSIZE, BLOCKDIM><<<s_grid, BLOCKSIZE>>>(m_pad,
-                                                                         n,
-                                                                         descr->w_pad,
-                                                                         descr->v_pad,
-                                                                         descr->B_pad,
-                                                                         descr->S_lower,
-                                                                         descr->S_main,
-                                                                         descr->S_upper,
-                                                                         descr->S_B);
-        CHECK_CUDA_LAUNCH_ERROR();
-
-        int                 s_size = 2 * m_pad / BLOCKDIM;
-
-        std::cout << "s_size: " << s_size << std::endl;
-
-        using S_solve_launch_ptr
-            = void (*)(int, const double*, const double*, const double*, double*);
-
-        static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
-            {2, launch_s_solve_kernel<double, 2>},
-            {4, launch_s_solve_kernel<double, 4>},
-            {8, launch_s_solve_kernel<double, 8>},
-            {16, launch_s_solve_kernel<double, 16>},
-            {32, launch_s_solve_kernel<double, 32>},
-            {64, launch_s_solve_kernel<double, 64>},
-            {128, launch_s_solve_kernel<double, 128>},
-            {256, launch_s_solve_kernel<double, 256>},
-            {512, launch_s_solve_kernel<double, 512>},
-            {1024, launch_s_solve_kernel<double, 1024>},
+        static const std::map<int, spike_solver_pcr_launch_ptr> k_spike_solver_dispatch = {
+            {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, double>},
+            {8, launch_spike_solver_pcr_kernel<8, NUM_RHS, double>},
+            {16, launch_spike_solver_pcr_kernel<16, NUM_RHS, double>},
+            {32, launch_spike_solver_pcr_kernel<32, NUM_RHS, double>},
+            {64, launch_spike_solver_pcr_kernel<64, NUM_RHS, double>},
+            {128, launch_spike_solver_pcr_kernel<128, NUM_RHS, double>},
+            {256, launch_spike_solver_pcr_kernel<256, NUM_RHS, double>},
+            {512, launch_spike_solver_pcr_kernel<512, NUM_RHS, double>},
+            {1024, launch_spike_solver_pcr_kernel<1024, NUM_RHS, double>},
         };
 
-        // auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
-        // if(dispatch_it != s_solve_dispatch.end())
-        // {
-        //    dispatch_it->second(n, descr->S_lower, descr->S_main, descr->S_upper, descr->S_B);
-        // }
-        // std::vector<double> h_y(s_size * n);
-        // CHECK_CUDA(cudaMemcpy(
-        //    h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
-
-        // std::vector<double> h_B_pad(m_pad * n);
-        // CHECK_CUDA(cudaMemcpy(
-        //    h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
-        // CHECK_CUDA(cudaMemcpy(
-        //   h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
-
-        // Solve Sx = y on host for debugging
-        std::vector<double> h_S_lower(s_size);
-        std::vector<double> h_S_main(s_size);
-        std::vector<double> h_S_upper(s_size);
-        std::vector<double> h_y(s_size * n);
-        CHECK_CUDA(cudaMemcpy(
-           h_S_lower.data(), descr->S_lower, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-           h_S_main.data(), descr->S_main, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-           h_S_upper.data(), descr->S_upper, sizeof(double) * s_size, cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(
-            h_y.data(), descr->S_B, sizeof(double) * s_size * n, cudaMemcpyDeviceToHost));
-
-        std::vector<double> h_B_pad(m_pad * n);
-        CHECK_CUDA(cudaMemcpy(
-            h_B_pad.data(), descr->B_pad, sizeof(double) * m_pad * n, cudaMemcpyDeviceToHost));
+        auto dispatch_it = k_spike_solver_dispatch.lower_bound(num_spikes);
+        if(dispatch_it != k_spike_solver_dispatch.end())
         {
-            host_thomas_algorithm(s_size,
+            dispatch_it->second(num_spikes,
                                 n,
-                                h_S_lower.data(),
-                                h_S_main.data(),
-                                h_S_upper.data(),
-                                h_y.data());
+                                spike_lower[level],
+                                spike_main[level],
+                                spike_upper[level],
+                                spike_B[level],
+                                spike_X[level]);
         }
-        //DEBUG_PRINT_ARRAY(h_y.data(), s_size * n, "Thomas solution h_y");
-
-
-
-
-
-
-
-
-
-        // Write y back to B_pad
-        for(int i = 1; i < s_size - 1; i += 2)
+        else
         {
-            double temp = h_y[i];
-            h_y[i]      = h_y[i + 1];
-            h_y[i + 1]  = temp;
+            tridiagonal_nonpivoting_solver_dispatch(num_spikes,
+                                                    n,
+                                                    spike_lower[level],
+                                                    spike_main[level],
+                                                    spike_upper[level],
+                                                    spike_B[level],
+                                                    spike_X[level],
+                                                    lower_modified,
+                                                    main_modified,
+                                                    upper_modified,
+                                                    B_modified,
+                                                    spike_lower,
+                                                    spike_main,
+                                                    spike_upper,
+                                                    spike_B,
+                                                    spike_X,
+                                                    level + 1);
         }
-        //DEBUG_PRINT_ARRAY(h_y.data(), s_size * n, "After correction h_y");
-        for(int i = 0; i < s_size / 2; i++)
+
+        launch_pcr_tiled_backward_substitution_kernel<BLOCKSIZE, NUM_RHS>(m,
+                                                                          n,
+                                                                          num_spikes,
+                                                                          lower_modified[level],
+                                                                          main_modified[level],
+                                                                          upper_modified[level],
+                                                                          B_modified[level],
+                                                                          spike_X[level],
+                                                                          X);
+    }
+
+    static void tridiagonal_nonpivoting_solver_dispatch(int           m,
+                                                        int           n,
+                                                        const double* lower_diag,
+                                                        const double* main_diag,
+                                                        const double* upper_diag,
+                                                        const double* B,
+                                                        double*       X,
+                                                        double**      lower_modified,
+                                                        double**      main_modified,
+                                                        double**      upper_modified,
+                                                        double**      B_modified,
+                                                        double**      spike_lower,
+                                                        double**      spike_main,
+                                                        double**      spike_upper,
+                                                        double**      spike_B,
+                                                        double**      spike_X,
+                                                        int           level)
+    {
+        if(m <= 10)
         {
-            h_B_pad[i]                                       = h_y[2 * i];
-            h_B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)] = h_y[2 * i + 1];
+            tridiagonal_thomas_algorithm_solver(m, n, lower_diag, main_diag, upper_diag, B, X);
+        }
+        else if(m <= 1024)
+        {
+            tridiagonal_pcr_solver_dispatch(m, n, lower_diag, main_diag, upper_diag, B, X);
+        }
+        else
+        {
+            tridiagonal_tile_pcr_spike_solver(m,
+                                              n,
+                                              lower_diag,
+                                              main_diag,
+                                              upper_diag,
+                                              B,
+                                              X,
+                                              lower_modified,
+                                              main_modified,
+                                              upper_modified,
+                                              B_modified,
+                                              spike_lower,
+                                              spike_main,
+                                              spike_upper,
+                                              spike_B,
+                                              spike_X,
+                                              level);
         }
 
-        //DEBUG_PRINT_ARRAY(h_B_pad.data(), m_pad * n, "h_B_pad"); // 32 correct up to here
-
-        CHECK_CUDA(cudaMemcpy(
-            descr->B_pad, h_B_pad.data(), sizeof(double) * m_pad * n, cudaMemcpyHostToDevice));
-
-        // Complete Sx = B_pad
-        backward_solve_kernel<BLOCKSIZE, BLOCKDIM>
-            <<<grid, BLOCKSIZE>>>(m_pad, n, descr->w_pad, descr->v_pad, descr->B_pad);
-        CHECK_CUDA_LAUNCH_ERROR();
-
-        data_marshaling_kernel2<BLOCKSIZE, BLOCKDIM>
-            <<<(m - 1) / BLOCKSIZE + 1, BLOCKSIZE>>>(m, m_pad, descr->B_pad, X);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 }
 
-void linalg::cuda_tridiagonal_solver(int                      m,
-                                     int                      n,
-                                     const double*            lower_diag,
-                                     const double*            main_diag,
-                                     const double*            upper_diag,
-                                     const double*            B,
-                                     double*                  X,
-                                     const tridiagonal_descr* descr)
+void linalg::cuda_non_pivoting_solver(int           m,
+                                      int           n,
+                                      const double* lower_diag,
+                                      const double* main_diag,
+                                      const double* upper_diag,
+                                      const double* B,
+                                      double*       X,
+                                      double**      lower_modified,
+                                      double**      main_modified,
+                                      double**      upper_modified,
+                                      double**      B_modified,
+                                      double**      spike_lower,
+                                      double**      spike_main,
+                                      double**      spike_upper,
+                                      double**      spike_B,
+                                      double**      spike_X)
 {
-    assert(descr->device_analysis_valid);
-    assert(descr->device_analysis_m == m);
-    assert(descr->device_analysis_n == n);
-    assert(descr->device_analysis_strategy == descr->strategy);
-
-    switch(descr->strategy)
-    {
-    case pivoting_strategy::none:
-        tridiagonal_nonpivoting_solver_dispatch(
-            m, n, lower_diag, main_diag, upper_diag, B, X, descr);
-        break;
-    case pivoting_strategy::partial:
-        tridiagonal_partial_pivoting_solver_dispatch(
-            m, n, lower_diag, main_diag, upper_diag, B, X, descr);
-        break;
-    }
+    tridiagonal_nonpivoting_solver_dispatch(m,
+                                            n,
+                                            lower_diag,
+                                            main_diag,
+                                            upper_diag,
+                                            B,
+                                            X,
+                                            lower_modified,
+                                            main_modified,
+                                            upper_modified,
+                                            B_modified,
+                                            spike_lower,
+                                            spike_main,
+                                            spike_upper,
+                                            spike_B,
+                                            spike_X);
 }

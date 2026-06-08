@@ -28,25 +28,41 @@
 
 namespace linalg
 {
-    struct tridiagonal_descr;
+    void cuda_partial_pivoting_solver(int           m,
+                                      int           n,
+                                      const double* lower_diag,
+                                      const double* main_diag,
+                                      const double* upper_diag,
+                                      const double* B,
+                                      double*       X,
+                                      double*       lower_pad,
+                                      double*       main_pad,
+                                      double*       upper_pad,
+                                      double*       B_pad,
+                                      double*       w_pad,
+                                      double*       v_pad,
+                                      double*       mt,
+                                      double*       S_lower,
+                                      double*       S_main,
+                                      double*       S_upper,
+                                      double*       S_B);
 
-    void free_tridiagonal_cuda_data(tridiagonal_descr* descr);
-
-    void cuda_tridiagonal_analysis(int                m,
-                                   int                n,
-                                   const double*      lower_diag,
-                                   const double*      main_diag,
-                                   const double*      upper_diag,
-                                   tridiagonal_descr* descr);
-
-    void cuda_tridiagonal_solver(int                      m,
-                                 int                      n,
-                                 const double*            lower_diag,
-                                 const double*            main_diag,
-                                 const double*            upper_diag,
-                                 const double*            b,
-                                 double*                  x,
-                                 const tridiagonal_descr* descr);
+    void cuda_non_pivoting_solver(int           m,
+                                  int           n,
+                                  const double* lower_diag,
+                                  const double* main_diag,
+                                  const double* upper_diag,
+                                  const double* B,
+                                  double*       X,
+                                  double**      lower_modified,
+                                  double**      main_modified,
+                                  double**      upper_modified,
+                                  double**      B_modified,
+                                  double**      spike_lower,
+                                  double**      spike_main,
+                                  double**      spike_upper,
+                                  double**      spike_B,
+                                  double**      spike_X);
 }
 
 #endif

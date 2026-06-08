@@ -27,27 +27,27 @@
 #ifndef DEVICE_TRIDIAGONAL_H
 #define DEVICE_TRIDIAGONAL_H
 
+#include "../../../include/direct_solvers/tridiagonal/tridiagonal.h"
 #include "vector.h"
 
 namespace linalg
 {
-    struct tridiagonal_descr;
-
-    void free_tridiagonal_device_data(tridiagonal_descr* descr);
-    void device_tridiagonal_analysis(int                   m,
-                                     int                   n,
-                                     const vector<double>& lower_diag,
-                                     const vector<double>& main_diag,
-                                     const vector<double>& upper_diag,
-                                     tridiagonal_descr*    descr);
-    void device_tridiagonal_solver(int                      m,
-                                   int                      n,
-                                   const vector<double>&    lower_diag,
-                                   const vector<double>&    main_diag,
-                                   const vector<double>&    upper_diag,
-                                   const vector<double>&    b,
-                                   vector<double>&          x,
-                                   const tridiagonal_descr* descr);
+    void device_partial_pivoting_algorithm(int                   m,
+                                           int                   n,
+                                           const vector<double>& lower_diag,
+                                           const vector<double>& main_diag,
+                                           const vector<double>& upper_diag,
+                                           const vector<double>& rhs,
+                                           vector<double>&       solution,
+                                           pivoting_data&        pivot_data);
+    void device_non_pivoting_algorithm(int                   m,
+                                       int                   n,
+                                       const vector<double>& lower_diag,
+                                       const vector<double>& main_diag,
+                                       const vector<double>& upper_diag,
+                                       const vector<double>& rhs,
+                                       vector<double>&       solution,
+                                       non_pivoting_data&    non_pivot_data);
 }
 
 #endif

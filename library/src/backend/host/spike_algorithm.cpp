@@ -28,13 +28,70 @@
 #include <iostream>
 #include <vector>
 
-#include "../../descriptors/tridiagonal_descr_internal.h"
 #include "../../trace.h"
 
 #include "spike_algorithm.h"
 
 namespace linalg
 {
+    template <typename T, uint32_t BLOCKDIM>
+    static void data_marshalling(int      m,
+                                 int      m_pad,
+                                 int      n,
+                                 const T* lower,
+                                 const T* main,
+                                 const T* upper,
+                                 const T* B,
+                                 T*       lower_pad,
+                                 T*       main_pad,
+                                 T*       upper_pad,
+                                 T*       B_pad)
+    {
+        ROUTINE_TRACE("data_marshalling");
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_pad; i++)
+        {
+            const int gwid = i / (m_pad / BLOCKDIM);
+            const int glid = i % (m_pad / BLOCKDIM);
+
+            if(BLOCKDIM * glid + gwid < m)
+            {
+                lower_pad[i] = lower[BLOCKDIM * glid + gwid];
+                main_pad[i]  = main[BLOCKDIM * glid + gwid];
+                upper_pad[i] = upper[BLOCKDIM * glid + gwid];
+
+                for(int j = 0; j < n; j++)
+                {
+                    B_pad[i + m_pad * j] = B[BLOCKDIM * glid + gwid + m * j];
+                }
+            }
+        }
+    }
+
+    template <typename T, uint32_t BLOCKDIM>
+    static void data_marshalling2(int m, int m_pad, int n, const T* B_pad, T* B)
+    {
+        ROUTINE_TRACE("data_marshalling2");
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int i = 0; i < m_pad; i++)
+        {
+            const int gwid = i / (m_pad / BLOCKDIM);
+            const int glid = i % (m_pad / BLOCKDIM);
+
+            if(BLOCKDIM * glid + gwid < m)
+            {
+                for(int j = 0; j < n; j++)
+                {
+                    B[BLOCKDIM * glid + gwid + m * j] = B_pad[i + m_pad * j];
+                }
+            }
+        }
+    }
+
     template <typename T>
     bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
     {
@@ -263,64 +320,6 @@ namespace linalg
     }
 
     template <typename T, uint32_t BLOCKDIM>
-    static void data_marshalling(int      m,
-                                 int      m_pad,
-                                 int      n,
-                                 const T* lower,
-                                 const T* main,
-                                 const T* upper,
-                                 const T* B,
-                                 T*       lower_pad,
-                                 T*       main_pad,
-                                 T*       upper_pad,
-                                 T*       B_pad)
-    {
-        ROUTINE_TRACE("data_marshalling");
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(int i = 0; i < m_pad; i++)
-        {
-            const int gwid = i / (m_pad / BLOCKDIM);
-            const int glid = i % (m_pad / BLOCKDIM);
-
-            if(BLOCKDIM * glid + gwid < m)
-            {
-                lower_pad[i] = lower[BLOCKDIM * glid + gwid];
-                main_pad[i]  = main[BLOCKDIM * glid + gwid];
-                upper_pad[i] = upper[BLOCKDIM * glid + gwid];
-
-                for(int j = 0; j < n; j++)
-                {
-                    B_pad[i + m_pad * j] = B[BLOCKDIM * glid + gwid + m * j];
-                }
-            }
-        }
-    }
-
-    template <typename T, uint32_t BLOCKDIM>
-    static void data_marshalling2(int m, int m_pad, int n, const T* B_pad, T* B)
-    {
-        ROUTINE_TRACE("data_marshalling2");
-#if defined(_OPENMP)
-#pragma omp parallel for schedule(dynamic, 1024)
-#endif
-        for(int i = 0; i < m_pad; i++)
-        {
-            const int gwid = i / (m_pad / BLOCKDIM);
-            const int glid = i % (m_pad / BLOCKDIM);
-
-            if(BLOCKDIM * glid + gwid < m)
-            {
-                for(int j = 0; j < n; j++)
-                {
-                    B[BLOCKDIM * glid + gwid + m * j] = B_pad[i + m_pad * j];
-                }
-            }
-        }
-    }
-
-    template <typename T, uint32_t BLOCKDIM>
     static void fill_S_matrix(int      m_pad,
                               int      n,
                               const T* w,
@@ -498,6 +497,32 @@ namespace linalg
     }
 
     template <typename T, uint32_t BLOCKDIM>
+    static void scatter_S_B_to_B_pad_kernel(int S_size, int m_pad, int n, T* S_B, T* B_pad)
+    {
+        ROUTINE_TRACE("scatter_S_B_to_B_pad_kernel");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(int j = 0; j < n; j++)
+        {
+            for(int i = 1; i < S_size - 1; i += 2)
+            {
+                T temp                  = S_B[i + S_size * j];
+                S_B[i + S_size * j]     = S_B[i + 1 + S_size * j];
+                S_B[i + 1 + S_size * j] = temp;
+            }
+
+            for(int i = 0; i < S_size / 2; i++)
+            {
+                B_pad[i + m_pad * j] = S_B[2 * i + S_size * j];
+                B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * j]
+                    = S_B[2 * i + 1 + S_size * j];
+            }
+        }
+    }
+
+    template <typename T, uint32_t BLOCKDIM>
     static void backward_solve(int m_pad, int n, const T* w, const T* v, T* rhs)
     {
         ROUTINE_TRACE("backward_solve");
@@ -508,8 +533,9 @@ namespace linalg
 #endif
         for(int i = 0; i < nblocks; i++)
         {
-            double x1 = (i >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : 0.0f;
-            double x2 = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1] : 0.0f;
+            const T x1
+                = (i >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : static_cast<T>(0);
+            const T x2 = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1] : static_cast<T>(0);
 
             for(int j = 1; j < BLOCKDIM - 1; j++)
             {
@@ -524,29 +550,45 @@ namespace linalg
     }
 
     template <typename T>
-    void spike_algorithm_template(int                      m,
-                                  int                      n,
-                                  const T*                 lower_diag,
-                                  const T*                 main_diag,
-                                  const T*                 upper_diag,
-                                  const T*                 B,
-                                  T*                       X,
-                                  const tridiagonal_descr* descr)
+    void spike_algorithm_template(int      m,
+                                  int      n,
+                                  const T* lower_diag,
+                                  const T* main_diag,
+                                  const T* upper_diag,
+                                  const T* B,
+                                  T*       X,
+                                  T*       lower_pad,
+                                  T*       main_pad,
+                                  T*       upper_pad,
+                                  T*       B_pad,
+                                  T*       w_pad,
+                                  T*       v_pad,
+                                  T*       mt,
+                                  T*       S_lower,
+                                  T*       S_main,
+                                  T*       S_upper,
+                                  T*       S_B)
     {
         ROUTINE_TRACE("spike_algorithm_template");
         constexpr int BLOCKDIM = 8;
 
         const int m_pad = next_power_of_two(m);
 
-        for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
         {
-            descr->host_data.lower_pad[i] = static_cast<T>(0);
-            descr->host_data.main_pad[i]  = static_cast<T>(1);
-            descr->host_data.upper_pad[i] = static_cast<T>(0);
+            ROUTINE_TRACE("AAAAA");
+            for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
+            {
+                lower_pad[i] = static_cast<T>(0);
+                main_pad[i]  = static_cast<T>(1);
+                upper_pad[i] = static_cast<T>(0);
+            }
 
             for(int j = 0; j < n; j++)
             {
-                descr->host_data.B_pad[i + m_pad * j] = static_cast<T>(0);
+                for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
+                {
+                    B_pad[i + m_pad * j] = static_cast<T>(0);
+                }
             }
         }
 
@@ -557,97 +599,51 @@ namespace linalg
                                       main_diag,
                                       upper_diag,
                                       B,
-                                      descr->host_data.lower_pad.data(),
-                                      descr->host_data.main_pad.data(),
-                                      descr->host_data.upper_pad.data(),
-                                      descr->host_data.B_pad.data());
+                                      lower_pad,
+                                      main_pad,
+                                      upper_pad,
+                                      B_pad);
 
         for(int i = 0; i < m_pad; i++)
         {
-            descr->host_data.w_pad[i] = static_cast<T>(0);
-            descr->host_data.v_pad[i] = static_cast<T>(0);
-            descr->host_data.mt[i]    = static_cast<T>(0);
+            w_pad[i] = static_cast<T>(0);
+            v_pad[i] = static_cast<T>(0);
+            mt[i]    = static_cast<T>(0);
         }
 
-        LBMT_solve<T, BLOCKDIM>(m_pad,
-                                n,
-                                descr->host_data.lower_pad.data(),
-                                descr->host_data.main_pad.data(),
-                                descr->host_data.upper_pad.data(),
-                                descr->host_data.w_pad.data(),
-                                descr->host_data.v_pad.data(),
-                                descr->host_data.mt.data(),
-                                descr->host_data.B_pad.data());
+        LBMT_solve<T, BLOCKDIM>(m_pad, n, lower_pad, main_pad, upper_pad, w_pad, v_pad, mt, B_pad);
 
         const int S_size = 2 * m_pad / BLOCKDIM;
 
-        for(int i = 0; i < S_size; i++)
         {
-            descr->host_data.S_lower[i] = static_cast<T>(0);
-            descr->host_data.S_main[i]  = static_cast<T>(0);
-            descr->host_data.S_upper[i] = static_cast<T>(0);
+            ROUTINE_TRACE("BBBBB");
+
+            for(int i = 0; i < S_size; i++)
+            {
+                S_lower[i] = static_cast<T>(0);
+                S_main[i]  = static_cast<T>(0);
+                S_upper[i] = static_cast<T>(0);
+            }
 
             for(int j = 0; j < n; j++)
             {
-                descr->host_data.S_B[i + S_size * j] = static_cast<T>(0);
+                for(int i = 0; i < S_size; i++)
+                {
+                    S_B[i + S_size * j] = static_cast<T>(0);
+                }
             }
         }
 
-        fill_S_matrix<T, BLOCKDIM>(m_pad,
-                                   n,
-                                   descr->host_data.w_pad.data(),
-                                   descr->host_data.v_pad.data(),
-                                   descr->host_data.B_pad.data(),
-                                   descr->host_data.S_lower.data(),
-                                   descr->host_data.S_main.data(),
-                                   descr->host_data.S_upper.data(),
-                                   descr->host_data.S_B.data());
+        fill_S_matrix<T, BLOCKDIM>(m_pad, n, w_pad, v_pad, B_pad, S_lower, S_main, S_upper, S_B);
 
-        S_solve<T>(S_size,
-                   n,
-                   descr->host_data.S_lower.data(),
-                   descr->host_data.S_main.data(),
-                   descr->host_data.S_upper.data(),
-                   descr->host_data.S_B.data());
+        S_solve<T>(S_size, n, S_lower, S_main, S_upper, S_B);
 
-        for(int j = 0; j < n; j++)
-        {
-            for(int i = 1; i < S_size - 1; i += 2)
-            {
-                double temp                              = descr->host_data.S_B[i + S_size * j];
-                descr->host_data.S_B[i + S_size * j]     = descr->host_data.S_B[i + 1 + S_size * j];
-                descr->host_data.S_B[i + 1 + S_size * j] = temp;
-            }
+        scatter_S_B_to_B_pad_kernel<T, BLOCKDIM>(S_size, m_pad, n, S_B, B_pad);
 
-            for(int i = 0; i < S_size / 2; i++)
-            {
-                descr->host_data.B_pad[i + m_pad * j] = descr->host_data.S_B[2 * i + S_size * j];
-                descr->host_data.B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * j]
-                    = descr->host_data.S_B[2 * i + 1 + S_size * j];
-            }
-        }
+        backward_solve<T, BLOCKDIM>(m_pad, n, w_pad, v_pad, B_pad);
 
-        backward_solve<T, BLOCKDIM>(m_pad,
-                                    n,
-                                    descr->host_data.w_pad.data(),
-                                    descr->host_data.v_pad.data(),
-                                    descr->host_data.B_pad.data());
-
-        data_marshalling2<T, BLOCKDIM>(m, m_pad, n, descr->host_data.B_pad.data(), X);
+        data_marshalling2<T, BLOCKDIM>(m, m_pad, n, B_pad, X);
     }
-
-    // void spike_algorithm(int                      m,
-    //                                int                      n,
-    //                                const double*            lower_diag,
-    //                                const double*            main_diag,
-    //                                const double*            upper_diag,
-    //                                const double*            b,
-    //                                double*                  x,
-    //                                const tridiagonal_descr* descr)
-    // {
-    //     spike_algorithm_template<double>(
-    //         m, n, lower_diag, main_diag, upper_diag, b, x, descr);
-    // }
 
     template void spike_algorithm_template<double>(int,
                                                    int,
@@ -656,5 +652,15 @@ namespace linalg
                                                    const double*,
                                                    const double*,
                                                    double*,
-                                                   const tridiagonal_descr*);
+                                                   double* lower_pad,
+                                                   double* main_pad,
+                                                   double* upper_pad,
+                                                   double* B_pad,
+                                                   double* w_pad,
+                                                   double* v_pad,
+                                                   double* mt,
+                                                   double* S_lower,
+                                                   double* S_main,
+                                                   double* S_upper,
+                                                   double* S_B);
 }

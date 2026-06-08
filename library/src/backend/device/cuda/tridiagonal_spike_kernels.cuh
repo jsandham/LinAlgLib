@@ -34,14 +34,12 @@
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void data_marshaling_kernel(int m,
                                        int m_pad,
-                                       const T* __restrict__ lower_in,
-                                       const T* __restrict__ main_in,
-                                       const T* __restrict__ upper_in,
-                                       const T* __restrict__ B_in,
-                                       T* __restrict__ lower_out,
-                                       T* __restrict__ main_out,
-                                       T* __restrict__ upper_out,
-                                       T* __restrict__ B_out)
+                                       const T* __restrict__ lower,
+                                       const T* __restrict__ main,
+                                       const T* __restrict__ upper,
+                                       T* __restrict__ lower_pad,
+                                       T* __restrict__ main_pad,
+                                       T* __restrict__ upper_pad)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -50,10 +48,38 @@ __global__ void data_marshaling_kernel(int m,
     const int gwid = gid / (m_pad / BLOCKDIM);
     const int glid = gid % (m_pad / BLOCKDIM);
 
-    lower_out[gid] = (gid < m) ? lower_in[BLOCKDIM * glid + gwid] : static_cast<T>(0);
-    main_out[gid]  = (gid < m) ? main_in[BLOCKDIM * glid + gwid] : static_cast<T>(1);
-    upper_out[gid] = (gid < m) ? upper_in[BLOCKDIM * glid + gwid] : static_cast<T>(0);
-    B_out[gid]     = (gid < m) ? B_in[BLOCKDIM * glid + gwid] : static_cast<T>(0);
+    if(gid >= m_pad)
+    {
+        return;
+    }
+
+    lower_pad[gid]
+        = (BLOCKDIM * glid + gwid < m) ? lower[BLOCKDIM * glid + gwid] : static_cast<T>(0);
+    main_pad[gid] = (BLOCKDIM * glid + gwid < m) ? main[BLOCKDIM * glid + gwid] : static_cast<T>(1);
+    upper_pad[gid]
+        = (BLOCKDIM * glid + gwid < m) ? upper[BLOCKDIM * glid + gwid] : static_cast<T>(0);
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void
+    data_marshaling_B_kernel(int m, int m_pad, const T* __restrict__ B, T* __restrict__ B_pad)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    const int batch = blockIdx.y;
+
+    const int gwid = gid / (m_pad / BLOCKDIM);
+    const int glid = gid % (m_pad / BLOCKDIM);
+
+    if(gid >= m_pad)
+    {
+        return;
+    }
+
+    B_pad[gid + m_pad * batch]
+        = (BLOCKDIM * glid + gwid < m) ? B[BLOCKDIM * glid + gwid + m * batch] : static_cast<T>(0);
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
@@ -64,12 +90,19 @@ __global__ void
     const int bid = blockIdx.x;
     const int gid = tid + BLOCKSIZE * bid;
 
+    const int batch = blockIdx.y;
+
     const int gwid = gid / (m_pad / BLOCKDIM);
     const int glid = gid % (m_pad / BLOCKDIM);
 
-    if(gid < m)
+    if(gid >= m_pad)
     {
-        B[BLOCKDIM * glid + gwid] = B_pad[gid];
+        return;
+    }
+
+    if(BLOCKDIM * glid + gwid < m)
+    {
+        B[BLOCKDIM * glid + gwid + m * batch] = B_pad[gid + m_pad * batch];
     }
 }
 
@@ -237,7 +270,8 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
             if(k < (BLOCKDIM - 2))
             {
-                rhs[nblocks * (k + 2) + gid] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                rhs[nblocks * (k + 2) + gid]
+                    += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
 
                 bk_2 = main[nblocks * (k + 2) + gid];
                 bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
@@ -263,7 +297,8 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
             w[nblocks * k + gid] += -tmp * w[nblocks * (k + 1) + gid];
             v[nblocks * k + gid] += -tmp * v[nblocks * (k + 1) + gid];
-            rhs[nblocks * k + gid] += -tmp * rhs[nblocks * (k + 1) + gid];
+            rhs[nblocks * k + gid]
+                += -tmp * rhs[nblocks * (k + 1) + gid];
 
             k -= 1;
         }
@@ -276,8 +311,10 @@ __global__ void LBMT_solve_kernel(int m_pad,
             w[nblocks * (k - 1) + gid] += -tmp2 * w[nblocks * (k + 1) + gid];
             v[nblocks * k + gid] += -tmp1 * v[nblocks * (k + 1) + gid];
             v[nblocks * (k - 1) + gid] += -tmp2 * v[nblocks * (k + 1) + gid];
-            rhs[nblocks * k + gid] += -tmp1 * rhs[nblocks * (k + 1) + gid];
-            rhs[nblocks * (k - 1) + gid] += -tmp2 * rhs[nblocks * (k + 1) + gid];
+            rhs[nblocks * k + gid]
+                += -tmp1 * rhs[nblocks * (k + 1) + gid];
+            rhs[nblocks * (k - 1) + gid]
+                += -tmp2 * rhs[nblocks * (k + 1) + gid];
 
             k -= 2;
         }
@@ -286,26 +323,28 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void fill_s_matrix_kernel(int m_pad,
-                                    int n,
-                                    const T* __restrict__ w,
-                                    const T* __restrict__ v,
-                                    const T* __restrict__ rhs,
-                                    T* __restrict__ S_lower,
-                                    T* __restrict__ S_main,
-                                    T* __restrict__ S_upper,
-                                    T* __restrict__ S_rhs)
+                                     int n,
+                                     const T* __restrict__ w,
+                                     const T* __restrict__ v,
+                                     const T* __restrict__ rhs,
+                                     T* __restrict__ S_lower,
+                                     T* __restrict__ S_main,
+                                     T* __restrict__ S_upper,
+                                     T* __restrict__ S_rhs)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
     const int gid = tid + BLOCKSIZE * bid;
+
+    const int batch = blockIdx.y;
 
     const int s_size = 2 * m_pad / BLOCKDIM;
 
     if(gid < s_size)
     {
         S_upper[gid] = (gid % 2 == 0) ? v[gid / 2] : static_cast<T>(1);
-        S_lower[gid] = (gid % 2 == 0) ? static_cast<T>(1)
-                                      : w[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+        S_lower[gid]
+            = (gid % 2 == 0) ? static_cast<T>(1) : w[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
     }
 
     if(gid == 0)
@@ -314,62 +353,43 @@ __global__ void fill_s_matrix_kernel(int m_pad,
         S_lower[1]          = static_cast<T>(0);
         S_upper[s_size - 2] = static_cast<T>(0);
         S_upper[s_size - 1] = static_cast<T>(0);
-        S_main[0]          = static_cast<T>(1);
-        S_main[s_size - 1] = static_cast<T>(1);
+        S_main[0]           = static_cast<T>(1);
+        S_main[s_size - 1]  = static_cast<T>(1);
     }
 
     if(gid >= 1 && gid < s_size - 1)
     {
-        S_main[gid] = (gid % 2 == 0) ? w[gid / 2]
-                                     : v[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+        S_main[gid]
+            = (gid % 2 == 0) ? w[gid / 2] : v[gid / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
     }
 
     if(gid < s_size / 2)
     {
-        S_rhs[2 * gid]     = rhs[gid];
-        S_rhs[2 * gid + 1] = rhs[gid + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+        S_rhs[2 * gid + s_size * batch] = rhs[gid + m_pad * batch];
+        S_rhs[2 * gid + 1 + s_size * batch]
+            = rhs[gid + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * batch];
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template <uint32_t S_SIZE, typename T>
-__global__ void S_solve_kernel(int n,
-                                  const T* __restrict__ S_lower,
-                                  const T* __restrict__ S_main,
-                                  const T* __restrict__ S_upper,
-                                  T* __restrict__ rhs)
+__global__ void S_solve_kernel(int m,
+                               int n,
+                               const T* __restrict__ S_lower,
+                               const T* __restrict__ S_main,
+                               const T* __restrict__ S_upper,
+                               T* __restrict__ rhs)
 {
     static_assert(S_SIZE >= 2);
+
+    const int batch = blockIdx.x;
 
     T mt[S_SIZE];
 
     constexpr int               PIVOT_MASK_WORDS = (S_SIZE + 31) / 32;
     PivotMask<PIVOT_MASK_WORDS> pivot_mask;
 
-    int k = 0;
-    T bk = S_main[k];
+    int k  = 0;
+    T   bk = S_main[k];
 
     while(k < S_SIZE)
     {
@@ -393,13 +413,13 @@ __global__ void S_solve_kernel(int n,
             pivot_mask.set_pivoting_to_1x1(k);
 
             // L * B * x = y
-            T rhsk = rhs[k] * inv_bk;
+            T rhsk = rhs[k + m * batch] * inv_bk;
 
-            rhs[k] = rhsk;
+            rhs[k + m * batch] = rhsk;
 
             if(k < (S_SIZE - 1))
             {
-                rhs[k + 1] += -(ak_1 * rhsk);
+                rhs[k + 1 + m * batch] += -(ak_1 * rhsk);
 
                 bk_1 = bk_1 - ak_1 * ck * inv_bk;
             }
@@ -426,15 +446,15 @@ __global__ void S_solve_kernel(int n,
             T bk_2 = static_cast<T>(0);
 
             // L * B * x = y
-            T rhsk   = rhs[k] * det;
-            T rhsk_1 = rhs[k + 1] * det;
+            T rhsk   = rhs[k + m * batch] * det;
+            T rhsk_1 = rhs[k + 1 + m * batch] * det;
 
-            rhs[k]       = (bk_1 * rhsk - ck * rhsk_1);
-            rhs[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+            rhs[k + m * batch]     = (bk_1 * rhsk - ck * rhsk_1);
+            rhs[k + 1 + m * batch] = (-ak_1 * rhsk + bk * rhsk_1);
 
             if(k < (S_SIZE - 2))
             {
-                rhs[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                rhs[k + 2 + m * batch] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
 
                 bk_2 = S_main[k + 2];
                 bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
@@ -458,7 +478,7 @@ __global__ void S_solve_kernel(int n,
         {
             const T tmp = mt[k];
 
-            rhs[k] += -tmp * rhs[k + 1];
+            rhs[k + m * batch] += -tmp * rhs[k + 1 + m * batch];
 
             k -= 1;
         }
@@ -467,30 +487,13 @@ __global__ void S_solve_kernel(int n,
             const T tmp1 = mt[k];
             const T tmp2 = mt[k - 1];
 
-            rhs[k] += -tmp1 * rhs[k + 1];
-            rhs[k - 1] += -tmp2 * rhs[k + 1];
+            rhs[k + m * batch] += -tmp1 * rhs[k + 1 + m * batch];
+            rhs[k - 1 + m * batch] += -tmp2 * rhs[k + 1 + m * batch];
 
             k -= 2;
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void backward_solve_kernel(
@@ -500,6 +503,8 @@ __global__ void backward_solve_kernel(
     const int bid = blockIdx.x;
     const int gid = tid + BLOCKSIZE * bid;
 
+    const int batch = blockIdx.y;
+
     const int nblocks = m_pad / BLOCKDIM;
 
     if(gid >= nblocks)
@@ -508,14 +513,14 @@ __global__ void backward_solve_kernel(
     }
 
     // backward solve (S * x = B_pad)
-    double x1 = (gid >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (gid - 1)] : 0.0f;
-    double x2 = (gid < (m_pad / BLOCKDIM - 1)) ? rhs[gid + 1] : 0.0f;
+    double x1 = (gid >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (gid - 1) + m_pad * batch ] : 0.0f;
+    double x2 = (gid < (m_pad / BLOCKDIM - 1)) ? rhs[gid + 1 + m_pad * batch] : 0.0f;
 
     for(int j = 1; j < BLOCKDIM - 1; j++)
     {
-        rhs[(m_pad / BLOCKDIM) * j + gid] = rhs[(m_pad / BLOCKDIM) * j + gid]
-                                            - w[(m_pad / BLOCKDIM) * j + gid] * x1
-                                            - v[(m_pad / BLOCKDIM) * j + gid] * x2;
+        rhs[(m_pad / BLOCKDIM) * j + gid + m_pad * batch]
+            = rhs[(m_pad / BLOCKDIM) * j + gid + m_pad * batch]
+              - w[(m_pad / BLOCKDIM) * j + gid] * x1 - v[(m_pad / BLOCKDIM) * j + gid] * x2;
     }
 }
 
@@ -717,5 +722,59 @@ __global__ void backward_solve_kernel(
 //         }
 //     }
 // }
+
+// Kernel that combines the swap-adjacent-pairs and scatter-to-B_pad steps that
+// previously ran on the host.  Each thread i in [0, s_size/2) handles one pair
+// of output elements, applying the same index permutation as the two host loops:
+//
+//   for(i = 1; i < s_size-1; i += 2)  swap(y[i], y[i+1]);
+//   for(i = 0; i < s_size/2; i++)
+//       B_pad[i]        = y[2*i];
+//       B_pad[i+stride] = y[2*i+1];
+//
+// The swap is folded into the read so no intermediate storage is needed.
+// Grid: dim3((s_size/2 + BLOCKSIZE-1) / BLOCKSIZE, n)
+//
+// for(int i = 1; i < s_size - 1; i += 2)
+// {
+//     double temp = h_y[i];
+//     h_y[i]      = h_y[i + 1];
+//     h_y[i + 1]  = temp;
+// }
+// for(int i = 0; i < s_size / 2; i++)
+// {
+//     h_B_pad[i]                                       = h_y[2 * i];
+//     h_B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)] = h_y[2 * i + 1];
+// }
+template <uint32_t BLOCKDIM, uint32_t BLOCKSIZE, typename T>
+__global__ void scatter_S_B_to_B_pad_kernel(int s_size,
+                                          int m_pad,
+                                          const T* __restrict__ S_B,
+                                          T* __restrict__ B_pad)
+{
+    const int i     = blockIdx.x * BLOCKSIZE + threadIdx.x; // [0, s_size/2)
+    const int batch = blockIdx.y;                           // [0, n)
+
+    if(i >= s_size / 2)
+        return;
+
+    const T* S_B_j   = S_B + batch * s_size;
+    T*       B_pad_j = B_pad + batch * m_pad;
+
+    const int stride = (m_pad / BLOCKDIM) * (BLOCKDIM - 1);
+
+    // After the swap loop, element at position 2*i is:
+    //   i == 0  -> S_B[0]       (not touched by the swap)
+    //   i  > 0  -> S_B[2*i - 1] (position 2*i was swapped with 2*i-1)
+    const T val_even = (i == 0) ? S_B_j[0] : S_B_j[2 * i - 1];
+
+    // After the swap loop, element at position 2*i+1 is:
+    //   2*i+1 < s_size-1  -> S_B[2*i + 2] (swapped with its right neighbour)
+    //   2*i+1 == s_size-1 -> S_B[s_size-1] (last element, not touched)
+    const T val_odd = (2 * i + 1 < s_size - 1) ? S_B_j[2 * i + 2] : S_B_j[s_size - 1];
+
+    B_pad_j[i]          = val_even;
+    B_pad_j[i + stride] = val_odd;
+}
 
 #endif // TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
