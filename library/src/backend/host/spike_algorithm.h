@@ -37,17 +37,18 @@ namespace linalg
                                   const T* upper_diag,
                                   const T* b,
                                   T*       x,
-                                  T*       lower_pad,
-                                  T*       main_pad,
-                                  T*       upper_pad,
-                                  T*       B_pad,
-                                  T*       w_pad,
-                                  T*       v_pad,
-                                  T*       mt,
-                                  T*       S_lower,
-                                  T*       S_main,
-                                  T*       S_upper,
-                                  T*       S_B);
+                                  T**      lower_pad,
+                                  T**      main_pad,
+                                  T**      upper_pad,
+                                  T**      B_pad,
+                                  T**      w_pad,
+                                  T**      v_pad,
+                                  T**      mt,
+                                  T**      S_lower,
+                                  T**      S_main,
+                                  T**      S_upper,
+                                  T**      S_B,
+                                  int      level = 0);
 }
 
 #endif // SPIKE_ALGORITHM_H

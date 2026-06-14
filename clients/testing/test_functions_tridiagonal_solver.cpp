@@ -57,14 +57,14 @@ bool Testing::test_tridiagonal_class_solver(Arguments arg)
     upper_diag[m - 1] = 0.0;
     for(int i = 0; i < m; i++)
     {
-        main_diag[i] = 3.0;
+        main_diag[i] = 2.0;
         if(i > 0)
         {
             lower_diag[i] = 1.0;
         }
         if(i < m - 1)
         {
-            upper_diag[i] = 1.2;
+            upper_diag[i] = 0.7;
         }
     }
 
@@ -83,12 +83,12 @@ bool Testing::test_tridiagonal_class_solver(Arguments arg)
     tridiagonal_solver solver(m, n, pivoting_strategy::partial);
 
     // To run on device: move data and solver workspace to device
-    //lower_diag.move_to_device();
-    //main_diag.move_to_device();
-    //upper_diag.move_to_device();
-    //rhs.move_to_device();
-    //solution.move_to_device();
-    //solver.move_to_device();
+    lower_diag.move_to_device();
+    main_diag.move_to_device();
+    upper_diag.move_to_device();
+    rhs.move_to_device();
+    solution.move_to_device();
+    solver.move_to_device();
 
     // Warmup
     for(int i = 0; i < 10; i++)
@@ -110,12 +110,12 @@ bool Testing::test_tridiagonal_class_solver(Arguments arg)
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     // Move back to host for verification (no-op if already on host)
-    //solution.move_to_host();
-    //lower_diag.move_to_host();
-    //main_diag.move_to_host();
-    //upper_diag.move_to_host();
-    //rhs.move_to_host();
-    //solver.move_to_host();
+    solution.move_to_host();
+    lower_diag.move_to_host();
+    main_diag.move_to_host();
+    upper_diag.move_to_host();
+    rhs.move_to_host();
+    solver.move_to_host();
 
     // Verify solution by computing residual: r = b - A*x
     double max_residual = 0.0;

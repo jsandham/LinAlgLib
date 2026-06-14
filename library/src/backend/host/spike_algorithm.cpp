@@ -30,6 +30,8 @@
 
 #include "../../trace.h"
 
+#include "../../../include/direct_solvers/tridiagonal/tridiagonal.h"
+
 #include "spike_algorithm.h"
 
 namespace linalg
@@ -531,19 +533,22 @@ namespace linalg
 #if defined(_OPENMP)
 #pragma omp parallel for schedule(dynamic, 1024)
 #endif
-        for(int i = 0; i < nblocks; i++)
+        for(int k = 0; k < n; k++)
         {
-            const T x1
-                = (i >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)] : static_cast<T>(0);
-            const T x2 = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1] : static_cast<T>(0);
-
-            for(int j = 1; j < BLOCKDIM - 1; j++)
+            for(int i = 0; i < nblocks; i++)
             {
-                for(int k = 0; k < n; k++)
+                const T x1 = (i >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)]
+                                      : static_cast<T>(0);
+                const T x2 = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1] : static_cast<T>(0);
+
+                for(int j = 1; j < BLOCKDIM - 1; j++)
                 {
+                    //for(int k = 0; k < n; k++)
+                    //{
                     rhs[(m_pad / BLOCKDIM) * j + i + m_pad * k]
                         = rhs[(m_pad / BLOCKDIM) * j + i + m_pad * k]
                           - w[(m_pad / BLOCKDIM) * j + i] * x1 - v[(m_pad / BLOCKDIM) * j + i] * x2;
+                    //}
                 }
             }
         }
@@ -557,37 +562,40 @@ namespace linalg
                                   const T* upper_diag,
                                   const T* B,
                                   T*       X,
-                                  T*       lower_pad,
-                                  T*       main_pad,
-                                  T*       upper_pad,
-                                  T*       B_pad,
-                                  T*       w_pad,
-                                  T*       v_pad,
-                                  T*       mt,
-                                  T*       S_lower,
-                                  T*       S_main,
-                                  T*       S_upper,
-                                  T*       S_B)
+                                  T**      lower_pad,
+                                  T**      main_pad,
+                                  T**      upper_pad,
+                                  T**      B_pad,
+                                  T**      w_pad,
+                                  T**      v_pad,
+                                  T**      mt,
+                                  T**      S_lower,
+                                  T**      S_main,
+                                  T**      S_upper,
+                                  T**      S_B,
+                                  int      level)
     {
         ROUTINE_TRACE("spike_algorithm_template");
-        constexpr int BLOCKDIM = 8;
+        constexpr int BLOCKDIM = pivoting_data::block_dim;
 
-        const int m_pad = next_power_of_two(m);
+        int m_pad = next_power_of_two(m);
+
+        m_pad = std::max(m_pad, BLOCKDIM);
 
         {
             ROUTINE_TRACE("AAAAA");
             for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
             {
-                lower_pad[i] = static_cast<T>(0);
-                main_pad[i]  = static_cast<T>(1);
-                upper_pad[i] = static_cast<T>(0);
+                lower_pad[level][i] = static_cast<T>(0);
+                main_pad[level][i]  = static_cast<T>(1);
+                upper_pad[level][i] = static_cast<T>(0);
             }
 
             for(int j = 0; j < n; j++)
             {
                 for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
                 {
-                    B_pad[i + m_pad * j] = static_cast<T>(0);
+                    B_pad[level][i + m_pad * j] = static_cast<T>(0);
                 }
             }
         }
@@ -599,19 +607,27 @@ namespace linalg
                                       main_diag,
                                       upper_diag,
                                       B,
-                                      lower_pad,
-                                      main_pad,
-                                      upper_pad,
-                                      B_pad);
+                                      lower_pad[level],
+                                      main_pad[level],
+                                      upper_pad[level],
+                                      B_pad[level]);
 
         for(int i = 0; i < m_pad; i++)
         {
-            w_pad[i] = static_cast<T>(0);
-            v_pad[i] = static_cast<T>(0);
-            mt[i]    = static_cast<T>(0);
+            w_pad[level][i] = static_cast<T>(0);
+            v_pad[level][i] = static_cast<T>(0);
+            mt[level][i]    = static_cast<T>(0);
         }
 
-        LBMT_solve<T, BLOCKDIM>(m_pad, n, lower_pad, main_pad, upper_pad, w_pad, v_pad, mt, B_pad);
+        LBMT_solve<T, BLOCKDIM>(m_pad,
+                                n,
+                                lower_pad[level],
+                                main_pad[level],
+                                upper_pad[level],
+                                w_pad[level],
+                                v_pad[level],
+                                mt[level],
+                                B_pad[level]);
 
         const int S_size = 2 * m_pad / BLOCKDIM;
 
@@ -620,29 +636,37 @@ namespace linalg
 
             for(int i = 0; i < S_size; i++)
             {
-                S_lower[i] = static_cast<T>(0);
-                S_main[i]  = static_cast<T>(0);
-                S_upper[i] = static_cast<T>(0);
+                S_lower[level][i] = static_cast<T>(0);
+                S_main[level][i]  = static_cast<T>(0);
+                S_upper[level][i] = static_cast<T>(0);
             }
 
             for(int j = 0; j < n; j++)
             {
                 for(int i = 0; i < S_size; i++)
                 {
-                    S_B[i + S_size * j] = static_cast<T>(0);
+                    S_B[level][i + S_size * j] = static_cast<T>(0);
                 }
             }
         }
 
-        fill_S_matrix<T, BLOCKDIM>(m_pad, n, w_pad, v_pad, B_pad, S_lower, S_main, S_upper, S_B);
+        fill_S_matrix<T, BLOCKDIM>(m_pad,
+                                   n,
+                                   w_pad[level],
+                                   v_pad[level],
+                                   B_pad[level],
+                                   S_lower[level],
+                                   S_main[level],
+                                   S_upper[level],
+                                   S_B[level]);
 
-        S_solve<T>(S_size, n, S_lower, S_main, S_upper, S_B);
+        S_solve<T>(S_size, n, S_lower[level], S_main[level], S_upper[level], S_B[level]);
 
-        scatter_S_B_to_B_pad_kernel<T, BLOCKDIM>(S_size, m_pad, n, S_B, B_pad);
+        scatter_S_B_to_B_pad_kernel<T, BLOCKDIM>(S_size, m_pad, n, S_B[level], B_pad[level]);
 
-        backward_solve<T, BLOCKDIM>(m_pad, n, w_pad, v_pad, B_pad);
+        backward_solve<T, BLOCKDIM>(m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
 
-        data_marshalling2<T, BLOCKDIM>(m, m_pad, n, B_pad, X);
+        data_marshalling2<T, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
     }
 
     template void spike_algorithm_template<double>(int,
@@ -652,15 +676,16 @@ namespace linalg
                                                    const double*,
                                                    const double*,
                                                    double*,
-                                                   double* lower_pad,
-                                                   double* main_pad,
-                                                   double* upper_pad,
-                                                   double* B_pad,
-                                                   double* w_pad,
-                                                   double* v_pad,
-                                                   double* mt,
-                                                   double* S_lower,
-                                                   double* S_main,
-                                                   double* S_upper,
-                                                   double* S_B);
+                                                   double** lower_pad,
+                                                   double** main_pad,
+                                                   double** upper_pad,
+                                                   double** B_pad,
+                                                   double** w_pad,
+                                                   double** v_pad,
+                                                   double** mt,
+                                                   double** S_lower,
+                                                   double** S_main,
+                                                   double** S_upper,
+                                                   double** S_B,
+                                                   int      level);
 }

@@ -61,19 +61,22 @@ namespace linalg
 
     struct pivoting_data
     {
-        vector<double> lower_pad;
-        vector<double> main_pad;
-        vector<double> upper_pad;
-        vector<double> B_pad;
+        constexpr static int tridiagonal_max_recursion_levels = 3;
+        constexpr static int block_dim                        = 256;
 
-        vector<double> w;
-        vector<double> v;
-        vector<double> mt;
+        vector<double> lower_pad[tridiagonal_max_recursion_levels];
+        vector<double> main_pad[tridiagonal_max_recursion_levels];
+        vector<double> upper_pad[tridiagonal_max_recursion_levels];
+        vector<double> B_pad[tridiagonal_max_recursion_levels];
 
-        vector<double> S_lower;
-        vector<double> S_main;
-        vector<double> S_upper;
-        vector<double> S_B;
+        vector<double> w[tridiagonal_max_recursion_levels];
+        vector<double> v[tridiagonal_max_recursion_levels];
+        vector<double> mt[tridiagonal_max_recursion_levels];
+
+        vector<double> S_lower[tridiagonal_max_recursion_levels];
+        vector<double> S_main[tridiagonal_max_recursion_levels];
+        vector<double> S_upper[tridiagonal_max_recursion_levels];
+        vector<double> S_B[tridiagonal_max_recursion_levels];
     };
 
     class tridiagonal_solver

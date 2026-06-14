@@ -43,6 +43,35 @@ void linalg::host_partial_pivoting_algorithm(int                   m,
                                              pivoting_data&        pivot_data)
 {
     ROUTINE_TRACE("linalg::host_partial_pivoting_algorithm");
+
+    const int L = pivoting_data::tridiagonal_max_recursion_levels;
+    double*   lower_pad_ptrs[L];
+    double*   main_pad_ptrs[L];
+    double*   upper_pad_ptrs[L];
+    double*   B_pad_ptrs[L];
+    double*   w_ptrs[L];
+    double*   v_ptrs[L];
+    double*   mt_ptrs[L];
+    double*   S_lower_ptrs[L];
+    double*   S_main_ptrs[L];
+    double*   S_upper_ptrs[L];
+    double*   S_B_ptrs[L];
+
+    for(int i = 0; i < L; i++)
+    {
+        lower_pad_ptrs[i] = pivot_data.lower_pad[i].get_vec();
+        main_pad_ptrs[i]  = pivot_data.main_pad[i].get_vec();
+        upper_pad_ptrs[i] = pivot_data.upper_pad[i].get_vec();
+        B_pad_ptrs[i]     = pivot_data.B_pad[i].get_vec();
+        w_ptrs[i]         = pivot_data.w[i].get_vec();
+        v_ptrs[i]         = pivot_data.v[i].get_vec();
+        mt_ptrs[i]        = pivot_data.mt[i].get_vec();
+        S_lower_ptrs[i]   = pivot_data.S_lower[i].get_vec();
+        S_main_ptrs[i]    = pivot_data.S_main[i].get_vec();
+        S_upper_ptrs[i]   = pivot_data.S_upper[i].get_vec();
+        S_B_ptrs[i]       = pivot_data.S_B[i].get_vec();
+    }
+
     spike_algorithm_template<double>(m,
                                      n,
                                      lower_diag.get_vec(),
@@ -50,17 +79,17 @@ void linalg::host_partial_pivoting_algorithm(int                   m,
                                      upper_diag.get_vec(),
                                      rhs.get_vec(),
                                      solution.get_vec(),
-                                     pivot_data.lower_pad.get_vec(),
-                                     pivot_data.main_pad.get_vec(),
-                                     pivot_data.upper_pad.get_vec(),
-                                     pivot_data.B_pad.get_vec(),
-                                     pivot_data.w.get_vec(),
-                                     pivot_data.v.get_vec(),
-                                     pivot_data.mt.get_vec(),
-                                     pivot_data.S_lower.get_vec(),
-                                     pivot_data.S_main.get_vec(),
-                                     pivot_data.S_upper.get_vec(),
-                                     pivot_data.S_B.get_vec());
+                                     lower_pad_ptrs,
+                                     main_pad_ptrs,
+                                     upper_pad_ptrs,
+                                     B_pad_ptrs,
+                                     w_ptrs,
+                                     v_ptrs,
+                                     mt_ptrs,
+                                     S_lower_ptrs,
+                                     S_main_ptrs,
+                                     S_upper_ptrs,
+                                     S_B_ptrs);
 }
 
 void linalg::host_non_pivoting_algorithm(int                   m,

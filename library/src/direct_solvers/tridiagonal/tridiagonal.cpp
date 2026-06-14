@@ -138,24 +138,38 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     }
     case pivoting_strategy::partial:
     {
-        const int m_pad = static_cast<int>(next_power_of_two(static_cast<uint64_t>(m)));
+        constexpr int BLOCKDIM = pivoting_data::block_dim;
 
-        // For partial pivoting, we would initialize the padded buffers here.
-        pivot_data.lower_pad.resize(m_pad);
-        pivot_data.main_pad.resize(m_pad);
-        pivot_data.upper_pad.resize(m_pad);
-        pivot_data.B_pad.resize(m_pad * n);
-        pivot_data.w.resize(m_pad);
-        pivot_data.v.resize(m_pad);
-        pivot_data.mt.resize(m_pad);
+        int current_m = m;
+        for(int level = 0; level < non_pivoting_data::tridiagonal_max_recursion_levels; level++)
+        {
+            std::cout << "level: " << level << " current_m: " << current_m << std::endl;
+            //if(current_m <= 1024)
+            //    break;
 
-        constexpr int BLOCKDIM = 8;
-        const int     S_size   = 2 * m_pad / BLOCKDIM;
+            int m_pad = static_cast<int>(next_power_of_two(static_cast<uint64_t>(current_m)));
+            m_pad     = std::max(m_pad, BLOCKDIM);
 
-        pivot_data.S_lower.resize(S_size);
-        pivot_data.S_main.resize(S_size);
-        pivot_data.S_upper.resize(S_size);
-        pivot_data.S_B.resize(S_size * n);
+            // For partial pivoting, we would initialize the padded buffers here.
+            pivot_data.lower_pad[level].resize(m_pad);
+            pivot_data.main_pad[level].resize(m_pad);
+            pivot_data.upper_pad[level].resize(m_pad);
+            pivot_data.B_pad[level].resize(m_pad * n);
+            pivot_data.w[level].resize(m_pad);
+            pivot_data.v[level].resize(m_pad);
+            pivot_data.mt[level].resize(m_pad);
+
+            const int S_size = 2 * m_pad / BLOCKDIM;
+
+            std::cout << "S_size: " << S_size << std::endl;
+
+            pivot_data.S_lower[level].resize(S_size);
+            pivot_data.S_main[level].resize(S_size);
+            pivot_data.S_upper[level].resize(S_size);
+            pivot_data.S_B[level].resize(S_size * n);
+
+            current_m = S_size;
+        }
         break;
     }
     }
@@ -183,17 +197,20 @@ void linalg::tridiagonal_solver::move_to_device()
             non_pivot_data.spike_X[i].move_to_device();
         }
 
-        pivot_data.lower_pad.move_to_device();
-        pivot_data.main_pad.move_to_device();
-        pivot_data.upper_pad.move_to_device();
-        pivot_data.B_pad.move_to_device();
-        pivot_data.w.move_to_device();
-        pivot_data.v.move_to_device();
-        pivot_data.mt.move_to_device();
-        pivot_data.S_lower.move_to_device();
-        pivot_data.S_main.move_to_device();
-        pivot_data.S_upper.move_to_device();
-        pivot_data.S_B.move_to_device();
+        for(int i = 0; i < pivoting_data::tridiagonal_max_recursion_levels; i++)
+        {
+            pivot_data.lower_pad[i].move_to_device();
+            pivot_data.main_pad[i].move_to_device();
+            pivot_data.upper_pad[i].move_to_device();
+            pivot_data.B_pad[i].move_to_device();
+            pivot_data.w[i].move_to_device();
+            pivot_data.v[i].move_to_device();
+            pivot_data.mt[i].move_to_device();
+            pivot_data.S_lower[i].move_to_device();
+            pivot_data.S_main[i].move_to_device();
+            pivot_data.S_upper[i].move_to_device();
+            pivot_data.S_B[i].move_to_device();
+        }
 
         on_host = false;
     }
@@ -216,17 +233,20 @@ void linalg::tridiagonal_solver::move_to_host()
             non_pivot_data.spike_X[i].move_to_host();
         }
 
-        pivot_data.lower_pad.move_to_host();
-        pivot_data.main_pad.move_to_host();
-        pivot_data.upper_pad.move_to_host();
-        pivot_data.B_pad.move_to_host();
-        pivot_data.w.move_to_host();
-        pivot_data.v.move_to_host();
-        pivot_data.mt.move_to_host();
-        pivot_data.S_lower.move_to_host();
-        pivot_data.S_main.move_to_host();
-        pivot_data.S_upper.move_to_host();
-        pivot_data.S_B.move_to_host();
+        for(int i = 0; i < pivoting_data::tridiagonal_max_recursion_levels; i++)
+        {
+            pivot_data.lower_pad[i].move_to_host();
+            pivot_data.main_pad[i].move_to_host();
+            pivot_data.upper_pad[i].move_to_host();
+            pivot_data.B_pad[i].move_to_host();
+            pivot_data.w[i].move_to_host();
+            pivot_data.v[i].move_to_host();
+            pivot_data.mt[i].move_to_host();
+            pivot_data.S_lower[i].move_to_host();
+            pivot_data.S_main[i].move_to_host();
+            pivot_data.S_upper[i].move_to_host();
+            pivot_data.S_B[i].move_to_host();
+        }
 
         on_host = true;
     }
