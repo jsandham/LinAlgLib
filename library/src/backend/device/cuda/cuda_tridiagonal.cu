@@ -488,43 +488,30 @@ namespace linalg
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void launch_LBMT_solve_wvmt(int      m_pad,
-                                  const T* lower,
-                                  const T* main,
-                                  const T* upper,
-                                  T*       w,
-                                  T*       v,
-                                  T*       mt)
+    static void launch_LBMT_solve_wvmt(
+        int m_pad, const T* lower, const T* main, const T* upper, T* w, T* v, T* mt)
     {
         ROUTINE_TRACE("launch_LBMT_solve_wvmt");
 
         const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
 
-        LBMT_solve_wvmt_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(grid, 1, 1), dim3(BLOCKSIZE, 1, 1)>>>(
-            m_pad, lower, main, upper, w, v, mt);
+        LBMT_solve_wvmt_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<dim3(grid, 1, 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, lower, main, upper, w, v, mt);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void launch_LBMT_solve_rhs(int      m_pad,
-                                      int      n,
-                                      const T* lower,
-                                      const T* main,
-                                      const T* upper,
-                                      const T* mt,
-                                      T*       rhs)
+    static void launch_LBMT_solve_rhs(
+        int m_pad, int n, const T* lower, const T* main, const T* upper, const T* mt, T* rhs)
     {
         ROUTINE_TRACE("launch_LBMT_solve_rhs");
 
         const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
 
-        LBMT_solve_rhs_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(grid, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(
-            m_pad, n, lower, main, upper, mt, rhs);
+        LBMT_solve_rhs_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<dim3(grid, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, n, lower, main, upper, mt, rhs);
         CHECK_CUDA_LAUNCH_ERROR();
     }
-
-
-
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void launch_fill_s_matrix(int      m_pad,
@@ -541,8 +528,9 @@ namespace linalg
 
         const int s_size = 2 * m_pad / BLOCKDIM;
         const int s_grid = (s_size - 1) / BLOCKSIZE + 1;
-        fill_s_matrix_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(s_grid, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(
-            m_pad, n, w, v, B_pad, S_lower, S_main, S_upper, S_B);
+        fill_s_matrix_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<dim3(s_grid, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(
+                m_pad, n, w, v, B_pad, S_lower, S_main, S_upper, S_B);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
@@ -648,37 +636,27 @@ namespace linalg
         //                                            B_pad[level] + batch * m_pad);
         // }
 
-
         CHECK_CUDA(cudaMemset(w_pad[level], 0, sizeof(double) * m_pad));
         CHECK_CUDA(cudaMemset(v_pad[level], 0, sizeof(double) * m_pad));
 
         launch_LBMT_solve_wvmt<BLOCKSIZE, BLOCKDIM>(m_pad,
-                                lower_pad[level],
-                                main_pad[level],
-                                upper_pad[level],
-                                w_pad[level],
-                                v_pad[level],
-                                mt[level]);
+                                                    lower_pad[level],
+                                                    main_pad[level],
+                                                    upper_pad[level],
+                                                    w_pad[level],
+                                                    v_pad[level],
+                                                    mt[level]);
 
         for(int i = 0; i < n; i += 32768)
         {
             launch_LBMT_solve_rhs<BLOCKSIZE, BLOCKDIM>(m_pad,
-                                        std::min(n - i, 32768),
-                                        lower_pad[level],
-                                        main_pad[level],
-                                        upper_pad[level],
-                                        mt[level],
-                                        B_pad[level] + m_pad * i);
+                                                       std::min(n - i, 32768),
+                                                       lower_pad[level],
+                                                       main_pad[level],
+                                                       upper_pad[level],
+                                                       mt[level],
+                                                       B_pad[level] + m_pad * i);
         }
-
-
-
-
-
-
-
-
-
 
         launch_fill_s_matrix<BLOCKSIZE, BLOCKDIM>(m_pad,
                                                   n,
@@ -716,25 +694,26 @@ namespace linalg
         }
         else
         {
-            tridiagonal_partial_pivoting_solver_dispatch(s_size,
-                                                             n,
-                                                             S_lower[level],
-                                                             S_main[level],
-                                                             S_upper[level],
-                                                             S_B[level],
-                                                             S_B[level], // reuse S_B as the rhs for the recursive call
-                                                             lower_pad,
-                                                             main_pad,
-                                                             upper_pad,
-                                                             B_pad,
-                                                             w_pad,
-                                                             v_pad,
-                                                             mt,
-                                                             S_lower,
-                                                             S_main,
-                                                             S_upper,
-                                                             S_B,
-                                                             level + 1);
+            tridiagonal_partial_pivoting_solver_dispatch(
+                s_size,
+                n,
+                S_lower[level],
+                S_main[level],
+                S_upper[level],
+                S_B[level],
+                S_B[level], // reuse S_B as the rhs for the recursive call
+                lower_pad,
+                main_pad,
+                upper_pad,
+                B_pad,
+                w_pad,
+                v_pad,
+                mt,
+                S_lower,
+                S_main,
+                S_upper,
+                S_B,
+                level + 1);
         }
 
         launch_scatter_S_B_to_B_pad<BLOCKDIM, BLOCKSIZE>(m_pad, n, S_B[level], B_pad[level]);
