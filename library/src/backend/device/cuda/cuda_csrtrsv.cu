@@ -43,36 +43,32 @@ void linalg::free_csrtrsv_cuda_data(csrtrsv_descr* descr)
     {
         if(descr->done_array != nullptr)
         {
-            std::cout << "Freeing done_array" << std::endl;
             CHECK_CUDA(cudaFree(descr->done_array));
         }
 
         if(descr->row_perm != nullptr)
         {
-            std::cout << "Freeing row_perm" << std::endl;
             CHECK_CUDA(cudaFree(descr->row_perm));
         }
 
         if(descr->diag_ind != nullptr)
         {
-            std::cout << "Freeing diag_ind" << std::endl;
             CHECK_CUDA(cudaFree(descr->diag_ind));
         }
     }
 }
 
+template <typename T>
 void linalg::cuda_csrtrsv_analysis(int             m,
                                    int             n,
                                    int             nnz,
                                    const int*      csr_row_ptr,
                                    const int*      csr_col_ind,
-                                   const double*   csr_val,
+                                   const T*        csr_val,
                                    triangular_type tri_type,
                                    diagonal_type   diag_type,
                                    csrtrsv_descr*  descr)
 {
-    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
-
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
     assert(descr->row_perm == nullptr);
@@ -136,15 +132,16 @@ void linalg::cuda_csrtrsv_analysis(int             m,
     // }
     // std::cout << "" << std::endl;
 }
+template <typename T>
 void linalg::cuda_csrtrsv_solve(int                  m,
                                 int                  n,
                                 int                  nnz,
-                                double               alpha,
+                                T                    alpha,
                                 const int*           csr_row_ptr,
                                 const int*           csr_col_ind,
-                                const double*        csr_val,
-                                const double*        b,
-                                double*              x,
+                                const T*             csr_val,
+                                const T*             b,
+                                T*                   x,
                                 triangular_type      tri_type,
                                 diagonal_type        diag_type,
                                 const csrtrsv_descr* descr)
@@ -178,3 +175,8 @@ void linalg::cuda_csrtrsv_solve(int                  m,
     // }
     // std::cout << std::endl;
 }
+
+template void linalg::cuda_csrtrsv_analysis<double>(int, int, int, const int*, const int*, const double*, triangular_type, diagonal_type, csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_analysis<float>(int, int, int, const int*, const int*, const float*, triangular_type, diagonal_type, csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_solve<double>(int, int, int, double, const int*, const int*, const double*, const double*, double*, triangular_type, diagonal_type, const csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_solve<float>(int, int, int, float, const int*, const int*, const float*, const float*, float*, triangular_type, diagonal_type, const csrtrsv_descr*);

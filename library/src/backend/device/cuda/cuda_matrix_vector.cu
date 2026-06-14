@@ -36,14 +36,15 @@
 //-------------------------------------------------------------------------------
 // sparse matrix-vector product y = A*x
 //-------------------------------------------------------------------------------
-void linalg::cuda_matrix_vector_product(int           m,
-                                        int           n,
-                                        int           nnz,
-                                        const int*    csr_row_ptr,
-                                        const int*    csr_col_ind,
-                                        const double* csr_val,
-                                        const double* x,
-                                        double*       y)
+template <typename T>
+void linalg::cuda_matrix_vector_product(int        m,
+                                        int        n,
+                                        int        nnz,
+                                        const int* csr_row_ptr,
+                                        const int* csr_col_ind,
+                                        const T*   csr_val,
+                                        const T*   x,
+                                        T*         y)
 {
     ROUTINE_TRACE("linalg::cuda_matrix_vector_product_impl");
 
@@ -52,22 +53,22 @@ void linalg::cuda_matrix_vector_product(int           m,
     if(avg_nnz_per_row <= 8)
     {
         csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
-            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+            m, n, nnz, T(1), csr_row_ptr, csr_col_ind, csr_val, x, T(0), y);
     }
     else if(avg_nnz_per_row <= 16)
     {
         csrmv_vector_kernel<256, 8><<<((m - 1) / (256 / 8) + 1), 256>>>(
-            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+            m, n, nnz, T(1), csr_row_ptr, csr_col_ind, csr_val, x, T(0), y);
     }
     else if(avg_nnz_per_row <= 32)
     {
         csrmv_vector_kernel<256, 16><<<((m - 1) / (256 / 16) + 1), 256>>>(
-            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+            m, n, nnz, T(1), csr_row_ptr, csr_col_ind, csr_val, x, T(0), y);
     }
     else
     {
         csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
-            m, n, nnz, 1.0, csr_row_ptr, csr_col_ind, csr_val, x, 0.0, y);
+            m, n, nnz, T(1), csr_row_ptr, csr_col_ind, csr_val, x, T(0), y);
     }
     CHECK_CUDA_LAUNCH_ERROR();
 }
@@ -75,15 +76,16 @@ void linalg::cuda_matrix_vector_product(int           m,
 //-------------------------------------------------------------------------------
 // Compute residual res = b - A * x
 //-------------------------------------------------------------------------------
-void linalg::cuda_compute_residual(int           m,
-                                   int           n,
-                                   int           nnz,
-                                   const int*    csr_row_ptr,
-                                   const int*    csr_col_ind,
-                                   const double* csr_val,
-                                   const double* x,
-                                   const double* b,
-                                   double*       res)
+template <typename T>
+void linalg::cuda_compute_residual(int        m,
+                                   int        n,
+                                   int        nnz,
+                                   const int* csr_row_ptr,
+                                   const int* csr_col_ind,
+                                   const T*   csr_val,
+                                   const T*   x,
+                                   const T*   b,
+                                   T*         res)
 {
     ROUTINE_TRACE("linalg::cuda_compute_residual_impl");
     compute_residual_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
@@ -98,27 +100,29 @@ void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
     }
 }
 
+template <typename T>
 void linalg::cuda_csrmv_analysis(int             m,
                                  int             n,
                                  int             nnz,
                                  const int*      csr_row_ptr,
                                  const int*      csr_col_ind,
-                                 const double*   csr_val,
+                                 const T*        csr_val,
                                  csrmv_algorithm alg,
                                  csrmv_descr*    descr)
 {
 }
 
+template <typename T>
 void linalg::cuda_csrmv_solve(int                m,
                               int                n,
                               int                nnz,
-                              double             alpha,
+                              T                  alpha,
                               const int*         csr_row_ptr,
                               const int*         csr_col_ind,
-                              const double*      csr_val,
-                              const double*      x,
-                              double             beta,
-                              double*            y,
+                              const T*           csr_val,
+                              const T*           x,
+                              T                  beta,
+                              T*                 y,
                               csrmv_algorithm    alg,
                               const csrmv_descr* descr)
 {
@@ -147,3 +151,12 @@ void linalg::cuda_csrmv_solve(int                m,
             m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
     }
 }
+
+template void linalg::cuda_matrix_vector_product<double>(int, int, int, const int*, const int*, const double*, const double*, double*);
+template void linalg::cuda_matrix_vector_product<float>(int, int, int, const int*, const int*, const float*, const float*, float*);
+template void linalg::cuda_compute_residual<double>(int, int, int, const int*, const int*, const double*, const double*, const double*, double*);
+template void linalg::cuda_compute_residual<float>(int, int, int, const int*, const int*, const float*, const float*, const float*, float*);
+template void linalg::cuda_csrmv_analysis<double>(int, int, int, const int*, const int*, const double*, csrmv_algorithm, csrmv_descr*);
+template void linalg::cuda_csrmv_analysis<float>(int, int, int, const int*, const int*, const float*, csrmv_algorithm, csrmv_descr*);
+template void linalg::cuda_csrmv_solve<double>(int, int, int, double, const int*, const int*, const double*, const double*, double, double*, csrmv_algorithm, const csrmv_descr*);
+template void linalg::cuda_csrmv_solve<float>(int, int, int, float, const int*, const int*, const float*, const float*, float, float*, csrmv_algorithm, const csrmv_descr*);

@@ -62,19 +62,16 @@ void linalg::free_csric0_cuda_data(csric0_descr* descr)
     {
         if(descr->done_array != nullptr)
         {
-            std::cout << "Freeing done_array" << std::endl;
             CHECK_CUDA(cudaFree(descr->done_array));
         }
 
         if(descr->row_perm != nullptr)
         {
-            std::cout << "Freeing row_perm" << std::endl;
             CHECK_CUDA(cudaFree(descr->row_perm));
         }
 
         if(descr->diag_ind != nullptr)
         {
-            std::cout << "Freeing diag_ind" << std::endl;
             CHECK_CUDA(cudaFree(descr->diag_ind));
         }
     }

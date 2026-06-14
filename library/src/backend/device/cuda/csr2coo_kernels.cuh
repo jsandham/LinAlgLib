@@ -137,15 +137,15 @@ __global__ void fill_identity_permuation_kernel(int length, int* __restrict__ pe
     }
 }
 
-template <uint32_t BLOCKSIZE>
+template <uint32_t BLOCKSIZE, typename T>
 __global__ void csr2csc_permute_colval_kernel(int m,
                                               int n,
                                               int nnz,
                                               const int* __restrict__ coo_row_ind,
-                                              const double* __restrict__ csr_val,
+                                              const T* __restrict__ csr_val,
                                               const int* __restrict__ perm,
                                               int* __restrict__ csc_row_ind,
-                                              double* __restrict__ csc_val)
+                                              T* __restrict__ csc_val)
 {
     int tid = threadIdx.x;
     int bid = blockIdx.x;

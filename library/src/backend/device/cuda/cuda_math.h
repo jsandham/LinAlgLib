@@ -41,8 +41,10 @@
 
 namespace linalg
 {
-    double cuda_norm_inf(const double* array, int size);
-    void   cuda_jacobi_solve(const double* rhs, const double* diag, double* x, size_t size);
+    template <typename T>
+    T cuda_norm_inf(const T* array, int size);
+    template <typename T>
+    void cuda_jacobi_solve(const T* rhs, const T* diag, T* x, size_t size);
 }
 
 #endif

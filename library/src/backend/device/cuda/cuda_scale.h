@@ -28,11 +28,13 @@
 
 namespace linalg
 {
+    template <typename T>
     void cuda_scale_diagonal(
-        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double scalar);
+        const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, T scalar);
 
+    template <typename T>
     void cuda_scale_by_inverse_diagonal(
-        const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, const double* diag);
+        const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, const T* diag);
 }
 
 #endif

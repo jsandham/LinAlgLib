@@ -60,19 +60,16 @@ void linalg::free_csrilu0_cuda_data(csrilu0_descr* descr)
     {
         if(descr->done_array != nullptr)
         {
-            std::cout << "Freeing done_array" << std::endl;
             CHECK_CUDA(cudaFree(descr->done_array));
         }
 
         if(descr->row_perm != nullptr)
         {
-            std::cout << "Freeing row_perm" << std::endl;
             CHECK_CUDA(cudaFree(descr->row_perm));
         }
 
         if(descr->diag_ind != nullptr)
         {
-            std::cout << "Freeing diag_ind" << std::endl;
             CHECK_CUDA(cudaFree(descr->diag_ind));
         }
     }
@@ -86,8 +83,6 @@ void linalg::cuda_csrilu0_analysis(int            m,
                                    const double*  csr_val,
                                    csrilu0_descr* descr)
 {
-    std::cout << "csrtrsv_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
-
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
     assert(descr->row_perm == nullptr);

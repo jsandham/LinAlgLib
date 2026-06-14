@@ -28,32 +28,34 @@
 
 namespace linalg
 {
-    void cuda_ssor_fill_lower_precond(int           m_A,
-                                      int           n_A,
-                                      int           nnz_A,
-                                      const int*    csr_row_ptr_A,
-                                      const int*    csr_col_ind_A,
-                                      const double* csr_val_A,
-                                      int           m_L,
-                                      int           n_L,
-                                      int           nnz_L,
-                                      const int*    csr_row_ptr_L,
-                                      int*          csr_col_ind_L,
-                                      double*       csr_val_L,
-                                      double        omega);
-    void cuda_ssor_fill_upper_precond(int           m_A,
-                                      int           n_A,
-                                      int           nnz_A,
-                                      const int*    csr_row_ptr_A,
-                                      const int*    csr_col_ind_A,
-                                      const double* csr_val_A,
-                                      int           m_U,
-                                      int           n_U,
-                                      int           nnz_U,
-                                      const int*    csr_row_ptr_U,
-                                      int*          csr_col_ind_U,
-                                      double*       csr_val_U,
-                                      double        omega);
+    template <typename T>
+    void cuda_ssor_fill_lower_precond(int        m_A,
+                                      int        n_A,
+                                      int        nnz_A,
+                                      const int* csr_row_ptr_A,
+                                      const int* csr_col_ind_A,
+                                      const T*   csr_val_A,
+                                      int        m_L,
+                                      int        n_L,
+                                      int        nnz_L,
+                                      const int* csr_row_ptr_L,
+                                      int*       csr_col_ind_L,
+                                      T*         csr_val_L,
+                                      T          omega);
+    template <typename T>
+    void cuda_ssor_fill_upper_precond(int        m_A,
+                                      int        n_A,
+                                      int        nnz_A,
+                                      const int* csr_row_ptr_A,
+                                      const int* csr_col_ind_A,
+                                      const T*   csr_val_A,
+                                      int        m_U,
+                                      int        n_U,
+                                      int        nnz_U,
+                                      const int* csr_row_ptr_U,
+                                      int*       csr_col_ind_U,
+                                      T*         csr_val_U,
+                                      T          omega);
 }
 
 #endif

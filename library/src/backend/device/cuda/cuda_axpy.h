@@ -28,16 +28,14 @@
 
 namespace linalg
 {
-    void   cuda_axpy(int size, double alpha, const double* x, double* y);
-    void   cuda_axpby(int size, double alpha, const double* x, double beta, double* y);
-    void   cuda_axpbypgz(int           size,
-                         double        alpha,
-                         const double* x,
-                         double        beta,
-                         const double* y,
-                         double        gamma,
-                         double*       z);
-    double cuda_dot_product(const double* x, const double* y, int size);
+    template <typename T>
+    void cuda_axpy(int size, T alpha, const T* x, T* y);
+    template <typename T>
+    void cuda_axpby(int size, T alpha, const T* x, T beta, T* y);
+    template <typename T>
+    void cuda_axpbypgz(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z);
+    template <typename T>
+    T cuda_dot_product(const T* x, const T* y, int size);
 }
 
 #endif

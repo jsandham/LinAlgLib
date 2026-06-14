@@ -175,12 +175,15 @@ void linalg::cuda_exclusive_scan(int size, T* array)
 
 template int32_t linalg::cuda_find_minimum<int32_t>(int size, const int32_t* array);
 template int64_t linalg::cuda_find_minimum<int64_t>(int size, const int64_t* array);
+template float   linalg::cuda_find_minimum<float>(int size, const float* array);
 template double  linalg::cuda_find_minimum<double>(int size, const double* array);
 
 template int32_t linalg::cuda_find_maximum<int32_t>(int size, const int32_t* array);
 template int64_t linalg::cuda_find_maximum<int64_t>(int size, const int64_t* array);
+template float   linalg::cuda_find_maximum<float>(int size, const float* array);
 template double  linalg::cuda_find_maximum<double>(int size, const double* array);
 
 template void linalg::cuda_exclusive_scan<int32_t>(int size, int32_t* array);
 template void linalg::cuda_exclusive_scan<int64_t>(int size, int64_t* array);
+template void linalg::cuda_exclusive_scan<float>(int size, float* array);
 template void linalg::cuda_exclusive_scan<double>(int size, double* array);

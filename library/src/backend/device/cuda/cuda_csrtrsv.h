@@ -34,24 +34,26 @@ namespace linalg
 
     void free_csrtrsv_cuda_data(csrtrsv_descr* descr);
 
+    template <typename T>
     void cuda_csrtrsv_analysis(int             m,
                                int             n,
                                int             nnz,
                                const int*      csr_row_ptr,
                                const int*      csr_col_ind,
-                               const double*   csr_val,
+                               const T*        csr_val,
                                triangular_type tri_type,
                                diagonal_type   diag_type,
                                csrtrsv_descr*  descr);
+    template <typename T>
     void cuda_csrtrsv_solve(int                  m,
                             int                  n,
                             int                  nnz,
-                            double               alpha,
+                            T                    alpha,
                             const int*           csr_row_ptr,
                             const int*           csr_col_ind,
-                            const double*        csr_val,
-                            const double*        b,
-                            double*              x,
+                            const T*             csr_val,
+                            const T*             b,
+                            T*                   x,
                             triangular_type      tri_type,
                             diagonal_type        diag_type,
                             const csrtrsv_descr* descr);

@@ -581,25 +581,26 @@ namespace linalg
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
-    static void tridiagonal_partial_pivoting_solver_dispatch(int           m,
-                                                             int           n,
-                                                             const double* lower_diag,
-                                                             const double* main_diag,
-                                                             const double* upper_diag,
-                                                             const double* B,
-                                                             double*       X,
-                                                             double**      lower_pad,
-                                                             double**      main_pad,
-                                                             double**      upper_pad,
-                                                             double**      B_pad,
-                                                             double**      w_pad,
-                                                             double**      v_pad,
-                                                             double**      mt,
-                                                             double**      S_lower,
-                                                             double**      S_main,
-                                                             double**      S_upper,
-                                                             double**      S_B,
-                                                             int           level = 0)
+    template <typename T>
+    static void tridiagonal_partial_pivoting_solver_dispatch(int      m,
+                                                             int      n,
+                                                             const T* lower_diag,
+                                                             const T* main_diag,
+                                                             const T* upper_diag,
+                                                             const T* B,
+                                                             T*       X,
+                                                             T**      lower_pad,
+                                                             T**      main_pad,
+                                                             T**      upper_pad,
+                                                             T**      B_pad,
+                                                             T**      w_pad,
+                                                             T**      v_pad,
+                                                             T**      mt,
+                                                             T**      S_lower,
+                                                             T**      S_main,
+                                                             T**      S_upper,
+                                                             T**      S_B,
+                                                             int      level = 0)
     {
         constexpr int BLOCKDIM  = linalg::pivoting_data::block_dim;
         constexpr int BLOCKSIZE = 256;
@@ -636,8 +637,8 @@ namespace linalg
         //                                            B_pad[level] + batch * m_pad);
         // }
 
-        CHECK_CUDA(cudaMemset(w_pad[level], 0, sizeof(double) * m_pad));
-        CHECK_CUDA(cudaMemset(v_pad[level], 0, sizeof(double) * m_pad));
+        CHECK_CUDA(cudaMemset(w_pad[level], 0, sizeof(T) * m_pad));
+        CHECK_CUDA(cudaMemset(v_pad[level], 0, sizeof(T) * m_pad));
 
         launch_LBMT_solve_wvmt<BLOCKSIZE, BLOCKDIM>(m_pad,
                                                     lower_pad[level],
@@ -668,22 +669,20 @@ namespace linalg
                                                   S_upper[level],
                                                   S_B[level]);
 
-        //std::cout << "s_size: " << s_size << " level: " << level << std::endl;
-
         using S_solve_launch_ptr
-            = void (*)(int, int, const double*, const double*, const double*, double*);
+            = void (*)(int, int, const T*, const T*, const T*, T*);
 
         static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
-            {2, launch_s_solve_kernel<double, 2>},
-            {4, launch_s_solve_kernel<double, 4>},
-            {8, launch_s_solve_kernel<double, 8>},
-            {16, launch_s_solve_kernel<double, 16>},
-            {32, launch_s_solve_kernel<double, 32>},
-            {64, launch_s_solve_kernel<double, 64>},
-            {128, launch_s_solve_kernel<double, 128>},
-            {256, launch_s_solve_kernel<double, 256>},
-            {512, launch_s_solve_kernel<double, 512>},
-            {1024, launch_s_solve_kernel<double, 1024>},
+            {2, launch_s_solve_kernel<T, 2>},
+            {4, launch_s_solve_kernel<T, 4>},
+            {8, launch_s_solve_kernel<T, 8>},
+            {16, launch_s_solve_kernel<T, 16>},
+            {32, launch_s_solve_kernel<T, 32>},
+            {64, launch_s_solve_kernel<T, 64>},
+            {128, launch_s_solve_kernel<T, 128>},
+            {256, launch_s_solve_kernel<T, 256>},
+            {512, launch_s_solve_kernel<T, 512>},
+            {1024, launch_s_solve_kernel<T, 1024>},
         };
 
         auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
@@ -725,24 +724,25 @@ namespace linalg
     }
 }
 
-void linalg::cuda_partial_pivoting_solver(int           m,
-                                          int           n,
-                                          const double* lower_diag,
-                                          const double* main_diag,
-                                          const double* upper_diag,
-                                          const double* B,
-                                          double*       X,
-                                          double**      lower_pad,
-                                          double**      main_pad,
-                                          double**      upper_pad,
-                                          double**      B_pad,
-                                          double**      w_pad,
-                                          double**      v_pad,
-                                          double**      mt,
-                                          double**      S_lower,
-                                          double**      S_main,
-                                          double**      S_upper,
-                                          double**      S_B)
+template <typename T>
+void linalg::cuda_partial_pivoting_solver(int      m,
+                                          int      n,
+                                          const T* lower_diag,
+                                          const T* main_diag,
+                                          const T* upper_diag,
+                                          const T* B,
+                                          T*       X,
+                                          T**      lower_pad,
+                                          T**      main_pad,
+                                          T**      upper_pad,
+                                          T**      B_pad,
+                                          T**      w_pad,
+                                          T**      v_pad,
+                                          T**      mt,
+                                          T**      S_lower,
+                                          T**      S_main,
+                                          T**      S_upper,
+                                          T**      S_B)
 {
     tridiagonal_partial_pivoting_solver_dispatch(m,
                                                  n,
@@ -766,41 +766,43 @@ void linalg::cuda_partial_pivoting_solver(int           m,
 
 namespace linalg
 {
-    static void tridiagonal_nonpivoting_solver_dispatch(int           m,
-                                                        int           n,
-                                                        const double* lower_diag,
-                                                        const double* main_diag,
-                                                        const double* upper_diag,
-                                                        const double* B,
-                                                        double*       X,
-                                                        double**      lower_modified,
-                                                        double**      main_modified,
-                                                        double**      upper_modified,
-                                                        double**      B_modified,
-                                                        double**      spike_lower,
-                                                        double**      spike_main,
-                                                        double**      spike_upper,
-                                                        double**      spike_B,
-                                                        double**      spike_X,
-                                                        int           level = 0);
+    template <typename T>
+    static void tridiagonal_nonpivoting_solver_dispatch(int      m,
+                                                        int      n,
+                                                        const T* lower_diag,
+                                                        const T* main_diag,
+                                                        const T* upper_diag,
+                                                        const T* B,
+                                                        T*       X,
+                                                        T**      lower_modified,
+                                                        T**      main_modified,
+                                                        T**      upper_modified,
+                                                        T**      B_modified,
+                                                        T**      spike_lower,
+                                                        T**      spike_main,
+                                                        T**      spike_upper,
+                                                        T**      spike_B,
+                                                        T**      spike_X,
+                                                        int      level = 0);
 
-    static void tridiagonal_tile_pcr_spike_solver(int           m,
-                                                  int           n,
-                                                  const double* lower_diag,
-                                                  const double* main_diag,
-                                                  const double* upper_diag,
-                                                  const double* B,
-                                                  double*       X,
-                                                  double**      lower_modified,
-                                                  double**      main_modified,
-                                                  double**      upper_modified,
-                                                  double**      B_modified,
-                                                  double**      spike_lower,
-                                                  double**      spike_main,
-                                                  double**      spike_upper,
-                                                  double**      spike_B,
-                                                  double**      spike_X,
-                                                  int           level)
+    template <typename T>
+    static void tridiagonal_tile_pcr_spike_solver(int      m,
+                                                  int      n,
+                                                  const T* lower_diag,
+                                                  const T* main_diag,
+                                                  const T* upper_diag,
+                                                  const T* B,
+                                                  T*       X,
+                                                  T**      lower_modified,
+                                                  T**      main_modified,
+                                                  T**      upper_modified,
+                                                  T**      B_modified,
+                                                  T**      spike_lower,
+                                                  T**      spike_main,
+                                                  T**      spike_upper,
+                                                  T**      spike_B,
+                                                  T**      spike_X,
+                                                  int      level)
     {
         constexpr int BLOCKSIZE = 256;
         constexpr int NUM_RHS
@@ -823,19 +825,18 @@ namespace linalg
                                                                         spike_upper[level],
                                                                         spike_B[level]);
 
-        using spike_solver_pcr_launch_ptr = void (*)(
-            int, int, const double*, const double*, const double*, const double*, double*);
+        using spike_solver_pcr_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
 
         static const std::map<int, spike_solver_pcr_launch_ptr> k_spike_solver_dispatch = {
-            {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, double>},
-            {8, launch_spike_solver_pcr_kernel<8, NUM_RHS, double>},
-            {16, launch_spike_solver_pcr_kernel<16, NUM_RHS, double>},
-            {32, launch_spike_solver_pcr_kernel<32, NUM_RHS, double>},
-            {64, launch_spike_solver_pcr_kernel<64, NUM_RHS, double>},
-            {128, launch_spike_solver_pcr_kernel<128, NUM_RHS, double>},
-            {256, launch_spike_solver_pcr_kernel<256, NUM_RHS, double>},
-            {512, launch_spike_solver_pcr_kernel<512, NUM_RHS, double>},
-            {1024, launch_spike_solver_pcr_kernel<1024, NUM_RHS, double>},
+            {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, T>},
+            {8, launch_spike_solver_pcr_kernel<8, NUM_RHS, T>},
+            {16, launch_spike_solver_pcr_kernel<16, NUM_RHS, T>},
+            {32, launch_spike_solver_pcr_kernel<32, NUM_RHS, T>},
+            {64, launch_spike_solver_pcr_kernel<64, NUM_RHS, T>},
+            {128, launch_spike_solver_pcr_kernel<128, NUM_RHS, T>},
+            {256, launch_spike_solver_pcr_kernel<256, NUM_RHS, T>},
+            {512, launch_spike_solver_pcr_kernel<512, NUM_RHS, T>},
+            {1024, launch_spike_solver_pcr_kernel<1024, NUM_RHS, T>},
         };
 
         auto dispatch_it = k_spike_solver_dispatch.lower_bound(num_spikes);
@@ -881,23 +882,24 @@ namespace linalg
                                                                           X);
     }
 
-    static void tridiagonal_nonpivoting_solver_dispatch(int           m,
-                                                        int           n,
-                                                        const double* lower_diag,
-                                                        const double* main_diag,
-                                                        const double* upper_diag,
-                                                        const double* B,
-                                                        double*       X,
-                                                        double**      lower_modified,
-                                                        double**      main_modified,
-                                                        double**      upper_modified,
-                                                        double**      B_modified,
-                                                        double**      spike_lower,
-                                                        double**      spike_main,
-                                                        double**      spike_upper,
-                                                        double**      spike_B,
-                                                        double**      spike_X,
-                                                        int           level)
+    template <typename T>
+    static void tridiagonal_nonpivoting_solver_dispatch(int      m,
+                                                        int      n,
+                                                        const T* lower_diag,
+                                                        const T* main_diag,
+                                                        const T* upper_diag,
+                                                        const T* B,
+                                                        T*       X,
+                                                        T**      lower_modified,
+                                                        T**      main_modified,
+                                                        T**      upper_modified,
+                                                        T**      B_modified,
+                                                        T**      spike_lower,
+                                                        T**      spike_main,
+                                                        T**      spike_upper,
+                                                        T**      spike_B,
+                                                        T**      spike_X,
+                                                        int      level)
     {
         if(m <= 10)
         {
@@ -932,22 +934,23 @@ namespace linalg
     }
 }
 
-void linalg::cuda_non_pivoting_solver(int           m,
-                                      int           n,
-                                      const double* lower_diag,
-                                      const double* main_diag,
-                                      const double* upper_diag,
-                                      const double* B,
-                                      double*       X,
-                                      double**      lower_modified,
-                                      double**      main_modified,
-                                      double**      upper_modified,
-                                      double**      B_modified,
-                                      double**      spike_lower,
-                                      double**      spike_main,
-                                      double**      spike_upper,
-                                      double**      spike_B,
-                                      double**      spike_X)
+template <typename T>
+void linalg::cuda_non_pivoting_solver(int      m,
+                                      int      n,
+                                      const T* lower_diag,
+                                      const T* main_diag,
+                                      const T* upper_diag,
+                                      const T* B,
+                                      T*       X,
+                                      T**      lower_modified,
+                                      T**      main_modified,
+                                      T**      upper_modified,
+                                      T**      B_modified,
+                                      T**      spike_lower,
+                                      T**      spike_main,
+                                      T**      spike_upper,
+                                      T**      spike_B,
+                                      T**      spike_X)
 {
     tridiagonal_nonpivoting_solver_dispatch(m,
                                             n,
@@ -966,3 +969,10 @@ void linalg::cuda_non_pivoting_solver(int           m,
                                             spike_B,
                                             spike_X);
 }
+
+// Explicit instantiations
+template void linalg::cuda_partial_pivoting_solver<double>(int, int, const double*, const double*, const double*, const double*, double*, double**, double**, double**, double**, double**, double**, double**, double**, double**, double**, double**);
+template void linalg::cuda_partial_pivoting_solver<float>(int, int, const float*, const float*, const float*, const float*, float*, float**, float**, float**, float**, float**, float**, float**, float**, float**, float**, float**);
+
+template void linalg::cuda_non_pivoting_solver<double>(int, int, const double*, const double*, const double*, const double*, double*, double**, double**, double**, double**, double**, double**, double**, double**, double**);
+template void linalg::cuda_non_pivoting_solver<float>(int, int, const float*, const float*, const float*, const float*, float*, float**, float**, float**, float**, float**, float**, float**, float**, float**);

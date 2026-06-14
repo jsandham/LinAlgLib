@@ -161,8 +161,6 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
 
             const int S_size = 2 * m_pad / BLOCKDIM;
 
-            std::cout << "S_size: " << S_size << std::endl;
-
             pivot_data.S_lower[level].resize(S_size);
             pivot_data.S_main[level].resize(S_size);
             pivot_data.S_upper[level].resize(S_size);

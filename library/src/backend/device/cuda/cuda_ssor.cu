@@ -34,24 +34,25 @@
 //-------------------------------------------------------------------------------
 // SSOR fill lower preconditioner L = (beta * D - E) * D^-1, beta = 1 / omega
 //-------------------------------------------------------------------------------
-void linalg::cuda_ssor_fill_lower_precond(int           m_A,
-                                          int           n_A,
-                                          int           nnz_A,
-                                          const int*    csr_row_ptr_A,
-                                          const int*    csr_col_ind_A,
-                                          const double* csr_val_A,
-                                          int           m_L,
-                                          int           n_L,
-                                          int           nnz_L,
-                                          const int*    csr_row_ptr_L,
-                                          int*          csr_col_ind_L,
-                                          double*       csr_val_L,
-                                          double        omega)
+template <typename T>
+void linalg::cuda_ssor_fill_lower_precond(int        m_A,
+                                          int        n_A,
+                                          int        nnz_A,
+                                          const int* csr_row_ptr_A,
+                                          const int* csr_col_ind_A,
+                                          const T*   csr_val_A,
+                                          int        m_L,
+                                          int        n_L,
+                                          int        nnz_L,
+                                          const int* csr_row_ptr_L,
+                                          int*       csr_col_ind_L,
+                                          T*         csr_val_L,
+                                          T          omega)
 {
     ROUTINE_TRACE("linalg::cuda_ssor_fill_lower_precond");
 
-    double* diag = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&diag, sizeof(double) * m_A));
+    T* diag = nullptr;
+    CHECK_CUDA(cudaMalloc((void**)&diag, sizeof(T) * m_A));
 
     cuda_extract_diagonal(m_A, n_A, nnz_A, csr_row_ptr_A, csr_col_ind_A, csr_val_A, diag);
 
@@ -74,19 +75,20 @@ void linalg::cuda_ssor_fill_lower_precond(int           m_A,
 //-------------------------------------------------------------------------------
 // SSOR fill upper preconditioner U = (beta * D - F), beta = 1 / omega
 //-------------------------------------------------------------------------------
-void linalg::cuda_ssor_fill_upper_precond(int           m_A,
-                                          int           n_A,
-                                          int           nnz_A,
-                                          const int*    csr_row_ptr_A,
-                                          const int*    csr_col_ind_A,
-                                          const double* csr_val_A,
-                                          int           m_U,
-                                          int           n_U,
-                                          int           nnz_U,
-                                          const int*    csr_row_ptr_U,
-                                          int*          csr_col_ind_U,
-                                          double*       csr_val_U,
-                                          double        omega)
+template <typename T>
+void linalg::cuda_ssor_fill_upper_precond(int        m_A,
+                                          int        n_A,
+                                          int        nnz_A,
+                                          const int* csr_row_ptr_A,
+                                          const int* csr_col_ind_A,
+                                          const T*   csr_val_A,
+                                          int        m_U,
+                                          int        n_U,
+                                          int        nnz_U,
+                                          const int* csr_row_ptr_U,
+                                          int*       csr_col_ind_U,
+                                          T*         csr_val_U,
+                                          T          omega)
 {
     ROUTINE_TRACE("linalg::cuda_ssor_fill_upper_precond");
     ssor_fill_upper_precond_kernel<256><<<((m_A - 1) / 256 + 1), 256>>>(m_A,
@@ -101,3 +103,9 @@ void linalg::cuda_ssor_fill_upper_precond(int           m_A,
                                                                         csr_val_U);
     CHECK_CUDA_LAUNCH_ERROR();
 }
+
+// Explicit instantiations
+template void linalg::cuda_ssor_fill_lower_precond<double>(int, int, int, const int*, const int*, const double*, int, int, int, const int*, int*, double*, double);
+template void linalg::cuda_ssor_fill_lower_precond<float>(int, int, int, const int*, const int*, const float*, int, int, int, const int*, int*, float*, float);
+template void linalg::cuda_ssor_fill_upper_precond<double>(int, int, int, const int*, const int*, const double*, int, int, int, const int*, int*, double*, double);
+template void linalg::cuda_ssor_fill_upper_precond<float>(int, int, int, const int*, const int*, const float*, int, int, int, const int*, int*, float*, float);

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -31,12 +31,13 @@
 
 #include "csr2coo_kernels.cuh"
 
+template <typename T>
 void linalg::cuda_csr2csc_buffer_size(int           m,
                                       int           n,
                                       int           nnz,
                                       const int*    csr_row_ptr,
-                                      const int*    csr_Col_ind,
-                                      const double* csr_val,
+                                      const int*    csr_col_ind,
+                                      const T*      csr_val,
                                       size_t*       buffer_size)
 {
     *buffer_size = 0;
@@ -44,15 +45,16 @@ void linalg::cuda_csr2csc_buffer_size(int           m,
     *buffer_size += sizeof(int) * nnz; // coo_row_ind
 }
 
+template <typename T>
 void linalg::cuda_csr2csc(int           m,
                           int           n,
                           int           nnz,
                           const int*    csr_row_ptr,
                           const int*    csr_col_ind,
-                          const double* csr_val,
+                          const T*      csr_val,
                           int*          csc_col_ptr,
                           int*          csc_row_ind,
-                          double*       csc_val,
+                          T*            csc_val,
                           void*         buffer)
 {
     int* perm        = reinterpret_cast<int*>(buffer);
@@ -76,3 +78,8 @@ void linalg::cuda_csr2csc(int           m,
         m, n, nnz, coo_row_ind, csr_val, perm, csc_row_ind, csc_val);
     CHECK_CUDA_LAUNCH_ERROR();
 }
+
+template void linalg::cuda_csr2csc_buffer_size<double>(int, int, int, const int*, const int*, const double*, size_t*);
+template void linalg::cuda_csr2csc_buffer_size<float>(int, int, int, const int*, const int*, const float*, size_t*);
+template void linalg::cuda_csr2csc(int, int, int, const int*, const int*, const double*, int*, int*, double*, void*);
+template void linalg::cuda_csr2csc(int, int, int, const int*, const int*, const float*, int*, int*, float*, void*);

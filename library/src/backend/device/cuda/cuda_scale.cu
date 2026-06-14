@@ -35,8 +35,9 @@
 //-------------------------------------------------------------------------------
 // scale diagonal
 //-------------------------------------------------------------------------------
+template <typename T>
 void linalg::cuda_scale_diagonal(
-    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double scalar)
+    const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, T scalar)
 {
     ROUTINE_TRACE("linalg::cuda_scale_diagonal_impl");
     scale_diagonal_kernel<256>
@@ -47,11 +48,18 @@ void linalg::cuda_scale_diagonal(
 //-------------------------------------------------------------------------------
 // scale by inverse diagonal
 //-------------------------------------------------------------------------------
+template <typename T>
 void linalg::cuda_scale_by_inverse_diagonal(
-    const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, const double* diag)
+    const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, const T* diag)
 {
     ROUTINE_TRACE("linalg::cuda_scale_by_inverse_diagonal_impl");
     scale_by_inverse_diagonal_kernel<256>
         <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, diag);
     CHECK_CUDA_LAUNCH_ERROR();
 }
+
+// Explicit instantiations
+template void linalg::cuda_scale_diagonal<double>(const int*, const int*, double*, int, double);
+template void linalg::cuda_scale_diagonal<float>(const int*, const int*, float*, int, float);
+template void linalg::cuda_scale_by_inverse_diagonal<double>(const int*, const int*, double*, int, const double*);
+template void linalg::cuda_scale_by_inverse_diagonal<float>(const int*, const int*, float*, int, const float*);

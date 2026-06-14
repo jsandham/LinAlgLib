@@ -30,46 +30,50 @@
 
 namespace linalg
 {
-    void cuda_matrix_vector_product(int           m,
-                                    int           n,
-                                    int           nnz,
-                                    const int*    csr_row_ptr,
-                                    const int*    csr_col_ind,
-                                    const double* csr_val,
-                                    const double* x,
-                                    double*       y);
-    void cuda_compute_residual(int           m,
-                               int           n,
-                               int           nnz,
-                               const int*    csr_row_ptr,
-                               const int*    csr_col_ind,
-                               const double* csr_val,
-                               const double* x,
-                               const double* b,
-                               double*       res);
+    template <typename T>
+    void cuda_matrix_vector_product(int        m,
+                                    int        n,
+                                    int        nnz,
+                                    const int* csr_row_ptr,
+                                    const int* csr_col_ind,
+                                    const T*   csr_val,
+                                    const T*   x,
+                                    T*         y);
+    template <typename T>
+    void cuda_compute_residual(int        m,
+                               int        n,
+                               int        nnz,
+                               const int* csr_row_ptr,
+                               const int* csr_col_ind,
+                               const T*   csr_val,
+                               const T*   x,
+                               const T*   b,
+                               T*         res);
 
     struct csrmv_descr;
 
     void free_csrmv_cuda_data(csrmv_descr* descr);
 
+    template <typename T>
     void cuda_csrmv_analysis(int             m,
                              int             n,
                              int             nnz,
                              const int*      csr_row_ptr,
                              const int*      csr_col_ind,
-                             const double*   csr_val,
+                             const T*        csr_val,
                              csrmv_algorithm alg,
                              csrmv_descr*    descr);
+    template <typename T>
     void cuda_csrmv_solve(int                m,
                           int                n,
                           int                nnz,
-                          double             alpha,
+                          T                  alpha,
                           const int*         csr_row_ptr,
                           const int*         csr_col_ind,
-                          const double*      csr_val,
-                          const double*      x,
-                          double             beta,
-                          double*            y,
+                          const T*           csr_val,
+                          const T*           x,
+                          T                  beta,
+                          T*                 y,
                           csrmv_algorithm    alg,
                           const csrmv_descr* descr);
 }

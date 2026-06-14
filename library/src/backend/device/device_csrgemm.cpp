@@ -59,6 +59,15 @@ void linalg::device_csrgemm_nnz(const csr_matrix& A,
     ROUTINE_TRACE("linalg::device_csrgemm_nnz");
     if constexpr(is_cuda_available())
     {
+        // C = alpha * A * B + beta * D; dimensions of C are A.m x B.n
+        // Currently it is the users responsiblilty to ensure that C is resized to the correct dimensions before
+        // calling this function. The function will update the nnz of C based on the result of the symbolic
+        // multiplication. If we do not want to make it the users responsibility to resize C, we can uncomment
+        // the line below to resize C to the correct dimensions before calling the CUDA function. However, this
+        // will add some overhead if C is already resized to the correct dimensions by the user.
+        //
+        // C.resize(A.get_m(), B.get_n(), 0);
+
         int nnz_C;
         CALL_CUDA(cuda_csrgemm_nnz(C.get_m(),
                                    C.get_n(),

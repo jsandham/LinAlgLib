@@ -28,26 +28,28 @@
 
 namespace linalg
 {
-    void cuda_compute_strong_connections(int           m,
-                                         int           n,
-                                         int           nnz,
-                                         const int*    csr_row_ptr,
-                                         const int*    csr_col_ind,
-                                         const double* csr_val,
-                                         double        eps,
-                                         int*          connections);
+    template <typename T>
+    void cuda_compute_strong_connections(int        m,
+                                         int        n,
+                                         int        nnz,
+                                         const int* csr_row_ptr,
+                                         const int* csr_col_ind,
+                                         const T*   csr_val,
+                                         T          eps,
+                                         int*       connections);
 
-    void cuda_compute_classical_strong_connections(int           m,
-                                                   int           n,
-                                                   int           nnz,
-                                                   const int*    csr_row_ptr_A,
-                                                   const int*    csr_col_ind_A,
-                                                   const double* csr_val_A,
-                                                   double        theta,
-                                                   int*          csr_row_ptr_S,
-                                                   int*          csr_col_ind_S,
-                                                   double*       csr_val_S,
-                                                   int*          connections);
+    template <typename T>
+    void cuda_compute_classical_strong_connections(int        m,
+                                                   int        n,
+                                                   int        nnz,
+                                                   const int* csr_row_ptr_A,
+                                                   const int* csr_col_ind_A,
+                                                   const T*   csr_val_A,
+                                                   T          theta,
+                                                   int*       csr_row_ptr_S,
+                                                   int*       csr_col_ind_S,
+                                                   T*         csr_val_S,
+                                                   int*       connections);
 }
 
 #endif

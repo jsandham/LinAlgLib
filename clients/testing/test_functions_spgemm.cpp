@@ -52,6 +52,7 @@ bool Testing::test_spgemm(Arguments arg)
     csr_matrix mat_B(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
 
     csr_matrix mat_C;
+    mat_C.resize(mat_A.get_m(), mat_B.get_n(), 0);
 
     mat_A.move_to_device();
     mat_B.move_to_device();

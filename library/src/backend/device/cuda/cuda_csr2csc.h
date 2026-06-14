@@ -30,24 +30,26 @@
 
 namespace linalg
 {
-    void cuda_csr2csc_buffer_size(int           m,
-                                  int           n,
-                                  int           nnz,
-                                  const int*    csr_row_ptr,
-                                  const int*    csr_col_ind,
-                                  const double* csr_val,
-                                  size_t*       buffer_size);
+    template <typename T>
+    void cuda_csr2csc_buffer_size(int        m,
+                                  int        n,
+                                  int        nnz,
+                                  const int* csr_row_ptr,
+                                  const int* csr_col_ind,
+                                  const T*   csr_val,
+                                  size_t*    buffer_size);
 
-    void cuda_csr2csc(int           m,
-                      int           n,
-                      int           nnz,
-                      const int*    csr_row_ptr,
-                      const int*    csr_col_ind,
-                      const double* csr_val,
-                      int*          csc_col_ptr,
-                      int*          csc_row_ind,
-                      double*       csc_val,
-                      void*         buffer);
+    template <typename T>
+    void cuda_csr2csc(int        m,
+                      int        n,
+                      int        nnz,
+                      const int* csr_row_ptr,
+                      const int* csr_col_ind,
+                      const T*   csr_val,
+                      int*       csc_col_ptr,
+                      int*       csc_row_ind,
+                      T*         csc_val,
+                      void*      buffer);
 }
 
 #endif

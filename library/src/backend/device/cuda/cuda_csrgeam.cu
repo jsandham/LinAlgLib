@@ -45,13 +45,11 @@ void linalg::free_csrgeam_cuda_data(csrgeam_descr* descr)
     {
         if(descr->perm != nullptr)
         {
-            std::cout << "Freeing perm" << std::endl;
             CHECK_CUDA(cudaFree(descr->perm));
         }
 
         if(descr->bin_offsets != nullptr)
         {
-            std::cout << "Freeing bin_offsets" << std::endl;
             CHECK_CUDA(cudaFree(descr->bin_offsets));
         }
     }
