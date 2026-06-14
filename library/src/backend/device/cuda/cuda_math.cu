@@ -57,5 +57,5 @@ void linalg::cuda_jacobi_solve(const T* rhs, const T* diag, T* x, size_t size)
 
 template double linalg::cuda_norm_inf<double>(const double*, int);
 template float  linalg::cuda_norm_inf<float>(const float*, int);
-template void linalg::cuda_jacobi_solve<double>(const double*, const double*, double*, size_t);
-template void linalg::cuda_jacobi_solve<float>(const float*, const float*, float*, size_t);
+template void   linalg::cuda_jacobi_solve<double>(const double*, const double*, double*, size_t);
+template void   linalg::cuda_jacobi_solve<float>(const float*, const float*, float*, size_t);

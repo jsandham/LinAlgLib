@@ -27,8 +27,8 @@
 #include <cassert>
 #include <iostream>
 
-#include <thrust/sort.h>
 #include <thrust/device_ptr.h>
+#include <thrust/sort.h>
 
 #include "cuda_csrtrsv.h"
 
@@ -176,7 +176,45 @@ void linalg::cuda_csrtrsv_solve(int                  m,
     // std::cout << std::endl;
 }
 
-template void linalg::cuda_csrtrsv_analysis<double>(int, int, int, const int*, const int*, const double*, triangular_type, diagonal_type, csrtrsv_descr*);
-template void linalg::cuda_csrtrsv_analysis<float>(int, int, int, const int*, const int*, const float*, triangular_type, diagonal_type, csrtrsv_descr*);
-template void linalg::cuda_csrtrsv_solve<double>(int, int, int, double, const int*, const int*, const double*, const double*, double*, triangular_type, diagonal_type, const csrtrsv_descr*);
-template void linalg::cuda_csrtrsv_solve<float>(int, int, int, float, const int*, const int*, const float*, const float*, float*, triangular_type, diagonal_type, const csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_analysis<double>(int,
+                                                    int,
+                                                    int,
+                                                    const int*,
+                                                    const int*,
+                                                    const double*,
+                                                    triangular_type,
+                                                    diagonal_type,
+                                                    csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_analysis<float>(int,
+                                                   int,
+                                                   int,
+                                                   const int*,
+                                                   const int*,
+                                                   const float*,
+                                                   triangular_type,
+                                                   diagonal_type,
+                                                   csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_solve<double>(int,
+                                                 int,
+                                                 int,
+                                                 double,
+                                                 const int*,
+                                                 const int*,
+                                                 const double*,
+                                                 const double*,
+                                                 double*,
+                                                 triangular_type,
+                                                 diagonal_type,
+                                                 const csrtrsv_descr*);
+template void linalg::cuda_csrtrsv_solve<float>(int,
+                                                int,
+                                                int,
+                                                float,
+                                                const int*,
+                                                const int*,
+                                                const float*,
+                                                const float*,
+                                                float*,
+                                                triangular_type,
+                                                diagonal_type,
+                                                const csrtrsv_descr*);

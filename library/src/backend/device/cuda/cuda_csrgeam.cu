@@ -27,8 +27,8 @@
 #include <iostream>
 #include <vector>
 
-#include <thrust/sort.h>
 #include <thrust/device_ptr.h>
+#include <thrust/sort.h>
 
 #include "cuda_csrgeam.h"
 #include "cuda_primitives.h"
@@ -55,15 +55,16 @@ void linalg::free_csrgeam_cuda_data(csrgeam_descr* descr)
     }
 }
 
+template <typename T>
 void linalg::cuda_csrgeam_nnz(int            m,
                               int            n,
                               int            nnz_A,
                               int            nnz_B,
                               csrgeam_descr* descr,
-                              double         alpha,
+                              T              alpha,
                               const int*     csr_row_ptr_A,
                               const int*     csr_col_ind_A,
-                              double         beta,
+                              T              beta,
                               const int*     csr_row_ptr_B,
                               const int*     csr_col_ind_B,
                               int*           csr_row_ptr_C,
@@ -314,23 +315,24 @@ void linalg::cuda_csrgeam_nnz(int            m,
     CHECK_CUDA(cudaMemcpy(nnz_C, csr_row_ptr_C + m, sizeof(int), cudaMemcpyDeviceToHost));
 }
 
+template <typename T>
 void linalg::cuda_csrgeam_solve(int                  m,
                                 int                  n,
                                 int                  nnz_A,
                                 int                  nnz_B,
                                 int                  nnz_C,
                                 const csrgeam_descr* descr,
-                                double               alpha,
+                                T                    alpha,
                                 const int*           csr_row_ptr_A,
                                 const int*           csr_col_ind_A,
-                                const double*        csr_val_A,
-                                double               beta,
+                                const T*             csr_val_A,
+                                T                    beta,
                                 const int*           csr_row_ptr_B,
                                 const int*           csr_col_ind_B,
-                                const double*        csr_val_B,
+                                const T*             csr_val_B,
                                 const int*           csr_row_ptr_C,
                                 int*                 csr_col_ind_C,
-                                double*              csr_val_C)
+                                T*                   csr_val_C)
 {
     std::cout << "nnz_C: " << nnz_C << std::endl;
 
@@ -511,15 +513,14 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     CHECK_CUDA_LAUNCH_ERROR();
 
-    std::vector<int>    hcsr_row_ptr_C(m + 1, 0);
-    std::vector<int>    hcsr_col_ind_C(nnz_C, 0);
-    std::vector<double> hcsr_val_C(nnz_C);
+    std::vector<int> hcsr_row_ptr_C(m + 1, 0);
+    std::vector<int> hcsr_col_ind_C(nnz_C, 0);
+    std::vector<T>   hcsr_val_C(nnz_C);
     CHECK_CUDA(cudaMemcpy(
         hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaMemcpy(
         hcsr_col_ind_C.data(), csr_col_ind_C, sizeof(int) * nnz_C, cudaMemcpyDeviceToHost));
-    CHECK_CUDA(
-        cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(double) * nnz_C, cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(T) * nnz_C, cudaMemcpyDeviceToHost));
 
     std::cout << "hcsr_row_ptr_C" << std::endl;
     for(int i = 0; i < m + 1; i++)
@@ -540,3 +541,66 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     std::cout << "" << std::endl;
 }
+
+template void linalg::cuda_csrgeam_nnz<float>(int            m,
+                                              int            n,
+                                              int            nnz_A,
+                                              int            nnz_B,
+                                              csrgeam_descr* descr,
+                                              float          alpha,
+                                              const int*     csr_row_ptr_A,
+                                              const int*     csr_col_ind_A,
+                                              float          beta,
+                                              const int*     csr_row_ptr_B,
+                                              const int*     csr_col_ind_B,
+                                              int*           csr_row_ptr_C,
+                                              int*           nnz_C);
+template void linalg::cuda_csrgeam_nnz<double>(int            m,
+                                               int            n,
+                                               int            nnz_A,
+                                               int            nnz_B,
+                                               csrgeam_descr* descr,
+                                               double         alpha,
+                                               const int*     csr_row_ptr_A,
+                                               const int*     csr_col_ind_A,
+                                               double         beta,
+                                               const int*     csr_row_ptr_B,
+                                               const int*     csr_col_ind_B,
+                                               int*           csr_row_ptr_C,
+                                               int*           nnz_C);
+
+template void linalg::cuda_csrgeam_solve<float>(int                  m,
+                                                int                  n,
+                                                int                  nnz_A,
+                                                int                  nnz_B,
+                                                int                  nnz_C,
+                                                const csrgeam_descr* descr,
+                                                float                alpha,
+                                                const int*           csr_row_ptr_A,
+                                                const int*           csr_col_ind_A,
+                                                const float*         csr_val_A,
+                                                float                beta,
+                                                const int*           csr_row_ptr_B,
+                                                const int*           csr_col_ind_B,
+                                                const float*         csr_val_B,
+                                                const int*           csr_row_ptr_C,
+                                                int*                 csr_col_ind_C,
+                                                float*               csr_val_C);
+
+template void linalg::cuda_csrgeam_solve<double>(int                  m,
+                                                 int                  n,
+                                                 int                  nnz_A,
+                                                 int                  nnz_B,
+                                                 int                  nnz_C,
+                                                 const csrgeam_descr* descr,
+                                                 double               alpha,
+                                                 const int*           csr_row_ptr_A,
+                                                 const int*           csr_col_ind_A,
+                                                 const double*        csr_val_A,
+                                                 double               beta,
+                                                 const int*           csr_row_ptr_B,
+                                                 const int*           csr_col_ind_B,
+                                                 const double*        csr_val_B,
+                                                 const int*           csr_row_ptr_C,
+                                                 int*                 csr_col_ind_C,
+                                                 double*              csr_val_C);

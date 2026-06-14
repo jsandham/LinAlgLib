@@ -28,33 +28,26 @@
 
 namespace linalg
 {
-    void cuda_csric0(int        m,
-                     int        n,
-                     int        nnz,
-                     const int* csr_row_ptr,
-                     const int* csr_col_ind,
-                     double*    csr_val,
-                     int*       structural_zero,
-                     int*       numeric_zero);
-
     struct csric0_descr;
 
     void free_csric0_cuda_data(csric0_descr* descr);
 
+    template <typename T>
     void cuda_csric0_analysis(int           m,
                               int           n,
                               int           nnz,
                               const int*    csr_row_ptr,
                               const int*    csr_col_ind,
-                              const double* csr_val,
+                              const T*      csr_val,
                               csric0_descr* descr);
 
+    template <typename T>
     void cuda_csric0_compute(int                 m,
                              int                 n,
                              int                 nnz,
                              const int*          csr_row_ptr,
                              const int*          csr_col_ind,
-                             double*             csr_val,
+                             T*                  csr_val,
                              const csric0_descr* descr);
 }
 

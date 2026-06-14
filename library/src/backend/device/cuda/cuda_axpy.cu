@@ -57,8 +57,7 @@ void linalg::cuda_axpby(int size, T alpha, const T* x, T beta, T* y)
 // Compute z = alpha * x + beta * y + gamma * z
 //-------------------------------------------------------------------------------
 template <typename T>
-void linalg::cuda_axpbypgz(
-    int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
+void linalg::cuda_axpbypgz(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z)
 {
     ROUTINE_TRACE("linalg::cuda_axpbypgz_impl");
     axpbypgz_kernel<256><<<((size - 1) / 256 + 1), 256>>>(size, alpha, x, beta, y, gamma, z);
@@ -92,7 +91,9 @@ template void linalg::cuda_axpy<double>(int, double, const double*, double*);
 template void linalg::cuda_axpy<float>(int, float, const float*, float*);
 template void linalg::cuda_axpby<double>(int, double, const double*, double, double*);
 template void linalg::cuda_axpby<float>(int, float, const float*, float, float*);
-template void linalg::cuda_axpbypgz<double>(int, double, const double*, double, const double*, double, double*);
-template void linalg::cuda_axpbypgz<float>(int, float, const float*, float, const float*, float, float*);
+template void linalg::cuda_axpbypgz<double>(
+    int, double, const double*, double, const double*, double, double*);
+template void
+    linalg::cuda_axpbypgz<float>(int, float, const float*, float, const float*, float, float*);
 template double linalg::cuda_dot_product<double>(const double*, const double*, int);
-template float linalg::cuda_dot_product<float>(const float*, const float*, int);
+template float  linalg::cuda_dot_product<float>(const float*, const float*, int);

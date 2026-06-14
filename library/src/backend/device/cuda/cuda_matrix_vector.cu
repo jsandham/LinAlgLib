@@ -152,11 +152,39 @@ void linalg::cuda_csrmv_solve(int                m,
     }
 }
 
-template void linalg::cuda_matrix_vector_product<double>(int, int, int, const int*, const int*, const double*, const double*, double*);
-template void linalg::cuda_matrix_vector_product<float>(int, int, int, const int*, const int*, const float*, const float*, float*);
-template void linalg::cuda_compute_residual<double>(int, int, int, const int*, const int*, const double*, const double*, const double*, double*);
-template void linalg::cuda_compute_residual<float>(int, int, int, const int*, const int*, const float*, const float*, const float*, float*);
-template void linalg::cuda_csrmv_analysis<double>(int, int, int, const int*, const int*, const double*, csrmv_algorithm, csrmv_descr*);
-template void linalg::cuda_csrmv_analysis<float>(int, int, int, const int*, const int*, const float*, csrmv_algorithm, csrmv_descr*);
-template void linalg::cuda_csrmv_solve<double>(int, int, int, double, const int*, const int*, const double*, const double*, double, double*, csrmv_algorithm, const csrmv_descr*);
-template void linalg::cuda_csrmv_solve<float>(int, int, int, float, const int*, const int*, const float*, const float*, float, float*, csrmv_algorithm, const csrmv_descr*);
+template void linalg::cuda_matrix_vector_product<double>(
+    int, int, int, const int*, const int*, const double*, const double*, double*);
+template void linalg::cuda_matrix_vector_product<float>(
+    int, int, int, const int*, const int*, const float*, const float*, float*);
+template void linalg::cuda_compute_residual<double>(
+    int, int, int, const int*, const int*, const double*, const double*, const double*, double*);
+template void linalg::cuda_compute_residual<float>(
+    int, int, int, const int*, const int*, const float*, const float*, const float*, float*);
+template void linalg::cuda_csrmv_analysis<double>(
+    int, int, int, const int*, const int*, const double*, csrmv_algorithm, csrmv_descr*);
+template void linalg::cuda_csrmv_analysis<float>(
+    int, int, int, const int*, const int*, const float*, csrmv_algorithm, csrmv_descr*);
+template void linalg::cuda_csrmv_solve<double>(int,
+                                               int,
+                                               int,
+                                               double,
+                                               const int*,
+                                               const int*,
+                                               const double*,
+                                               const double*,
+                                               double,
+                                               double*,
+                                               csrmv_algorithm,
+                                               const csrmv_descr*);
+template void linalg::cuda_csrmv_solve<float>(int,
+                                              int,
+                                              int,
+                                              float,
+                                              const int*,
+                                              const int*,
+                                              const float*,
+                                              const float*,
+                                              float,
+                                              float*,
+                                              csrmv_algorithm,
+                                              const csrmv_descr*);

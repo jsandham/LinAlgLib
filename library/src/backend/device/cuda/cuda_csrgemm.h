@@ -32,6 +32,7 @@ namespace linalg
 
     void free_csrgemm_cuda_data(csrgemm_descr* descr);
 
+    template <typename T>
     void cuda_csrgemm_nnz(int            m,
                           int            n,
                           int            k,
@@ -39,17 +40,18 @@ namespace linalg
                           int            nnz_B,
                           int            nnz_D,
                           csrgemm_descr* descr,
-                          double         alpha,
+                          T              alpha,
                           const int*     csr_row_ptr_A,
                           const int*     csr_col_ind_A,
                           const int*     csr_row_ptr_B,
                           const int*     csr_col_ind_B,
-                          double         beta,
+                          T              beta,
                           const int*     csr_row_ptr_D,
                           const int*     csr_col_ind_D,
                           int*           csr_row_ptr_C,
                           int*           nnz_C);
 
+    template <typename T>
     void cuda_csrgemm_solve(int                  m,
                             int                  n,
                             int                  k,
@@ -58,20 +60,20 @@ namespace linalg
                             int                  nnz_D,
                             int                  nnz_C,
                             const csrgemm_descr* descr,
-                            double               alpha,
+                            T                    alpha,
                             const int*           csr_row_ptr_A,
                             const int*           csr_col_ind_A,
-                            const double*        csr_val_A,
+                            const T*             csr_val_A,
                             const int*           csr_row_ptr_B,
                             const int*           csr_col_ind_B,
-                            const double*        csr_val_B,
-                            double               beta,
+                            const T*             csr_val_B,
+                            T                    beta,
                             const int*           csr_row_ptr_D,
                             const int*           csr_col_ind_D,
-                            const double*        csr_val_D,
+                            const T*             csr_val_D,
                             const int*           csr_row_ptr_C,
                             int*                 csr_col_ind_C,
-                            double*              csr_val_C);
+                            T*                   csr_val_C);
 }
 
 #endif

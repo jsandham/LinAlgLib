@@ -61,7 +61,11 @@ void linalg::cuda_compute_classical_strong_connections(int        m,
 {
 }
 
-template void linalg::cuda_compute_strong_connections<double>(int, int, int, const int*, const int*, const double*, double, int*);
-template void linalg::cuda_compute_strong_connections<float>(int, int, int, const int*, const int*, const float*, float, int*);
-template void linalg::cuda_compute_classical_strong_connections<double>(int, int, int, const int*, const int*, const double*, double, int*, int*, double*, int*);
-template void linalg::cuda_compute_classical_strong_connections<float>(int, int, int, const int*, const int*, const float*, float, int*, int*, float*, int*);
+template void linalg::cuda_compute_strong_connections<double>(
+    int, int, int, const int*, const int*, const double*, double, int*);
+template void linalg::cuda_compute_strong_connections<float>(
+    int, int, int, const int*, const int*, const float*, float, int*);
+template void linalg::cuda_compute_classical_strong_connections<double>(
+    int, int, int, const int*, const int*, const double*, double, int*, int*, double*, int*);
+template void linalg::cuda_compute_classical_strong_connections<float>(
+    int, int, int, const int*, const int*, const float*, float, int*, int*, float*, int*);

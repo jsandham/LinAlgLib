@@ -383,7 +383,7 @@ namespace linalg
     {                                                                                \
         for(int j = 0; j < (m_pad) / (blockdim); j++)                                \
         {                                                                            \
-            std::vector<double> h_temp((blockdim), 0.0);                             \
+            std::vector<T> h_temp((blockdim), 0.0);                                  \
             for(int i = 0; i < (blockdim); i++)                                      \
             {                                                                        \
                 if(i == 0)                                                           \
@@ -417,7 +417,7 @@ namespace linalg
 #define DEBUG_PRINT_TRIDIAG_MATRIX(lower_diag, main_diag, upper_diag, matrix_size, name) \
     do                                                                                   \
     {                                                                                    \
-        std::vector<double> h_A((matrix_size) * (matrix_size), 0.0);                     \
+        std::vector<T> h_A((matrix_size) * (matrix_size), 0.0);                          \
         for(int i = 0; i < (matrix_size); i++)                                           \
         {                                                                                \
             h_A[i * (matrix_size) + i] = (main_diag)[i];                                 \
@@ -669,8 +669,7 @@ namespace linalg
                                                   S_upper[level],
                                                   S_B[level]);
 
-        using S_solve_launch_ptr
-            = void (*)(int, int, const T*, const T*, const T*, T*);
+        using S_solve_launch_ptr = void (*)(int, int, const T*, const T*, const T*, T*);
 
         static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
             {2, launch_s_solve_kernel<T, 2>},
@@ -825,7 +824,8 @@ namespace linalg
                                                                         spike_upper[level],
                                                                         spike_B[level]);
 
-        using spike_solver_pcr_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
+        using spike_solver_pcr_launch_ptr
+            = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
 
         static const std::map<int, spike_solver_pcr_launch_ptr> k_spike_solver_dispatch = {
             {4, launch_spike_solver_pcr_kernel<4, NUM_RHS, T>},
@@ -971,8 +971,72 @@ void linalg::cuda_non_pivoting_solver(int      m,
 }
 
 // Explicit instantiations
-template void linalg::cuda_partial_pivoting_solver<double>(int, int, const double*, const double*, const double*, const double*, double*, double**, double**, double**, double**, double**, double**, double**, double**, double**, double**, double**);
-template void linalg::cuda_partial_pivoting_solver<float>(int, int, const float*, const float*, const float*, const float*, float*, float**, float**, float**, float**, float**, float**, float**, float**, float**, float**, float**);
+template void linalg::cuda_partial_pivoting_solver<double>(int,
+                                                           int,
+                                                           const double*,
+                                                           const double*,
+                                                           const double*,
+                                                           const double*,
+                                                           double*,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**,
+                                                           double**);
+template void linalg::cuda_partial_pivoting_solver<float>(int,
+                                                          int,
+                                                          const float*,
+                                                          const float*,
+                                                          const float*,
+                                                          const float*,
+                                                          float*,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**,
+                                                          float**);
 
-template void linalg::cuda_non_pivoting_solver<double>(int, int, const double*, const double*, const double*, const double*, double*, double**, double**, double**, double**, double**, double**, double**, double**, double**);
-template void linalg::cuda_non_pivoting_solver<float>(int, int, const float*, const float*, const float*, const float*, float*, float**, float**, float**, float**, float**, float**, float**, float**, float**);
+template void linalg::cuda_non_pivoting_solver<double>(int,
+                                                       int,
+                                                       const double*,
+                                                       const double*,
+                                                       const double*,
+                                                       const double*,
+                                                       double*,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**,
+                                                       double**);
+template void linalg::cuda_non_pivoting_solver<float>(int,
+                                                      int,
+                                                      const float*,
+                                                      const float*,
+                                                      const float*,
+                                                      const float*,
+                                                      float*,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**,
+                                                      float**);

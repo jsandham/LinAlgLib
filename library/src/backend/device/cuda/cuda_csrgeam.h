@@ -32,37 +32,39 @@ namespace linalg
 
     void free_csrgeam_cuda_data(csrgeam_descr* descr);
 
+    template <typename T>
     void cuda_csrgeam_nnz(int            m,
                           int            n,
                           int            nnz_A,
                           int            nnz_B,
                           csrgeam_descr* descr,
-                          double         alpha,
+                          T              alpha,
                           const int*     csr_row_ptr_A,
                           const int*     csr_col_ind_A,
-                          double         beta,
+                          T              beta,
                           const int*     csr_row_ptr_B,
                           const int*     csr_col_ind_B,
                           int*           csr_row_ptr_C,
                           int*           nnz_C);
 
+    template <typename T>
     void cuda_csrgeam_solve(int                  m,
                             int                  n,
                             int                  nnz_A,
                             int                  nnz_B,
                             int                  nnz_C,
                             const csrgeam_descr* descr,
-                            double               alpha,
+                            T                    alpha,
                             const int*           csr_row_ptr_A,
                             const int*           csr_col_ind_A,
-                            const double*        csr_val_A,
-                            double               beta,
+                            const T*             csr_val_A,
+                            T                    beta,
                             const int*           csr_row_ptr_B,
                             const int*           csr_col_ind_B,
-                            const double*        csr_val_B,
+                            const T*             csr_val_B,
                             const int*           csr_row_ptr_C,
                             int*                 csr_col_ind_C,
-                            double*              csr_val_C);
+                            T*                   csr_val_C);
 }
 
 #endif

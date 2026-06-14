@@ -28,8 +28,8 @@
 #include <iostream>
 #include <vector>
 
-#include <thrust/sort.h>
 #include <thrust/device_ptr.h>
+#include <thrust/sort.h>
 
 #include "cuda_csric0.h"
 
@@ -38,20 +38,6 @@
 #include "csr2coo_kernels.cuh"
 #include "csric0_kernels.cuh"
 #include "csrtrsv_kernels.cuh"
-
-//----------------------------------------------------------------------------------------
-// Compute incomplete Cholesky factorization inplace (only modifies lower triangular part)
-//----------------------------------------------------------------------------------------
-void linalg::cuda_csric0(int        m,
-                         int        n,
-                         int        nnz,
-                         const int* csr_row_ptr,
-                         const int* csr_col_ind,
-                         double*    csr_val,
-                         int*       structural_zero,
-                         int*       numeric_zero)
-{
-}
 
 //-------------------------------------------------------------------------------
 // Compute Incomplete Cholesky IC0: A = L * L^T
@@ -77,12 +63,13 @@ void linalg::free_csric0_cuda_data(csric0_descr* descr)
     }
 }
 
+template <typename T>
 void linalg::cuda_csric0_analysis(int           m,
                                   int           n,
                                   int           nnz,
                                   const int*    csr_row_ptr,
                                   const int*    csr_col_ind,
-                                  const double* csr_val,
+                                  const T*      csr_val,
                                   csric0_descr* descr)
 {
     std::cout << "cuda_csric0_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
@@ -156,12 +143,13 @@ void linalg::cuda_csric0_analysis(int           m,
     std::cout << "" << std::endl;
 }
 
+template <typename T>
 void linalg::cuda_csric0_compute(int                 m,
                                  int                 n,
                                  int                 nnz,
                                  const int*          csr_row_ptr,
                                  const int*          csr_col_ind,
-                                 double*             csr_val,
+                                 T*                  csr_val,
                                  const csric0_descr* descr)
 {
     assert(descr->diag_ind != nullptr);
@@ -175,3 +163,34 @@ void linalg::cuda_csric0_compute(int                 m,
         m, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array, descr->row_perm);
     CHECK_CUDA_LAUNCH_ERROR();
 }
+
+template void linalg::cuda_csric0_analysis<float>(int           m,
+                                                  int           n,
+                                                  int           nnz,
+                                                  const int*    csr_row_ptr,
+                                                  const int*    csr_col_ind,
+                                                  const float*  csr_val,
+                                                  csric0_descr* descr);
+template void linalg::cuda_csric0_analysis<double>(int           m,
+                                                   int           n,
+                                                   int           nnz,
+                                                   const int*    csr_row_ptr,
+                                                   const int*    csr_col_ind,
+                                                   const double* csr_val,
+                                                   csric0_descr* descr);
+
+template void linalg::cuda_csric0_compute<float>(int                 m,
+                                                 int                 n,
+                                                 int                 nnz,
+                                                 const int*          csr_row_ptr,
+                                                 const int*          csr_col_ind,
+                                                 float*              csr_val,
+                                                 const csric0_descr* descr);
+
+template void linalg::cuda_csric0_compute<double>(int                 m,
+                                                  int                 n,
+                                                  int                 nnz,
+                                                  const int*          csr_row_ptr,
+                                                  const int*          csr_col_ind,
+                                                  double*             csr_val,
+                                                  const csric0_descr* descr);

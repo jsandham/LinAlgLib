@@ -24,21 +24,21 @@
 //
 //********************************************************************************
 
-#include <thrust/sort.h>
 #include <thrust/execution_policy.h>
+#include <thrust/sort.h>
 
 #include "cuda_csr2csc.h"
 
 #include "csr2coo_kernels.cuh"
 
 template <typename T>
-void linalg::cuda_csr2csc_buffer_size(int           m,
-                                      int           n,
-                                      int           nnz,
-                                      const int*    csr_row_ptr,
-                                      const int*    csr_col_ind,
-                                      const T*      csr_val,
-                                      size_t*       buffer_size)
+void linalg::cuda_csr2csc_buffer_size(int        m,
+                                      int        n,
+                                      int        nnz,
+                                      const int* csr_row_ptr,
+                                      const int* csr_col_ind,
+                                      const T*   csr_val,
+                                      size_t*    buffer_size)
 {
     *buffer_size = 0;
     *buffer_size += sizeof(int) * nnz; // perm
@@ -46,16 +46,16 @@ void linalg::cuda_csr2csc_buffer_size(int           m,
 }
 
 template <typename T>
-void linalg::cuda_csr2csc(int           m,
-                          int           n,
-                          int           nnz,
-                          const int*    csr_row_ptr,
-                          const int*    csr_col_ind,
-                          const T*      csr_val,
-                          int*          csc_col_ptr,
-                          int*          csc_row_ind,
-                          T*            csc_val,
-                          void*         buffer)
+void linalg::cuda_csr2csc(int        m,
+                          int        n,
+                          int        nnz,
+                          const int* csr_row_ptr,
+                          const int* csr_col_ind,
+                          const T*   csr_val,
+                          int*       csc_col_ptr,
+                          int*       csc_row_ind,
+                          T*         csc_val,
+                          void*      buffer)
 {
     int* perm        = reinterpret_cast<int*>(buffer);
     int* coo_row_ind = reinterpret_cast<int*>(buffer) + nnz;
@@ -79,7 +79,11 @@ void linalg::cuda_csr2csc(int           m,
     CHECK_CUDA_LAUNCH_ERROR();
 }
 
-template void linalg::cuda_csr2csc_buffer_size<double>(int, int, int, const int*, const int*, const double*, size_t*);
-template void linalg::cuda_csr2csc_buffer_size<float>(int, int, int, const int*, const int*, const float*, size_t*);
-template void linalg::cuda_csr2csc(int, int, int, const int*, const int*, const double*, int*, int*, double*, void*);
-template void linalg::cuda_csr2csc(int, int, int, const int*, const int*, const float*, int*, int*, float*, void*);
+template void linalg::cuda_csr2csc_buffer_size<double>(
+    int, int, int, const int*, const int*, const double*, size_t*);
+template void linalg::cuda_csr2csc_buffer_size<float>(
+    int, int, int, const int*, const int*, const float*, size_t*);
+template void linalg::cuda_csr2csc(
+    int, int, int, const int*, const int*, const double*, int*, int*, double*, void*);
+template void linalg::cuda_csr2csc(
+    int, int, int, const int*, const int*, const float*, int*, int*, float*, void*);
