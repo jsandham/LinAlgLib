@@ -211,6 +211,41 @@ namespace YAML
             return true;
         }
     };
+
+    template <>
+    struct convert<Testing::pivoting_strategy>
+    {
+        static Node encode(const Testing::pivoting_strategy& rhs)
+        {
+            Node node;
+            switch(rhs)
+            {
+            case Testing::pivoting_strategy::Partial:
+                node = "Partial";
+                break;
+            case Testing::pivoting_strategy::None:
+                node = "None";
+                break;
+            }
+
+            return node;
+        }
+
+        static bool decode(const Node& node, Testing::pivoting_strategy& rhs)
+        {
+            std::string type = node.as<std::string>();
+            if(type == "Partial")
+            {
+                rhs = Testing::pivoting_strategy::Partial;
+            }
+            else if(type == "None")
+            {
+                rhs = Testing::pivoting_strategy::None;
+            }
+
+            return true;
+        }
+    };
 }
 
 template <typename T>
@@ -309,17 +344,18 @@ inline Testing::Fixture StringToFixture(const std::string& str)
 // Helper struct to hold all parameter vectors
 struct TestParameters
 {
-    std::vector<std::string>             matrices;
-    std::vector<Testing::preconditioner> precond_types;
-    std::vector<Testing::cycle_type>     cycle_types;
-    std::vector<Testing::smoother_type>  smoother_types;
-    std::vector<int>                     presmoothings;
-    std::vector<int>                     postsmoothings;
-    std::vector<int>                     max_iters;
-    std::vector<int>                     m_values;
-    std::vector<int>                     n_values;
-    std::vector<double>                  tols;
-    std::vector<double>                  omegas;
+    std::vector<std::string>                matrices;
+    std::vector<Testing::preconditioner>    precond_types;
+    std::vector<Testing::cycle_type>        cycle_types;
+    std::vector<Testing::smoother_type>     smoother_types;
+    std::vector<Testing::pivoting_strategy> pivoting_strategies;
+    std::vector<int>                        presmoothings;
+    std::vector<int>                        postsmoothings;
+    std::vector<int>                        max_iters;
+    std::vector<int>                        m_values;
+    std::vector<int>                        n_values;
+    std::vector<double>                     tols;
+    std::vector<double>                     omegas;
 };
 
 template <std::size_t I = 0, typename F, typename Tuple, typename... Args>
@@ -383,6 +419,8 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         params.precond_types  = read_group_values("precond", Testing::preconditioner::None);
         params.cycle_types    = read_group_values("cycle", Testing::cycle_type::None);
         params.smoother_types = read_group_values("smoother", Testing::smoother_type::None);
+        params.pivoting_strategies
+            = read_group_values("pivoting_strategy", Testing::pivoting_strategy::None);
         params.presmoothings  = read_group_values("presmoothing", -1);
         params.postsmoothings = read_group_values("postsmoothing", -1);
         params.max_iters      = read_group_values("max_iters", -1);
@@ -396,6 +434,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         total_tests *= params.precond_types.size();
         total_tests *= params.cycle_types.size();
         total_tests *= params.smoother_types.size();
+        total_tests *= params.pivoting_strategies.size();
         total_tests *= params.presmoothings.size();
         total_tests *= params.postsmoothings.size();
         total_tests *= params.max_iters.size();
@@ -410,17 +449,18 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
         tests.reserve(tests.size() + total_tests);
 
         for_each_combination(
-            [&](const std::string&      filename,
-                Testing::preconditioner precond,
-                Testing::cycle_type     cycle_type,
-                Testing::smoother_type  smoother_type,
-                int                     presmoothing,
-                int                     postsmoothing,
-                int                     max_iters,
-                int                     m,
-                int                     n,
-                double                  tol,
-                double                  omega) {
+            [&](const std::string&         filename,
+                Testing::preconditioner    precond,
+                Testing::cycle_type        cycle_type,
+                Testing::smoother_type     smoother_type,
+                Testing::pivoting_strategy pivoting_strategy,
+                int                        presmoothing,
+                int                        postsmoothing,
+                int                        max_iters,
+                int                        m,
+                int                        n,
+                double                     tol,
+                double                     omega) {
                 tests.emplace_back(Testing::Arguments{
                     category_enum,
                     fixture_enum,
@@ -429,6 +469,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                     precond,
                     cycle_type,
                     smoother_type,
+                    pivoting_strategy,
                     presmoothing,
                     postsmoothing,
                     max_iters,
@@ -442,6 +483,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
             params.precond_types,
             params.cycle_types,
             params.smoother_types,
+            params.pivoting_strategies,
             params.presmoothings,
             params.postsmoothings,
             params.max_iters,

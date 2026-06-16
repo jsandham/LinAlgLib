@@ -118,6 +118,12 @@ namespace Testing
         None
     };
 
+    enum class pivoting_strategy
+    {
+        Partial,
+        None
+    };
+
     inline std::string CategoryToString(Category category)
     {
         switch(category)
@@ -288,6 +294,19 @@ namespace Testing
         case smoother_type::SSOR:
             return "SSOR";
         case smoother_type::None:
+            return "None";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string PivotingStrategyToString(pivoting_strategy strategy)
+    {
+        switch(strategy)
+        {
+        case pivoting_strategy::Partial:
+            return "Partial";
+        case pivoting_strategy::None:
             return "None";
         }
 

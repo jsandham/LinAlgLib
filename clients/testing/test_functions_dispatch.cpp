@@ -87,7 +87,7 @@ namespace Testing
         case Fixture::CSRILU0:
             return test_csrilu0(arg);
         case Fixture::TridiagonalSolver:
-            return test_tridiagonal_class_solver(arg);
+            return test_tridiagonal_solver(arg);
         }
 
         return false;

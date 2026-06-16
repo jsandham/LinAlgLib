@@ -39,7 +39,7 @@
 
 using namespace linalg;
 
-bool Testing::test_tridiagonal_class_solver(Arguments arg)
+bool Testing::test_tridiagonal_solver(Arguments arg)
 {
     // System size
     int m = arg.m;
@@ -78,9 +78,18 @@ bool Testing::test_tridiagonal_class_solver(Arguments arg)
         rhs[m * i + (m - 1)] = 1.0;
     }
 
-    // Create the OO solver
-    // tridiagonal_solver solver(m, n, pivoting_strategy::none);
-    tridiagonal_solver solver(m, n, pivoting_strategy::partial);
+    // Create the solver
+    linalg::pivoting_strategy pivoting;
+    switch(arg.pivoting_strategy)
+    {
+    case Testing::pivoting_strategy::None:
+        pivoting = linalg::pivoting_strategy::none;
+        break;
+    case Testing::pivoting_strategy::Partial:
+        pivoting = linalg::pivoting_strategy::partial;
+        break;
+    }
+    tridiagonal_solver solver(m, n, pivoting);
 
     // To run on device: move data and solver workspace to device
     lower_diag.move_to_device();

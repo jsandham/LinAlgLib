@@ -1,10 +1,7 @@
 Tests:
   small:
     precond: [None, Jacobi]
-    matrix_file: [
-                  # "matrices/SPD/bcsstm02/bcsstm02.mtx",
-                  # "matrices/SPD/ex5/ex5.mtx",
-                  "matrices/SPD/mesh1em6/mesh1em6.mtx",
+    matrix_file: ["matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/bcsstk01/bcsstk01.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",
                   "matrices/SPD/mesh2em5/mesh2em5.mtx",

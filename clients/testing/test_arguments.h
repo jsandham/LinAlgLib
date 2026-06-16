@@ -37,20 +37,21 @@ namespace Testing
 {
     struct Arguments
     {
-        Category       category; // IterativeSolvers, Math, Primitive
-        Fixture        fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
-        std::string    group; // small, medium, large, etc
-        std::string    filename; // bmwcra_1.mtx, shipsec1.mtx, etc
-        preconditioner precond_type;
-        cycle_type     cycle_type;
-        smoother_type  smoother_type;
-        int            presmoothing;
-        int            postsmoothing;
-        int            max_iters;
-        int            m;
-        int            n;
-        double         tol;
-        double         omega;
+        Category          category; // IterativeSolvers, Math, Primitive
+        Fixture           fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
+        std::string       group; // small, medium, large, etc
+        std::string       filename; // bmwcra_1.mtx, shipsec1.mtx, etc
+        preconditioner    precond_type;
+        cycle_type        cycle_type;
+        smoother_type     smoother_type;
+        pivoting_strategy pivoting_strategy;
+        int               presmoothing;
+        int               postsmoothing;
+        int               max_iters;
+        int               m;
+        int               n;
+        double            tol;
+        double            omega;
 
         std::string generate_test_name() const
         {
@@ -66,6 +67,10 @@ namespace Testing
             if(this->smoother_type != smoother_type::None)
             {
                 name += "_" + SmootherTypeToString(this->smoother_type);
+            }
+            if(this->pivoting_strategy != pivoting_strategy::None)
+            {
+                name += "_" + PivotingStrategyToString(this->pivoting_strategy);
             }
             if(this->presmoothing >= 0)
             {

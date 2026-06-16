@@ -46,8 +46,7 @@ namespace Testing
     bool test_transpose(Arguments arg);
     bool test_csric0(Arguments arg);
     bool test_csrilu0(Arguments arg);
-    // bool test_tridiagonal_solver(Arguments arg);
-    bool test_tridiagonal_class_solver(Arguments arg);
+    bool test_tridiagonal_solver(Arguments arg);
 
     // Primitive
     bool test_exclusive_scan(Arguments arg);
