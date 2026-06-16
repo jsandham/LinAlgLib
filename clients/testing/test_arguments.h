@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -33,44 +33,44 @@
 
 #include "test_enums.h"
 
-namespace Testing
+namespace testing
 {
     struct Arguments
     {
-        Category          category; // IterativeSolvers, Math, Primitive
-        Fixture           fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
-        std::string       group; // small, medium, large, etc
-        std::string       filename; // bmwcra_1.mtx, shipsec1.mtx, etc
-        preconditioner    precond_type;
-        cycle_type        cycle_type;
-        smoother_type     smoother_type;
-        pivoting_strategy pivoting_strategy;
-        int               presmoothing;
-        int               postsmoothing;
-        int               max_iters;
-        int               m;
-        int               n;
-        double            tol;
-        double            omega;
+        testing::category          category; // IterativeSolvers, Math, Primitive
+        testing::fixture           fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
+        std::string                group; // small, medium, large, etc
+        std::string                filename; // bmwcra_1.mtx, shipsec1.mtx, etc
+        testing::preconditioner    precond_type;
+        testing::cycle_type        cycle_type;
+        testing::smoother_type     smoother_type;
+        testing::pivoting_strategy pivoting_strategy;
+        int                        presmoothing;
+        int                        postsmoothing;
+        int                        max_iters;
+        int                        m;
+        int                        n;
+        double                     tol;
+        double                     omega;
 
         std::string generate_test_name() const
         {
             std::string name = group;
             if(this->precond_type != preconditioner::None)
             {
-                name += "_" + PreconditionerToString(this->precond_type);
+                name += "_" + preconditioner_to_string(this->precond_type);
             }
             if(this->cycle_type != cycle_type::None)
             {
-                name += "_" + CycleTypeToString(this->cycle_type);
+                name += "_" + cycle_type_to_string(this->cycle_type);
             }
             if(this->smoother_type != smoother_type::None)
             {
-                name += "_" + SmootherTypeToString(this->smoother_type);
+                name += "_" + smoother_type_to_string(this->smoother_type);
             }
             if(this->pivoting_strategy != pivoting_strategy::None)
             {
-                name += "_" + PivotingStrategyToString(this->pivoting_strategy);
+                name += "_" + pivoting_strategy_to_string(this->pivoting_strategy);
             }
             if(this->presmoothing >= 0)
             {

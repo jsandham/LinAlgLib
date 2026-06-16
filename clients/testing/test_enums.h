@@ -30,9 +30,9 @@
 #include <linalg.h>
 #include <string>
 
-namespace Testing
+namespace testing
 {
-    enum class Category
+    enum class category
     {
         IterativeSolvers,
         Math,
@@ -40,7 +40,7 @@ namespace Testing
         Unknown
     };
 
-    enum class Fixture
+    enum class fixture
     {
         Jacobi,
         GaussSeidel,
@@ -65,7 +65,7 @@ namespace Testing
         Unknown
     };
 
-    enum class ClassicalSolver
+    enum class classical_solver
     {
         Jacobi,
         GaussSeidel,
@@ -74,14 +74,14 @@ namespace Testing
         SSOR
     };
 
-    enum class KrylovSolver
+    enum class krylov_solver
     {
         CG,
         BICGSTAB,
         GMRES
     };
 
-    enum class AMGSolver
+    enum class AMG_solver
     {
         UAAMG,
         SAAMG,
@@ -124,120 +124,120 @@ namespace Testing
         None
     };
 
-    inline std::string CategoryToString(Category category)
+    inline std::string category_to_string(category category)
     {
         switch(category)
         {
-        case Category::IterativeSolvers:
+        case category::IterativeSolvers:
             return "IterativeSolvers";
-        case Category::Math:
+        case category::Math:
             return "Math";
-        case Category::Primitive:
+        case category::Primitive:
             return "Primitive";
         }
 
         return "Invalid";
     }
 
-    inline std::string FixtureToString(Fixture fixture)
+    inline std::string fixture_to_string(fixture fixture)
     {
         switch(fixture)
         {
-        case Fixture::Jacobi:
+        case fixture::Jacobi:
             return "Jacobi";
-        case Fixture::GaussSeidel:
+        case fixture::GaussSeidel:
             return "GaussSeidel";
-        case Fixture::SOR:
+        case fixture::SOR:
             return "SOR";
-        case Fixture::SymmGaussSeidel:
+        case fixture::SymmGaussSeidel:
             return "SymmGaussSeidel";
-        case Fixture::SSOR:
+        case fixture::SSOR:
             return "SSOR";
-        case Fixture::CG:
+        case fixture::CG:
             return "CG";
-        case Fixture::BICGSTAB:
+        case fixture::BICGSTAB:
             return "BICGSTAB";
-        case Fixture::GMRES:
+        case fixture::GMRES:
             return "GMRES";
-        case Fixture::UAAMG:
+        case fixture::UAAMG:
             return "UAAMG";
-        case Fixture::SAAMG:
+        case fixture::SAAMG:
             return "SAAMG";
-        case Fixture::RSAMG:
+        case fixture::RSAMG:
             return "RSAMG";
-        case Fixture::SpMV:
+        case fixture::SpMV:
             return "SpMV";
-        case Fixture::SpGEMM:
+        case fixture::SpGEMM:
             return "SpGEMM";
-        case Fixture::SpGEAM:
+        case fixture::SpGEAM:
             return "SpGEAM";
-        case Fixture::SpTRSV:
+        case fixture::SpTRSV:
             return "SpTRSV";
-        case Fixture::Transpose:
+        case fixture::Transpose:
             return "Transpose";
-        case Fixture::CSRIC0:
+        case fixture::CSRIC0:
             return "CSRIC0";
-        case Fixture::CSRILU0:
+        case fixture::CSRILU0:
             return "CSRILU0";
-        case Fixture::TridiagonalSolver:
+        case fixture::TridiagonalSolver:
             return "TridiagonalSolver";
-        case Fixture::ExclusiveScan:
+        case fixture::ExclusiveScan:
             return "ExclusiveScan";
         }
 
         return "Invalid";
     }
 
-    inline std::string ClassicalSolverToString(ClassicalSolver solver)
+    inline std::string classical_solver_to_string(classical_solver solver)
     {
         switch(solver)
         {
-        case ClassicalSolver::Jacobi:
+        case classical_solver::Jacobi:
             return "Jacobi";
-        case ClassicalSolver::GaussSeidel:
+        case classical_solver::GaussSeidel:
             return "GaussSeidel";
-        case ClassicalSolver::SOR:
+        case classical_solver::SOR:
             return "SOR";
-        case ClassicalSolver::SymmGaussSeidel:
+        case classical_solver::SymmGaussSeidel:
             return "SymmGaussSeidel";
-        case ClassicalSolver::SSOR:
+        case classical_solver::SSOR:
             return "SSOR";
         }
 
         return "Invalid";
     }
 
-    inline std::string KrylovSolverToString(KrylovSolver solver)
+    inline std::string krylov_solver_to_string(krylov_solver solver)
     {
         switch(solver)
         {
-        case KrylovSolver::CG:
+        case krylov_solver::CG:
             return "CG";
-        case KrylovSolver::BICGSTAB:
+        case krylov_solver::BICGSTAB:
             return "BICGSTAB";
-        case KrylovSolver::GMRES:
+        case krylov_solver::GMRES:
             return "GMRES";
         }
 
         return "Invalid";
     }
 
-    inline std::string AMGSolverToString(AMGSolver solver)
+    inline std::string amg_solver_to_string(AMG_solver solver)
     {
         switch(solver)
         {
-        case AMGSolver::UAAMG:
+        case AMG_solver::UAAMG:
             return "UAAMG";
-        case AMGSolver::SAAMG:
+        case AMG_solver::SAAMG:
             return "SAAMG";
-        case AMGSolver::RSAMG:
+        case AMG_solver::RSAMG:
             return "RSAMG";
         }
 
         return "Invalid";
     }
 
-    inline std::string PreconditionerToString(preconditioner precond)
+    inline std::string preconditioner_to_string(preconditioner precond)
     {
         switch(precond)
         {
@@ -262,7 +262,7 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string CycleTypeToString(cycle_type cycle)
+    inline std::string cycle_type_to_string(cycle_type cycle)
     {
         switch(cycle)
         {
@@ -279,7 +279,7 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string SmootherTypeToString(smoother_type smoother)
+    inline std::string smoother_type_to_string(smoother_type smoother)
     {
         switch(smoother)
         {
@@ -300,7 +300,7 @@ namespace Testing
         return "Invalid";
     }
 
-    inline std::string PivotingStrategyToString(pivoting_strategy strategy)
+    inline std::string pivoting_strategy_to_string(pivoting_strategy strategy)
     {
         switch(strategy)
         {

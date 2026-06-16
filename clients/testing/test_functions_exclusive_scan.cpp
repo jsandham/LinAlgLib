@@ -33,18 +33,16 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_exclusive_scan(Arguments arg)
+bool testing::test_exclusive_scan(Arguments arg)
 {
     // Host solution
-    vector<double> vec_1(arg.m);
+    linalg::vector<double> vec_1(arg.m);
     vec_1.ones();
 
-    exclusive_scan(vec_1);
+    linalg::exclusive_scan(vec_1);
 
     // Device solution
-    vector<double> vec_2(arg.m);
+    linalg::vector<double> vec_2(arg.m);
     vec_2.ones();
 
     vec_2.move_to_device();
@@ -53,7 +51,7 @@ bool Testing::test_exclusive_scan(Arguments arg)
     for(int i = 0; i < 4; i++)
     {
         vec_2.ones();
-        exclusive_scan(vec_2);
+        linalg::exclusive_scan(vec_2);
     }
     linalg::sync();
     auto t2 = std::chrono::high_resolution_clock::now();

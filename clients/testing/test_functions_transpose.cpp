@@ -33,15 +33,13 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_transpose(Arguments arg)
+bool testing::test_transpose(Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    csr_matrix mat_A_transpose;
-    csr_matrix mat_A2;
+    linalg::csr_matrix mat_A_transpose;
+    linalg::csr_matrix mat_A2;
 
     mat_A_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
     mat_A2.resize(mat_A.get_m(), mat_A.get_n(), mat_A.get_nnz());

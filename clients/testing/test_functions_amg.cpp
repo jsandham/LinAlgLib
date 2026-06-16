@@ -32,28 +32,26 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
+bool testing::test_amg(AMG_solver solver_type, Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
     // Solution vector
-    vector<double> vec_x(mat_A.get_m());
+    linalg::vector<double> vec_x(mat_A.get_m());
     vec_x.zeros();
 
-    vector<double> vec_init_x(mat_A.get_m());
+    linalg::vector<double> vec_init_x(mat_A.get_m());
     vec_init_x.zeros();
 
     // Righthand side vector
-    vector<double> vec_b(mat_A.get_m());
+    linalg::vector<double> vec_b(mat_A.get_m());
     vec_b.ones();
 
-    vector<double> vec_e(mat_A.get_n());
+    linalg::vector<double> vec_e(mat_A.get_n());
     vec_e.ones();
 
-    hierarchy hierachy;
+    linalg::hierarchy hierachy;
 
     // mat_A.move_to_device();
     // vec_x.move_to_device();
@@ -68,48 +66,48 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 
     switch(solver_type)
     {
-    case AMGSolver::UAAMG:
+    case AMG_solver::UAAMG:
         uaamg_setup(mat_A, max_levels, hierachy);
         break;
-    case AMGSolver::SAAMG:
+    case AMG_solver::SAAMG:
         saamg_setup(mat_A, max_levels, hierachy);
         break;
-    case AMGSolver::RSAMG:
+    case AMG_solver::RSAMG:
         rsamg_setup(mat_A, max_levels, hierachy);
         break;
     }
 
-    Cycle cycle = Cycle::Vcycle;
+    linalg::Cycle cycle = linalg::Cycle::Vcycle;
     switch(arg.cycle_type)
     {
-    case cycle_type::Vcycle:
-        cycle = Cycle::Vcycle;
+    case testing::cycle_type::Vcycle:
+        cycle = linalg::Cycle::Vcycle;
         break;
-    case cycle_type::Wcycle:
-        cycle = Cycle::Wcycle;
+    case testing::cycle_type::Wcycle:
+        cycle = linalg::Cycle::Wcycle;
         break;
-    case cycle_type::Fcycle:
-        cycle = Cycle::Fcycle;
+    case testing::cycle_type::Fcycle:
+        cycle = linalg::Cycle::Fcycle;
         break;
     }
 
-    Smoother smoother = Smoother::Jacobi;
+    linalg::Smoother smoother = linalg::Smoother::Jacobi;
     switch(arg.smoother_type)
     {
-    case smoother_type::Jacobi:
-        smoother = Smoother::Jacobi;
+    case testing::smoother_type::Jacobi:
+        smoother = linalg::Smoother::Jacobi;
         break;
-    case smoother_type::Gauss_Seidel:
-        smoother = Smoother::Gauss_Seidel;
+    case testing::smoother_type::Gauss_Seidel:
+        smoother = linalg::Smoother::Gauss_Seidel;
         break;
-    case smoother_type::Symm_Gauss_Seidel:
-        smoother = Smoother::Symm_Gauss_Seidel;
+    case testing::smoother_type::Symm_Gauss_Seidel:
+        smoother = linalg::Smoother::Symm_Gauss_Seidel;
         break;
-    case smoother_type::SOR:
-        smoother = Smoother::SOR;
+    case testing::smoother_type::SOR:
+        smoother = linalg::Smoother::SOR;
         break;
-    case smoother_type::SSOR:
-        smoother = Smoother::SSOR;
+    case testing::smoother_type::SSOR:
+        smoother = linalg::Smoother::SSOR;
         break;
     }
 
@@ -122,10 +120,10 @@ bool Testing::test_amg(AMGSolver solver_type, Arguments arg)
 
     std::cout << "arg.presmoothing: " << arg.presmoothing
               << " arg.postsmoothing: " << arg.postsmoothing
-              << " arg.cycle: " << CycleTypeToString(arg.cycle_type)
-              << " arg.smoother: " << SmootherTypeToString(arg.smoother_type) << std::endl;
+              << " arg.cycle: " << cycle_type_to_string(arg.cycle_type)
+              << " arg.smoother: " << smoother_type_to_string(arg.smoother_type) << std::endl;
 
-    iter_control control;
+    linalg::iter_control control;
     control.max_cycle = arg.max_iters;
 
     // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);

@@ -33,42 +33,40 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
+bool testing::test_krylov(krylov_solver solver_type, Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
     // Solution vector
-    vector<double> vec_x(mat_A.get_m());
+    linalg::vector<double> vec_x(mat_A.get_m());
     vec_x.zeros();
 
-    vector<double> vec_init_x(mat_A.get_m());
+    linalg::vector<double> vec_init_x(mat_A.get_m());
     vec_init_x.zeros();
 
     // Righthand side vector
-    vector<double> vec_b(mat_A.get_m());
+    linalg::vector<double> vec_b(mat_A.get_m());
     vec_b.ones();
 
-    vector<double> vec_e(mat_A.get_n());
+    linalg::vector<double> vec_e(mat_A.get_n());
     vec_e.ones();
 
     mat_A.multiply_by_vector(vec_b, vec_e);
 
-    cg_solver       cg;
-    bicgstab_solver bicgstab;
-    gmres_solver    gmres;
+    linalg::cg_solver       cg;
+    linalg::bicgstab_solver bicgstab;
+    linalg::gmres_solver    gmres;
 
     switch(solver_type)
     {
-    case KrylovSolver::CG:
+    case krylov_solver::CG:
         cg.build(mat_A);
         break;
-    case KrylovSolver::BICGSTAB:
+    case krylov_solver::BICGSTAB:
         bicgstab.build(mat_A);
         break;
-    case KrylovSolver::GMRES:
+    case krylov_solver::GMRES:
         gmres.build(mat_A, 100);
         break;
     }
@@ -76,26 +74,26 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
     linalg::preconditioner* p = nullptr;
     switch(arg.precond_type)
     {
-    case Testing::preconditioner::Jacobi:
-        p = new jacobi_precond;
+    case testing::preconditioner::Jacobi:
+        p = new linalg::jacobi_precond;
         break;
-    case Testing::preconditioner::GaussSeidel:
-        p = new gauss_seidel_precond;
+    case testing::preconditioner::GaussSeidel:
+        p = new linalg::gauss_seidel_precond;
         break;
-    case Testing::preconditioner::SOR:
-        p = new SOR_precond(0.3);
+    case testing::preconditioner::SOR:
+        p = new linalg::SOR_precond(0.3);
         break;
-    case Testing::preconditioner::SymmGaussSeidel:
-        p = new symmetric_gauss_seidel_precond;
+    case testing::preconditioner::SymmGaussSeidel:
+        p = new linalg::symmetric_gauss_seidel_precond;
         break;
-    case Testing::preconditioner::SSOR:
-        p = new SSOR_precond(1.2);
+    case testing::preconditioner::SSOR:
+        p = new linalg::SSOR_precond(1.2);
         break;
-    case Testing::preconditioner::ILU:
-        p = new ilu_precond;
+    case testing::preconditioner::ILU:
+        p = new linalg::ilu_precond;
         break;
-    case Testing::preconditioner::IC:
-        p = new ic_precond;
+    case testing::preconditioner::IC:
+        p = new linalg::ic_precond;
         break;
     }
 
@@ -117,20 +115,20 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     int iter = 0;
 
-    iter_control control;
+    linalg::iter_control control;
     control.max_iter = arg.max_iters;
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
     switch(solver_type)
     {
-    case KrylovSolver::CG:
+    case krylov_solver::CG:
         iter = cg.solve(mat_A, vec_x, vec_b, p, control);
         break;
-    case KrylovSolver::BICGSTAB:
+    case krylov_solver::BICGSTAB:
         iter = bicgstab.solve(mat_A, vec_x, vec_b, p, control);
         break;
-    case KrylovSolver::GMRES:
+    case krylov_solver::GMRES:
         iter = gmres.solve(mat_A, vec_x, vec_b, p, control);
         break;
     }
@@ -153,7 +151,7 @@ bool Testing::test_krylov(KrylovSolver solver_type, Arguments arg)
 
     std::cout << "iter: " << iter << std::endl;
 
-    int norm_type = (solver_type == KrylovSolver::GMRES) ? 1 : 0;
+    int norm_type = (solver_type == krylov_solver::GMRES) ? 1 : 0;
 
     return check_solution(
         mat_A, vec_b, vec_x, vec_init_x, std::max(control.abs_tol, control.rel_tol), norm_type);

@@ -34,37 +34,41 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_sptrsv(Arguments arg)
+bool testing::test_sptrsv(Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    vector<double> vec_x(mat_A.get_n());
+    linalg::vector<double> vec_x(mat_A.get_n());
     vec_x.ones();
 
-    vector<double> vec_y1(mat_A.get_m());
+    linalg::vector<double> vec_y1(mat_A.get_m());
     vec_y1.ones();
 
-    vector<double> vec_y2(mat_A.get_m());
+    linalg::vector<double> vec_y2(mat_A.get_m());
     vec_y2.copy_from(vec_y1);
 
     // Prepare for csrtrsv analysis
-    csrtrsv_descr* descr = nullptr;
-    create_csrtrsv_descr(&descr);
+    linalg::csrtrsv_descr* descr = nullptr;
+    linalg::create_csrtrsv_descr(&descr);
 
-    //csrtrsv_analysis(mat_A, triangular_type::lower, diagonal_type::non_unit, descr);
-    csrtrsv_analysis(mat_A, triangular_type::upper, diagonal_type::non_unit, descr);
+    //linalg::csrtrsv_analysis(mat_A, linalg::triangular_type::lower, linalg::diagonal_type::non_unit, descr);
+    linalg::csrtrsv_analysis(
+        mat_A, linalg::triangular_type::upper, linalg::diagonal_type::non_unit, descr);
 
     // Multiple by vector on the host
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 4; i++)
     {
-        //csrtrsv_solve(
-        //    mat_A, vec_x, vec_y1, 1.0, triangular_type::lower, diagonal_type::non_unit, descr);
-        csrtrsv_solve(
-            mat_A, vec_x, vec_y1, 1.0, triangular_type::upper, diagonal_type::non_unit, descr);
+        //linalg::csrtrsv_solve(
+        //    mat_A, vec_x, vec_y1, 1.0, linalg::triangular_type::lower, linalg::diagonal_type::non_unit, descr);
+        linalg::csrtrsv_solve(mat_A,
+                              vec_x,
+                              vec_y1,
+                              1.0,
+                              linalg::triangular_type::upper,
+                              linalg::diagonal_type::non_unit,
+                              descr);
     }
     auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -77,17 +81,23 @@ bool Testing::test_sptrsv(Arguments arg)
     vec_x.move_to_device();
     vec_y2.move_to_device();
 
-    //csrtrsv_analysis(mat_A, triangular_type::lower, diagonal_type::non_unit, descr);
-    csrtrsv_analysis(mat_A, triangular_type::upper, diagonal_type::non_unit, descr);
+    //linalg::csrtrsv_analysis(mat_A, linalg::triangular_type::lower, linalg::diagonal_type::non_unit, descr);
+    linalg::csrtrsv_analysis(
+        mat_A, linalg::triangular_type::upper, linalg::diagonal_type::non_unit, descr);
 
     // Multiple by vector on the device
     auto t3 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 1; i++)
     {
-        //csrtrsv_solve(
-        //    mat_A, vec_x, vec_y2, 1.0, triangular_type::lower, diagonal_type::non_unit, descr);
-        csrtrsv_solve(
-            mat_A, vec_x, vec_y2, 1.0, triangular_type::upper, diagonal_type::non_unit, descr);
+        //linalg::csrtrsv_solve(
+        //    mat_A, vec_x, vec_y2, 1.0, linalg::triangular_type::lower, linalg::diagonal_type::non_unit, descr);
+        linalg::csrtrsv_solve(mat_A,
+                              vec_x,
+                              vec_y2,
+                              1.0,
+                              linalg::triangular_type::upper,
+                              linalg::diagonal_type::non_unit,
+                              descr);
     }
     auto t4 = std::chrono::high_resolution_clock::now();
 
@@ -113,7 +123,7 @@ bool Testing::test_sptrsv(Arguments arg)
 
     std::cout << "max_error: " << max_error << std::endl;
 
-    destroy_csrtrsv_descr(descr);
+    linalg::destroy_csrtrsv_descr(descr);
 
     if(max_error > 1e-12)
     {

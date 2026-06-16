@@ -34,11 +34,9 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_spmv(Arguments arg)
+bool testing::test_spmv(Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
     std::mt19937                           generator(1234567);
@@ -49,13 +47,13 @@ bool Testing::test_spmv(Arguments arg)
         mat_A.get_val()[i] = distribution(generator);
     }
 
-    vector<double> vec_x(mat_A.get_n());
+    linalg::vector<double> vec_x(mat_A.get_n());
     vec_x.ones();
 
-    vector<double> vec_y1(mat_A.get_m());
+    linalg::vector<double> vec_y1(mat_A.get_m());
     vec_y1.ones();
 
-    vector<double> vec_y2(mat_A.get_m());
+    linalg::vector<double> vec_y2(mat_A.get_m());
     vec_y2.copy_from(vec_y1);
 
     // Multiple by vector on the host

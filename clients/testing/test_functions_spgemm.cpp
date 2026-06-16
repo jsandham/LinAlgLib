@@ -33,9 +33,7 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_spgemm(Arguments arg)
+bool testing::test_spgemm(Arguments arg)
 {
     // 2 1 0 1
     // 1 2 1 0
@@ -48,10 +46,10 @@ bool Testing::test_spgemm(Arguments arg)
     std::vector<int>    hcsr_col_ind = {0, 1, 3, 0, 1, 2, 1, 2, 3, 0, 2, 3};
     std::vector<double> hcsr_val     = {2.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 2.0};
 
-    csr_matrix mat_A(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
-    csr_matrix mat_B(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
+    linalg::csr_matrix mat_A(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
+    linalg::csr_matrix mat_B(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
 
-    csr_matrix mat_C;
+    linalg::csr_matrix mat_C;
     mat_C.resize(mat_A.get_m(), mat_B.get_n(), 0);
 
     mat_A.move_to_device();

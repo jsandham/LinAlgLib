@@ -34,39 +34,37 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_csrilu0(Arguments arg)
+bool testing::test_csrilu0(Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
     std::cout << "Matrix: " << arg.filename << " m: " << mat_A.get_m() << " n: " << mat_A.get_n()
               << " nnz: " << mat_A.get_nnz() << std::endl;
 
     // Make a copy for host computation
-    csr_matrix mat_A_host;
+    linalg::csr_matrix mat_A_host;
     mat_A_host.copy_from(mat_A);
 
     // Make a copy for device computation
-    csr_matrix mat_A_device;
+    linalg::csr_matrix mat_A_device;
     mat_A_device.copy_from(mat_A);
 
     // Prepare for csrilu0 analysis
-    csrilu0_descr* descr = nullptr;
-    create_csrilu0_descr(&descr);
+    linalg::csrilu0_descr* descr = nullptr;
+    linalg::create_csrilu0_descr(&descr);
 
     int structural_zero = 0;
     int numeric_zero    = 0;
 
     // Perform analysis on host
-    csrilu0_analysis(mat_A_host, descr);
+    linalg::csrilu0_analysis(mat_A_host, descr);
 
     // Compute csrilu0 on the host
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 4; i++)
     {
-        csrilu0_compute(mat_A_host, descr);
+        linalg::csrilu0_compute(mat_A_host, descr);
     }
     auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -77,13 +75,13 @@ bool Testing::test_csrilu0(Arguments arg)
     mat_A_device.move_to_device();
 
     // Perform analysis on device
-    csrilu0_analysis(mat_A_device, descr);
+    linalg::csrilu0_analysis(mat_A_device, descr);
 
     // Compute csrilu0 on the device
     auto t3 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 4; i++)
     {
-        csrilu0_compute(mat_A_device, descr);
+        linalg::csrilu0_compute(mat_A_device, descr);
     }
     linalg::sync();
     auto t4 = std::chrono::high_resolution_clock::now();
@@ -105,7 +103,7 @@ bool Testing::test_csrilu0(Arguments arg)
 
     std::cout << "max_error: " << max_error << std::endl;
 
-    destroy_csrilu0_descr(descr);
+    linalg::destroy_csrilu0_descr(descr);
 
     if(max_error > 1e-12)
     {

@@ -24,6 +24,8 @@
 //
 //********************************************************************************
 
+#include <cstdint>
+
 #include "../../../include/direct_solvers/tridiagonal/tridiagonal.h"
 
 #include "../../trace.h"

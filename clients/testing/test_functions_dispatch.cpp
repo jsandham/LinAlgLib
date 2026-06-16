@@ -35,34 +35,34 @@ static std::string correct_filename(const std::string& filename)
 #endif
 }
 
-namespace Testing
+namespace testing
 {
     static bool solver_test_dispatch(Arguments arg)
     {
         switch(arg.fixture)
         {
-        case Fixture::Jacobi:
-            return test_classical(ClassicalSolver::Jacobi, arg);
-        case Fixture::GaussSeidel:
-            return test_classical(ClassicalSolver::GaussSeidel, arg);
-        case Fixture::SOR:
-            return test_classical(ClassicalSolver::SOR, arg);
-        case Fixture::SymmGaussSeidel:
-            return test_classical(ClassicalSolver::SymmGaussSeidel, arg);
-        case Fixture::SSOR:
-            return test_classical(ClassicalSolver::SSOR, arg);
-        case Fixture::CG:
-            return test_krylov(KrylovSolver::CG, arg);
-        case Fixture::BICGSTAB:
-            return test_krylov(KrylovSolver::BICGSTAB, arg);
-        case Fixture::GMRES:
-            return test_krylov(KrylovSolver::GMRES, arg);
-        case Fixture::UAAMG:
-            return test_amg(AMGSolver::UAAMG, arg);
-        case Fixture::SAAMG:
-            return test_amg(AMGSolver::SAAMG, arg);
-        case Fixture::RSAMG:
-            return test_amg(AMGSolver::RSAMG, arg);
+        case fixture::Jacobi:
+            return test_classical(classical_solver::Jacobi, arg);
+        case fixture::GaussSeidel:
+            return test_classical(classical_solver::GaussSeidel, arg);
+        case fixture::SOR:
+            return test_classical(classical_solver::SOR, arg);
+        case fixture::SymmGaussSeidel:
+            return test_classical(classical_solver::SymmGaussSeidel, arg);
+        case fixture::SSOR:
+            return test_classical(classical_solver::SSOR, arg);
+        case fixture::CG:
+            return test_krylov(krylov_solver::CG, arg);
+        case fixture::BICGSTAB:
+            return test_krylov(krylov_solver::BICGSTAB, arg);
+        case fixture::GMRES:
+            return test_krylov(krylov_solver::GMRES, arg);
+        case fixture::UAAMG:
+            return test_amg(AMG_solver::UAAMG, arg);
+        case fixture::SAAMG:
+            return test_amg(AMG_solver::SAAMG, arg);
+        case fixture::RSAMG:
+            return test_amg(AMG_solver::RSAMG, arg);
         }
 
         return false;
@@ -72,21 +72,21 @@ namespace Testing
     {
         switch(arg.fixture)
         {
-        case Fixture::SpMV:
+        case fixture::SpMV:
             return test_spmv(arg);
-        case Fixture::SpTRSV:
+        case fixture::SpTRSV:
             return test_sptrsv(arg);
-        case Fixture::SpGEMM:
+        case fixture::SpGEMM:
             return test_spgemm(arg);
-        case Fixture::SpGEAM:
+        case fixture::SpGEAM:
             return test_spgeam(arg);
-        case Fixture::Transpose:
+        case fixture::Transpose:
             return test_transpose(arg);
-        case Fixture::CSRIC0:
+        case fixture::CSRIC0:
             return test_csric0(arg);
-        case Fixture::CSRILU0:
+        case fixture::CSRILU0:
             return test_csrilu0(arg);
-        case Fixture::TridiagonalSolver:
+        case fixture::TridiagonalSolver:
             return test_tridiagonal_solver(arg);
         }
 
@@ -99,7 +99,7 @@ namespace Testing
 
         switch(arg.fixture)
         {
-        case Fixture::ExclusiveScan:
+        case fixture::ExclusiveScan:
             return test_exclusive_scan(arg);
         }
 
@@ -107,22 +107,22 @@ namespace Testing
     }
 }
 
-bool Testing::test_dispatch(Arguments arg)
+bool testing::test_dispatch(Arguments arg)
 {
     arg.filename = correct_filename(arg.filename);
 
-    std::cout << "test_dispatch: category = " << CategoryToString(arg.category)
-              << ", fixture = " << FixtureToString(arg.fixture) << std::endl;
+    std::cout << "test_dispatch: category = " << category_to_string(arg.category)
+              << ", fixture = " << fixture_to_string(arg.fixture) << std::endl;
 
     std::cout << "arg.fixture: " << static_cast<int>(arg.fixture) << std::endl;
 
     switch(arg.category)
     {
-    case Category::IterativeSolvers:
+    case category::IterativeSolvers:
         return solver_test_dispatch(arg);
-    case Category::Math:
+    case category::Math:
         return math_test_dispatch(arg);
-    case Category::Primitive:
+    case category::Primitive:
         return primitive_test_dispatch(arg);
     }
 

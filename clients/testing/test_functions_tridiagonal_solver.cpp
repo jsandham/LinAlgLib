@@ -37,20 +37,18 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_tridiagonal_solver(Arguments arg)
+bool testing::test_tridiagonal_solver(Arguments arg)
 {
     // System size
     int m = arg.m;
     int n = arg.n;
 
     // Create tridiagonal matrix coefficients
-    vector<double> lower_diag(m);
-    vector<double> main_diag(m);
-    vector<double> upper_diag(m);
-    vector<double> rhs(m * n);
-    vector<double> solution(m * n);
+    linalg::vector<double> lower_diag(m);
+    linalg::vector<double> main_diag(m);
+    linalg::vector<double> upper_diag(m);
+    linalg::vector<double> rhs(m * n);
+    linalg::vector<double> solution(m * n);
 
     // Initialize with the same system as test_tridiagonal_solver
     lower_diag[0]     = 0.0;
@@ -82,14 +80,14 @@ bool Testing::test_tridiagonal_solver(Arguments arg)
     linalg::pivoting_strategy pivoting;
     switch(arg.pivoting_strategy)
     {
-    case Testing::pivoting_strategy::None:
+    case testing::pivoting_strategy::None:
         pivoting = linalg::pivoting_strategy::none;
         break;
-    case Testing::pivoting_strategy::Partial:
+    case testing::pivoting_strategy::Partial:
         pivoting = linalg::pivoting_strategy::partial;
         break;
     }
-    tridiagonal_solver solver(m, n, pivoting);
+    linalg::tridiagonal_solver solver(m, n, pivoting);
 
     // To run on device: move data and solver workspace to device
     lower_diag.move_to_device();

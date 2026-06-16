@@ -29,14 +29,14 @@
 
 #include "test_arguments.h"
 
-namespace Testing
+namespace testing
 {
     bool test_dispatch(Arguments arg);
 
     // Iterative solvers
-    bool test_classical(ClassicalSolver solver_type, Arguments arg);
-    bool test_krylov(KrylovSolver solver_type, Arguments arg);
-    bool test_amg(AMGSolver solver_type, Arguments arg);
+    bool test_classical(classical_solver solver_type, Arguments arg);
+    bool test_krylov(krylov_solver solver_type, Arguments arg);
+    bool test_amg(AMG_solver solver_type, Arguments arg);
 
     // Math testing
     bool test_spmv(Arguments arg);
@@ -51,6 +51,6 @@ namespace Testing
     // Primitive
     bool test_exclusive_scan(Arguments arg);
 
-} // namespace Testing
+} // namespace testing
 
 #endif

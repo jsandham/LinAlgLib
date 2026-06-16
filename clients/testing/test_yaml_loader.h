@@ -41,32 +41,32 @@
 namespace YAML
 {
     template <>
-    struct convert<Testing::preconditioner>
+    struct convert<testing::preconditioner>
     {
-        static Node encode(const Testing::preconditioner& rhs)
+        static Node encode(const testing::preconditioner& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case Testing::preconditioner::Jacobi:
+            case testing::preconditioner::Jacobi:
                 node = "Jacobi";
                 break;
-            case Testing::preconditioner::GaussSeidel:
+            case testing::preconditioner::GaussSeidel:
                 node = "GaussSeidel";
                 break;
-            case Testing::preconditioner::SOR:
+            case testing::preconditioner::SOR:
                 node = "SOR";
                 break;
-            case Testing::preconditioner::SymmGaussSeidel:
+            case testing::preconditioner::SymmGaussSeidel:
                 node = "SymmGaussSeidel";
                 break;
-            case Testing::preconditioner::IC:
+            case testing::preconditioner::IC:
                 node = "IC";
                 break;
-            case Testing::preconditioner::ILU:
+            case testing::preconditioner::ILU:
                 node = "ILU";
                 break;
-            case Testing::preconditioner::None:
+            case testing::preconditioner::None:
                 node = "None";
                 break;
             }
@@ -74,40 +74,40 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, Testing::preconditioner& rhs)
+        static bool decode(const Node& node, testing::preconditioner& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Jacobi")
             {
-                rhs = Testing::preconditioner::Jacobi;
+                rhs = testing::preconditioner::Jacobi;
             }
             if(type == "GaussSeidel")
             {
-                rhs = Testing::preconditioner::GaussSeidel;
+                rhs = testing::preconditioner::GaussSeidel;
             }
             if(type == "SOR")
             {
-                rhs = Testing::preconditioner::SOR;
+                rhs = testing::preconditioner::SOR;
             }
             if(type == "SymmGaussSeidel")
             {
-                rhs = Testing::preconditioner::SymmGaussSeidel;
+                rhs = testing::preconditioner::SymmGaussSeidel;
             }
             if(type == "SSOR")
             {
-                rhs = Testing::preconditioner::SSOR;
+                rhs = testing::preconditioner::SSOR;
             }
             else if(type == "IC")
             {
-                rhs = Testing::preconditioner::IC;
+                rhs = testing::preconditioner::IC;
             }
             else if(type == "ILU")
             {
-                rhs = Testing::preconditioner::ILU;
+                rhs = testing::preconditioner::ILU;
             }
             else if(type == "None")
             {
-                rhs = Testing::preconditioner::None;
+                rhs = testing::preconditioner::None;
             }
 
             return true;
@@ -115,20 +115,20 @@ namespace YAML
     };
 
     template <>
-    struct convert<Testing::cycle_type>
+    struct convert<testing::cycle_type>
     {
-        static Node encode(const Testing::cycle_type& rhs)
+        static Node encode(const testing::cycle_type& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case Testing::cycle_type::Fcycle:
+            case testing::cycle_type::Fcycle:
                 node = "Fcycle";
                 break;
-            case Testing::cycle_type::Vcycle:
+            case testing::cycle_type::Vcycle:
                 node = "Vcycle";
                 break;
-            case Testing::cycle_type::Wcycle:
+            case testing::cycle_type::Wcycle:
                 node = "Wcycle";
                 break;
             }
@@ -136,20 +136,20 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, Testing::cycle_type& rhs)
+        static bool decode(const Node& node, testing::cycle_type& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Fcycle")
             {
-                rhs = Testing::cycle_type::Fcycle;
+                rhs = testing::cycle_type::Fcycle;
             }
             else if(type == "Vcycle")
             {
-                rhs = Testing::cycle_type::Vcycle;
+                rhs = testing::cycle_type::Vcycle;
             }
             else if(type == "Wcycle")
             {
-                rhs = Testing::cycle_type::Wcycle;
+                rhs = testing::cycle_type::Wcycle;
             }
 
             return true;
@@ -157,26 +157,26 @@ namespace YAML
     };
 
     template <>
-    struct convert<Testing::smoother_type>
+    struct convert<testing::smoother_type>
     {
-        static Node encode(const Testing::smoother_type& rhs)
+        static Node encode(const testing::smoother_type& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case Testing::smoother_type::Jacobi:
+            case testing::smoother_type::Jacobi:
                 node = "Jacobi";
                 break;
-            case Testing::smoother_type::Gauss_Seidel:
+            case testing::smoother_type::Gauss_Seidel:
                 node = "Gauss_Seidel";
                 break;
-            case Testing::smoother_type::Symm_Gauss_Seidel:
+            case testing::smoother_type::Symm_Gauss_Seidel:
                 node = "Symm_Gauss_Seidel";
                 break;
-            case Testing::smoother_type::SOR:
+            case testing::smoother_type::SOR:
                 node = "SOR";
                 break;
-            case Testing::smoother_type::SSOR:
+            case testing::smoother_type::SSOR:
                 node = "SSOR";
                 break;
             }
@@ -184,28 +184,28 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, Testing::smoother_type& rhs)
+        static bool decode(const Node& node, testing::smoother_type& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Jacobi")
             {
-                rhs = Testing::smoother_type::Jacobi;
+                rhs = testing::smoother_type::Jacobi;
             }
             else if(type == "Gauss_Seidel")
             {
-                rhs = Testing::smoother_type::Gauss_Seidel;
+                rhs = testing::smoother_type::Gauss_Seidel;
             }
             else if(type == "Symm_Gauss_Seidel")
             {
-                rhs = Testing::smoother_type::Symm_Gauss_Seidel;
+                rhs = testing::smoother_type::Symm_Gauss_Seidel;
             }
             else if(type == "SOR")
             {
-                rhs = Testing::smoother_type::SOR;
+                rhs = testing::smoother_type::SOR;
             }
             else if(type == "SSOR")
             {
-                rhs = Testing::smoother_type::SSOR;
+                rhs = testing::smoother_type::SSOR;
             }
 
             return true;
@@ -213,17 +213,17 @@ namespace YAML
     };
 
     template <>
-    struct convert<Testing::pivoting_strategy>
+    struct convert<testing::pivoting_strategy>
     {
-        static Node encode(const Testing::pivoting_strategy& rhs)
+        static Node encode(const testing::pivoting_strategy& rhs)
         {
             Node node;
             switch(rhs)
             {
-            case Testing::pivoting_strategy::Partial:
+            case testing::pivoting_strategy::Partial:
                 node = "Partial";
                 break;
-            case Testing::pivoting_strategy::None:
+            case testing::pivoting_strategy::None:
                 node = "None";
                 break;
             }
@@ -231,16 +231,16 @@ namespace YAML
             return node;
         }
 
-        static bool decode(const Node& node, Testing::pivoting_strategy& rhs)
+        static bool decode(const Node& node, testing::pivoting_strategy& rhs)
         {
             std::string type = node.as<std::string>();
             if(type == "Partial")
             {
-                rhs = Testing::pivoting_strategy::Partial;
+                rhs = testing::pivoting_strategy::Partial;
             }
             else if(type == "None")
             {
-                rhs = Testing::pivoting_strategy::None;
+                rhs = testing::pivoting_strategy::None;
             }
 
             return true;
@@ -284,13 +284,13 @@ inline std::string correct_test_filepath(const std::string& filepath)
 #endif
 }
 
-inline Testing::Category StringToCategory(const std::string& str)
+inline testing::category StringToCategory(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, Testing::Category> categoryMap
-        = {{"IterativeSolvers", Testing::Category::IterativeSolvers},
-           {"Math", Testing::Category::Math},
-           {"Primitive", Testing::Category::Primitive}};
+    static const std::unordered_map<std::string, testing::category> categoryMap
+        = {{"IterativeSolvers", testing::category::IterativeSolvers},
+           {"Math", testing::category::Math},
+           {"Primitive", testing::category::Primitive}};
 
     // Find the string in the map
     auto it = categoryMap.find(str);
@@ -301,33 +301,33 @@ inline Testing::Category StringToCategory(const std::string& str)
         return it->second;
     }
 
-    return Testing::Category::Unknown;
+    return testing::category::Unknown;
 }
 
-inline Testing::Fixture StringToFixture(const std::string& str)
+inline testing::fixture StringToFixture(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, Testing::Fixture> fixtureMap
-        = {{"Jacobi", Testing::Fixture::Jacobi},
-           {"GaussSeidel", Testing::Fixture::GaussSeidel},
-           {"SOR", Testing::Fixture::SOR},
-           {"SymmGaussSeidel", Testing::Fixture::SymmGaussSeidel},
-           {"SSOR", Testing::Fixture::SSOR},
-           {"CG", Testing::Fixture::CG},
-           {"BICGSTAB", Testing::Fixture::BICGSTAB},
-           {"GMRES", Testing::Fixture::GMRES},
-           {"UAAMG", Testing::Fixture::UAAMG},
-           {"SAAMG", Testing::Fixture::SAAMG},
-           {"RSAMG", Testing::Fixture::RSAMG},
-           {"SpMV", Testing::Fixture::SpMV},
-           {"SpTRSV", Testing::Fixture::SpTRSV},
-           {"SpGEMM", Testing::Fixture::SpGEMM},
-           {"SpGEAM", Testing::Fixture::SpGEAM},
-           {"Transpose", Testing::Fixture::Transpose},
-           {"CSRIC0", Testing::Fixture::CSRIC0},
-           {"CSRILU0", Testing::Fixture::CSRILU0},
-           {"TridiagonalSolver", Testing::Fixture::TridiagonalSolver},
-           {"ExclusiveScan", Testing::Fixture::ExclusiveScan}};
+    static const std::unordered_map<std::string, testing::fixture> fixtureMap
+        = {{"Jacobi", testing::fixture::Jacobi},
+           {"GaussSeidel", testing::fixture::GaussSeidel},
+           {"SOR", testing::fixture::SOR},
+           {"SymmGaussSeidel", testing::fixture::SymmGaussSeidel},
+           {"SSOR", testing::fixture::SSOR},
+           {"CG", testing::fixture::CG},
+           {"BICGSTAB", testing::fixture::BICGSTAB},
+           {"GMRES", testing::fixture::GMRES},
+           {"UAAMG", testing::fixture::UAAMG},
+           {"SAAMG", testing::fixture::SAAMG},
+           {"RSAMG", testing::fixture::RSAMG},
+           {"SpMV", testing::fixture::SpMV},
+           {"SpTRSV", testing::fixture::SpTRSV},
+           {"SpGEMM", testing::fixture::SpGEMM},
+           {"SpGEAM", testing::fixture::SpGEAM},
+           {"Transpose", testing::fixture::Transpose},
+           {"CSRIC0", testing::fixture::CSRIC0},
+           {"CSRILU0", testing::fixture::CSRILU0},
+           {"TridiagonalSolver", testing::fixture::TridiagonalSolver},
+           {"ExclusiveScan", testing::fixture::ExclusiveScan}};
 
     // Find the string in the map
     auto it = fixtureMap.find(str);
@@ -338,17 +338,17 @@ inline Testing::Fixture StringToFixture(const std::string& str)
         return it->second;
     }
 
-    return Testing::Fixture::Unknown;
+    return testing::fixture::Unknown;
 }
 
 // Helper struct to hold all parameter vectors
 struct TestParameters
 {
     std::vector<std::string>                matrices;
-    std::vector<Testing::preconditioner>    precond_types;
-    std::vector<Testing::cycle_type>        cycle_types;
-    std::vector<Testing::smoother_type>     smoother_types;
-    std::vector<Testing::pivoting_strategy> pivoting_strategies;
+    std::vector<testing::preconditioner>    precond_types;
+    std::vector<testing::cycle_type>        cycle_types;
+    std::vector<testing::smoother_type>     smoother_types;
+    std::vector<testing::pivoting_strategy> pivoting_strategies;
     std::vector<int>                        presmoothings;
     std::vector<int>                        postsmoothings;
     std::vector<int>                        max_iters;
@@ -382,18 +382,18 @@ void for_each_combination(F&& f, const Containers&... containers)
     for_each_combination_impl(std::forward<F>(f), tupled);
 }
 
-inline std::vector<Testing::Arguments> generate_tests(const std::string category,
+inline std::vector<testing::Arguments> generate_tests(const std::string category,
                                                       const std::string fixture,
                                                       const std::string filepath)
 {
-    const Testing::Category category_enum = StringToCategory(category);
-    const Testing::Fixture  fixture_enum  = StringToFixture(fixture);
+    const testing::category category_enum = StringToCategory(category);
+    const testing::fixture  fixture_enum  = StringToFixture(fixture);
 
     const std::string resolved_filepath = correct_test_filepath(filepath);
     YAML::Node        root_node         = YAML::LoadFile(resolved_filepath);
     const YAML::Node  tests_node        = root_node["Tests"];
 
-    std::vector<Testing::Arguments> tests;
+    std::vector<testing::Arguments> tests;
 
     std::cout << "category: " << category << " fixture: " << fixture << " filepath: " << filepath
               << std::endl;
@@ -416,11 +416,11 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
 
         TestParameters params;
         params.matrices       = read_group_values("matrix_file", std::string(""));
-        params.precond_types  = read_group_values("precond", Testing::preconditioner::None);
-        params.cycle_types    = read_group_values("cycle", Testing::cycle_type::None);
-        params.smoother_types = read_group_values("smoother", Testing::smoother_type::None);
+        params.precond_types  = read_group_values("precond", testing::preconditioner::None);
+        params.cycle_types    = read_group_values("cycle", testing::cycle_type::None);
+        params.smoother_types = read_group_values("smoother", testing::smoother_type::None);
         params.pivoting_strategies
-            = read_group_values("pivoting_strategy", Testing::pivoting_strategy::None);
+            = read_group_values("pivoting_strategy", testing::pivoting_strategy::None);
         params.presmoothings  = read_group_values("presmoothing", -1);
         params.postsmoothings = read_group_values("postsmoothing", -1);
         params.max_iters      = read_group_values("max_iters", -1);
@@ -450,10 +450,10 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
 
         for_each_combination(
             [&](const std::string&         filename,
-                Testing::preconditioner    precond,
-                Testing::cycle_type        cycle_type,
-                Testing::smoother_type     smoother_type,
-                Testing::pivoting_strategy pivoting_strategy,
+                testing::preconditioner    precond,
+                testing::cycle_type        cycle_type,
+                testing::smoother_type     smoother_type,
+                testing::pivoting_strategy pivoting_strategy,
                 int                        presmoothing,
                 int                        postsmoothing,
                 int                        max_iters,
@@ -461,7 +461,7 @@ inline std::vector<Testing::Arguments> generate_tests(const std::string category
                 int                        n,
                 double                     tol,
                 double                     omega) {
-                tests.emplace_back(Testing::Arguments{
+                tests.emplace_back(testing::Arguments{
                     category_enum,
                     fixture_enum,
                     group,

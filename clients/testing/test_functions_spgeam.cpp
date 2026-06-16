@@ -33,17 +33,15 @@
 
 #include "linalg.h"
 
-using namespace linalg;
-
-bool Testing::test_spgeam(Arguments arg)
+bool testing::test_spgeam(Arguments arg)
 {
-    csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    csr_matrix mat_B;
+    linalg::csr_matrix mat_B;
     mat_B.copy_from(mat_A);
 
-    csr_matrix mat_C;
+    linalg::csr_matrix mat_C;
 
     auto t1 = std::chrono::high_resolution_clock::now();
     mat_A.multiply_by_matrix(mat_C, mat_B);
@@ -51,6 +49,6 @@ bool Testing::test_spgeam(Arguments arg)
 
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << ms_double.count() << "ms" << std::endl;
-    
+
     return false;
 }

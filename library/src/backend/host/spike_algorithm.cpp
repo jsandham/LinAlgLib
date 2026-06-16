@@ -25,6 +25,8 @@
 //********************************************************************************
 
 #include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
