@@ -41,6 +41,41 @@
 namespace YAML
 {
     template <>
+    struct convert<testing::backend>
+    {
+        static Node encode(const testing::backend& rhs)
+        {
+            Node node;
+            switch(rhs)
+            {
+            case testing::backend::CPU:
+                node = "CPU";
+                break;
+            case testing::backend::GPU:
+                node = "GPU";
+                break;
+            }
+
+            return node;
+        }
+
+        static bool decode(const Node& node, testing::backend& rhs)
+        {
+            std::string type = node.as<std::string>();
+            if(type == "CPU")
+            {
+                rhs = testing::backend::CPU;
+            }
+            if(type == "GPU")
+            {
+                rhs = testing::backend::GPU;
+            }
+
+            return true;
+        }
+    };
+
+    template <>
     struct convert<testing::preconditioner>
     {
         static Node encode(const testing::preconditioner& rhs)
@@ -284,7 +319,7 @@ inline std::string correct_test_filepath(const std::string& filepath)
 #endif
 }
 
-inline testing::category StringToCategory(const std::string& str)
+inline testing::category string_to_category(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
     static const std::unordered_map<std::string, testing::category> categoryMap
@@ -304,7 +339,7 @@ inline testing::category StringToCategory(const std::string& str)
     return testing::category::Unknown;
 }
 
-inline testing::fixture StringToFixture(const std::string& str)
+inline testing::fixture string_to_fixture(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
     static const std::unordered_map<std::string, testing::fixture> fixtureMap
@@ -345,6 +380,7 @@ inline testing::fixture StringToFixture(const std::string& str)
 struct TestParameters
 {
     std::vector<std::string>                matrices;
+    std::vector<testing::backend>           backends;
     std::vector<testing::preconditioner>    precond_types;
     std::vector<testing::cycle_type>        cycle_types;
     std::vector<testing::smoother_type>     smoother_types;
@@ -386,8 +422,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                                                       const std::string fixture,
                                                       const std::string filepath)
 {
-    const testing::category category_enum = StringToCategory(category);
-    const testing::fixture  fixture_enum  = StringToFixture(fixture);
+    const testing::category category_enum = string_to_category(category);
+    const testing::fixture  fixture_enum  = string_to_fixture(fixture);
 
     const std::string resolved_filepath = correct_test_filepath(filepath);
     YAML::Node        root_node         = YAML::LoadFile(resolved_filepath);
@@ -416,6 +452,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
 
         TestParameters params;
         params.matrices       = read_group_values("matrix_file", std::string(""));
+        params.backends       = read_group_values("backend", testing::backend::CPU);
         params.precond_types  = read_group_values("precond", testing::preconditioner::None);
         params.cycle_types    = read_group_values("cycle", testing::cycle_type::None);
         params.smoother_types = read_group_values("smoother", testing::smoother_type::None);
@@ -431,6 +468,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
 
         size_t total_tests = 1;
         total_tests *= params.matrices.size();
+        total_tests *= params.backends.size();
         total_tests *= params.precond_types.size();
         total_tests *= params.cycle_types.size();
         total_tests *= params.smoother_types.size();
@@ -450,6 +488,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
 
         for_each_combination(
             [&](const std::string&         filename,
+                testing::backend           backend,
                 testing::preconditioner    precond,
                 testing::cycle_type        cycle_type,
                 testing::smoother_type     smoother_type,
@@ -466,6 +505,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                     fixture_enum,
                     group,
                     filename,
+                    backend,
                     precond,
                     cycle_type,
                     smoother_type,
@@ -480,6 +520,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                 });
             },
             params.matrices,
+            params.backends,
             params.precond_types,
             params.cycle_types,
             params.smoother_types,

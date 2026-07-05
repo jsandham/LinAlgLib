@@ -34,6 +34,12 @@
 
 bool testing::test_classical(classical_solver solver_type, Arguments arg)
 {
+    if(arg.backend != backend::CPU)
+    {
+        std::cout << "Error: Classical solvers only supported on CPU backend." << std::endl;
+        return false;
+    }
+
     linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
     mat_A.make_diagonally_dominant();
@@ -53,9 +59,6 @@ bool testing::test_classical(classical_solver solver_type, Arguments arg)
     vec_e.ones();
 
     mat_A.multiply_by_vector(vec_b, vec_e);
-
-    std::cout << "mat_A.get_m(): " << mat_A.get_m() << " mat_A.get_n(): " << mat_A.get_n()
-              << " mat_A.get_nnz(): " << mat_A.get_nnz() << std::endl;
 
     linalg::jacobi_solver jac;
     linalg::gs_solver     gs;

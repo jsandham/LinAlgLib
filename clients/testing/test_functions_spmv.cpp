@@ -77,7 +77,7 @@ bool testing::test_spmv(Arguments arg)
     {
         mat_A.multiply_by_vector(vec_y2, vec_x);
     }
-    linalg::sync();
+    linalg::synchronize();
     auto t4 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> ms_device = t4 - t3;

@@ -35,46 +35,65 @@
 
 bool testing::test_exclusive_scan(Arguments arg)
 {
-    // Host solution
-    linalg::vector<double> vec_1(arg.m);
-    vec_1.ones();
+    linalg::vector<double> init_vec(arg.m);
+    linalg::vector<double> vec(arg.m);
 
-    linalg::exclusive_scan(vec_1);
+    if(arg.backend == backend::GPU)
+    {
+        init_vec.move_to_device();
+        vec.move_to_device();
+    }
 
-    // Device solution
-    linalg::vector<double> vec_2(arg.m);
-    vec_2.ones();
+    init_vec.rand(-1.0, 1.0);
 
-    vec_2.move_to_device();
-
-    auto t1 = std::chrono::high_resolution_clock::now();
+    // Warmup
     for(int i = 0; i < 4; i++)
     {
-        vec_2.ones();
-        linalg::exclusive_scan(vec_2);
+        vec.copy_from(init_vec);
+        linalg::exclusive_scan(vec);
     }
-    linalg::sync();
+    linalg::synchronize();
+
+    // Timed run
+    auto t1 = std::chrono::high_resolution_clock::now();
+    for(int i = 0; i < 100; i++)
+    {
+        vec.copy_from(init_vec);
+        linalg::exclusive_scan(vec);
+    }
+    linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<float, std::milli> ms_float = t2 - t1;
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    vec_2.move_to_host();
-
-    //vec_1.print_vector("Host solution");
-    //vec_2.print_vector("Device solution");
-
-    bool pass = true;
-    for(int i = 0; i < vec_2.get_size(); i++)
+    if(arg.backend == backend::GPU)
     {
-        if(vec_2[i] != vec_1[i])
-        {
-            std::cout << "Mismatch at index " << i << ": " << vec_2[i] << " != " << vec_1[i]
-                      << std::endl;
-            pass = false;
-            break;
-        }
+        init_vec.move_to_host();
+        vec.move_to_host();
     }
 
-    return pass;
+    // Verify results with a simple test case of all ones. The exclusive
+    // scan of an array of ones should be [0, 1, 2, ..., n-1].
+    bool   success        = true;
+    double expected_value = 0.0;
+    for(int i = 0; i < vec.get_size(); i++)
+    {
+        if(std::abs(vec[i] - expected_value) > 1e-9)
+        {
+            std::cout << "Mismatch at index " << i
+                      << " std::abs(vec[i] - expected_value): " << std::abs(vec[i] - expected_value)
+                      << std::endl;
+            success = false;
+        }
+
+        expected_value += init_vec[i];
+    }
+
+    size_t total_bytes_read_write = sizeof(double) * 2 * arg.m;
+    double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
+    double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
+    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
+
+    return success;
 }

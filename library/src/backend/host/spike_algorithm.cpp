@@ -578,7 +578,7 @@ namespace linalg
                                   int      level)
     {
         ROUTINE_TRACE("spike_algorithm_template");
-        constexpr int BLOCKDIM = pivoting_data::block_dim;
+        constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
         int m_pad = next_power_of_two(m);
 
@@ -671,6 +671,25 @@ namespace linalg
         data_marshalling2<T, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
     }
 
+    template void spike_algorithm_template<float>(int,
+                                                  int,
+                                                  const float*,
+                                                  const float*,
+                                                  const float*,
+                                                  const float*,
+                                                  float*,
+                                                  float** lower_pad,
+                                                  float** main_pad,
+                                                  float** upper_pad,
+                                                  float** B_pad,
+                                                  float** w_pad,
+                                                  float** v_pad,
+                                                  float** mt,
+                                                  float** S_lower,
+                                                  float** S_main,
+                                                  float** S_upper,
+                                                  float** S_B,
+                                                  int     level);
     template void spike_algorithm_template<double>(int,
                                                    int,
                                                    const double*,

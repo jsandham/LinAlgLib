@@ -32,22 +32,24 @@
 
 namespace linalg
 {
-    void host_partial_pivoting_algorithm(int                   m,
-                                         int                   n,
-                                         const vector<double>& lower_diag,
-                                         const vector<double>& main_diag,
-                                         const vector<double>& upper_diag,
-                                         const vector<double>& rhs,
-                                         vector<double>&       solution,
-                                         pivoting_data&        pivot_data);
+    template <typename T>
+    void host_partial_pivoting_algorithm(int               m,
+                                         int               n,
+                                         const vector<T>&  lower_diag,
+                                         const vector<T>&  main_diag,
+                                         const vector<T>&  upper_diag,
+                                         const vector<T>&  rhs,
+                                         vector<T>&        solution,
+                                         pivoting_data<T>& pivot_data);
+    template <typename T>
     void host_non_pivoting_algorithm(int                   m,
                                      int                   n,
-                                     const vector<double>& lower_diag,
-                                     const vector<double>& main_diag,
-                                     const vector<double>& upper_diag,
-                                     const vector<double>& rhs,
-                                     vector<double>&       solution,
-                                     non_pivoting_data&    non_pivot_data);
+                                     const vector<T>&      lower_diag,
+                                     const vector<T>&      main_diag,
+                                     const vector<T>&      upper_diag,
+                                     const vector<T>&      rhs,
+                                     vector<T>&            solution,
+                                     non_pivoting_data<T>& non_pivot_data);
 }
 
 #endif

@@ -602,7 +602,7 @@ namespace linalg
                                                              T**      S_B,
                                                              int      level = 0)
     {
-        constexpr int BLOCKDIM  = linalg::pivoting_data::block_dim;
+        constexpr int BLOCKDIM  = linalg::pivoting_data<T>::block_dim;
         constexpr int BLOCKSIZE = 256;
 
         int m_pad = next_power_of_two(m);

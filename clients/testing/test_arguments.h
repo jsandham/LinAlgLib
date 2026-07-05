@@ -41,6 +41,7 @@ namespace testing
         testing::fixture           fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
         std::string                group; // small, medium, large, etc
         std::string                filename; // bmwcra_1.mtx, shipsec1.mtx, etc
+        testing::backend           backend; // CPU, GPU
         testing::preconditioner    precond_type;
         testing::cycle_type        cycle_type;
         testing::smoother_type     smoother_type;
@@ -56,6 +57,10 @@ namespace testing
         std::string generate_test_name() const
         {
             std::string name = group;
+            if(this->backend != backend::CPU)
+            {
+                name += "_" + backend_to_string(this->backend);
+            }
             if(this->precond_type != preconditioner::None)
             {
                 name += "_" + preconditioner_to_string(this->precond_type);

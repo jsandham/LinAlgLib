@@ -19,3 +19,4 @@ Tests:
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx",
                   "matrices/SPD/bundle1/bundle1.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]

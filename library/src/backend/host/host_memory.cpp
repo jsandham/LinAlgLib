@@ -24,6 +24,8 @@
 //
 //********************************************************************************
 #include <assert.h>
+#include <cstdlib>
+#include <iostream>
 #include <stdint.h>
 
 #include "host_memory.h"
@@ -67,6 +69,20 @@ namespace linalg
             dest[i] = src[i];
         }
     }
+
+    template <typename T>
+    static void host_fill_random_impl(T* x, size_t n, T min, T max)
+    {
+        ROUTINE_TRACE("host_fill_random_impl");
+
+#if defined(_OPENMP)
+#pragma omp parallel for schedule(dynamic, 1024)
+#endif
+        for(size_t i = 0; i < n; i++)
+        {
+            x[i] = min + static_cast<T>(rand()) / (static_cast<T>(RAND_MAX / (max - min)));
+        }
+    }
 }
 
 template <typename T>
@@ -83,6 +99,13 @@ void linalg::host_fill(T* data, size_t size, T val)
     host_fill_impl(data, size, val);
 }
 
+template <typename T>
+void linalg::host_fill_random(T* data, size_t size, T min, T max)
+{
+    ROUTINE_TRACE("linalg::host_fill_random");
+    host_fill_random_impl(data, size, min, max);
+}
+
 template void linalg::copy_h2h<uint32_t>(uint32_t* dest, const uint32_t* src, size_t size);
 template void linalg::copy_h2h<int32_t>(int32_t* dest, const int32_t* src, size_t size);
 template void linalg::copy_h2h<int64_t>(int64_t* dest, const int64_t* src, size_t size);
@@ -94,3 +117,12 @@ template void linalg::host_fill<int32_t>(int32_t* data, size_t size, int32_t val
 template void linalg::host_fill<int64_t>(int64_t* data, size_t size, int64_t val);
 template void linalg::host_fill<float>(float* data, size_t size, float val);
 template void linalg::host_fill<double>(double* data, size_t size, double val);
+
+template void
+    linalg::host_fill_random<uint32_t>(uint32_t* data, size_t size, uint32_t min, uint32_t max);
+template void
+    linalg::host_fill_random<int32_t>(int32_t* data, size_t size, int32_t min, int32_t max);
+template void
+    linalg::host_fill_random<int64_t>(int64_t* data, size_t size, int64_t min, int64_t max);
+template void linalg::host_fill_random<float>(float* data, size_t size, float min, float max);
+template void linalg::host_fill_random<double>(double* data, size_t size, double min, double max);

@@ -97,14 +97,17 @@ bool testing::test_krylov(krylov_solver solver_type, Arguments arg)
         break;
     }
 
-    mat_A.move_to_device();
-    vec_x.move_to_device();
-    vec_b.move_to_device();
-    cg.move_to_device();
-    bicgstab.move_to_device();
-    if(p != nullptr)
+    if(arg.backend == backend::GPU)
     {
-        p->move_to_device();
+        mat_A.move_to_device();
+        vec_x.move_to_device();
+        vec_b.move_to_device();
+        cg.move_to_device();
+        bicgstab.move_to_device();
+        if(p != nullptr)
+        {
+            p->move_to_device();
+        }
     }
 
     if(p != nullptr)
@@ -143,11 +146,14 @@ bool testing::test_krylov(krylov_solver solver_type, Arguments arg)
         delete p;
     }
 
-    mat_A.move_to_host();
-    vec_x.move_to_host();
-    vec_b.move_to_host();
-    cg.move_to_host();
-    bicgstab.move_to_host();
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_host();
+        vec_x.move_to_host();
+        vec_b.move_to_host();
+        cg.move_to_host();
+        bicgstab.move_to_host();
+    }
 
     std::cout << "iter: " << iter << std::endl;
 

@@ -43,40 +43,42 @@
 
 namespace linalg
 {
+    template <typename T>
     struct non_pivoting_data
     {
         constexpr static int tridiagonal_max_recursion_levels = 3;
 
-        vector<double> lower_modified[tridiagonal_max_recursion_levels];
-        vector<double> main_modified[tridiagonal_max_recursion_levels];
-        vector<double> upper_modified[tridiagonal_max_recursion_levels];
-        vector<double> B_modified[tridiagonal_max_recursion_levels];
+        vector<T> lower_modified[tridiagonal_max_recursion_levels];
+        vector<T> main_modified[tridiagonal_max_recursion_levels];
+        vector<T> upper_modified[tridiagonal_max_recursion_levels];
+        vector<T> B_modified[tridiagonal_max_recursion_levels];
 
-        vector<double> spike_lower[tridiagonal_max_recursion_levels];
-        vector<double> spike_main[tridiagonal_max_recursion_levels];
-        vector<double> spike_upper[tridiagonal_max_recursion_levels];
-        vector<double> spike_B[tridiagonal_max_recursion_levels];
-        vector<double> spike_X[tridiagonal_max_recursion_levels];
+        vector<T> spike_lower[tridiagonal_max_recursion_levels];
+        vector<T> spike_main[tridiagonal_max_recursion_levels];
+        vector<T> spike_upper[tridiagonal_max_recursion_levels];
+        vector<T> spike_B[tridiagonal_max_recursion_levels];
+        vector<T> spike_X[tridiagonal_max_recursion_levels];
     };
 
+    template <typename T>
     struct pivoting_data
     {
         constexpr static int tridiagonal_max_recursion_levels = 3;
         constexpr static int block_dim                        = 256;
 
-        vector<double> lower_pad[tridiagonal_max_recursion_levels];
-        vector<double> main_pad[tridiagonal_max_recursion_levels];
-        vector<double> upper_pad[tridiagonal_max_recursion_levels];
-        vector<double> B_pad[tridiagonal_max_recursion_levels];
+        vector<T> lower_pad[tridiagonal_max_recursion_levels];
+        vector<T> main_pad[tridiagonal_max_recursion_levels];
+        vector<T> upper_pad[tridiagonal_max_recursion_levels];
+        vector<T> B_pad[tridiagonal_max_recursion_levels];
 
-        vector<double> w[tridiagonal_max_recursion_levels];
-        vector<double> v[tridiagonal_max_recursion_levels];
-        vector<double> mt[tridiagonal_max_recursion_levels];
+        vector<T> w[tridiagonal_max_recursion_levels];
+        vector<T> v[tridiagonal_max_recursion_levels];
+        vector<T> mt[tridiagonal_max_recursion_levels];
 
-        vector<double> S_lower[tridiagonal_max_recursion_levels];
-        vector<double> S_main[tridiagonal_max_recursion_levels];
-        vector<double> S_upper[tridiagonal_max_recursion_levels];
-        vector<double> S_B[tridiagonal_max_recursion_levels];
+        vector<T> S_lower[tridiagonal_max_recursion_levels];
+        vector<T> S_main[tridiagonal_max_recursion_levels];
+        vector<T> S_upper[tridiagonal_max_recursion_levels];
+        vector<T> S_B[tridiagonal_max_recursion_levels];
     };
 
     class tridiagonal_solver
@@ -89,10 +91,10 @@ namespace linalg
         bool on_host;
 
         // Non-pivoting data
-        non_pivoting_data non_pivot_data;
+        non_pivoting_data<double> non_pivot_data;
 
         // Pivoting data
-        pivoting_data pivot_data;
+        pivoting_data<double> pivot_data;
 
     public:
         tridiagonal_solver(int m, int n, pivoting_strategy strategy);

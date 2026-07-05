@@ -72,17 +72,8 @@ namespace linalg
         }
     }
 
-    // void thomas_algorithm(int           m,
-    //                                 int           n,
-    //                                 const double* lower_diag,
-    //                                 const double* main_diag,
-    //                                 const double* upper_diag,
-    //                                 const double* b,
-    //                                 double*       x)
-    // {
-    //     thomas_algorithm_template<double>(m, n, lower_diag, main_diag, upper_diag, b, x);
-    // }
-
+    template void thomas_algorithm_template<float>(
+        int, int, const float*, const float*, const float*, const float*, float*);
     template void thomas_algorithm_template<double>(
         int, int, const double*, const double*, const double*, const double*, double*);
 }

@@ -34,12 +34,18 @@
 #include "backend/device/device_memory.h"
 
 // Synchornize
-void linalg::sync()
+void linalg::synchronize()
 {
-    ROUTINE_TRACE("linalg::sync");
+    ROUTINE_TRACE("linalg::synchronize");
 
     if(is_device_available())
     {
         device_sync();
     }
+}
+
+// Check if device is available
+bool linalg::is_device_available()
+{
+    return ::is_device_available();
 }

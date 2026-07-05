@@ -35,30 +35,31 @@
 #include "cuda/cuda_tridiagonal.h"
 #endif
 
-void linalg::device_partial_pivoting_algorithm(int                   m,
-                                               int                   n,
-                                               const vector<double>& lower_diag,
-                                               const vector<double>& main_diag,
-                                               const vector<double>& upper_diag,
-                                               const vector<double>& rhs,
-                                               vector<double>&       solution,
-                                               pivoting_data&        pivot_data)
+template <typename T>
+void linalg::device_partial_pivoting_algorithm(int               m,
+                                               int               n,
+                                               const vector<T>&  lower_diag,
+                                               const vector<T>&  main_diag,
+                                               const vector<T>&  upper_diag,
+                                               const vector<T>&  rhs,
+                                               vector<T>&        solution,
+                                               pivoting_data<T>& pivot_data)
 {
     ROUTINE_TRACE("linalg::device_partial_pivoting_algorithm");
     if constexpr(is_cuda_available())
     {
-        const int L = pivoting_data::tridiagonal_max_recursion_levels;
-        double*   lower_pad_ptrs[L];
-        double*   main_pad_ptrs[L];
-        double*   upper_pad_ptrs[L];
-        double*   B_pad_ptrs[L];
-        double*   w_ptrs[L];
-        double*   v_ptrs[L];
-        double*   mt_ptrs[L];
-        double*   S_lower_ptrs[L];
-        double*   S_main_ptrs[L];
-        double*   S_upper_ptrs[L];
-        double*   S_B_ptrs[L];
+        const int L = pivoting_data<T>::tridiagonal_max_recursion_levels;
+        T*        lower_pad_ptrs[L];
+        T*        main_pad_ptrs[L];
+        T*        upper_pad_ptrs[L];
+        T*        B_pad_ptrs[L];
+        T*        w_ptrs[L];
+        T*        v_ptrs[L];
+        T*        mt_ptrs[L];
+        T*        S_lower_ptrs[L];
+        T*        S_main_ptrs[L];
+        T*        S_upper_ptrs[L];
+        T*        S_B_ptrs[L];
 
         for(int i = 0; i < L; i++)
         {
@@ -101,29 +102,30 @@ void linalg::device_partial_pivoting_algorithm(int                   m,
     }
 }
 
+template <typename T>
 void linalg::device_non_pivoting_algorithm(int                   m,
                                            int                   n,
-                                           const vector<double>& lower_diag,
-                                           const vector<double>& main_diag,
-                                           const vector<double>& upper_diag,
-                                           const vector<double>& rhs,
-                                           vector<double>&       solution,
-                                           non_pivoting_data&    non_pivot_data)
+                                           const vector<T>&      lower_diag,
+                                           const vector<T>&      main_diag,
+                                           const vector<T>&      upper_diag,
+                                           const vector<T>&      rhs,
+                                           vector<T>&            solution,
+                                           non_pivoting_data<T>& non_pivot_data)
 {
     ROUTINE_TRACE("linalg::device_non_pivoting_algorithm");
     if constexpr(is_cuda_available())
     {
-        constexpr int L = non_pivoting_data::tridiagonal_max_recursion_levels;
+        constexpr int L = non_pivoting_data<T>::tridiagonal_max_recursion_levels;
 
-        double* lower_modified_ptrs[L];
-        double* main_modified_ptrs[L];
-        double* upper_modified_ptrs[L];
-        double* B_modified_ptrs[L];
-        double* spike_lower_ptrs[L];
-        double* spike_main_ptrs[L];
-        double* spike_upper_ptrs[L];
-        double* spike_B_ptrs[L];
-        double* spike_X_ptrs[L];
+        T* lower_modified_ptrs[L];
+        T* main_modified_ptrs[L];
+        T* upper_modified_ptrs[L];
+        T* B_modified_ptrs[L];
+        T* spike_lower_ptrs[L];
+        T* spike_main_ptrs[L];
+        T* spike_upper_ptrs[L];
+        T* spike_B_ptrs[L];
+        T* spike_X_ptrs[L];
 
         for(int i = 0; i < L; i++)
         {
@@ -161,3 +163,41 @@ void linalg::device_non_pivoting_algorithm(int                   m,
                   << std::endl;
     }
 }
+
+template void linalg::device_partial_pivoting_algorithm<float>(int                   m,
+                                                               int                   n,
+                                                               const vector<float>&  lower_diag,
+                                                               const vector<float>&  main_diag,
+                                                               const vector<float>&  upper_diag,
+                                                               const vector<float>&  rhs,
+                                                               vector<float>&        solution,
+                                                               pivoting_data<float>& pivot_data);
+
+template void
+    linalg::device_non_pivoting_algorithm<float>(int                       m,
+                                                 int                       n,
+                                                 const vector<float>&      lower_diag,
+                                                 const vector<float>&      main_diag,
+                                                 const vector<float>&      upper_diag,
+                                                 const vector<float>&      rhs,
+                                                 vector<float>&            solution,
+                                                 non_pivoting_data<float>& non_pivot_data);
+
+template void linalg::device_partial_pivoting_algorithm<double>(int                    m,
+                                                                int                    n,
+                                                                const vector<double>&  lower_diag,
+                                                                const vector<double>&  main_diag,
+                                                                const vector<double>&  upper_diag,
+                                                                const vector<double>&  rhs,
+                                                                vector<double>&        solution,
+                                                                pivoting_data<double>& pivot_data);
+
+template void
+    linalg::device_non_pivoting_algorithm<double>(int                        m,
+                                                  int                        n,
+                                                  const vector<double>&      lower_diag,
+                                                  const vector<double>&      main_diag,
+                                                  const vector<double>&      upper_diag,
+                                                  const vector<double>&      rhs,
+                                                  vector<double>&            solution,
+                                                  non_pivoting_data<double>& non_pivot_data);

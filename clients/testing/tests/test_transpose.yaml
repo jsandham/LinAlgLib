@@ -28,18 +28,18 @@ Tests:
                   "matrices/SPD/wathen120/wathen120.mtx"]
 
   medium:
-      matrix_file: ["matrices/SPD/Dubcova2/Dubcova2.mtx",
-                    "matrices/SPD/denormal/denormal.mtx",
-                    "matrices/SPD/raefsky4/raefsky4.mtx",
-                    "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
-                    "matrices/SPD/qa8fm/qa8fm.mtx",
-                    "matrices/SPD/Dubcova3/Dubcova3.mtx",
-                    "matrices/SPD/pdb1HYS/pdb1HYS.mtx",
-                    "matrices/SPD/tmt_sym/tmt_sym.mtx",
-                    "matrices/SPD/bmw7st_1/bmw7st_1.mtx",
-                    "matrices/SPD/2cubes_sphere/2cubes_sphere.mtx",
-                    "matrices/SPD/parabolic_fem/parabolic_fem.mtx",
-                    "matrices/SPD/offshore/offshore.mtx"]
+    matrix_file: ["matrices/SPD/Dubcova2/Dubcova2.mtx",
+                  "matrices/SPD/denormal/denormal.mtx",
+                  "matrices/SPD/raefsky4/raefsky4.mtx",
+                  "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
+                  "matrices/SPD/qa8fm/qa8fm.mtx",
+                  "matrices/SPD/Dubcova3/Dubcova3.mtx",
+                  "matrices/SPD/pdb1HYS/pdb1HYS.mtx",
+                  "matrices/SPD/tmt_sym/tmt_sym.mtx",
+                  "matrices/SPD/bmw7st_1/bmw7st_1.mtx",
+                  "matrices/SPD/2cubes_sphere/2cubes_sphere.mtx",
+                  "matrices/SPD/parabolic_fem/parabolic_fem.mtx",
+                  "matrices/SPD/offshore/offshore.mtx"]
 
   large:
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",

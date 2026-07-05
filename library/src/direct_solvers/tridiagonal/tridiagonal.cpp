@@ -36,20 +36,21 @@
 
 namespace linalg
 {
+    template <typename T>
     static void non_pivoting_algorithm(int                   m,
                                        int                   n,
-                                       const vector<double>& lower_diag,
-                                       const vector<double>& main_diag,
-                                       const vector<double>& upper_diag,
-                                       const vector<double>& rhs,
-                                       vector<double>&       solution,
-                                       non_pivoting_data&    non_pivot_data)
+                                       const vector<T>&      lower_diag,
+                                       const vector<T>&      main_diag,
+                                       const vector<T>&      upper_diag,
+                                       const vector<T>&      rhs,
+                                       vector<T>&            solution,
+                                       non_pivoting_data<T>& non_pivot_data)
     {
         ROUTINE_TRACE("linalg::non_pivoting_algorithm");
 
         backend_dispatch("non_pivoting_algorithm",
-                         host_non_pivoting_algorithm,
-                         device_non_pivoting_algorithm,
+                         host_non_pivoting_algorithm<T>,
+                         device_non_pivoting_algorithm<T>,
                          m,
                          n,
                          lower_diag,
@@ -60,20 +61,21 @@ namespace linalg
                          non_pivot_data);
     }
 
-    static void partial_pivoting_algorithm(int                   m,
-                                           int                   n,
-                                           const vector<double>& lower_diag,
-                                           const vector<double>& main_diag,
-                                           const vector<double>& upper_diag,
-                                           const vector<double>& rhs,
-                                           vector<double>&       solution,
-                                           pivoting_data&        pivot_data)
+    template <typename T>
+    static void partial_pivoting_algorithm(int               m,
+                                           int               n,
+                                           const vector<T>&  lower_diag,
+                                           const vector<T>&  main_diag,
+                                           const vector<T>&  upper_diag,
+                                           const vector<T>&  rhs,
+                                           vector<T>&        solution,
+                                           pivoting_data<T>& pivot_data)
     {
         ROUTINE_TRACE("linalg::partial_pivoting_algorithm");
 
         backend_dispatch("partial_pivoting_algorithm",
-                         host_partial_pivoting_algorithm,
-                         device_partial_pivoting_algorithm,
+                         host_partial_pivoting_algorithm<T>,
+                         device_partial_pivoting_algorithm<T>,
                          m,
                          n,
                          lower_diag,
@@ -116,7 +118,8 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     {
         constexpr int BLOCKSIZE = 256;
         int           current_m = m;
-        for(int level = 0; level < non_pivoting_data::tridiagonal_max_recursion_levels; level++)
+        for(int level = 0; level < non_pivoting_data<double>::tridiagonal_max_recursion_levels;
+            level++)
         {
             if(current_m <= 1024)
                 break;
@@ -128,6 +131,7 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
             non_pivot_data.main_modified[level].resize(current_m);
             non_pivot_data.upper_modified[level].resize(current_m);
             non_pivot_data.B_modified[level].resize(current_m * n);
+
             non_pivot_data.spike_lower[level].resize(num_spikes);
             non_pivot_data.spike_main[level].resize(num_spikes);
             non_pivot_data.spike_upper[level].resize(num_spikes);
@@ -140,10 +144,11 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     }
     case pivoting_strategy::partial:
     {
-        constexpr int BLOCKDIM = pivoting_data::block_dim;
+        constexpr int BLOCKDIM = pivoting_data<double>::block_dim;
 
         int current_m = m;
-        for(int level = 0; level < non_pivoting_data::tridiagonal_max_recursion_levels; level++)
+        for(int level = 0; level < non_pivoting_data<double>::tridiagonal_max_recursion_levels;
+            level++)
         {
             std::cout << "level: " << level << " current_m: " << current_m << std::endl;
             //if(current_m <= 1024)
@@ -184,12 +189,13 @@ void linalg::tridiagonal_solver::move_to_device()
 {
     if(on_host)
     {
-        for(int i = 0; i < non_pivoting_data::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < non_pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
         {
             non_pivot_data.lower_modified[i].move_to_device();
             non_pivot_data.main_modified[i].move_to_device();
             non_pivot_data.upper_modified[i].move_to_device();
             non_pivot_data.B_modified[i].move_to_device();
+
             non_pivot_data.spike_lower[i].move_to_device();
             non_pivot_data.spike_main[i].move_to_device();
             non_pivot_data.spike_upper[i].move_to_device();
@@ -197,7 +203,7 @@ void linalg::tridiagonal_solver::move_to_device()
             non_pivot_data.spike_X[i].move_to_device();
         }
 
-        for(int i = 0; i < pivoting_data::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_device();
             pivot_data.main_pad[i].move_to_device();
@@ -220,12 +226,13 @@ void linalg::tridiagonal_solver::move_to_host()
 {
     if(!on_host)
     {
-        for(int i = 0; i < non_pivoting_data::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < non_pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
         {
             non_pivot_data.lower_modified[i].move_to_host();
             non_pivot_data.main_modified[i].move_to_host();
             non_pivot_data.upper_modified[i].move_to_host();
             non_pivot_data.B_modified[i].move_to_host();
+
             non_pivot_data.spike_lower[i].move_to_host();
             non_pivot_data.spike_main[i].move_to_host();
             non_pivot_data.spike_upper[i].move_to_host();
@@ -233,7 +240,7 @@ void linalg::tridiagonal_solver::move_to_host()
             non_pivot_data.spike_X[i].move_to_host();
         }
 
-        for(int i = 0; i < pivoting_data::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_host();
             pivot_data.main_pad[i].move_to_host();
@@ -261,11 +268,11 @@ void linalg::tridiagonal_solver::solve(const vector<double>& lower_diag,
     switch(strategy)
     {
     case pivoting_strategy::none:
-        non_pivoting_algorithm(
+        non_pivoting_algorithm<double>(
             m, n, lower_diag, main_diag, upper_diag, rhs, solution, non_pivot_data);
         break;
     case pivoting_strategy::partial:
-        partial_pivoting_algorithm(
+        partial_pivoting_algorithm<double>(
             m, n, lower_diag, main_diag, upper_diag, rhs, solution, pivot_data);
         break;
     }

@@ -65,6 +65,12 @@ namespace testing
         Unknown
     };
 
+    enum class backend
+    {
+        CPU,
+        GPU
+    };
+
     enum class classical_solver
     {
         Jacobi,
@@ -183,6 +189,19 @@ namespace testing
             return "TridiagonalSolver";
         case fixture::ExclusiveScan:
             return "ExclusiveScan";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string backend_to_string(backend backend)
+    {
+        switch(backend)
+        {
+        case backend::CPU:
+            return "CPU";
+        case backend::GPU:
+            return "GPU";
         }
 
         return "Invalid";

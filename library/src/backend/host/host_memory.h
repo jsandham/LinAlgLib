@@ -37,6 +37,9 @@ namespace linalg
     template <typename T>
     void host_fill(T* data, size_t size, T val);
 
+    template <typename T>
+    void host_fill_random(T* data, size_t size, T min, T max);
+
 } // namespace linalg
 
 #endif

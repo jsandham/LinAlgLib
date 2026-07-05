@@ -138,7 +138,7 @@ void linalg::device_fill(T* data, size_t size, T val)
 
 void linalg::device_sync()
 {
-    ROUTINE_TRACE("linalg::sync");
+    ROUTINE_TRACE("linalg::device_sync");
 
     if constexpr(is_cuda_available())
     {

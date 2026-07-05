@@ -31,6 +31,7 @@
 #include <cmath>
 #include <functional>
 #include <iostream>
+#include <random>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -50,19 +51,26 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     linalg::vector<double> rhs(m * n);
     linalg::vector<double> solution(m * n);
 
+    std::mt19937 gen(123456);
+
+    // 3. Define the range [0.0, 1.0)
+    std::uniform_real_distribution<double> main_dist(2.0, 2.5);
+    std::uniform_real_distribution<double> lower_dist(0.5, 1.0);
+    std::uniform_real_distribution<double> upper_dist(0.5, 1.0);
+
     // Initialize with the same system as test_tridiagonal_solver
     lower_diag[0]     = 0.0;
     upper_diag[m - 1] = 0.0;
     for(int i = 0; i < m; i++)
     {
-        main_diag[i] = 2.0;
+        main_diag[i] = main_dist(gen);
         if(i > 0)
         {
-            lower_diag[i] = 1.0;
+            lower_diag[i] = lower_dist(gen);
         }
         if(i < m - 1)
         {
-            upper_diag[i] = 0.7;
+            upper_diag[i] = upper_dist(gen);
         }
     }
 
@@ -70,7 +78,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0 + j;
+            rhs[m * i + j] = 1.0;
         }
         rhs[m * i + 0]       = 1.0;
         rhs[m * i + (m - 1)] = 1.0;
@@ -89,20 +97,23 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     }
     linalg::tridiagonal_solver solver(m, n, pivoting);
 
-    // To run on device: move data and solver workspace to device
-    lower_diag.move_to_device();
-    main_diag.move_to_device();
-    upper_diag.move_to_device();
-    rhs.move_to_device();
-    solution.move_to_device();
-    solver.move_to_device();
+    if(arg.backend == backend::GPU)
+    {
+        // To run on device: move data and solver workspace to device
+        lower_diag.move_to_device();
+        main_diag.move_to_device();
+        upper_diag.move_to_device();
+        rhs.move_to_device();
+        solution.move_to_device();
+        solver.move_to_device();
+    }
 
     // Warmup
     for(int i = 0; i < 10; i++)
     {
         solver.solve(lower_diag, main_diag, upper_diag, rhs, solution);
     }
-    linalg::sync();
+    linalg::synchronize();
 
     // Timed solve
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -110,19 +121,22 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         solver.solve(lower_diag, main_diag, upper_diag, rhs, solution);
     }
-    linalg::sync();
+    linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> ms_float = t2 - t1;
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    // Move back to host for verification (no-op if already on host)
-    solution.move_to_host();
-    lower_diag.move_to_host();
-    main_diag.move_to_host();
-    upper_diag.move_to_host();
-    rhs.move_to_host();
-    solver.move_to_host();
+    if(arg.backend == backend::GPU)
+    {
+        // Move back to host for verification (no-op if already on host)
+        solution.move_to_host();
+        lower_diag.move_to_host();
+        main_diag.move_to_host();
+        upper_diag.move_to_host();
+        rhs.move_to_host();
+        solver.move_to_host();
+    }
 
     // Verify solution by computing residual: r = b - A*x
     double max_residual = 0.0;
@@ -133,11 +147,11 @@ bool testing::test_tridiagonal_solver(Arguments arg)
             double ax = main_diag[j] * solution[m * i + j];
             if(j > 0)
             {
-                ax += lower_diag[j] * solution[m * i + j - 1];
+                ax = std::fma(lower_diag[j], solution[m * i + j - 1], ax);
             }
             if(j < m - 1)
             {
-                ax += upper_diag[j] * solution[m * i + j + 1];
+                ax = std::fma(upper_diag[j], solution[m * i + j + 1], ax);
             }
             max_residual = std::max(max_residual, std::abs(rhs[m * i + j] - ax));
         }
@@ -149,13 +163,9 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
     double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 
-    std::cout << "Total data transferred: " << total_gbytes << " GB"
-              << " total_bytes_read_write: " << total_bytes_read_write << std::endl;
+    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
 
-    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s"
-              << " ms_float.count(): " << ms_float.count() << std::endl;
-
-    double tolerance = 1e-6;
+    double tolerance = 1e-15;
     bool   success   = (max_residual < tolerance);
 
     if(!success)

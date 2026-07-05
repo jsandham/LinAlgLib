@@ -95,8 +95,6 @@ namespace testing
 
     static bool primitive_test_dispatch(Arguments arg)
     {
-        std::cout << "primitive_test_dispatch" << std::endl;
-
         switch(arg.fixture)
         {
         case fixture::ExclusiveScan:
@@ -111,10 +109,15 @@ bool testing::test_dispatch(Arguments arg)
 {
     arg.filename = correct_filename(arg.filename);
 
-    std::cout << "test_dispatch: category = " << category_to_string(arg.category)
-              << ", fixture = " << fixture_to_string(arg.fixture) << std::endl;
-
-    std::cout << "arg.fixture: " << static_cast<int>(arg.fixture) << std::endl;
+    if(arg.backend == backend::GPU)
+    {
+        if(!linalg::is_device_available())
+        {
+            std::cout << "Error: GPU backend requested but no device is available. Skipping test."
+                      << std::endl;
+            return true; // Skip the test gracefully
+        }
+    }
 
     switch(arg.category)
     {

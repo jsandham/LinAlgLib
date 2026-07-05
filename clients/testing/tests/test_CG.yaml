@@ -14,6 +14,7 @@ Tests:
                   "matrices/SPD/finan512/finan512.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   small2:
     precond: [Jacobi]
@@ -25,6 +26,7 @@ Tests:
                   "matrices/SPD/apache1/apache1.mtx",
                   "matrices/SPD/wathen120/wathen120.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   small3:
     precond: [SymmGaussSeidel, SSOR]
@@ -42,6 +44,7 @@ Tests:
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx",
                   "matrices/SPD/bundle1/bundle1.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   medium1:
     precond: [Jacobi]
@@ -55,6 +58,7 @@ Tests:
                   "matrices/SPD/tmt_sym/tmt_sym.mtx",
                   "matrices/SPD/bmw7st_1/bmw7st_1.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   medium2:
     precond: [Jacobi]
@@ -62,6 +66,7 @@ Tests:
                   "matrices/SPD/parabolic_fem/parabolic_fem.mtx",
                   "matrices/SPD/offshore/offshore.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   medium3:
     precond: [SymmGaussSeidel, SSOR]
@@ -72,12 +77,14 @@ Tests:
                   "matrices/SPD/pdb1HYS/pdb1HYS.mtx",
                   "matrices/SPD/tmt_sym/tmt_sym.mtx"]
     max_iters: [200]
+    backend: [CPU, GPU]
 
   large1:
     precond: [Jacobi]
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
                   "matrices/SPD/crankseg_2/crankseg_2.mtx"]
     max_iters: [300]
+    backend: [CPU, GPU]
 
   slow2:
       precond: [Jacobi]
@@ -96,3 +103,4 @@ Tests:
                     "matrices/SPD/consph/consph.mtx",
                     "matrices/SPD/G3_circuit/G3_circuit.mtx"]
       max_iters: [1000]
+      backend: [CPU, GPU]

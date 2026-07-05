@@ -177,6 +177,12 @@ namespace linalg
         /*! \brief Sets all elements of the vector to one. */
         void ones();
 
+        /*! \brief Fills the vector with random values within the specified range.
+     * \param min The minimum value for the random numbers.
+     * \param max The maximum value for the random numbers.
+     */
+        void rand(T min, T max);
+
         /*! \brief Fills the entire vector with the provided value.
      * \param val The value to assign to every element of the vector.
      */

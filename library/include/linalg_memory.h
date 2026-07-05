@@ -45,7 +45,9 @@ namespace linalg
      * host and device when timing operations or when you need to ensure device
      * computations have finished before accessing results on the host.
      */
-    void sync();
+    void synchronize();
+
+    bool is_device_available();
 }
 
 #endif

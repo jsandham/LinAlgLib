@@ -83,7 +83,7 @@ bool testing::test_csric0(Arguments arg)
     {
         linalg::csric0_compute(mat_A_device, descr);
     }
-    linalg::sync();
+    linalg::synchronize();
     auto t4 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> ms_device = t4 - t3;

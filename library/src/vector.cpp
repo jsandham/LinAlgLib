@@ -179,6 +179,26 @@ void vector<T>::ones()
 }
 
 template <typename T>
+void vector<T>::rand(T min, T max)
+{
+    ROUTINE_TRACE("vector<T>::rand");
+
+    bool moved_to_host_was_required = false;
+    if(!this->is_on_host())
+    {
+        this->move_to_host();
+        moved_to_host_was_required = true;
+    }
+
+    host_fill_random(this->hvec->get_data(), this->hvec->get_size(), min, max);
+
+    if(moved_to_host_was_required)
+    {
+        this->move_to_device();
+    }
+}
+
+template <typename T>
 void vector<T>::fill(T val)
 {
     ROUTINE_TRACE("vector<T>::fill");

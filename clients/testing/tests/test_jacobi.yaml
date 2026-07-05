@@ -39,6 +39,7 @@ Tests:
                   "matrices/SPD/G2_circuit/G2_circuit.mtx",
                   "matrices/SPD/bundle1/bundle1.mtx"]
     max_iters: [1000]
+    backend: [CPU]
 
   medium:
     matrix_file: ["matrices/SPD/olafu/olafu.mtx",
@@ -84,6 +85,7 @@ Tests:
                   "matrices/SPD/m_t1/m_t1.mtx",
                   "matrices/SPD/hood/hood.mtx"]
     max_iters: [1000]
+    backend: [CPU]
 
   large:
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
@@ -109,3 +111,4 @@ Tests:
                   "matrices/SPD/Emilia_923/Emilia_923.mtx",
                   "matrices/SPD/ldoor/ldoor.mtx"]
     max_iters: [1000]
+    backend: [CPU]
