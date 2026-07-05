@@ -430,7 +430,7 @@ __global__ void pcr_tiled_backward_kernel(int m,
 //             upper_pyramid[pyramid_idx] = sc[elim];
 //             rhs_pyramid[pyramid_idx]   = srhs[elim];
 
-//             // Elimination Math: Use 'elim' row to modify 'left' and 'right'
+//             // Elimination math: Use 'elim' row to modify 'left' and 'right'
 //             T k1 = sc[left] / sb[elim];
 //             T k2 = sa[right] / sb[elim];
 

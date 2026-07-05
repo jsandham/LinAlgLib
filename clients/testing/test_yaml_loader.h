@@ -323,9 +323,11 @@ inline testing::category string_to_category(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
     static const std::unordered_map<std::string, testing::category> categoryMap
-        = {{"IterativeSolvers", testing::category::IterativeSolvers},
-           {"Math", testing::category::Math},
-           {"Primitive", testing::category::Primitive}};
+        = {{"iterative_solvers", testing::category::iterative_solvers},
+           {"direct_solvers", testing::category::direct_solvers},
+           {"math", testing::category::math},
+           {"primitive", testing::category::primitive},
+           {"csr_matrix", testing::category::csr_matrix}};
 
     // Find the string in the map
     auto it = categoryMap.find(str);
@@ -354,7 +356,7 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"UAAMG", testing::fixture::UAAMG},
            {"SAAMG", testing::fixture::SAAMG},
            {"RSAMG", testing::fixture::RSAMG},
-           {"SpMV", testing::fixture::SpMV},
+           {"multiply_by_vector", testing::fixture::multiply_by_vector},
            {"SpTRSV", testing::fixture::SpTRSV},
            {"SpGEMM", testing::fixture::SpGEMM},
            {"SpGEAM", testing::fixture::SpGEAM},

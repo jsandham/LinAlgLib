@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, CSRILU0, incomplete_lu, "tests/test_csrilu0.yaml");
+INSTANTIATE_TEST(math, CSRILU0, incomplete_lu, "tests/test_csrilu0.yaml");

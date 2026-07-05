@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Primitive, ExclusiveScan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+INSTANTIATE_TEST(primitive, ExclusiveScan, exclusive_scan, "tests/test_exclusive_scan.yaml");

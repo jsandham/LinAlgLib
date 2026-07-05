@@ -34,9 +34,11 @@ namespace testing
 {
     enum class category
     {
-        IterativeSolvers,
-        Math,
-        Primitive,
+        iterative_solvers,
+        direct_solvers,
+        math,
+        primitive,
+        csr_matrix,
         Unknown
     };
 
@@ -53,7 +55,7 @@ namespace testing
         UAAMG,
         SAAMG,
         RSAMG,
-        SpMV,
+        multiply_by_vector,
         SpTRSV,
         SpGEMM,
         SpGEAM,
@@ -134,12 +136,16 @@ namespace testing
     {
         switch(category)
         {
-        case category::IterativeSolvers:
-            return "IterativeSolvers";
-        case category::Math:
-            return "Math";
-        case category::Primitive:
-            return "Primitive";
+        case category::iterative_solvers:
+            return "iterative_solvers";
+        case category::direct_solvers:
+            return "direct_solvers";
+        case category::math:
+            return "math";
+        case category::primitive:
+            return "primitive";
+        case category::csr_matrix:
+            return "csr_matrix";
         }
 
         return "Invalid";
@@ -171,8 +177,8 @@ namespace testing
             return "SAAMG";
         case fixture::RSAMG:
             return "RSAMG";
-        case fixture::SpMV:
-            return "SpMV";
+        case fixture::multiply_by_vector:
+            return "multiply_by_vector";
         case fixture::SpGEMM:
             return "SpGEMM";
         case fixture::SpGEAM:

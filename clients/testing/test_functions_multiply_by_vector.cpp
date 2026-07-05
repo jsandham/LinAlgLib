@@ -34,10 +34,7 @@
 
 #include "linalg.h"
 
-// Should rename this test to test_functions_multiply_by_vector.
-// Should rename test_functions_spgemm.cpp to test_functions_multiply_by_matrix.cpp
-
-bool testing::test_spmv(Arguments arg)
+bool testing::test_multiply_by_vector(Arguments arg)
 {
     linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
@@ -105,7 +102,7 @@ bool testing::test_spmv(Arguments arg)
 
     if(!success)
     {
-        std::cout << "SPMV test failed" << std::endl;
+        std::cout << "multiply_by_vector test failed" << std::endl;
     }
 
     size_t total_bytes_read_write

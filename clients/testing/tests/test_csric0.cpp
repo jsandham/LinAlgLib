@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, CSRIC0, incomplete_cholesky, "tests/test_csric0.yaml");
+INSTANTIATE_TEST(math, CSRIC0, incomplete_cholesky, "tests/test_csric0.yaml");

@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, SpTRSV, triangular_solve, "tests/test_SpTRSV.yaml");
+INSTANTIATE_TEST(math, SpTRSV, triangular_solve, "tests/test_SpTRSV.yaml");

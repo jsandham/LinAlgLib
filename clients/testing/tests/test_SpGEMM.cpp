@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, SpGEMM, matrix_matrix_product, "tests/test_SpGEMM.yaml");
+INSTANTIATE_TEST(math, SpGEMM, matrix_matrix_product, "tests/test_SpGEMM.yaml");

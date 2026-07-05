@@ -37,7 +37,7 @@ static std::string correct_filename(const std::string& filename)
 
 namespace testing
 {
-    static bool solver_test_dispatch(Arguments arg)
+    static bool iterative_solver_test_dispatch(Arguments arg)
     {
         switch(arg.fixture)
         {
@@ -68,26 +68,33 @@ namespace testing
         return false;
     }
 
+    static bool direct_solver_test_dispatch(Arguments arg)
+    {
+        switch(arg.fixture)
+        {
+        case fixture::TridiagonalSolver:
+            return test_tridiagonal_solver(arg);
+        }
+
+        return false;
+    }
+
     static bool math_test_dispatch(Arguments arg)
     {
         switch(arg.fixture)
         {
-        case fixture::SpMV:
-            return test_spmv(arg);
+        case fixture::multiply_by_vector:
+            return test_multiply_by_vector(arg);
         case fixture::SpTRSV:
             return test_sptrsv(arg);
         case fixture::SpGEMM:
             return test_spgemm(arg);
         case fixture::SpGEAM:
             return test_spgeam(arg);
-        case fixture::Transpose:
-            return test_transpose(arg);
         case fixture::CSRIC0:
             return test_csric0(arg);
         case fixture::CSRILU0:
             return test_csrilu0(arg);
-        case fixture::TridiagonalSolver:
-            return test_tridiagonal_solver(arg);
         }
 
         return false;
@@ -99,6 +106,19 @@ namespace testing
         {
         case fixture::ExclusiveScan:
             return test_exclusive_scan(arg);
+        }
+
+        return false;
+    }
+
+    static bool csr_matrix_test_dispatch(Arguments arg)
+    {
+        switch(arg.fixture)
+        {
+        case fixture::multiply_by_vector:
+            return test_multiply_by_vector(arg);
+        case fixture::Transpose:
+            return test_transpose(arg);
         }
 
         return false;
@@ -121,12 +141,16 @@ bool testing::test_dispatch(Arguments arg)
 
     switch(arg.category)
     {
-    case category::IterativeSolvers:
-        return solver_test_dispatch(arg);
-    case category::Math:
+    case category::iterative_solvers:
+        return iterative_solver_test_dispatch(arg);
+    case category::direct_solvers:
+        return direct_solver_test_dispatch(arg);
+    case category::math:
         return math_test_dispatch(arg);
-    case category::Primitive:
+    case category::primitive:
         return primitive_test_dispatch(arg);
+    case category::csr_matrix:
+        return csr_matrix_test_dispatch(arg);
     }
 
     return false;

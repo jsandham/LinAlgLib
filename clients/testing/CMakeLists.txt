@@ -82,7 +82,7 @@ target_sources(test_main
     test_functions_classical.cpp
     test_functions_krylov.cpp
     test_functions_amg.cpp
-    test_functions_spmv.cpp
+    test_functions_multiply_by_vector.cpp
     test_functions_sptrsv.cpp
     test_functions_spgemm.cpp
     test_functions_spgeam.cpp

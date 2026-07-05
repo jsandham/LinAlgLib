@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(IterativeSolvers, GMRES, krylov, "tests/test_GMRES.yaml");
+INSTANTIATE_TEST(iterative_solvers, GMRES, krylov, "tests/test_GMRES.yaml");

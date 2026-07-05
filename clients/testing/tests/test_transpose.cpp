@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, Transpose, matrix_transpose, "tests/test_transpose.yaml");
+INSTANTIATE_TEST(csr_matrix, Transpose, matrix_transpose, "tests/test_transpose.yaml");

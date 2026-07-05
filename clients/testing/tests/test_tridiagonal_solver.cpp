@@ -26,4 +26,7 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, TridiagonalSolver, tridiagonal_solver, "tests/test_tridiagonal_solver.yaml");
+INSTANTIATE_TEST(direct_solvers,
+                 TridiagonalSolver,
+                 tridiagonal_solver,
+                 "tests/test_tridiagonal_solver.yaml");

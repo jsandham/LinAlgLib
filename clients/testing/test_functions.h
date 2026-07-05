@@ -33,23 +33,27 @@ namespace testing
 {
     bool test_dispatch(Arguments arg);
 
-    // Iterative solvers
+    // iterative solvers
     bool test_classical(classical_solver solver_type, Arguments arg);
     bool test_krylov(krylov_solver solver_type, Arguments arg);
     bool test_amg(AMG_solver solver_type, Arguments arg);
 
-    // Math testing
-    bool test_spmv(Arguments arg);
+    // direct solvers
+    bool test_tridiagonal_solver(Arguments arg);
+
+    // math testing
     bool test_sptrsv(Arguments arg);
     bool test_spgemm(Arguments arg);
     bool test_spgeam(Arguments arg);
     bool test_transpose(Arguments arg);
     bool test_csric0(Arguments arg);
     bool test_csrilu0(Arguments arg);
-    bool test_tridiagonal_solver(Arguments arg);
 
-    // Primitive
+    // primitive
     bool test_exclusive_scan(Arguments arg);
+
+    // csr matrix
+    bool test_multiply_by_vector(Arguments arg);
 
 } // namespace testing
 

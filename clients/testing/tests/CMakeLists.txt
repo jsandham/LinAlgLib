@@ -36,7 +36,7 @@ target_sources(test_main
     test_BICGSTAB.cpp
     test_UAAMG.cpp
     test_SAAMG.cpp
-    test_SpMV.cpp
+    test_multiply_by_vector.cpp
     test_SpTRSV.cpp
     test_SpGEMM.cpp
     test_csric0.cpp

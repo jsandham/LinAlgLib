@@ -26,4 +26,7 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(Math, SpMV, matrix_vector_product, "tests/test_SpMV.yaml");
+INSTANTIATE_TEST(csr_matrix,
+                 multiply_by_vector,
+                 matrix_vector_product,
+                 "tests/test_multiply_by_vector.yaml");
