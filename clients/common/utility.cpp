@@ -522,3 +522,23 @@ bool check_matrix_equality(const linalg::csr_matrix& A, const linalg::csr_matrix
 
     return true;
 }
+
+bool check_vector_equality(const linalg::vector<double>& x, const linalg::vector<double>& y)
+{
+    if(x.get_size() != y.get_size())
+    {
+        return false;
+    }
+
+    for(size_t i = 0; i < x.get_size(); i++)
+    {
+        if(std::abs(x[i] - y[i]) > 1e-9)
+        {
+            std::cout << "i: " << i << " x[i]: " << x[i] << " y[i]: " << y[i]
+                      << " std::abs(x[i] - y[i]): " << std::abs(x[i] - y[i]) << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}

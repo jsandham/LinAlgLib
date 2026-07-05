@@ -35,39 +35,7 @@
 
 bool testing::test_spgemm(Arguments arg)
 {
-    // 2 1 0 1
-    // 1 2 1 0
-    // 0 1 2 1
-    // 1 0 1 2
-    int                 m            = 4;
-    int                 n            = 4;
-    int                 nnz          = 12;
-    std::vector<int>    hcsr_row_ptr = {0, 3, 6, 9, 12};
-    std::vector<int>    hcsr_col_ind = {0, 1, 3, 0, 1, 2, 1, 2, 3, 0, 2, 3};
-    std::vector<double> hcsr_val     = {2.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 2.0};
-
-    linalg::csr_matrix mat_A(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
-    linalg::csr_matrix mat_B(hcsr_row_ptr, hcsr_col_ind, hcsr_val, m, n, nnz);
-
-    linalg::csr_matrix mat_C;
-    mat_C.resize(mat_A.get_m(), mat_B.get_n(), 0);
-
-    mat_A.move_to_device();
-    mat_B.move_to_device();
-    mat_C.move_to_device();
-
-    mat_A.multiply_by_matrix(mat_C, mat_B);
-    //matrix_matrix_addition(mat_C, mat_A, mat_B);
-
-    mat_A.move_to_host();
-    mat_B.move_to_host();
-    mat_C.move_to_host();
-
-    mat_A.print_matrix("A");
-    mat_B.print_matrix("B");
-    mat_C.print_matrix("C");
-
-    /*csr_matrix mat_A;
+    linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
     for(int i = 0; i < mat_A.get_nnz(); i++)
@@ -76,29 +44,62 @@ bool testing::test_spgemm(Arguments arg)
         csr_val[i]      = 1;
     }
 
-    mat_A.print_matrix("A");
-
-    csr_matrix mat_B;
+    linalg::csr_matrix mat_B;
     mat_B.copy_from(mat_A);
 
-    mat_B.print_matrix("B");
-
-    csr_matrix mat_C;
+    linalg::csr_matrix mat_C;
     mat_C.resize(mat_A.get_m(), mat_B.get_n(), 0);
 
-    mat_A.move_to_device();
-    mat_B.move_to_device();
-    mat_C.move_to_device();
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_device();
+        mat_B.move_to_device();
+        mat_C.move_to_device();
+    }
 
+    // Warm up
+    for(int i = 0; i < 4; i++)
+    {
+        mat_A.multiply_by_matrix(mat_C, mat_B);
+    }
+    linalg::synchronize();
+
+    // Timed run
     auto t1 = std::chrono::high_resolution_clock::now();
-    mat_A.multiply_by_matrix(mat_C, mat_B);
+    for(int i = 0; i < 100; i++)
+    {
+        mat_A.multiply_by_matrix(mat_C, mat_B);
+    }
+    linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << ms_double.count() << "ms" << std::endl;
+    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    //mat_C.move_to_host();
-    //mat_C.print_matrix("C");*/
+    if(arg.backend == backend::GPU)
+    {
+        mat_C.move_to_host();
+        // mat_C.print_matrix("C");
+    }
 
-    return true;
+    // Inline host solution
+    linalg::csr_matrix mat_C_host;
+
+    // Verify result
+    bool success = check_matrix_equality(mat_C, mat_C_host);
+
+    size_t bytes_read_A
+        = sizeof(double) * mat_A.get_nnz() + sizeof(int) * (mat_A.get_m() + 1 + mat_A.get_nnz());
+    size_t bytes_read_B
+        = sizeof(double) * mat_B.get_nnz() + sizeof(int) * (mat_B.get_m() + 1 + mat_B.get_nnz());
+    size_t bytes_write_C
+        = sizeof(double) * mat_C.get_nnz() + sizeof(int) * (mat_C.get_m() + 1 + mat_C.get_nnz());
+
+    size_t total_bytes_read_write = bytes_read_A + bytes_read_B + bytes_write_C;
+
+    double total_gbytes = (double)100 * total_bytes_read_write / 1e9;
+    double bandwidth    = total_gbytes / (ms_float.count() / 1e3);
+    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
+
+    return success;
 }

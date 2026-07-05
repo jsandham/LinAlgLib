@@ -19,6 +19,7 @@ Tests:
                   "matrices/SPD/thermomech_TC/thermomech_TC.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx",
                   "matrices/SPD/bundle1/bundle1.mtx"]
+    backend: [CPU, GPU]
 
   medium:
     matrix_file: ["matrices/SPD/olafu/olafu.mtx",
@@ -63,6 +64,7 @@ Tests:
                   "matrices/SPD/x104/x104.mtx",
                   "matrices/SPD/m_t1/m_t1.mtx",
                   "matrices/SPD/hood/hood.mtx"]
+    backend: [CPU, GPU]
 
   large:
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
@@ -87,3 +89,4 @@ Tests:
                   "matrices/SPD/PFlow_742/PFlow_742.mtx",
                   "matrices/SPD/Emilia_923/Emilia_923.mtx",
                   "matrices/SPD/ldoor/ldoor.mtx"]
+    backend: [CPU, GPU]

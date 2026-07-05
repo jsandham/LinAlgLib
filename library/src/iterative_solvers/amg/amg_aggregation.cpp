@@ -165,12 +165,8 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
         iter++;
     }
 
-    std::cout << "A" << std::endl;
-
     aggregate_root_nodes.resize(A.get_m(), -1);
     aggregate_root_nodes.fill(-1);
-
-    std::cout << "B" << std::endl;
 
     //aggregate_root_nodes.move_to_host();
     //aggregates.move_to_host();
@@ -179,7 +175,6 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix&  A,
     {
         aggregate_root_nodes[i] = (aggregates[i] == 1) ? 1 : -1;
     }
-    std::cout << "C" << std::endl;
 
     //aggregate_root_nodes.move_to_device();
     //aggregates.move_to_device();

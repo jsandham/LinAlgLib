@@ -34,6 +34,9 @@
 
 #include "linalg.h"
 
+// Should rename this test to test_functions_multiply_by_vector.
+// Should rename test_functions_spgemm.cpp to test_functions_multiply_by_matrix.cpp
+
 bool testing::test_spmv(Arguments arg)
 {
     linalg::csr_matrix mat_A;
@@ -50,56 +53,67 @@ bool testing::test_spmv(Arguments arg)
     linalg::vector<double> vec_x(mat_A.get_n());
     vec_x.ones();
 
-    linalg::vector<double> vec_y1(mat_A.get_m());
-    vec_y1.ones();
+    linalg::vector<double> vec_y(mat_A.get_m());
+    vec_y.zeros();
 
-    linalg::vector<double> vec_y2(mat_A.get_m());
-    vec_y2.copy_from(vec_y1);
-
-    // Multiple by vector on the host
-    auto t1 = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < 4; i++)
+    if(arg.backend == backend::GPU)
     {
-        mat_A.multiply_by_vector(vec_y1, vec_x);
+        mat_A.move_to_device();
+        vec_x.move_to_device();
+        vec_y.move_to_device();
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> ms_host = t2 - t1;
-    std::cout << "host spmv: " << ms_host.count() << "ms" << std::endl;
-
-    mat_A.move_to_device();
-    vec_x.move_to_device();
-    vec_y2.move_to_device();
-
-    // Multiple by vector on the device
-    auto t3 = std::chrono::high_resolution_clock::now();
+    // Warmup
     for(int i = 0; i < 4; i++)
     {
-        mat_A.multiply_by_vector(vec_y2, vec_x);
+        mat_A.multiply_by_vector(vec_y, vec_x);
     }
     linalg::synchronize();
-    auto t4 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> ms_device = t4 - t3;
-    std::cout << "device spmv: " << ms_device.count() << "ms" << std::endl;
-
-    vec_y2.move_to_host();
-
-    // Compare host and device solution
-    double max_error = 0.0;
-    for(int i = 0; i < mat_A.get_m(); i++)
+    // Timed run
+    auto t1 = std::chrono::high_resolution_clock::now();
+    for(int i = 0; i < 100; i++)
     {
-        max_error = std::max(max_error, std::abs(vec_y2[i] - vec_y1[i]));
-        if(std::abs(vec_y2[i] - vec_y1[i]) > 1e-12)
+        mat_A.multiply_by_vector(vec_y, vec_x);
+    }
+    linalg::synchronize();
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
+
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_host();
+        vec_x.move_to_host();
+        vec_y.move_to_host();
+    }
+
+    // Inline host solution
+    linalg::vector<double> host_y(mat_A.get_m());
+    host_y.zeros();
+    for(int i = 0; i < mat_A.get_m(); ++i)
+    {
+        for(int j = mat_A.get_row_ptr()[i]; j < mat_A.get_row_ptr()[i + 1]; ++j)
         {
-            std::cout << "vec_y1[i]: " << vec_y1[i] << " vec_y2[i]: " << vec_y2[i]
-                      << " std::abs(vec_y2[i] - vec_y1[i]): " << std::abs(vec_y2[i] - vec_y1[i])
-                      << std::endl;
-            return false;
+            host_y[i] += mat_A.get_val()[j] * vec_x.get_vec()[mat_A.get_col_ind()[j]];
         }
     }
 
-    std::cout << "max_error: " << max_error << std::endl;
+    // Compare solutions
+    bool success = check_vector_equality(vec_y, host_y);
 
-    return true;
+    if(!success)
+    {
+        std::cout << "SPMV test failed" << std::endl;
+    }
+
+    size_t total_bytes_read_write
+        = sizeof(double) * (mat_A.get_nnz() + mat_A.get_m() + mat_A.get_n())
+          + sizeof(int) * (mat_A.get_m() + 1 + mat_A.get_nnz());
+    double total_gbytes = (double)100 * total_bytes_read_write / 1e9;
+    double bandwidth    = total_gbytes / (ms_float.count() / 1e3);
+    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
+
+    return success;
 }

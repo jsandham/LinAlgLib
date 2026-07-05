@@ -78,16 +78,16 @@ void linalg::cuda_csrgemm_nnz(int            m,
         m, alpha, csr_row_ptr_A, csr_col_ind_A, csr_row_ptr_B, beta, csr_row_ptr_D, csr_row_ptr_C);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    std::vector<int> hcsr_row_ptr_C(m + 1);
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // std::vector<int> hcsr_row_ptr_C(m + 1);
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
 
-    std::cout << "csr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "csr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     descr->perm = nullptr;
     CHECK_CUDA(cudaMalloc((void**)&descr->perm, sizeof(int) * m));
@@ -103,25 +103,25 @@ void linalg::cuda_csrgemm_nnz(int            m,
     // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
     thrust::sort_by_key(d_keys, d_keys + m, d_values);
 
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
 
-    std::cout << "csr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "csr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
-    std::vector<int> hperm(m);
-    CHECK_CUDA(cudaMemcpy(hperm.data(), descr->perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
+    // std::vector<int> hperm(m);
+    // CHECK_CUDA(cudaMemcpy(hperm.data(), descr->perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
 
-    std::cout << "perm" << std::endl;
-    for(int i = 0; i < m; i++)
-    {
-        std::cout << hperm[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "perm" << std::endl;
+    // for(int i = 0; i < m; i++)
+    // {
+    //     std::cout << hperm[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     // Bin rows based on required hash table size.
     // Bin sizes are: 32, 64, 128, 256, 512, 1024, 2048, 4096
@@ -133,15 +133,15 @@ void linalg::cuda_csrgemm_nnz(int            m,
     compute_rows_bin_number_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
 
-    std::cout << "csr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "csr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     fill_bin_offsets_kernel<256>
         <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr_C, descr->bin_offsets);
@@ -153,12 +153,12 @@ void linalg::cuda_csrgemm_nnz(int            m,
                           sizeof(int) * (bin_count + 1),
                           cudaMemcpyDeviceToHost));
 
-    std::cout << "hbin_offsets" << std::endl;
-    for(int i = 0; i < bin_count + 1; i++)
-    {
-        std::cout << hbin_offsets[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "hbin_offsets" << std::endl;
+    // for(int i = 0; i < bin_count + 1; i++)
+    // {
+    //     std::cout << hbin_offsets[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     const int bin_0_count = hbin_offsets[1] - hbin_offsets[0];
     const int bin_1_count = hbin_offsets[2] - hbin_offsets[1];
@@ -309,27 +309,27 @@ void linalg::cuda_csrgemm_nnz(int            m,
     }
     CHECK_CUDA_LAUNCH_ERROR();
 
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
 
-    std::cout << "csr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "csr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     cuda_exclusive_scan(m + 1, csr_row_ptr_C);
 
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
 
-    std::cout << "csr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "csr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 
     CHECK_CUDA(cudaMemcpy(nnz_C, csr_row_ptr_C + m, sizeof(int), cudaMemcpyDeviceToHost));
 
@@ -564,33 +564,33 @@ void linalg::cuda_csrgemm_solve(int                  m,
     }
     CHECK_CUDA_LAUNCH_ERROR();
 
-    std::vector<int> hcsr_row_ptr_C(m + 1, 0);
-    std::vector<int> hcsr_col_ind_C(nnz_C, 0);
-    std::vector<T>   hcsr_val_C(nnz_C);
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
-    CHECK_CUDA(cudaMemcpy(
-        hcsr_col_ind_C.data(), csr_col_ind_C, sizeof(int) * nnz_C, cudaMemcpyDeviceToHost));
-    CHECK_CUDA(cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(T) * nnz_C, cudaMemcpyDeviceToHost));
+    // std::vector<int> hcsr_row_ptr_C(m + 1, 0);
+    // std::vector<int> hcsr_col_ind_C(nnz_C, 0);
+    // std::vector<T>   hcsr_val_C(nnz_C);
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_row_ptr_C.data(), csr_row_ptr_C, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(
+    //     hcsr_col_ind_C.data(), csr_col_ind_C, sizeof(int) * nnz_C, cudaMemcpyDeviceToHost));
+    // CHECK_CUDA(cudaMemcpy(hcsr_val_C.data(), csr_val_C, sizeof(T) * nnz_C, cudaMemcpyDeviceToHost));
 
-    std::cout << "hcsr_row_ptr_C" << std::endl;
-    for(int i = 0; i < m + 1; i++)
-    {
-        std::cout << hcsr_row_ptr_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
-    std::cout << "hcsr_col_ind_C" << std::endl;
-    for(int i = 0; i < nnz_C; i++)
-    {
-        std::cout << hcsr_col_ind_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
-    std::cout << "hcsr_val_C" << std::endl;
-    for(int i = 0; i < nnz_C; i++)
-    {
-        std::cout << hcsr_val_C[i] << " ";
-    }
-    std::cout << "" << std::endl;
+    // std::cout << "hcsr_row_ptr_C" << std::endl;
+    // for(int i = 0; i < m + 1; i++)
+    // {
+    //     std::cout << hcsr_row_ptr_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+    // std::cout << "hcsr_col_ind_C" << std::endl;
+    // for(int i = 0; i < nnz_C; i++)
+    // {
+    //     std::cout << hcsr_col_ind_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
+    // std::cout << "hcsr_val_C" << std::endl;
+    // for(int i = 0; i < nnz_C; i++)
+    // {
+    //     std::cout << hcsr_val_C[i] << " ";
+    // }
+    // std::cout << "" << std::endl;
 }
 
 template void linalg::cuda_csrgemm_nnz<float>(int            m,

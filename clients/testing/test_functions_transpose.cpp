@@ -39,26 +39,85 @@ bool testing::test_transpose(Arguments arg)
     mat_A.read_mtx(arg.filename);
 
     linalg::csr_matrix mat_A_transpose;
-    linalg::csr_matrix mat_A2;
 
     mat_A_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
-    mat_A2.resize(mat_A.get_m(), mat_A.get_n(), mat_A.get_nnz());
 
-    mat_A.move_to_device();
-    mat_A_transpose.move_to_device();
-    mat_A2.move_to_device();
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_device();
+        mat_A_transpose.move_to_device();
+    }
 
+    // Warmup
+    for(int i = 0; i < 4; i++)
+    {
+        mat_A.transpose(mat_A_transpose);
+    }
+    linalg::synchronize();
+
+    // Timed run
     auto t1 = std::chrono::high_resolution_clock::now();
-    mat_A.transpose(mat_A_transpose);
-    mat_A_transpose.transpose(mat_A2);
+    for(int i = 0; i < 100; i++)
+    {
+        mat_A.transpose(mat_A_transpose);
+    }
+    linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << ms_double.count() << "ms" << std::endl;
+    std::chrono::duration<float, std::milli> ms_float = t2 - t1;
+    std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    mat_A.move_to_host();
-    mat_A_transpose.move_to_host();
-    mat_A2.move_to_host();
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_host();
+        mat_A_transpose.move_to_host();
+    }
 
-    return check_matrix_equality(mat_A, mat_A2);
+    bool success = true;
+
+    // Verify transpose
+    for(int i = 0; i < mat_A.get_m(); ++i)
+    {
+        for(int j = mat_A.get_row_ptr()[i]; j < mat_A.get_row_ptr()[i + 1]; ++j)
+        {
+            int    col = mat_A.get_col_ind()[j];
+            double val = mat_A.get_val()[j];
+
+            bool found = false;
+            for(int k = mat_A_transpose.get_row_ptr()[col];
+                k < mat_A_transpose.get_row_ptr()[col + 1];
+                ++k)
+            {
+                if(mat_A_transpose.get_col_ind()[k] == i)
+                {
+                    if(std::abs(mat_A_transpose.get_val()[k] - val) < 1e-9)
+                    {
+                        found = true;
+                    }
+                    break;
+                }
+            }
+            if(!found)
+            {
+                success = false;
+                break;
+            }
+        }
+        if(!success)
+        {
+            break;
+        }
+    }
+
+    size_t total_bytes_read
+        = sizeof(double) * mat_A.get_nnz() + sizeof(int) * (mat_A.get_m() + 1 + mat_A.get_nnz());
+    size_t total_bytes_write
+        = sizeof(double) * mat_A_transpose.get_nnz()
+          + sizeof(int) * (mat_A_transpose.get_m() + 1 + mat_A_transpose.get_nnz());
+
+    double total_gbytes = (double)100 * (total_bytes_read + total_bytes_write) / 1e9;
+    double bandwidth    = total_gbytes / (ms_float.count() / 1e3);
+    std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
+
+    return success;
 }

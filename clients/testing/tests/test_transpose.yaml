@@ -26,6 +26,7 @@ Tests:
                   "matrices/SPD/wathen100/wathen100.mtx",
                   "matrices/SPD/apache1/apache1.mtx",
                   "matrices/SPD/wathen120/wathen120.mtx"]
+    backend: [CPU, GPU]
 
   medium:
     matrix_file: ["matrices/SPD/Dubcova2/Dubcova2.mtx",
@@ -40,6 +41,7 @@ Tests:
                   "matrices/SPD/2cubes_sphere/2cubes_sphere.mtx",
                   "matrices/SPD/parabolic_fem/parabolic_fem.mtx",
                   "matrices/SPD/offshore/offshore.mtx"]
+    backend: [CPU, GPU]
 
   large:
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
@@ -97,3 +99,4 @@ Tests:
                   "matrices/SPD/inline_1/inline_1.mtx",
                   "matrices/SPD/Emilia_923/Emilia_923.mtx",
                   "matrices/SPD/ldoor/ldoor.mtx"]
+    backend: [CPU, GPU]

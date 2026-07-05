@@ -60,4 +60,6 @@ bool check_solution(const linalg::csr_matrix&     A,
 
 bool check_matrix_equality(const linalg::csr_matrix& A, const linalg::csr_matrix& B);
 
+bool check_vector_equality(const linalg::vector<double>& x, const linalg::vector<double>& y);
+
 #endif
