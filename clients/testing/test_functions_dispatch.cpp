@@ -85,10 +85,10 @@ namespace testing
         {
         case fixture::multiply_by_vector:
             return test_multiply_by_vector(arg);
+        case fixture::multiply_by_matrix:
+            return test_multiply_by_matrix(arg);
         case fixture::SpTRSV:
             return test_sptrsv(arg);
-        case fixture::SpGEMM:
-            return test_spgemm(arg);
         case fixture::SpGEAM:
             return test_spgeam(arg);
         case fixture::CSRIC0:
@@ -117,6 +117,8 @@ namespace testing
         {
         case fixture::multiply_by_vector:
             return test_multiply_by_vector(arg);
+        case fixture::multiply_by_matrix:
+            return test_multiply_by_matrix(arg);
         case fixture::Transpose:
             return test_transpose(arg);
         }

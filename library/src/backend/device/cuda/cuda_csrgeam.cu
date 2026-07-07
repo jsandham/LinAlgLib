@@ -170,7 +170,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
 
     if(bin_0_count > 0)
     {
-        std::cout << "bin_0_count: " << bin_0_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 32>
             <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
                                                             descr->perm,
@@ -185,7 +184,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_1_count > 0)
     {
-        std::cout << "bin_1_count: " << bin_1_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 64>
             <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
                                                             descr->perm,
@@ -200,7 +198,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_2_count > 0)
     {
-        std::cout << "bin_2_count: " << bin_2_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 128>
             <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
                                                             descr->perm,
@@ -215,7 +212,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_3_count > 0)
     {
-        std::cout << "bin_3_count: " << bin_3_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 256>
             <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
                                                             descr->perm,
@@ -230,7 +226,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_4_count > 0)
     {
-        std::cout << "bin_4_count: " << bin_4_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 512>
             <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
                                                             descr->perm,
@@ -245,7 +240,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_5_count > 0)
     {
-        std::cout << "bin_5_count: " << bin_5_count << std::endl;
         csrgeam_nnz_per_row_kernel<256, 32, 1024>
             <<<((bin_5_count - 1) / (256 / 32) + 1), 256>>>(bin_5_count,
                                                             descr->perm,
@@ -260,7 +254,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_6_count > 0)
     {
-        std::cout << "bin_6_count: " << bin_6_count << std::endl;
         csrgeam_nnz_per_row_kernel<128, 32, 2048>
             <<<((bin_6_count - 1) / (128 / 32) + 1), 128>>>(bin_6_count,
                                                             descr->perm,
@@ -275,7 +268,6 @@ void linalg::cuda_csrgeam_nnz(int            m,
     }
     if(bin_7_count > 0)
     {
-        std::cout << "bin_7_count: " << bin_7_count << std::endl;
         csrgeam_nnz_per_row_kernel<64, 32, 4096>
             <<<((bin_7_count - 1) / (64 / 32) + 1), 64>>>(bin_7_count,
                                                           descr->perm,
@@ -361,7 +353,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
 
     if(bin_0_count > 0)
     {
-        std::cout << "bin_0_count: " << bin_0_count << std::endl;
         csrgeam_fill_kernel<256, 32, 32>
             <<<((bin_0_count - 1) / (256 / 32) + 1), 256>>>(bin_0_count,
                                                             descr->perm,
@@ -380,7 +371,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_1_count > 0)
     {
-        std::cout << "bin_1_count: " << bin_1_count << std::endl;
         csrgeam_fill_kernel<256, 32, 64>
             <<<((bin_1_count - 1) / (256 / 32) + 1), 256>>>(bin_1_count,
                                                             descr->perm,
@@ -399,7 +389,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_2_count > 0)
     {
-        std::cout << "bin_2_count: " << bin_2_count << std::endl;
         csrgeam_fill_kernel<256, 32, 128>
             <<<((bin_2_count - 1) / (256 / 32) + 1), 256>>>(bin_2_count,
                                                             descr->perm,
@@ -418,7 +407,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_3_count > 0)
     {
-        std::cout << "bin_3_count: " << bin_3_count << std::endl;
         csrgeam_fill_kernel<256, 32, 256>
             <<<((bin_3_count - 1) / (256 / 32) + 1), 256>>>(bin_3_count,
                                                             descr->perm,
@@ -437,7 +425,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_4_count > 0)
     {
-        std::cout << "bin_4_count: " << bin_4_count << std::endl;
         csrgeam_fill_kernel<256, 32, 512>
             <<<((bin_4_count - 1) / (256 / 32) + 1), 256>>>(bin_4_count,
                                                             descr->perm,
@@ -456,7 +443,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_5_count > 0)
     {
-        std::cout << "bin_5_count: " << bin_5_count << std::endl;
         csrgeam_fill_kernel<128, 32, 1024>
             <<<((bin_5_count - 1) / (128 / 32) + 1), 128>>>(bin_5_count,
                                                             descr->perm,
@@ -475,7 +461,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_6_count > 0)
     {
-        std::cout << "bin_6_count: " << bin_6_count << std::endl;
         csrgeam_fill_kernel<64, 32, 2048>
             <<<((bin_6_count - 1) / (64 / 32) + 1), 64>>>(bin_6_count,
                                                           descr->perm,
@@ -494,7 +479,6 @@ void linalg::cuda_csrgeam_solve(int                  m,
     }
     if(bin_7_count > 0)
     {
-        std::cout << "bin_7_count: " << bin_7_count << std::endl;
         csrgeam_fill_kernel<32, 32, 4096>
             <<<((bin_7_count - 1) / (32 / 32) + 1), 32>>>(bin_7_count,
                                                           descr->perm,

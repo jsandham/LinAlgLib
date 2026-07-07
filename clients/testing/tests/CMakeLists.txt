@@ -37,8 +37,8 @@ target_sources(test_main
     test_UAAMG.cpp
     test_SAAMG.cpp
     test_multiply_by_vector.cpp
+    test_multiply_by_matrix.cpp
     test_SpTRSV.cpp
-    test_SpGEMM.cpp
     test_csric0.cpp
     test_csrilu0.cpp
     test_transpose.cpp

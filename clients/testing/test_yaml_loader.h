@@ -322,7 +322,7 @@ inline std::string correct_test_filepath(const std::string& filepath)
 inline testing::category string_to_category(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, testing::category> categoryMap
+    static const std::unordered_map<std::string, testing::category> category_map
         = {{"iterative_solvers", testing::category::iterative_solvers},
            {"direct_solvers", testing::category::direct_solvers},
            {"math", testing::category::math},
@@ -330,10 +330,10 @@ inline testing::category string_to_category(const std::string& str)
            {"csr_matrix", testing::category::csr_matrix}};
 
     // Find the string in the map
-    auto it = categoryMap.find(str);
+    auto it = category_map.find(str);
 
     // Return the corresponding enum value or a default value
-    if(it != categoryMap.end())
+    if(it != category_map.end())
     {
         return it->second;
     }
@@ -344,7 +344,7 @@ inline testing::category string_to_category(const std::string& str)
 inline testing::fixture string_to_fixture(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
-    static const std::unordered_map<std::string, testing::fixture> fixtureMap
+    static const std::unordered_map<std::string, testing::fixture> fixture_map
         = {{"Jacobi", testing::fixture::Jacobi},
            {"GaussSeidel", testing::fixture::GaussSeidel},
            {"SOR", testing::fixture::SOR},
@@ -357,8 +357,8 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"SAAMG", testing::fixture::SAAMG},
            {"RSAMG", testing::fixture::RSAMG},
            {"multiply_by_vector", testing::fixture::multiply_by_vector},
+           {"multiply_by_matrix", testing::fixture::multiply_by_matrix},
            {"SpTRSV", testing::fixture::SpTRSV},
-           {"SpGEMM", testing::fixture::SpGEMM},
            {"SpGEAM", testing::fixture::SpGEAM},
            {"Transpose", testing::fixture::Transpose},
            {"CSRIC0", testing::fixture::CSRIC0},
@@ -367,10 +367,10 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"ExclusiveScan", testing::fixture::ExclusiveScan}};
 
     // Find the string in the map
-    auto it = fixtureMap.find(str);
+    auto it = fixture_map.find(str);
 
     // Return the corresponding enum value or a default value
-    if(it != fixtureMap.end())
+    if(it != fixture_map.end())
     {
         return it->second;
     }

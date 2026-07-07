@@ -43,7 +43,6 @@ namespace testing
 
     // math testing
     bool test_sptrsv(Arguments arg);
-    bool test_spgemm(Arguments arg);
     bool test_spgeam(Arguments arg);
     bool test_transpose(Arguments arg);
     bool test_csric0(Arguments arg);
@@ -54,6 +53,7 @@ namespace testing
 
     // csr matrix
     bool test_multiply_by_vector(Arguments arg);
+    bool test_multiply_by_matrix(Arguments arg);
 
 } // namespace testing
 

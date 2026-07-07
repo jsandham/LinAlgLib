@@ -56,8 +56,8 @@ namespace testing
         SAAMG,
         RSAMG,
         multiply_by_vector,
+        multiply_by_matrix,
         SpTRSV,
-        SpGEMM,
         SpGEAM,
         Transpose,
         CSRIC0,
@@ -179,8 +179,8 @@ namespace testing
             return "RSAMG";
         case fixture::multiply_by_vector:
             return "multiply_by_vector";
-        case fixture::SpGEMM:
-            return "SpGEMM";
+        case fixture::multiply_by_matrix:
+            return "multiply_by_matrix";
         case fixture::SpGEAM:
             return "SpGEAM";
         case fixture::SpTRSV:
