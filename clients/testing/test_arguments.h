@@ -42,6 +42,7 @@ namespace testing
         std::string                group; // small, medium, large, etc
         std::string                filename; // bmwcra_1.mtx, shipsec1.mtx, etc
         testing::backend           backend; // CPU, GPU
+        testing::uplo              uplo; // Lower, Upper
         testing::preconditioner    precond_type;
         testing::cycle_type        cycle_type;
         testing::smoother_type     smoother_type;
@@ -60,6 +61,10 @@ namespace testing
             if(this->backend != backend::CPU)
             {
                 name += "_" + backend_to_string(this->backend);
+            }
+            if(this->uplo != uplo::Lower)
+            {
+                name += "_" + uplo_to_string(this->uplo);
             }
             if(this->precond_type != preconditioner::None)
             {

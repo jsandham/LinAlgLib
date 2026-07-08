@@ -76,6 +76,41 @@ namespace YAML
     };
 
     template <>
+    struct convert<testing::uplo>
+    {
+        static Node encode(const testing::uplo& rhs)
+        {
+            Node node;
+            switch(rhs)
+            {
+            case testing::uplo::Lower:
+                node = "Lower";
+                break;
+            case testing::uplo::Upper:
+                node = "Upper";
+                break;
+            }
+
+            return node;
+        }
+
+        static bool decode(const Node& node, testing::uplo& rhs)
+        {
+            std::string type = node.as<std::string>();
+            if(type == "Lower")
+            {
+                rhs = testing::uplo::Lower;
+            }
+            else if(type == "Upper")
+            {
+                rhs = testing::uplo::Upper;
+            }
+
+            return true;
+        }
+    };
+
+    template <>
     struct convert<testing::preconditioner>
     {
         static Node encode(const testing::preconditioner& rhs)
@@ -358,6 +393,7 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"RSAMG", testing::fixture::RSAMG},
            {"multiply_by_vector", testing::fixture::multiply_by_vector},
            {"multiply_by_matrix", testing::fixture::multiply_by_matrix},
+           {"triangular_solve", testing::fixture::triangular_solve},
            {"SpTRSV", testing::fixture::SpTRSV},
            {"SpGEAM", testing::fixture::SpGEAM},
            {"Transpose", testing::fixture::Transpose},
@@ -383,6 +419,7 @@ struct TestParameters
 {
     std::vector<std::string>                matrices;
     std::vector<testing::backend>           backends;
+    std::vector<testing::uplo>              uplos;
     std::vector<testing::preconditioner>    precond_types;
     std::vector<testing::cycle_type>        cycle_types;
     std::vector<testing::smoother_type>     smoother_types;
@@ -455,6 +492,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         TestParameters params;
         params.matrices       = read_group_values("matrix_file", std::string(""));
         params.backends       = read_group_values("backend", testing::backend::CPU);
+        params.uplos          = read_group_values("uplo", testing::uplo::Lower);
         params.precond_types  = read_group_values("precond", testing::preconditioner::None);
         params.cycle_types    = read_group_values("cycle", testing::cycle_type::None);
         params.smoother_types = read_group_values("smoother", testing::smoother_type::None);
@@ -471,6 +509,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         size_t total_tests = 1;
         total_tests *= params.matrices.size();
         total_tests *= params.backends.size();
+        total_tests *= params.uplos.size();
         total_tests *= params.precond_types.size();
         total_tests *= params.cycle_types.size();
         total_tests *= params.smoother_types.size();
@@ -491,6 +530,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         for_each_combination(
             [&](const std::string&         filename,
                 testing::backend           backend,
+                testing::uplo              uplo,
                 testing::preconditioner    precond,
                 testing::cycle_type        cycle_type,
                 testing::smoother_type     smoother_type,
@@ -508,6 +548,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                     group,
                     filename,
                     backend,
+                    uplo,
                     precond,
                     cycle_type,
                     smoother_type,
@@ -523,6 +564,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
             },
             params.matrices,
             params.backends,
+            params.uplos,
             params.precond_types,
             params.cycle_types,
             params.smoother_types,
@@ -535,10 +577,10 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
             params.tols,
             params.omegas);
 
-        for(size_t i = 0; i < total_tests; i++)
-        {
-            std::cout << "Generated test name: " << tests[i].generate_test_name() << std::endl;
-        }
+        // for(size_t i = 0; i < total_tests; i++)
+        // {
+        //     std::cout << "Generated test name: " << tests[i].generate_test_name() << std::endl;
+        // }
     }
 
     return tests;

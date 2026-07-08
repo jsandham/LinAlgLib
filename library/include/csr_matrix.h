@@ -285,6 +285,32 @@ namespace linalg
      */
         void multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const;
 
+        /*! \brief Solves the lower triangular system \f$L \cdot x = y\f$ using forward substitution.
+     *
+     * Treats this CSR matrix as a lower triangular matrix \f$L\f$ and solves for \f$x\f$
+     * given the right-hand side vector \f$y\f$.
+     * \param x The output `vector` that will store the solution.
+     * \param y The input right-hand side `vector`.
+     * \param unit_diag If `true`, the diagonal is assumed to be all ones and its stored
+     * values are ignored. If `false`, the actual diagonal values from the matrix are used.
+     */
+        void triangular_solve_lower(vector<double>&       x,
+                                    const vector<double>& y,
+                                    bool                  unit_diag) const;
+
+        /*! \brief Solves the upper triangular system \f$U \cdot x = y\f$ using back substitution.
+     *
+     * Treats this CSR matrix as an upper triangular matrix \f$U\f$ and solves for \f$x\f$
+     * given the right-hand side vector \f$y\f$.
+     * \param x The output `vector` that will store the solution.
+     * \param y The input right-hand side `vector`.
+     * \param unit_diag If `true`, the diagonal is assumed to be all ones and its stored
+     * values are ignored. If `false`, the actual diagonal values from the matrix are used.
+     */
+        void triangular_solve_upper(vector<double>&       x,
+                                    const vector<double>& y,
+                                    bool                  unit_diag) const;
+
         /*! \brief Computes the transpose of the CSR matrix: \f$T = A^T\f$.
      *
      * \param T The output `csr_matrix` that will store the transpose of this matrix.

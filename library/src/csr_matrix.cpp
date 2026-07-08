@@ -328,6 +328,58 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
     destroy_csrgemm_descr(descr);
 }
 
+void csr_matrix::triangular_solve_lower(vector<double>&       x,
+                                        const vector<double>& y,
+                                        bool                  unit_diag) const
+{
+    ROUTINE_TRACE("csr_matrix::triangular_solve_lower");
+
+    csrtrsv_descr* descr = nullptr;
+    create_csrtrsv_descr(&descr);
+
+    csrtrsv_analysis(*this,
+                     triangular_type::lower,
+                     unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
+                     descr);
+
+    // Perform the triangular solve
+    csrtrsv_solve(*this,
+                  y,
+                  x,
+                  static_cast<double>(1.0),
+                  triangular_type::lower,
+                  unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
+                  descr);
+
+    destroy_csrtrsv_descr(descr);
+}
+
+void csr_matrix::triangular_solve_upper(vector<double>&       x,
+                                        const vector<double>& y,
+                                        bool                  unit_diag) const
+{
+    ROUTINE_TRACE("csr_matrix::triangular_solve_upper");
+
+    csrtrsv_descr* descr = nullptr;
+    create_csrtrsv_descr(&descr);
+
+    csrtrsv_analysis(*this,
+                     triangular_type::upper,
+                     unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
+                     descr);
+
+    // Perform the triangular solve
+    csrtrsv_solve(*this,
+                  y,
+                  x,
+                  static_cast<double>(1.0),
+                  triangular_type::upper,
+                  unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
+                  descr);
+
+    destroy_csrtrsv_descr(descr);
+}
+
 void csr_matrix::transpose(csr_matrix& T) const
 {
     ROUTINE_TRACE("csr_matrix::transpose");

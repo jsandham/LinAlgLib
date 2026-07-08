@@ -57,6 +57,7 @@ namespace testing
         RSAMG,
         multiply_by_vector,
         multiply_by_matrix,
+        triangular_solve,
         SpTRSV,
         SpGEAM,
         Transpose,
@@ -71,6 +72,12 @@ namespace testing
     {
         CPU,
         GPU
+    };
+
+    enum class uplo
+    {
+        Lower,
+        Upper
     };
 
     enum class classical_solver
@@ -181,6 +188,8 @@ namespace testing
             return "multiply_by_vector";
         case fixture::multiply_by_matrix:
             return "multiply_by_matrix";
+        case fixture::triangular_solve:
+            return "triangular_solve";
         case fixture::SpGEAM:
             return "SpGEAM";
         case fixture::SpTRSV:
@@ -208,6 +217,19 @@ namespace testing
             return "CPU";
         case backend::GPU:
             return "GPU";
+        }
+
+        return "Invalid";
+    }
+
+    inline std::string uplo_to_string(uplo uplo)
+    {
+        switch(uplo)
+        {
+        case uplo::Lower:
+            return "Lower";
+        case uplo::Upper:
+            return "Upper";
         }
 
         return "Invalid";

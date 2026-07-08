@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -83,10 +83,6 @@ namespace testing
     {
         switch(arg.fixture)
         {
-        case fixture::multiply_by_vector:
-            return test_multiply_by_vector(arg);
-        case fixture::multiply_by_matrix:
-            return test_multiply_by_matrix(arg);
         case fixture::SpTRSV:
             return test_sptrsv(arg);
         case fixture::SpGEAM:
@@ -119,6 +115,8 @@ namespace testing
             return test_multiply_by_vector(arg);
         case fixture::multiply_by_matrix:
             return test_multiply_by_matrix(arg);
+        case fixture::triangular_solve:
+            return test_triangular_solve(arg);
         case fixture::Transpose:
             return test_transpose(arg);
         }
@@ -140,6 +138,9 @@ bool testing::test_dispatch(Arguments arg)
             return true; // Skip the test gracefully
         }
     }
+
+    std::cout << "category: " << category_to_string(arg.category) << std::endl;
+    std::cout << "fixture: " << fixture_to_string(arg.fixture) << std::endl;
 
     switch(arg.category)
     {
