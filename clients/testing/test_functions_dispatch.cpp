@@ -117,10 +117,15 @@ namespace testing
             return test_multiply_by_matrix(arg);
         case fixture::triangular_solve:
             return test_triangular_solve(arg);
-        case fixture::Transpose:
+        case fixture::compute_incomplete_cholesky_factorization:
+            return test_compute_incomplete_cholesky_factorization(arg);
+        case fixture::compute_incomplete_cholesky_factorization_dense:
+            return test_compute_incomplete_cholesky_factorization_dense(arg);
+        case fixture::transpose:
             return test_transpose(arg);
+        case fixture::transpose_dense:
+            return test_transpose_dense(arg);
         }
-
         return false;
     }
 }

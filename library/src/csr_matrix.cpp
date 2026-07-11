@@ -380,6 +380,21 @@ void csr_matrix::triangular_solve_upper(vector<double>&       x,
     destroy_csrtrsv_descr(descr);
 }
 
+void csr_matrix::compute_incomplete_cholesky_factorization()
+{
+    ROUTINE_TRACE("csr_matrix::compute_incomplete_cholesky_factorization");
+
+    csric0_descr* descr = nullptr;
+    create_csric0_descr(&descr);
+
+    csric0_analysis(*this, descr);
+
+    // Compute Cholesky factorization inplace
+    csric0_compute(*this, descr);
+
+    destroy_csric0_descr(descr);
+}
+
 void csr_matrix::transpose(csr_matrix& T) const
 {
     ROUTINE_TRACE("csr_matrix::transpose");

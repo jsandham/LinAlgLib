@@ -39,10 +39,13 @@ target_sources(test_main
     test_multiply_by_vector.cpp
     test_multiply_by_matrix.cpp
     test_triangular_solve.cpp
+    test_incomplete_cholesky_factorization.cpp
+    test_incomplete_cholesky_factorization_dense.cpp
     test_SpTRSV.cpp
     test_csric0.cpp
     test_csrilu0.cpp
     test_transpose.cpp
+    test_transpose_dense.cpp
     test_tridiagonal_solver.cpp
     test_exclusive_scan.cpp
 )

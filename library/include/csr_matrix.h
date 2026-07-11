@@ -311,6 +311,8 @@ namespace linalg
                                     const vector<double>& y,
                                     bool                  unit_diag) const;
 
+        void compute_incomplete_cholesky_factorization();
+
         /*! \brief Computes the transpose of the CSR matrix: \f$T = A^T\f$.
      *
      * \param T The output `csr_matrix` that will store the transpose of this matrix.

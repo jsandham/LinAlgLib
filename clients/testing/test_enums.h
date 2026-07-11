@@ -58,9 +58,12 @@ namespace testing
         multiply_by_vector,
         multiply_by_matrix,
         triangular_solve,
+        compute_incomplete_cholesky_factorization,
+        compute_incomplete_cholesky_factorization_dense,
         SpTRSV,
         SpGEAM,
-        Transpose,
+        transpose,
+        transpose_dense,
         CSRIC0,
         CSRILU0,
         TridiagonalSolver,
@@ -190,12 +193,18 @@ namespace testing
             return "multiply_by_matrix";
         case fixture::triangular_solve:
             return "triangular_solve";
+        case fixture::compute_incomplete_cholesky_factorization:
+            return "compute_incomplete_cholesky_factorization";
+        case fixture::compute_incomplete_cholesky_factorization_dense:
+            return "compute_incomplete_cholesky_factorization_dense";
         case fixture::SpGEAM:
             return "SpGEAM";
         case fixture::SpTRSV:
             return "SpTRSV";
-        case fixture::Transpose:
-            return "Transpose";
+        case fixture::transpose:
+            return "transpose";
+        case fixture::transpose_dense:
+            return "transpose_dense";
         case fixture::CSRIC0:
             return "CSRIC0";
         case fixture::CSRILU0:

@@ -159,8 +159,8 @@ void linalg::cuda_csric0_compute(int                 m,
     CHECK_CUDA(cudaMemset(descr->done_array, 0, sizeof(int) * m));
 
     std::cout << "cuda_csric0_compute m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
-    csric0_solve_kernel<256, 32, 128><<<((m - 1) / (256 / 32) + 1), 256>>>(
-        m, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array, descr->row_perm);
+    csric0_solve_kernel<256, 32, 512><<<((m - 1) / (256 / 32) + 1), 256>>>(
+         m, csr_row_ptr, csr_col_ind, csr_val, descr->diag_ind, descr->done_array, descr->row_perm);
     CHECK_CUDA_LAUNCH_ERROR();
 }
 

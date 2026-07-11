@@ -1,0 +1,6 @@
+Tests:
+  small:
+    matrix_file: ["matrices/SPD/ex5/ex5.mtx"]
+    backend: [CPU]
+  # medium:
+  #   matrix_file: ["matrices/SPD/olafu/olafu.mtx", "matrices/SPD/gyro/gyro.mtx"]

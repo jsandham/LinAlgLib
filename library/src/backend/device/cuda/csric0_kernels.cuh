@@ -75,8 +75,8 @@ __global__ void csric0_solve_kernel(int m,
     {
         const int col = csr_col_ind[i];
 
-        atomic_insert_key_value2<HASHSIZE>(&shared_key[(BLOCKSIZE / WARPSIZE) * wid],
-                                           &shared_val[(BLOCKSIZE / WARPSIZE) * wid],
+        atomic_insert_key_value2<HASHSIZE>(&shared_key[HASHSIZE * wid],
+                                           &shared_val[HASHSIZE * wid],
                                            col,
                                            i,
                                            -1);
@@ -115,8 +115,8 @@ __global__ void csric0_solve_kernel(int m,
             const int col_j = csr_col_ind[j];
             assert(col_j >= 0 && col_j < col_i);
 
-            int pos = atomic_find_val<HASHSIZE>(&shared_key[(BLOCKSIZE / WARPSIZE) * wid],
-                                                &shared_val[(BLOCKSIZE / WARPSIZE) * wid],
+            int pos = atomic_find_val<HASHSIZE>(&shared_key[HASHSIZE * wid],
+                                                &shared_val[HASHSIZE * wid],
                                                 col_j,
                                                 -1);
 

@@ -85,9 +85,12 @@ target_sources(test_main
     test_functions_multiply_by_vector.cpp
     test_functions_multiply_by_matrix.cpp
     test_functions_triangular_solve.cpp
+    test_functions_incomplete_cholesky_factorization.cpp
+    test_functions_incomplete_cholesky_factorization_dense.cpp
     test_functions_sptrsv.cpp
     test_functions_spgeam.cpp
     test_functions_transpose.cpp
+    test_functions_transpose_dense.cpp
     test_functions_csric0.cpp
     test_functions_csrilu0.cpp
     test_functions_tridiagonal_solver.cpp

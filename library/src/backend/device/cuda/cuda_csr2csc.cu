@@ -66,9 +66,11 @@ void linalg::cuda_csr2csc(int        m,
     CHECK_CUDA(cudaMemcpy(csc_row_ind, csr_col_ind, sizeof(int) * nnz, cudaMemcpyDeviceToDevice));
 
     // Sort keys and apply the same permutation to values directly on device pointers.
-    thrust::sort_by_key(thrust::device, csc_row_ind, csc_row_ind + nnz, perm);
+    // Stable sort preserves the original CSR row order for equal column keys,
+    // which is required to preserve the correct row ordering in the transposed CSR.
+    thrust::stable_sort_by_key(thrust::device, csc_row_ind, csc_row_ind + nnz, perm);
 
-    coo2csr_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csc_row_ind, csc_col_ptr);
+    coo2csr_kernel<256><<<((n - 1) / 256 + 1), 256>>>(n, m, nnz, csc_row_ind, csc_col_ptr);
     CHECK_CUDA_LAUNCH_ERROR();
 
     csr2coo_kernel<256><<<((nnz - 1) / 256 + 1), 256>>>(m, n, nnz, csr_row_ptr, coo_row_ind);
