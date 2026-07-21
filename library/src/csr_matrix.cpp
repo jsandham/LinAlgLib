@@ -395,6 +395,21 @@ void csr_matrix::compute_incomplete_cholesky_factorization()
     destroy_csric0_descr(descr);
 }
 
+void csr_matrix::compute_incomplete_LU_factorization()
+{
+    ROUTINE_TRACE("csr_matrix::compute_incomplete_LU_factorization");
+
+    csrilu0_descr* descr = nullptr;
+    create_csrilu0_descr(&descr);
+
+    csrilu0_analysis(*this, descr);
+
+    // Compute ILU factorization inplace
+    csrilu0_compute(*this, descr);
+
+    destroy_csrilu0_descr(descr);
+}
+
 void csr_matrix::transpose(csr_matrix& T) const
 {
     ROUTINE_TRACE("csr_matrix::transpose");

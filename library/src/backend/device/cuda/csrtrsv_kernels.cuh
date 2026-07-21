@@ -113,7 +113,7 @@ __global__ void csrtrsv_analysis_kernel(int                     m,
         }
     }
 
-    warp_reduction_max<WARPSIZE>(&max_depth, lid);
+    warp_reduction_max<WARPSIZE>(&max_depth);
 
     if(lid == 0)
     {
@@ -199,7 +199,7 @@ __global__ void csrtrsv_solve_kernel(int                     m,
         }
     }
 
-    warp_reduction_sum<WARPSIZE>(&sum, lid);
+    warp_reduction_sum<WARPSIZE>(&sum);
 
     if(lid == 0)
     {

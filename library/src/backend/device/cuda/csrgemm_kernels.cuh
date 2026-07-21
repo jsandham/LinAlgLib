@@ -70,7 +70,7 @@ __global__ void csrgemm_count_products_kernel(int     m,
             product_count += end_B - start_B;
         }
 
-        warp_reduction_sum<WARPSIZE>(&product_count, lid);
+        warp_reduction_sum<WARPSIZE>(&product_count);
     }
 
     if(beta != static_cast<T>(0))
@@ -211,7 +211,7 @@ __global__ void csrgemm_nnz_per_row_kernel(int        bin_count,
         }
     }
 
-    warp_reduction_sum<WARPSIZE>(&row_nnz, lid);
+    warp_reduction_sum<WARPSIZE>(&row_nnz);
 
     if(lid == 0)
     {

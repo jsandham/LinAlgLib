@@ -181,7 +181,7 @@ __global__ void csrgeam_nnz_per_row_kernel(int        bin_count,
         }
     }
 
-    warp_reduction_sum<WARPSIZE>(&row_nnz, lid);
+    warp_reduction_sum<WARPSIZE>(&row_nnz);
 
     if(lid == 0)
     {

@@ -41,6 +41,7 @@ target_sources(test_main
     test_triangular_solve.cpp
     test_incomplete_cholesky_factorization.cpp
     test_incomplete_cholesky_factorization_dense.cpp
+    test_incomplete_LU_factorization_dense.cpp
     test_SpTRSV.cpp
     test_csric0.cpp
     test_csrilu0.cpp

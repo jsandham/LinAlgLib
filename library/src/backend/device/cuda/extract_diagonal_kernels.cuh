@@ -97,7 +97,7 @@ __global__ void extract_lower_triangular_nnz_kernel(int m_A,
         }
 
         // Reduce within warp
-        warp_reduction_sum<WARPSIZE>(&count, lid);
+        warp_reduction_sum<WARPSIZE>(&count);
 
         // Write result
         if(lid == 0)
@@ -140,7 +140,7 @@ __global__ void extract_upper_triangular_nnz_kernel(int m_A,
         }
 
         // Reduce within warp
-        warp_reduction_sum<WARPSIZE>(&count, lid);
+        warp_reduction_sum<WARPSIZE>(&count);
 
         // Write result
         if(lid == 0)

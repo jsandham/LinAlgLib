@@ -34,49 +34,6 @@
 
 #include "linalg.h"
 
-// std::cout << "Warning: host_csric0_impl is not optimized for performance." << std::endl;
-// std::vector<int> diag_ptr(m, -1);
-// for(int row = 0; row < m; row++)
-// {
-//     int              row_begin = csr_row_ptr[row];
-//     int              row_end   = csr_row_ptr[row + 1];
-//     std::vector<int> col_offset_map(n, -1);
-//     for(int j = row_begin; j < row_end; j++)
-//         col_offset_map[csr_col_ind[j]] = j;
-//     T sum = 0.0;
-//     for(int j = row_begin; j < row_end; j++)
-//     {
-//         int col_j = csr_col_ind[j];
-//         if(col_j < row)
-//         {
-//             int diag_index = diag_ptr[col_j];
-//             T   s          = 0.0;
-//             for(int k = csr_row_ptr[col_j]; k < diag_index; k++)
-//             {
-//                 int col_k       = csr_col_ind[k];
-//                 int col_k_index = col_offset_map[col_k];
-//                 if(col_k_index != -1)
-//                     s += csr_val[col_k_index] * csr_val[k];
-//             }
-//             T diag_val = get_diagonal_value_local(
-//                 col_j, diag_index, csr_val, structural_zero, numeric_zero);
-//             T val = (csr_val[j] - s) / diag_val;
-//             sum += val * val;
-//             csr_val[j] = val;
-//         }
-//         else if(col_j == row)
-//         {
-//             diag_ptr[row] = j;
-//             csr_val[j]    = std::sqrt(std::abs(csr_val[j] - sum));
-//             break;
-//         }
-//         else
-//         {
-//             break;
-//         }
-//     }
-// }
-
 static bool compute_reference_incomplete_cholesky(const linalg::csr_matrix& A,
                                                   linalg::csr_matrix&       L)
 {

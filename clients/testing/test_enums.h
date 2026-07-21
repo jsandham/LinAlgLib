@@ -60,6 +60,7 @@ namespace testing
         triangular_solve,
         compute_incomplete_cholesky_factorization,
         compute_incomplete_cholesky_factorization_dense,
+        compute_incomplete_LU_factorization_dense,
         SpTRSV,
         SpGEAM,
         transpose,
@@ -197,6 +198,8 @@ namespace testing
             return "compute_incomplete_cholesky_factorization";
         case fixture::compute_incomplete_cholesky_factorization_dense:
             return "compute_incomplete_cholesky_factorization_dense";
+        case fixture::compute_incomplete_LU_factorization_dense:
+            return "compute_incomplete_LU_factorization_dense";
         case fixture::SpGEAM:
             return "SpGEAM";
         case fixture::SpTRSV:

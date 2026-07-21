@@ -58,6 +58,7 @@ namespace testing
     bool test_triangular_solve(Arguments arg);
     bool test_compute_incomplete_cholesky_factorization(Arguments arg);
     bool test_compute_incomplete_cholesky_factorization_dense(Arguments arg);
+    bool test_compute_incomplete_LU_factorization_dense(Arguments arg);
 
 } // namespace testing
 

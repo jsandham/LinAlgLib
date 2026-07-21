@@ -102,7 +102,7 @@ __device__ __forceinline__ int log2_int(unsigned int value)
 }
 
 template <uint32_t WARPSIZE, typename T>
-__device__ __forceinline__ void warp_reduction_sum(T* __restrict__ data, int lid)
+__device__ __forceinline__ void warp_reduction_sum(T* __restrict__ data)
 {
     if(WARPSIZE > 16)
     {
@@ -126,8 +126,44 @@ __device__ __forceinline__ void warp_reduction_sum(T* __restrict__ data, int lid
     }
 }
 
+
+
+
+
+
 template <uint32_t WARPSIZE, typename T>
-__device__ __forceinline__ void warp_reduction_max(T* __restrict__ data, int lid)
+__device__ __forceinline__ T warp_segmented_reduction_sum(int row, T val)
+{
+    const int lid = threadIdx.x & (WARPSIZE - 1);
+
+    for(int j = 1; j < WARPSIZE; j <<= 1)
+    {
+        const int left_row = __shfl_up_sync(FULL_MASK, row, j);
+        const T   left_val = __shfl_up_sync(FULL_MASK, val, j);
+
+        if(row == left_row)
+        {
+            if(lid >= j)
+            {
+                val += left_val;
+            }
+        }
+    }
+
+    return val;
+}
+
+
+
+
+
+
+
+
+
+
+template <uint32_t WARPSIZE, typename T>
+__device__ __forceinline__ void warp_reduction_max(T* __restrict__ data)
 {
     if(WARPSIZE > 16)
     {

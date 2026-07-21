@@ -121,6 +121,8 @@ namespace testing
             return test_compute_incomplete_cholesky_factorization(arg);
         case fixture::compute_incomplete_cholesky_factorization_dense:
             return test_compute_incomplete_cholesky_factorization_dense(arg);
+        case fixture::compute_incomplete_LU_factorization_dense:
+            return test_compute_incomplete_LU_factorization_dense(arg);
         case fixture::transpose:
             return test_transpose(arg);
         case fixture::transpose_dense:

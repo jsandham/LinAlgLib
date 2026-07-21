@@ -60,7 +60,7 @@ __global__ void compute_residual_kernel(int m,
             sum += x[col] * val;
         }
 
-        warp_reduction_sum<WARPSIZE>(&sum, lid);
+        warp_reduction_sum<WARPSIZE>(&sum);
 
         if(lid == 0)
         {

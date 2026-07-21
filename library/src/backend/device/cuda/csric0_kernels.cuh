@@ -126,7 +126,7 @@ __global__ void csric0_solve_kernel(int m,
             }
         }
 
-        warp_reduction_sum<WARPSIZE>(&sum, lid);
+        warp_reduction_sum<WARPSIZE>(&sum);
 
         if(lid == 0)
         {

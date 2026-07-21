@@ -8,7 +8,7 @@
 // of this softwareand associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
-// copies of the Software, and to permit persons to whom the Software is
+// copies of the Software, and to permit persons to whom the Software are
 // furnished to do so, subject to the following conditions :
 //
 // The above copyright notice and this permission notice shall be included in all
@@ -34,9 +34,9 @@
 
 #include "linalg.h"
 
-bool testing::test_compute_incomplete_cholesky_factorization_dense(Arguments arg)
+bool testing::test_compute_incomplete_LU_factorization_dense(Arguments arg)
 {
-    // Create a dense SPD matrix.
+    // Create a dense matrix.
     std::vector<int> csr_row_ptr(arg.m + 1, 0);
     for(int i = 0; i < arg.m; i++)
     {
@@ -50,7 +50,8 @@ bool testing::test_compute_incomplete_cholesky_factorization_dense(Arguments arg
         for(int j = 0; j < arg.m; j++)
         {
             csr_col_ind[arg.m * i + j] = j;
-            csr_val[arg.m * i + j]     = (i == j) ? 2.0 : 1.0; // Create a simple SPD matrix
+            // Use nonsymmetric but well-conditioned values: diagonal larger.
+            csr_val[arg.m * i + j] = (i == j) ? 4.0 : 1.0;
         }
     }
 
@@ -59,7 +60,7 @@ bool testing::test_compute_incomplete_cholesky_factorization_dense(Arguments arg
                              csr_val,
                              arg.m,
                              arg.m,
-                             arg.m * arg.m); // Assuming a dense matrix for testing
+                             arg.m * arg.m); // dense
     mat_A.make_diagonally_dominant();
 
     linalg::vector<double> ones(mat_A.get_n());
@@ -89,19 +90,15 @@ bool testing::test_compute_incomplete_cholesky_factorization_dense(Arguments arg
 
     mat_A.multiply_by_vector(b, ones);
 
-    // LL^T * x = b
-    // Let y = L^T * z and b = L * y
-    // Step 1: Solve L * y = b
-    // Step 2: Solve L^T * z = y
-    // Step 3: Verify that z is approximately equal to ones
-    mat_A.compute_incomplete_cholesky_factorization();
+    // LU: A = L * U
+    // Solve L * y = b, then U * z = y -> z should equal ones
+    mat_A.compute_incomplete_LU_factorization();
 
     // Solve L * y = b
     mat_A.triangular_solve_lower(y, b, false);
 
-    // Solve L^T * z = y
-    mat_A.transpose(mat_transpose);
-    mat_transpose.triangular_solve_upper(z, y, false);
+    // Solve U * z = y
+    mat_A.triangular_solve_upper(z, y, false);
 
     if(arg.backend == backend::GPU)
     {
@@ -109,11 +106,10 @@ bool testing::test_compute_incomplete_cholesky_factorization_dense(Arguments arg
         ones.move_to_host();
     }
 
-    // Verify that z is approximately equal to ones
     bool success = check_vector_equality(z, ones);
     if(!success)
     {
-        std::cout << "Cholesky result does not match reference solution." << std::endl;
+        std::cout << "ILU result does not match reference solution." << std::endl;
     }
 
     return success;

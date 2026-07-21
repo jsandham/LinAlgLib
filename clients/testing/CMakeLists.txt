@@ -87,6 +87,7 @@ target_sources(test_main
     test_functions_triangular_solve.cpp
     test_functions_incomplete_cholesky_factorization.cpp
     test_functions_incomplete_cholesky_factorization_dense.cpp
+    test_functions_incomplete_LU_factorization_dense.cpp
     test_functions_sptrsv.cpp
     test_functions_spgeam.cpp
     test_functions_transpose.cpp

@@ -311,7 +311,53 @@ namespace linalg
                                     const vector<double>& y,
                                     bool                  unit_diag) const;
 
+        /*! \brief Compute incomplete Cholesky factorization (IC(0)) in-place.
+       *
+       * This routine computes the incomplete Cholesky factorization of the matrix
+       * stored in this object. The operation factors the matrix A into L * L^T,
+       * where L is a lower-triangular matrix with the same sparsity pattern as A
+       * (zero fill-in). The factorization is performed in-place: the lower
+       * triangular portion and diagonal of this matrix are overwritten with the
+       * computed Cholesky factors. The upper triangular entries are not modified.
+       *
+       * Preconditions:
+       * - The matrix should be symmetric positive-definite (or numerically suitable
+       *   for IC(0)). No pivoting is performed.
+       *
+       * Postconditions:
+       * - After this call, the lower-triangular entries and diagonal contain the
+       *   incomplete Cholesky factor L (diagonal contains the computed diagonal
+       *   entries such that A \\approx L * L^T).
+       *
+       * Notes:
+       * - This method dispatches to host or device implementations depending on
+       *   where the matrix data resides (`is_on_host()`).
+       */
         void compute_incomplete_cholesky_factorization();
+
+        /*! \brief Compute incomplete LU factorization (ILU(0)) in-place.
+       *
+       * This routine computes the incomplete LU factorization of the matrix stored
+       * in this object. The operation factors the matrix A into L * U where L is
+       * lower-triangular with unit or stored diagonal and U is upper-triangular.
+       * The sparsity pattern of L and U matches that of A (zero fill-in) and the
+       * factorization is performed in-place: the lower and upper triangular
+       * portions of the matrix are overwritten with the computed factors.
+       *
+       * Preconditions:
+       * - The matrix should be structurally compatible with ILU(0). No pivoting
+       *   or reordering is performed by this routine.
+       *
+       * Postconditions:
+       * - After this call, the matrix stores the ILU factors: the lower-triangular
+       *   entries contain L (optionally unit diagonal) and the upper-triangular
+       *   entries contain U. The original matrix A is overwritten.
+       *
+       * Notes:
+       * - This method dispatches to host or device implementations depending on
+       *   where the matrix data resides (`is_on_host()`).
+       */
+        void compute_incomplete_LU_factorization();
 
         /*! \brief Computes the transpose of the CSR matrix: \f$T = A^T\f$.
      *
