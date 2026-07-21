@@ -41,3 +41,48 @@ jobs:
       - name: Run tests
         run: |
           ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
+
+  build_in_distros:
+    name: Build in multiple Linux distros (container)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ["ubuntu:22.04", "debian:12", "rockylinux:8"]
+        build_type: [Debug, Release]
+    container: ${{ matrix.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show distro
+        run: cat /etc/os-release || true
+
+      - name: Install build dependencies
+        run: |
+          set -e
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential ca-certificates git wget cmake
+          elif command -v yum >/dev/null 2>&1; then
+            yum -y install gcc gcc-c++ make wget git
+            if ! command -v cmake >/dev/null 2>&1; then
+              yum -y install epel-release || true
+              yum -y install cmake3 || true
+              if command -v cmake3 >/dev/null 2>&1; then
+                ln -s $(command -v cmake3) /usr/local/bin/cmake || true
+              fi
+            fi
+          else
+            echo "Unknown package manager; please install build tools in the container image" >&2
+            exit 1
+          fi
+          cmake --version || true
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} -- -m
+
+      - name: Run tests
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
