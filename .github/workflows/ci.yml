@@ -21,11 +21,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies (Linux)
+      - name: Install dependencies (Linux) and modern CMake
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake
+          sudo apt-get install -y build-essential ca-certificates wget
+          CMAKE_VERSION=3.26.4
+          echo "Installing CMake ${CMAKE_VERSION}"
+          wget -qO /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
+          sudo tar -xzf /tmp/cmake.tar.gz -C /opt
+          sudo ln -sfn /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/
+          cmake --version
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -60,12 +66,12 @@ jobs:
       - name: Show distro
         run: cat /etc/os-release || true
 
-      - name: Install build dependencies
+      - name: Install build dependencies and modern CMake
         run: |
           set -e
           if command -v apt-get >/dev/null 2>&1; then
             apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential ca-certificates git wget cmake
+            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential ca-certificates git wget
           elif command -v yum >/dev/null 2>&1; then
             yum -y install gcc gcc-c++ make wget git
             if ! command -v cmake >/dev/null 2>&1; then
@@ -79,6 +85,11 @@ jobs:
             echo "Unknown package manager; please install build tools in the container image" >&2
             exit 1
           fi
+          CMAKE_VERSION=3.26.4
+          echo "Installing CMake ${CMAKE_VERSION}"
+          wget -qO /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf /tmp/cmake.tar.gz -C /tmp
+          ln -sfn /tmp/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ || true
           cmake --version || true
 
       - name: Configure
