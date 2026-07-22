@@ -100,3 +100,27 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Build docs
+        run: |
+          doxygen docs/Doxyfile
+
+      - name: Validate generated docs
+        run: |
+          if [ ! -f docs/html/index.html ]; then
+            echo "Documentation build failed: docs/html/index.html not found"
+            exit 1
+          fi

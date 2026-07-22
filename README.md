@@ -142,6 +142,33 @@ clang-format.exe -i --style microsoft library/src/iterative_solvers/amg/*.cpp
 - Linker errors for templated CUDA helpers:
 	- Verify required explicit template instantiations exist in CUDA translation units.
 
+## Continuous Integration
+
+This repository uses GitHub Actions to validate the codebase.
+The CI workflow is defined in `.github/workflows/ci.yml` and includes the following jobs:
+
+- `build` — builds the library and test suite on both `ubuntu-latest` and `windows-latest` in Debug and Release.
+- `build_in_distros` — builds the project inside container images for multiple Linux distros (`ubuntu:22.04`, `debian:12`, `rockylinux:8`).
+- `docs` — installs Doxygen and Graphviz, generates documentation with `doxygen docs/Doxyfile`, and validates the generated HTML.
+
+The workflow is triggered on:
+- `push` to `main` and `master`
+- `pull_request` targeting `main` and `master`
+- manual runs via the Actions UI (`workflow_dispatch`)
+
+### Run the workflow manually
+
+If you have repo permissions, trigger the workflow from the GitHub Actions page or use the GitHub CLI:
+
+```bash
+gh workflow run ci.yml --ref master
+```
+
+### Notes
+
+- The CI uses a modern CMake release on Linux so the project can build with `CMake 3.25+`.
+- CUDA builds and runtime GPU tests are not supported on GitHub-hosted runners because they do not expose NVIDIA GPUs. For CUDA execution, use a self-hosted GPU runner or local testing environment.
+
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for details.
