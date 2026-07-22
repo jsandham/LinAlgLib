@@ -106,7 +106,14 @@ namespace linalg
     * `total_levels = 1` would represent a direct solver without any multigrid
     * coarsening.
     */
-        int  total_levels;
+        int total_levels;
+
+        /**
+    * @brief Indicates whether hierarchy data resides in host memory.
+    *
+    * When `true`, hierarchy matrices and transfer operators are stored on the
+    * host backend. When `false`, they are stored on the device backend.
+    */
         bool on_host;
 
         hierarchy();
