@@ -30,6 +30,8 @@ project(linalglib LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+option(ENABLE_COVERAGE "Build with code coverage support" OFF)
+
 add_subdirectory(deps/perfetto)
 add_subdirectory(library)
 add_subdirectory(clients)

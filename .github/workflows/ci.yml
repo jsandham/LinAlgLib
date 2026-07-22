@@ -124,3 +124,43 @@ jobs:
             echo "Documentation build failed: docs/html/index.html not found"
             exit 1
           fi
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install coverage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ca-certificates wget python3-pip
+          python3 -m pip install --user gcovr
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure coverage build
+        run: |
+          cmake -S . -B build-coverage -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build coverage build
+        run: |
+          cmake --build build-coverage --config Debug -- -m
+
+      - name: Run tests for coverage
+        run: |
+          ctest --test-dir build-coverage -C Debug --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          gcovr -r . library --html-details -o coverage-report.html
+          gcovr -r . library --txt -o coverage-summary.txt
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage-report.html
+            coverage-summary.txt

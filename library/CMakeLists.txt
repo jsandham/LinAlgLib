@@ -80,6 +80,15 @@ endif()
 
 add_library(linalglib)
 
+if(ENABLE_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(linalglib PRIVATE -g -O0 --coverage -fprofile-arcs -ftest-coverage)
+    target_link_options(linalglib PUBLIC --coverage)
+  else()
+    message(WARNING "Code coverage is only supported for GCC/Clang in this project")
+  endif()
+endif()
+
 target_sources(linalglib PRIVATE ${LINALGLIB_HEADERS_PUBLIC})
 
 if(BUILD_WITH_CUDA)
