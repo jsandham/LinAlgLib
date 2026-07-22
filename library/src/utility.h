@@ -167,10 +167,19 @@ inline auto
 {
     backend bend = determine_backend(std::forward<Args>(args)...);
 
+    using result_type = decltype(host_func(std::forward<Args>(args)...));
+
     if(bend != backend::host && bend != backend::device)
     {
         std::cout << "Error: parameters must all be on host or all be on device" << std::endl;
-        return decltype(host_func(std::forward<Args>(args)...)){};
+        if constexpr(std::is_void_v<result_type>)
+        {
+            return;
+        }
+        else
+        {
+            return result_type{};
+        }
     }
 
     if(bend == backend::host)
