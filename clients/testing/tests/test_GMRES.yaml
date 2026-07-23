@@ -1,5 +1,5 @@
 Tests:
-  quick:
+  small:
     precond: [None, Jacobi]
     matrix_file: ["matrices/SPD/crystm02/crystm02.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
