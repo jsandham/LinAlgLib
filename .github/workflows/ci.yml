@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential ca-certificates wget
-          CMAKE_VERSION=3.26.4
+          CMAKE_VERSION=4.4.0
           echo "Installing CMake ${CMAKE_VERSION}"
           wget -qO /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
           sudo tar -xzf /tmp/cmake.tar.gz -C /opt
@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $CMAKE_VERSION = "3.26.4"
+          $CMAKE_VERSION = "4.4.0"
           Write-Host "Installing CMake $CMAKE_VERSION"
           $url = "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-windows-x86_64.zip"
           Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\cmake.zip"
