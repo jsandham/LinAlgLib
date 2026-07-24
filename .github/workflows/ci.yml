@@ -162,8 +162,8 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          gcovr -r . library --html-details -o coverage-report.html
-          gcovr -r . library --txt -o coverage-summary.txt
+          gcovr -r . --filter library/ build-coverage --html-details -o coverage-report.html
+          gcovr -r . --filter library/ build-coverage --txt -o coverage-summary.txt
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
