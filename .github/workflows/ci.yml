@@ -33,11 +33,19 @@ jobs:
           sudo ln -sfn /opt/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/
           cmake --version
 
-      - name: Install dependencies (Windows)
+      - name: Install pinned CMake (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          choco install -y cmake
-          refreshenv
+          $CMAKE_VERSION = "3.26.4"
+          Write-Host "Installing CMake $CMAKE_VERSION"
+          $url = "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-windows-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\cmake.zip"
+          Expand-Archive -Path "$env:RUNNER_TEMP\cmake.zip" -DestinationPath "$env:RUNNER_TEMP\cmake" -Force
+          $cmakeBin = "$env:RUNNER_TEMP\cmake\cmake-$CMAKE_VERSION-windows-x86_64\bin"
+          # Prepend so it wins over the pre-installed CMake on the runner image.
+          Add-Content -Path $env:GITHUB_PATH -Value $cmakeBin
+          & "$cmakeBin\cmake.exe" --version
 
       - name: Configure
         run: |

@@ -111,10 +111,27 @@ target_link_libraries(test_main PRIVATE gtest_main gmock_main)
 target_link_libraries(test_main PRIVATE yaml-cpp::yaml-cpp)
 
 if(WIN32)
+  # linalglib is compiled with /openmp:llvm, so test_main depends on the LLVM
+  # OpenMP runtime (libomp140.x86_64.dll). That DLL ships next to cl.exe but is
+  # not on PATH, so the executable fails to launch during gtest test discovery.
+  # It is an implicit compiler dependency, so CMake does not report it in
+  # TARGET_RUNTIME_DLLS; copy it next to the executable explicitly.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    get_filename_component(_msvc_bin_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    set(_libomp_dll "${_msvc_bin_dir}/libomp140.x86_64.dll")
+    if(EXISTS "${_libomp_dll}")
+      add_custom_command(TARGET test_main POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${_libomp_dll}" "$<TARGET_FILE_DIR:test_main>")
+    endif()
+  endif()
+
+  # Copy any CMake-tracked runtime DLL dependencies (e.g. if linalglib ever
+  # becomes a shared library). Guarded so it is a no-op when the list is empty,
+  # which would otherwise make "cmake -E copy_if_different" fail.
   add_custom_command(TARGET test_main POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          $<TARGET_RUNTIME_DLLS:test_main>
-          $<TARGET_FILE_DIR:test_main> COMMAND_EXPAND_LISTS)
+    COMMAND "$<$<BOOL:$<TARGET_RUNTIME_DLLS:test_main>>:${CMAKE_COMMAND};-E;copy_if_different;$<TARGET_RUNTIME_DLLS:test_main>;$<TARGET_FILE_DIR:test_main>>"
+    COMMAND_EXPAND_LISTS)
 endif()
 
 include(GoogleTest)
