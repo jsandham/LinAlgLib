@@ -110,8 +110,15 @@ target_link_libraries(test_main PRIVATE linalglib)
 target_link_libraries(test_main PRIVATE gtest_main gmock_main)
 target_link_libraries(test_main PRIVATE yaml-cpp::yaml-cpp)
 
+if(WIN32)
+  add_custom_command(TARGET test_main POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          $<TARGET_RUNTIME_DLLS:test_main>
+          $<TARGET_FILE_DIR:test_main> COMMAND_EXPAND_LISTS)
+endif()
+
 include(GoogleTest)
-gtest_discover_tests(test_main WORKING_DIRECTORY $<TARGET_FILE_DIR:test_main> DISCOVERY_MODE PRE_TEST)
+gtest_discover_tests(test_main WORKING_DIRECTORY $<TARGET_FILE_DIR:test_main> DISCOVERY_MODE PRE_TEST DISCOVERY_TIMEOUT 60)
 
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR : ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "PROJECT_BINARY_DIR : ${PROJECT_BINARY_DIR}")
