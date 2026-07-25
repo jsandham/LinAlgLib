@@ -72,7 +72,7 @@ namespace testing
     {
         switch(arg.fixture)
         {
-        case fixture::TridiagonalSolver:
+        case fixture::tridiagonal_solver:
             return test_tridiagonal_solver(arg);
         }
 
@@ -100,7 +100,7 @@ namespace testing
     {
         switch(arg.fixture)
         {
-        case fixture::ExclusiveScan:
+        case fixture::exclusive_scan:
             return test_exclusive_scan(arg);
         }
 
@@ -127,6 +127,8 @@ namespace testing
             return test_transpose(arg);
         case fixture::transpose_dense:
             return test_transpose_dense(arg);
+        case fixture::ruiz_scaling:
+            return test_ruiz_scaling(arg);
         }
         return false;
     }

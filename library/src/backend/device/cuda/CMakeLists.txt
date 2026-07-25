@@ -33,6 +33,7 @@ target_sources(linalglib
     cuda_ssor.cu
     cuda_extract.cu
     cuda_scale.cu
+    cuda_ruiz_scaling.cu
     cuda_csric0.cu
     cuda_csrilu0.cu
     cuda_csr2csc.cu

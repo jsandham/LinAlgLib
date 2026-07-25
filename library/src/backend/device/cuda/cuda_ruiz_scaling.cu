@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,23 @@
 //
 //********************************************************************************
 
-#include "../test.h"
+#include <cuda_runtime.h>
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+#include "cuda_ruiz_scaling.h"
+
+#include "../../../trace.h"
+
+//-------------------------------------------------------------------------------
+// Ruiz scaling
+//-------------------------------------------------------------------------------
+template <typename T>
+void linalg::cuda_ruiz_scaling(T* D1,
+    const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, T* D2)
+{
+    ROUTINE_TRACE("linalg::cuda_ruiz_scaling_impl");
+    //scale_diagonal_kernel<256>
+    //    <<<((m - 1) / 256 + 1), 256>>>(m, csr_row_ptr, csr_col_ind, csr_val, scalar);
+    //CHECK_CUDA_LAUNCH_ERROR();
+}
+
+template void  linalg::cuda_ruiz_scaling<double>(double* D1, const int* csr_row_ptr, const int* csr_col_ind, double* csr_val, int m, double* D2);

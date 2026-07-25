@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -26,4 +26,4 @@
 
 #include "../test.h"
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+INSTANTIATE_TEST(csr_matrix, ruiz_scaling, ruiz_scaling, "tests/test_ruiz_scaling.yaml");

@@ -27,6 +27,6 @@
 #include "../test.h"
 
 INSTANTIATE_TEST(direct_solvers,
-                 TridiagonalSolver,
+                 tridiagonal_solver,
                  tridiagonal_solver,
                  "tests/test_tridiagonal_solver.yaml");

@@ -404,8 +404,8 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"transpose_dense", testing::fixture::transpose_dense},
            {"CSRIC0", testing::fixture::CSRIC0},
            {"CSRILU0", testing::fixture::CSRILU0},
-           {"TridiagonalSolver", testing::fixture::TridiagonalSolver},
-           {"ExclusiveScan", testing::fixture::ExclusiveScan}};
+           {"tridiagonal_solver", testing::fixture::tridiagonal_solver},
+           {"exclusive_scan", testing::fixture::exclusive_scan}};
 
     // Find the string in the map
     auto it = fixture_map.find(str);

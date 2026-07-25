@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,28 @@
 //
 //********************************************************************************
 
-#include "../test.h"
+#include "device_ruiz_scaling.h"
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+#include <iostream>
+
+#include "../../trace.h"
+#include "../../utility.h"
+
+#if defined(LINALGLIB_HAS_CUDA)
+#include "cuda/cuda_ruiz_scaling.h"
+#endif
+
+void linalg::device_ruiz_scaling(vector<double>& D1, csr_matrix& A, vector<double>& D2)
+{
+    ROUTINE_TRACE("linalg::device_ruiz_scaling");
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_ruiz_scaling(
+            D1.get_vec(), A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), D2.get_vec()));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+    }
+}

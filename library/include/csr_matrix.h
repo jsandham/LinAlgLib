@@ -365,6 +365,8 @@ namespace linalg
      */
         void transpose(csr_matrix& T) const;
 
+        void apply_ruiz_scaling(vector<double>& D1, vector<double>& D2);
+
         /*! \brief Reads a sparse matrix from a Matrix Market (.mtx) file into this CSR object.
      * \param filename The path to the .mtx file.
      * \return `true` if the file was successfully read and parsed, `false` otherwise.

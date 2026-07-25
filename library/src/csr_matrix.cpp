@@ -418,6 +418,18 @@ void csr_matrix::transpose(csr_matrix& T) const
         "linalg::csr_matrix::transpose", host_transpose_matrix, device_transpose_matrix, *this, T);
 }
 
+void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2)
+{
+    ROUTINE_TRACE("csr_matrix::apply_ruiz_scaling");
+
+    backend_dispatch("linalg::csr_matrix::apply_ruiz_scaling",
+                     host_ruiz_scaling,
+                     device_ruiz_scaling,
+                     D1,
+                     *this,
+                     D2);
+}
+
 // Structure to hold triplet (COO) format data
 struct triplet
 {

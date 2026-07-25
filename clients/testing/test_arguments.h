@@ -38,7 +38,7 @@ namespace testing
     struct Arguments
     {
         testing::category          category; // iterative_solvers, math, primitive
-        testing::fixture           fixture; // Jacobi, CG, SpMV, ExclusiveScan, etc
+        testing::fixture           fixture; // Jacobi, CG, SpMV, exclusive_scan, etc
         std::string                group; // small, medium, large, etc
         std::string                filename; // bmwcra_1.mtx, shipsec1.mtx, etc
         testing::backend           backend; // CPU, GPU

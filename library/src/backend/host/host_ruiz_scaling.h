@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,6 +24,15 @@
 //
 //********************************************************************************
 
-#include "../test.h"
+#ifndef HOST_RUIZ_SCALING_H
+#define HOST_RUIZ_SCALING_H
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+#include "csr_matrix.h"
+#include "vector.h"
+
+namespace linalg
+{
+    void host_ruiz_scaling(vector<double>& D1, csr_matrix& A, vector<double>& D2);
+}
+
+#endif // HOST_APPLY_RUIZ_SCALING_H

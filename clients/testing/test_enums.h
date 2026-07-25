@@ -67,8 +67,9 @@ namespace testing
         transpose_dense,
         CSRIC0,
         CSRILU0,
-        TridiagonalSolver,
-        ExclusiveScan,
+        tridiagonal_solver,
+        exclusive_scan,
+        ruiz_scaling,
         Unknown
     };
 
@@ -212,10 +213,12 @@ namespace testing
             return "CSRIC0";
         case fixture::CSRILU0:
             return "CSRILU0";
-        case fixture::TridiagonalSolver:
-            return "TridiagonalSolver";
-        case fixture::ExclusiveScan:
-            return "ExclusiveScan";
+        case fixture::tridiagonal_solver:
+            return "tridiagonal_solver";
+        case fixture::exclusive_scan:
+            return "exclusive_scan";
+        case fixture::ruiz_scaling:
+            return "ruiz_scaling";
         }
 
         return "Invalid";

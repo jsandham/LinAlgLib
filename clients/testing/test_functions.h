@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -51,6 +51,7 @@ namespace testing
     bool test_exclusive_scan(Arguments arg);
 
     // csr matrix
+    bool test_ruiz_scaling(Arguments arg);
     bool test_transpose(Arguments arg);
     bool test_transpose_dense(Arguments arg);
     bool test_multiply_by_vector(Arguments arg);

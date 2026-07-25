@@ -34,6 +34,7 @@ target_sources(linalglib
     host_matrix_vector.cpp
     host_extract.cpp
     host_scale.cpp
+    host_ruiz_scaling.cpp
     host_ssor.cpp
     host_csr2csc.cpp
     host_csrtrsv.cpp

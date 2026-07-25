@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -23,7 +23,14 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef CUDA_RUIZ_sCALING_H
+#define CUDA_RUIZ_SCALING_H
 
-#include "../test.h"
+namespace linalg
+{
+    template <typename T>
+    void cuda_ruiz_scaling(
+        T* D1, const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, T* D2);
+}
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+#endif

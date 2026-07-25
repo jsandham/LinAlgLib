@@ -35,6 +35,7 @@
 #include "cuda_csrtrsv.h"
 #include "cuda_extract.h"
 #include "cuda_matrix_vector.h"
+#include "cuda_ruiz_scaling.h"
 #include "cuda_scale.h"
 #include "cuda_ssor.h"
 #include "cuda_tridiagonal.h"
