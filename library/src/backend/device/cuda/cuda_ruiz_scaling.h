@@ -29,8 +29,18 @@
 namespace linalg
 {
     template <typename T>
-    void cuda_ruiz_scaling(
-        T* D1, const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, T* D2);
+    void cuda_ruiz_scaling(T*         D1,
+                           const int* csr_row_ptr,
+                           const int* csr_col_ind,
+                           T*         csr_val,
+                           int        m,
+                           T*         D2,
+                           int        max_k,
+                           T          tol);
+
+    template <typename T>
+    void cuda_symmetric_ruiz_scaling(
+        T* D, const int* csr_row_ptr, const int* csr_col_ind, T* csr_val, int m, int max_k, T tol);
 }
 
 #endif

@@ -50,9 +50,9 @@ int main()
     control.rel_tol = 1e-08;
     control.abs_tol = 1e-08;
 
-    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 10, 10, Cycle::Vcycle, Smoother::Gauss_Seidel, control);
-    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::Gauss_Seidel, control);
-    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, Cycle::Wcycle, Smoother::SOR, control);
+    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 10, 10, cycle::vcycle, smoother::gauss_seidel, control);
+    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, cycle::wcycle, smoother::gauss_seidel, control);
+    // int cycles = linalg::amg_solve(hierachy, x.data(), b.data(), 2, 2, cycle::wcycle, smoother::SOR, control);
 
     // // Print solution
     // std::cout << "x" << std::endl;

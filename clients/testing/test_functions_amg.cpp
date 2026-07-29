@@ -77,37 +77,37 @@ bool testing::test_amg(AMG_solver solver_type, Arguments arg)
         break;
     }
 
-    linalg::Cycle cycle = linalg::Cycle::Vcycle;
+    linalg::cycle cycle = linalg::cycle::vcycle;
     switch(arg.cycle_type)
     {
-    case testing::cycle_type::Vcycle:
-        cycle = linalg::Cycle::Vcycle;
+    case testing::cycle_type::vcycle:
+        cycle = linalg::cycle::vcycle;
         break;
-    case testing::cycle_type::Wcycle:
-        cycle = linalg::Cycle::Wcycle;
+    case testing::cycle_type::wcycle:
+        cycle = linalg::cycle::wcycle;
         break;
-    case testing::cycle_type::Fcycle:
-        cycle = linalg::Cycle::Fcycle;
+    case testing::cycle_type::fcycle:
+        cycle = linalg::cycle::fcycle;
         break;
     }
 
-    linalg::Smoother smoother = linalg::Smoother::Jacobi;
+    linalg::smoother smoother = linalg::smoother::jacobi;
     switch(arg.smoother_type)
     {
-    case testing::smoother_type::Jacobi:
-        smoother = linalg::Smoother::Jacobi;
+    case testing::smoother_type::jacobi:
+        smoother = linalg::smoother::jacobi;
         break;
-    case testing::smoother_type::Gauss_Seidel:
-        smoother = linalg::Smoother::Gauss_Seidel;
+    case testing::smoother_type::gauss_seidel:
+        smoother = linalg::smoother::gauss_seidel;
         break;
-    case testing::smoother_type::Symm_Gauss_Seidel:
-        smoother = linalg::Smoother::Symm_Gauss_Seidel;
+    case testing::smoother_type::symmetric_gauss_seidel:
+        smoother = linalg::smoother::symmetric_gauss_seidel;
         break;
     case testing::smoother_type::SOR:
-        smoother = linalg::Smoother::SOR;
+        smoother = linalg::smoother::SOR;
         break;
     case testing::smoother_type::SSOR:
-        smoother = linalg::Smoother::SSOR;
+        smoother = linalg::smoother::SSOR;
         break;
     }
 

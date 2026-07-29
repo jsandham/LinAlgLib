@@ -38,23 +38,23 @@
 
 #include "linalg.h"
 
-bool testing::test_ruiz_scaling(Arguments arg)
+bool testing::test_symmetric_ruiz_scaling(Arguments arg)
 {
+    std::cout << "max_iters: " << arg.max_iters << " tol: " << arg.tol << std::endl;
+
     linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    linalg::vector<double> D1(mat_A.get_m());
-    linalg::vector<double> D2(mat_A.get_m());
+    linalg::vector<double> D(mat_A.get_m());
 
     if(arg.backend == backend::GPU)
     {
         mat_A.move_to_device();
-        D1.move_to_device();
-        D2.move_to_device();
+        D.move_to_device();
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    mat_A.apply_ruiz_scaling(D1, D2, arg.max_iters, arg.tol);
+    mat_A.apply_symmetric_ruiz_scaling(D, arg.max_iters, arg.tol);
     linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -64,13 +64,11 @@ bool testing::test_ruiz_scaling(Arguments arg)
     if(arg.backend == backend::GPU)
     {
         mat_A.move_to_host();
-        D1.move_to_host();
-        D2.move_to_host();
+        D.move_to_host();
     }
 
     // Verify that the scaled matrix has row and column norms close to 1
     std::vector<double> row_norm(mat_A.get_m(), 0.0);
-    std::vector<double> col_norm(mat_A.get_m(), 0.0);
 
     for(int i = 0; i < mat_A.get_m(); i++)
     {
@@ -82,14 +80,13 @@ bool testing::test_ruiz_scaling(Arguments arg)
             const int    col = mat_A.get_col_ind()[j];
             const double val = mat_A.get_val()[j];
 
-            row_norm[i]   = std::max(row_norm[i], std::abs(val));
-            col_norm[col] = std::max(col_norm[col], std::abs(val));
+            row_norm[i] = std::max(row_norm[i], std::abs(val));
         }
     }
 
     for(int i = 0; i < mat_A.get_m(); i++)
     {
-        if(std::abs(1.0 - row_norm[i]) > arg.tol || std::abs(1.0 - col_norm[i]) > arg.tol)
+        if(std::abs(1.0 - row_norm[i]) > arg.tol)
         {
             return false;
         }

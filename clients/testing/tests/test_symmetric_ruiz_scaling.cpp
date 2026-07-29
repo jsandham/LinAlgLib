@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,42 +24,9 @@
 //
 //********************************************************************************
 
-#include <iostream>
-#include <vector>
+#include "../test.h"
 
-#include "linalg.h"
-#include "utility.h"
-
-int main()
-{
-    linalg::csr_matrix A;
-    A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
-
-    // Solution vector
-    linalg::vector<double> x(A.get_m());
-    x.zeros();
-
-    // Righthand side vector
-    linalg::vector<double> b(A.get_m());
-    b.ones();
-
-    linalg::hierarchy hierachy;
-    linalg::uaamg_setup(A, 2, hierachy);
-
-    linalg::iter_control control;
-    control.rel_tol = 1e-08;
-    control.abs_tol = 1e-08;
-
-    int cycles = linalg::amg_solve(
-        hierachy, x, b, 2, 2, linalg::cycle::wcycle, linalg::smoother::gauss_seidel, control);
-
-    // // Print solution
-    // std::cout << "x" << std::endl;
-    // for (int i = 0; i < x.get_size(); i++)
-    // {
-    //     std::cout << x[i] << " ";
-    // }
-    // std::cout << "" << std::endl;
-
-    return 0;
-}
+INSTANTIATE_TEST(csr_matrix,
+                 symmetric_ruiz_scaling,
+                 symmetric_ruiz_scaling,
+                 "tests/test_symmetric_ruiz_scaling.yaml");

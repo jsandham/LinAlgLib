@@ -38,11 +38,11 @@ namespace testing
     struct Arguments
     {
         testing::category          category; // iterative_solvers, math, primitive
-        testing::fixture           fixture; // Jacobi, CG, SpMV, exclusive_scan, etc
+        testing::fixture           fixture; // jacobi, CG, SpMV, exclusive_scan, etc
         std::string                group; // small, medium, large, etc
         std::string                filename; // bmwcra_1.mtx, shipsec1.mtx, etc
         testing::backend           backend; // CPU, GPU
-        testing::uplo              uplo; // Lower, Upper
+        testing::uplo              uplo; // lower, upper
         testing::preconditioner    precond_type;
         testing::cycle_type        cycle_type;
         testing::smoother_type     smoother_type;
@@ -62,23 +62,23 @@ namespace testing
             {
                 name += "_" + backend_to_string(this->backend);
             }
-            if(this->uplo != uplo::Lower)
+            if(this->uplo != uplo::lower)
             {
                 name += "_" + uplo_to_string(this->uplo);
             }
-            if(this->precond_type != preconditioner::None)
+            if(this->precond_type != preconditioner::none)
             {
                 name += "_" + preconditioner_to_string(this->precond_type);
             }
-            if(this->cycle_type != cycle_type::None)
+            if(this->cycle_type != cycle_type::none)
             {
                 name += "_" + cycle_type_to_string(this->cycle_type);
             }
-            if(this->smoother_type != smoother_type::None)
+            if(this->smoother_type != smoother_type::none)
             {
                 name += "_" + smoother_type_to_string(this->smoother_type);
             }
-            if(this->pivoting_strategy != pivoting_strategy::None)
+            if(this->pivoting_strategy != pivoting_strategy::none)
             {
                 name += "_" + pivoting_strategy_to_string(this->pivoting_strategy);
             }

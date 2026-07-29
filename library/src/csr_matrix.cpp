@@ -418,7 +418,7 @@ void csr_matrix::transpose(csr_matrix& T) const
         "linalg::csr_matrix::transpose", host_transpose_matrix, device_transpose_matrix, *this, T);
 }
 
-void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2)
+void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2, int max_k, double tol)
 {
     ROUTINE_TRACE("csr_matrix::apply_ruiz_scaling");
 
@@ -427,7 +427,22 @@ void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2)
                      device_ruiz_scaling,
                      D1,
                      *this,
-                     D2);
+                     D2,
+                     max_k,
+                     tol);
+}
+
+void csr_matrix::apply_symmetric_ruiz_scaling(vector<double>& D, int max_k, double tol)
+{
+    ROUTINE_TRACE("csr_matrix::apply_symmetric_ruiz_scaling");
+
+    backend_dispatch("linalg::csr_matrix::apply_symmetric_ruiz_scaling",
+                     host_symmetric_ruiz_scaling,
+                     device_symmetric_ruiz_scaling,
+                     D,
+                     *this,
+                     max_k,
+                     tol);
 }
 
 // Structure to hold triplet (COO) format data

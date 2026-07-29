@@ -1,6 +1,6 @@
 Tests:
   small:
-    precond: [None, Jacobi]
+    precond: [none, jacobi]
     matrix_file: ["matrices/SPD/crystm02/crystm02.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
     max_iters: [1000]

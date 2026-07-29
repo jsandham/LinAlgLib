@@ -88,10 +88,10 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     linalg::pivoting_strategy pivoting;
     switch(arg.pivoting_strategy)
     {
-    case testing::pivoting_strategy::None:
+    case testing::pivoting_strategy::none:
         pivoting = linalg::pivoting_strategy::none;
         break;
-    case testing::pivoting_strategy::Partial:
+    case testing::pivoting_strategy::partial:
         pivoting = linalg::pivoting_strategy::partial;
         break;
     }

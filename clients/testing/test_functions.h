@@ -52,6 +52,7 @@ namespace testing
 
     // csr matrix
     bool test_ruiz_scaling(Arguments arg);
+    bool test_symmetric_ruiz_scaling(Arguments arg);
     bool test_transpose(Arguments arg);
     bool test_transpose_dense(Arguments arg);
     bool test_multiply_by_vector(Arguments arg);

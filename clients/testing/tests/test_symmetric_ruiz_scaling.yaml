@@ -28,7 +28,7 @@ Tests:
                   "matrices/SPD/wathen120/wathen120.mtx"]
     max_iters: [30]
     tol: [1e-6]
-    backend: [CPU]
+    backend: [GPU]
 
   medium:
     matrix_file: ["matrices/SPD/olafu/olafu.mtx",
@@ -75,4 +75,4 @@ Tests:
                   "matrices/SPD/hood/hood.mtx"]
     max_iters: [30]
     tol: [1e-6]
-    backend: [CPU]
+    backend: [GPU]

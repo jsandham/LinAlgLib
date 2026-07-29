@@ -108,13 +108,13 @@ namespace linalg
     static void apply_smoother(const csr_matrix&     A,
                                vector<double>&       x,
                                const vector<double>& b,
-                               Smoother              smoother)
+                               smoother              smoother)
     {
         ROUTINE_TRACE("apply_smoother");
 
         switch(smoother)
         {
-        case Smoother::Jacobi:
+        case smoother::jacobi:
         {
             vector<double> xold(A.get_m());
             xold.copy_from(x);
@@ -122,16 +122,16 @@ namespace linalg
             jacobi_iteration(A, x, xold, b);
             break;
         }
-        case Smoother::Gauss_Seidel:
+        case smoother::gauss_seidel:
             gauss_seidel_iteration(A, x, b);
             break;
-        case Smoother::Symm_Gauss_Seidel:
+        case smoother::symmetric_gauss_seidel:
             gauss_seidel_iteration(A, x, b);
             break;
-        case Smoother::SOR:
+        case smoother::SOR:
             sor_iteration(A, x, b, 0.5f);
             break;
-        case Smoother::SSOR:
+        case smoother::SSOR:
             ssor_iteration(A, x, b, 0.5f);
             break;
         default:
@@ -145,7 +145,7 @@ namespace linalg
                        int                   n1,
                        int                   n2,
                        int                   currentLevel,
-                       Smoother              smoother)
+                       smoother              smoother)
     {
         ROUTINE_TRACE("vcycle");
 
@@ -271,7 +271,7 @@ namespace linalg
                        int                   n2,
                        int                   n3,
                        int                   currentLevel,
-                       Smoother              smoother)
+                       smoother              smoother)
     {
         ROUTINE_TRACE("wcycle");
 
@@ -394,7 +394,7 @@ namespace linalg
                        int                   n2,
                        int                   n3,
                        int                   currentLevel,
-                       Smoother              smoother)
+                       smoother              smoother)
     {
         ROUTINE_TRACE("fcycle");
 
@@ -516,8 +516,8 @@ int linalg::amg_solve(const hierarchy&      hierarchy,
                       const vector<double>& b,
                       int                   n1,
                       int                   n2,
-                      Cycle                 cycle,
-                      Smoother              smoother,
+                      cycle                 cycle,
+                      smoother              smoother,
                       iter_control          control)
 {
     ROUTINE_TRACE("amg_solve");
@@ -538,13 +538,13 @@ int linalg::amg_solve(const hierarchy&      hierarchy,
     {
         switch(cycle)
         {
-        case Cycle::Vcycle:
+        case cycle::vcycle:
             vcycle(hierarchy, x, b, n1, n2, 0, smoother);
             break;
-        case Cycle::Wcycle:
+        case cycle::wcycle:
             wcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
             break;
-        case Cycle::Fcycle:
+        case cycle::fcycle:
             fcycle(hierarchy, x, b, n1, n2, n3, 0, smoother);
             break;
         }

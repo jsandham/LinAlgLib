@@ -39,15 +39,15 @@ namespace testing
         math,
         primitive,
         csr_matrix,
-        Unknown
+        unknown
     };
 
     enum class fixture
     {
-        Jacobi,
-        GaussSeidel,
+        jacobi,
+        gauss_seidel,
         SOR,
-        SymmGaussSeidel,
+        symmetric_gauss_seidel,
         SSOR,
         CG,
         BICGSTAB,
@@ -70,7 +70,8 @@ namespace testing
         tridiagonal_solver,
         exclusive_scan,
         ruiz_scaling,
-        Unknown
+        symmetric_ruiz_scaling,
+        unknown
     };
 
     enum class backend
@@ -81,16 +82,16 @@ namespace testing
 
     enum class uplo
     {
-        Lower,
-        Upper
+        lower,
+        upper
     };
 
     enum class classical_solver
     {
-        Jacobi,
-        GaussSeidel,
+        jacobi,
+        gauss_seidel,
         SOR,
-        SymmGaussSeidel,
+        symmetric_gauss_seidel,
         SSOR
     };
 
@@ -110,38 +111,38 @@ namespace testing
 
     enum class preconditioner
     {
-        Jacobi,
-        GaussSeidel,
+        jacobi,
+        gauss_seidel,
         SOR,
-        SymmGaussSeidel,
+        symmetric_gauss_seidel,
         SSOR,
         ILU,
         IC,
-        None
+        none
     };
 
     enum class cycle_type
     {
-        Vcycle,
-        Wcycle,
-        Fcycle,
-        None
+        vcycle,
+        wcycle,
+        fcycle,
+        none
     };
 
     enum class smoother_type
     {
-        Jacobi,
-        Gauss_Seidel,
-        Symm_Gauss_Seidel,
+        jacobi,
+        gauss_seidel,
+        symmetric_gauss_seidel,
         SOR,
         SSOR,
-        None
+        none
     };
 
     enum class pivoting_strategy
     {
-        Partial,
-        None
+        partial,
+        none
     };
 
     inline std::string category_to_string(category category)
@@ -160,21 +161,21 @@ namespace testing
             return "csr_matrix";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string fixture_to_string(fixture fixture)
     {
         switch(fixture)
         {
-        case fixture::Jacobi:
-            return "Jacobi";
-        case fixture::GaussSeidel:
-            return "GaussSeidel";
+        case fixture::jacobi:
+            return "jacobi";
+        case fixture::gauss_seidel:
+            return "gauss_seidel";
         case fixture::SOR:
             return "SOR";
-        case fixture::SymmGaussSeidel:
-            return "SymmGaussSeidel";
+        case fixture::symmetric_gauss_seidel:
+            return "symmetric_gauss_seidel";
         case fixture::SSOR:
             return "SSOR";
         case fixture::CG:
@@ -219,9 +220,11 @@ namespace testing
             return "exclusive_scan";
         case fixture::ruiz_scaling:
             return "ruiz_scaling";
+        case fixture::symmetric_ruiz_scaling:
+            return "symmetric_ruiz_scaling";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string backend_to_string(backend backend)
@@ -234,39 +237,39 @@ namespace testing
             return "GPU";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string uplo_to_string(uplo uplo)
     {
         switch(uplo)
         {
-        case uplo::Lower:
-            return "Lower";
-        case uplo::Upper:
-            return "Upper";
+        case uplo::lower:
+            return "lower";
+        case uplo::upper:
+            return "upper";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string classical_solver_to_string(classical_solver solver)
     {
         switch(solver)
         {
-        case classical_solver::Jacobi:
-            return "Jacobi";
-        case classical_solver::GaussSeidel:
-            return "GaussSeidel";
+        case classical_solver::jacobi:
+            return "jacobi";
+        case classical_solver::gauss_seidel:
+            return "gauss_seidel";
         case classical_solver::SOR:
             return "SOR";
-        case classical_solver::SymmGaussSeidel:
-            return "SymmGaussSeidel";
+        case classical_solver::symmetric_gauss_seidel:
+            return "symmetric_gauss_seidel";
         case classical_solver::SSOR:
             return "SSOR";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string krylov_solver_to_string(krylov_solver solver)
@@ -281,7 +284,7 @@ namespace testing
             return "GMRES";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string amg_solver_to_string(AMG_solver solver)
@@ -296,83 +299,83 @@ namespace testing
             return "RSAMG";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string preconditioner_to_string(preconditioner precond)
     {
         switch(precond)
         {
-        case preconditioner::Jacobi:
-            return "Jacobi";
-        case preconditioner::GaussSeidel:
-            return "GaussSeidel";
+        case preconditioner::jacobi:
+            return "jacobi";
+        case preconditioner::gauss_seidel:
+            return "gauss_seidel";
         case preconditioner::SOR:
             return "SOR";
-        case preconditioner::SymmGaussSeidel:
-            return "SymmGaussSeidel";
+        case preconditioner::symmetric_gauss_seidel:
+            return "symmetric_gauss_seidel";
         case preconditioner::SSOR:
             return "SSOR";
         case preconditioner::ILU:
             return "ILU";
         case preconditioner::IC:
             return "IC";
-        case preconditioner::None:
-            return "None";
+        case preconditioner::none:
+            return "none";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string cycle_type_to_string(cycle_type cycle)
     {
         switch(cycle)
         {
-        case cycle_type::Vcycle:
-            return "Vcycle";
-        case cycle_type::Wcycle:
-            return "Wcycle";
-        case cycle_type::Fcycle:
-            return "Fcycle";
-        case cycle_type::None:
-            return "None";
+        case cycle_type::vcycle:
+            return "vcycle";
+        case cycle_type::wcycle:
+            return "wcycle";
+        case cycle_type::fcycle:
+            return "fcycle";
+        case cycle_type::none:
+            return "none";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string smoother_type_to_string(smoother_type smoother)
     {
         switch(smoother)
         {
-        case smoother_type::Jacobi:
-            return "Jacobi";
-        case smoother_type::Gauss_Seidel:
-            return "Gauss_Seidel";
-        case smoother_type::Symm_Gauss_Seidel:
-            return "Symm_Gauss_Seidel";
+        case smoother_type::jacobi:
+            return "jacobi";
+        case smoother_type::gauss_seidel:
+            return "gauss_seidel";
+        case smoother_type::symmetric_gauss_seidel:
+            return "symmetric_gauss_seidel";
         case smoother_type::SOR:
             return "SOR";
         case smoother_type::SSOR:
             return "SSOR";
-        case smoother_type::None:
-            return "None";
+        case smoother_type::none:
+            return "none";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 
     inline std::string pivoting_strategy_to_string(pivoting_strategy strategy)
     {
         switch(strategy)
         {
-        case pivoting_strategy::Partial:
-            return "Partial";
-        case pivoting_strategy::None:
-            return "None";
+        case pivoting_strategy::partial:
+            return "partial";
+        case pivoting_strategy::none:
+            return "none";
         }
 
-        return "Invalid";
+        return "invalid";
     }
 }
 

@@ -41,14 +41,14 @@ namespace testing
     {
         switch(arg.fixture)
         {
-        case fixture::Jacobi:
-            return test_classical(classical_solver::Jacobi, arg);
-        case fixture::GaussSeidel:
-            return test_classical(classical_solver::GaussSeidel, arg);
+        case fixture::jacobi:
+            return test_classical(classical_solver::jacobi, arg);
+        case fixture::gauss_seidel:
+            return test_classical(classical_solver::gauss_seidel, arg);
         case fixture::SOR:
             return test_classical(classical_solver::SOR, arg);
-        case fixture::SymmGaussSeidel:
-            return test_classical(classical_solver::SymmGaussSeidel, arg);
+        case fixture::symmetric_gauss_seidel:
+            return test_classical(classical_solver::symmetric_gauss_seidel, arg);
         case fixture::SSOR:
             return test_classical(classical_solver::SSOR, arg);
         case fixture::CG:
@@ -129,6 +129,8 @@ namespace testing
             return test_transpose_dense(arg);
         case fixture::ruiz_scaling:
             return test_ruiz_scaling(arg);
+        case fixture::symmetric_ruiz_scaling:
+            return test_symmetric_ruiz_scaling(arg);
         }
         return false;
     }

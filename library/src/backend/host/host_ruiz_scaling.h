@@ -32,7 +32,10 @@
 
 namespace linalg
 {
-    void host_ruiz_scaling(vector<double>& D1, csr_matrix& A, vector<double>& D2);
+    void host_ruiz_scaling(
+        vector<double>& D1, csr_matrix& A, vector<double>& D2, int max_k, double tol);
+
+    void host_symmetric_ruiz_scaling(vector<double>& D, csr_matrix& A, int max_k, double tol);
 }
 
 #endif // HOST_APPLY_RUIZ_SCALING_H

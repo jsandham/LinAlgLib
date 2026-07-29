@@ -35,13 +35,35 @@
 #include "cuda/cuda_ruiz_scaling.h"
 #endif
 
-void linalg::device_ruiz_scaling(vector<double>& D1, csr_matrix& A, vector<double>& D2)
+void linalg::device_ruiz_scaling(
+    vector<double>& D1, csr_matrix& A, vector<double>& D2, int max_k, double tol)
 {
     ROUTINE_TRACE("linalg::device_ruiz_scaling");
     if constexpr(is_cuda_available())
     {
-        CALL_CUDA(cuda_ruiz_scaling(
-            D1.get_vec(), A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), D2.get_vec()));
+        CALL_CUDA(cuda_ruiz_scaling(D1.get_vec(),
+                                    A.get_row_ptr(),
+                                    A.get_col_ind(),
+                                    A.get_val(),
+                                    A.get_m(),
+                                    D2.get_vec(),
+                                    max_k,
+                                    tol));
+    }
+    else
+    {
+        std::cout << "Error: Not device backend available for the function " << __func__
+                  << std::endl;
+    }
+}
+
+void linalg::device_symmetric_ruiz_scaling(vector<double>& D, csr_matrix& A, int max_k, double tol)
+{
+    ROUTINE_TRACE("linalg::device_symmetric_ruiz_scaling");
+    if constexpr(is_cuda_available())
+    {
+        CALL_CUDA(cuda_symmetric_ruiz_scaling(
+            D.get_vec(), A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), max_k, tol));
     }
     else
     {
