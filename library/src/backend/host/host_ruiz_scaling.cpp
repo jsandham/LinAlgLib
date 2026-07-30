@@ -26,7 +26,9 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cmath>
 #include <iostream>
+#include <limits>
 
 #include "host_ruiz_scaling.h"
 
