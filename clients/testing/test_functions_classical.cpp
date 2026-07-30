@@ -68,16 +68,16 @@ bool testing::test_classical(classical_solver solver_type, Arguments arg)
 
     switch(solver_type)
     {
-    case classical_solver::Jacobi:
+    case classical_solver::jacobi:
         jac.build(mat_A);
         break;
-    case classical_solver::GaussSeidel:
+    case classical_solver::gauss_seidel:
         gs.build(mat_A);
         break;
     case classical_solver::SOR:
         sor.build(mat_A);
         break;
-    case classical_solver::SymmGaussSeidel:
+    case classical_solver::symmetric_gauss_seidel:
         sgs.build(mat_A);
         break;
     case classical_solver::SSOR:
@@ -91,16 +91,16 @@ bool testing::test_classical(classical_solver solver_type, Arguments arg)
 
     switch(solver_type)
     {
-    case classical_solver::Jacobi:
+    case classical_solver::jacobi:
         iter = jac.solve(mat_A, vec_x, vec_b, control);
         break;
-    case classical_solver::GaussSeidel:
+    case classical_solver::gauss_seidel:
         iter = gs.solve(mat_A, vec_x, vec_b, control);
         break;
     case classical_solver::SOR:
         iter = sor.solve(mat_A, vec_x, vec_b, control, 0.666667);
         break;
-    case classical_solver::SymmGaussSeidel:
+    case classical_solver::symmetric_gauss_seidel:
         iter = sgs.solve(mat_A, vec_x, vec_b, control);
         break;
     case classical_solver::SSOR:

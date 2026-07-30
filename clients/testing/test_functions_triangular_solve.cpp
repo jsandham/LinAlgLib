@@ -50,10 +50,10 @@ bool testing::test_triangular_solve(Arguments arg)
 
     switch(arg.uplo)
     {
-    case testing::uplo::Lower:
+    case testing::uplo::lower:
         mat_B.copy_lower_triangular_from(mat_A, true);
         break;
-    case testing::uplo::Upper:
+    case testing::uplo::upper:
         mat_B.copy_upper_triangular_from(mat_A, true);
         break;
     }
@@ -82,10 +82,10 @@ bool testing::test_triangular_solve(Arguments arg)
     {
         switch(arg.uplo)
         {
-        case testing::uplo::Lower:
+        case testing::uplo::lower:
             mat_B.triangular_solve_lower(vec_x, vec_y, false);
             break;
-        case testing::uplo::Upper:
+        case testing::uplo::upper:
             mat_B.triangular_solve_upper(vec_x, vec_y, false);
             break;
         }
@@ -98,10 +98,10 @@ bool testing::test_triangular_solve(Arguments arg)
     {
         switch(arg.uplo)
         {
-        case testing::uplo::Lower:
+        case testing::uplo::lower:
             mat_B.triangular_solve_lower(vec_x, vec_y, false);
             break;
-        case testing::uplo::Upper:
+        case testing::uplo::upper:
             mat_B.triangular_solve_upper(vec_x, vec_y, false);
             break;
         }

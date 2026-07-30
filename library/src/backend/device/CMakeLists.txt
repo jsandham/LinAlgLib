@@ -34,6 +34,7 @@ target_sources(linalglib
     device_matrix_vector.cpp
     device_extract.cpp
     device_scale.cpp
+    device_ruiz_scaling.cpp
     device_ssor.cpp
     device_csr2csc.cpp
     device_csrtrsv.cpp

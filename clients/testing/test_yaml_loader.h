@@ -83,11 +83,11 @@ namespace YAML
             Node node;
             switch(rhs)
             {
-            case testing::uplo::Lower:
-                node = "Lower";
+            case testing::uplo::lower:
+                node = "lower";
                 break;
-            case testing::uplo::Upper:
-                node = "Upper";
+            case testing::uplo::upper:
+                node = "upper";
                 break;
             }
 
@@ -97,13 +97,13 @@ namespace YAML
         static bool decode(const Node& node, testing::uplo& rhs)
         {
             std::string type = node.as<std::string>();
-            if(type == "Lower")
+            if(type == "lower")
             {
-                rhs = testing::uplo::Lower;
+                rhs = testing::uplo::lower;
             }
-            else if(type == "Upper")
+            else if(type == "upper")
             {
-                rhs = testing::uplo::Upper;
+                rhs = testing::uplo::upper;
             }
 
             return true;
@@ -118,17 +118,17 @@ namespace YAML
             Node node;
             switch(rhs)
             {
-            case testing::preconditioner::Jacobi:
-                node = "Jacobi";
+            case testing::preconditioner::jacobi:
+                node = "jacobi";
                 break;
-            case testing::preconditioner::GaussSeidel:
-                node = "GaussSeidel";
+            case testing::preconditioner::gauss_seidel:
+                node = "gauss_seidel";
                 break;
             case testing::preconditioner::SOR:
                 node = "SOR";
                 break;
-            case testing::preconditioner::SymmGaussSeidel:
-                node = "SymmGaussSeidel";
+            case testing::preconditioner::symmetric_gauss_seidel:
+                node = "symmetric_gauss_seidel";
                 break;
             case testing::preconditioner::IC:
                 node = "IC";
@@ -136,8 +136,8 @@ namespace YAML
             case testing::preconditioner::ILU:
                 node = "ILU";
                 break;
-            case testing::preconditioner::None:
-                node = "None";
+            case testing::preconditioner::none:
+                node = "none";
                 break;
             }
 
@@ -147,21 +147,21 @@ namespace YAML
         static bool decode(const Node& node, testing::preconditioner& rhs)
         {
             std::string type = node.as<std::string>();
-            if(type == "Jacobi")
+            if(type == "jacobi")
             {
-                rhs = testing::preconditioner::Jacobi;
+                rhs = testing::preconditioner::jacobi;
             }
-            if(type == "GaussSeidel")
+            if(type == "gauss_seidel")
             {
-                rhs = testing::preconditioner::GaussSeidel;
+                rhs = testing::preconditioner::gauss_seidel;
             }
             if(type == "SOR")
             {
                 rhs = testing::preconditioner::SOR;
             }
-            if(type == "SymmGaussSeidel")
+            if(type == "symmetric_gauss_seidel")
             {
-                rhs = testing::preconditioner::SymmGaussSeidel;
+                rhs = testing::preconditioner::symmetric_gauss_seidel;
             }
             if(type == "SSOR")
             {
@@ -175,9 +175,9 @@ namespace YAML
             {
                 rhs = testing::preconditioner::ILU;
             }
-            else if(type == "None")
+            else if(type == "none")
             {
-                rhs = testing::preconditioner::None;
+                rhs = testing::preconditioner::none;
             }
 
             return true;
@@ -192,14 +192,14 @@ namespace YAML
             Node node;
             switch(rhs)
             {
-            case testing::cycle_type::Fcycle:
-                node = "Fcycle";
+            case testing::cycle_type::fcycle:
+                node = "fcycle";
                 break;
-            case testing::cycle_type::Vcycle:
-                node = "Vcycle";
+            case testing::cycle_type::vcycle:
+                node = "vcycle";
                 break;
-            case testing::cycle_type::Wcycle:
-                node = "Wcycle";
+            case testing::cycle_type::wcycle:
+                node = "wcycle";
                 break;
             }
 
@@ -209,17 +209,17 @@ namespace YAML
         static bool decode(const Node& node, testing::cycle_type& rhs)
         {
             std::string type = node.as<std::string>();
-            if(type == "Fcycle")
+            if(type == "fcycle")
             {
-                rhs = testing::cycle_type::Fcycle;
+                rhs = testing::cycle_type::fcycle;
             }
-            else if(type == "Vcycle")
+            else if(type == "vcycle")
             {
-                rhs = testing::cycle_type::Vcycle;
+                rhs = testing::cycle_type::vcycle;
             }
-            else if(type == "Wcycle")
+            else if(type == "wcycle")
             {
-                rhs = testing::cycle_type::Wcycle;
+                rhs = testing::cycle_type::wcycle;
             }
 
             return true;
@@ -234,14 +234,14 @@ namespace YAML
             Node node;
             switch(rhs)
             {
-            case testing::smoother_type::Jacobi:
-                node = "Jacobi";
+            case testing::smoother_type::jacobi:
+                node = "jacobi";
                 break;
-            case testing::smoother_type::Gauss_Seidel:
-                node = "Gauss_Seidel";
+            case testing::smoother_type::gauss_seidel:
+                node = "gauss_seidel";
                 break;
-            case testing::smoother_type::Symm_Gauss_Seidel:
-                node = "Symm_Gauss_Seidel";
+            case testing::smoother_type::symmetric_gauss_seidel:
+                node = "symmetric_gauss_seidel";
                 break;
             case testing::smoother_type::SOR:
                 node = "SOR";
@@ -257,17 +257,17 @@ namespace YAML
         static bool decode(const Node& node, testing::smoother_type& rhs)
         {
             std::string type = node.as<std::string>();
-            if(type == "Jacobi")
+            if(type == "jacobi")
             {
-                rhs = testing::smoother_type::Jacobi;
+                rhs = testing::smoother_type::jacobi;
             }
-            else if(type == "Gauss_Seidel")
+            else if(type == "gauss_seidel")
             {
-                rhs = testing::smoother_type::Gauss_Seidel;
+                rhs = testing::smoother_type::gauss_seidel;
             }
-            else if(type == "Symm_Gauss_Seidel")
+            else if(type == "symmetric_gauss_seidel")
             {
-                rhs = testing::smoother_type::Symm_Gauss_Seidel;
+                rhs = testing::smoother_type::symmetric_gauss_seidel;
             }
             else if(type == "SOR")
             {
@@ -290,11 +290,11 @@ namespace YAML
             Node node;
             switch(rhs)
             {
-            case testing::pivoting_strategy::Partial:
-                node = "Partial";
+            case testing::pivoting_strategy::partial:
+                node = "partial";
                 break;
-            case testing::pivoting_strategy::None:
-                node = "None";
+            case testing::pivoting_strategy::none:
+                node = "none";
                 break;
             }
 
@@ -304,13 +304,13 @@ namespace YAML
         static bool decode(const Node& node, testing::pivoting_strategy& rhs)
         {
             std::string type = node.as<std::string>();
-            if(type == "Partial")
+            if(type == "partial")
             {
-                rhs = testing::pivoting_strategy::Partial;
+                rhs = testing::pivoting_strategy::partial;
             }
-            else if(type == "None")
+            else if(type == "none")
             {
-                rhs = testing::pivoting_strategy::None;
+                rhs = testing::pivoting_strategy::none;
             }
 
             return true;
@@ -373,17 +373,17 @@ inline testing::category string_to_category(const std::string& str)
         return it->second;
     }
 
-    return testing::category::Unknown;
+    return testing::category::unknown;
 }
 
 inline testing::fixture string_to_fixture(const std::string& str)
 {
     // Static map for efficiency. It's initialized only once.
     static const std::unordered_map<std::string, testing::fixture> fixture_map
-        = {{"Jacobi", testing::fixture::Jacobi},
-           {"GaussSeidel", testing::fixture::GaussSeidel},
+        = {{"jacobi", testing::fixture::jacobi},
+           {"gauss_seidel", testing::fixture::gauss_seidel},
            {"SOR", testing::fixture::SOR},
-           {"SymmGaussSeidel", testing::fixture::SymmGaussSeidel},
+           {"symmetric_gauss_seidel", testing::fixture::symmetric_gauss_seidel},
            {"SSOR", testing::fixture::SSOR},
            {"CG", testing::fixture::CG},
            {"BICGSTAB", testing::fixture::BICGSTAB},
@@ -404,8 +404,10 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"transpose_dense", testing::fixture::transpose_dense},
            {"CSRIC0", testing::fixture::CSRIC0},
            {"CSRILU0", testing::fixture::CSRILU0},
-           {"TridiagonalSolver", testing::fixture::TridiagonalSolver},
-           {"ExclusiveScan", testing::fixture::ExclusiveScan}};
+           {"tridiagonal_solver", testing::fixture::tridiagonal_solver},
+           {"ruiz_scaling", testing::fixture::ruiz_scaling},
+           {"symmetric_ruiz_scaling", testing::fixture::symmetric_ruiz_scaling},
+           {"exclusive_scan", testing::fixture::exclusive_scan}};
 
     // Find the string in the map
     auto it = fixture_map.find(str);
@@ -416,7 +418,7 @@ inline testing::fixture string_to_fixture(const std::string& str)
         return it->second;
     }
 
-    return testing::fixture::Unknown;
+    return testing::fixture::unknown;
 }
 
 // Helper struct to hold all parameter vectors
@@ -497,12 +499,12 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         TestParameters params;
         params.matrices       = read_group_values("matrix_file", std::string(""));
         params.backends       = read_group_values("backend", testing::backend::CPU);
-        params.uplos          = read_group_values("uplo", testing::uplo::Lower);
-        params.precond_types  = read_group_values("precond", testing::preconditioner::None);
-        params.cycle_types    = read_group_values("cycle", testing::cycle_type::None);
-        params.smoother_types = read_group_values("smoother", testing::smoother_type::None);
+        params.uplos          = read_group_values("uplo", testing::uplo::lower);
+        params.precond_types  = read_group_values("precond", testing::preconditioner::none);
+        params.cycle_types    = read_group_values("cycle", testing::cycle_type::none);
+        params.smoother_types = read_group_values("smoother", testing::smoother_type::none);
         params.pivoting_strategies
-            = read_group_values("pivoting_strategy", testing::pivoting_strategy::None);
+            = read_group_values("pivoting_strategy", testing::pivoting_strategy::none);
         params.presmoothings  = read_group_values("presmoothing", -1);
         params.postsmoothings = read_group_values("postsmoothing", -1);
         params.max_iters      = read_group_values("max_iters", -1);

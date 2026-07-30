@@ -92,6 +92,8 @@ target_sources(test_main
     test_functions_spgeam.cpp
     test_functions_transpose.cpp
     test_functions_transpose_dense.cpp
+    test_functions_ruiz_scaling.cpp
+    test_functions_symmetric_ruiz_scaling.cpp
     test_functions_csric0.cpp
     test_functions_csrilu0.cpp
     test_functions_tridiagonal_solver.cpp

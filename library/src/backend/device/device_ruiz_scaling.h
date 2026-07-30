@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025-2026 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -23,7 +23,18 @@
 // SOFTWARE.
 //
 //********************************************************************************
+#ifndef DEVICE_RUIZ_SCALING_H
+#define DEVICE_RUIZ_SCALING_H
 
-#include "../test.h"
+#include "csr_matrix.h"
+#include "vector.h"
 
-INSTANTIATE_TEST(primitive, exclusive_scan, exclusive_scan, "tests/test_exclusive_scan.yaml");
+namespace linalg
+{
+    void device_ruiz_scaling(
+        vector<double>& D1, csr_matrix& A, vector<double>& D2, int max_k, double tol);
+
+    void device_symmetric_ruiz_scaling(vector<double>& D, csr_matrix& A, int max_k, double tol);
+}
+
+#endif

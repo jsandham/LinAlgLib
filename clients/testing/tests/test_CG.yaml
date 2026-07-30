@@ -1,6 +1,6 @@
 Tests:
   small1:
-    precond: [None, Jacobi, SOR]
+    precond: [none, jacobi, SOR]
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",
@@ -17,7 +17,7 @@ Tests:
     backend: [CPU, GPU]
 
   small2:
-    precond: [Jacobi]
+    precond: [jacobi]
     matrix_file: ["matrices/SPD/nos6/nos6.mtx",
                   "matrices/SPD/bodyy6/bodyy6.mtx",
                   "matrices/SPD/cvxbqp1/cvxbqp1.mtx",
@@ -29,7 +29,7 @@ Tests:
     backend: [CPU, GPU]
 
   small3:
-    precond: [SymmGaussSeidel, SSOR]
+    precond: [symmetric_gauss_seidel, SSOR]
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",
@@ -47,7 +47,7 @@ Tests:
     backend: [CPU, GPU]
 
   medium1:
-    precond: [Jacobi]
+    precond: [jacobi]
     matrix_file: ["matrices/SPD/Dubcova2/Dubcova2.mtx",
                   "matrices/SPD/denormal/denormal.mtx",
                   "matrices/SPD/raefsky4/raefsky4.mtx",
@@ -61,7 +61,7 @@ Tests:
     backend: [CPU, GPU]
 
   medium2:
-    precond: [Jacobi]
+    precond: [jacobi]
     matrix_file: ["matrices/SPD/2cubes_sphere/2cubes_sphere.mtx",
                   "matrices/SPD/parabolic_fem/parabolic_fem.mtx",
                   "matrices/SPD/offshore/offshore.mtx"]
@@ -69,7 +69,7 @@ Tests:
     backend: [CPU, GPU]
 
   medium3:
-    precond: [SymmGaussSeidel, SSOR]
+    precond: [symmetric_gauss_seidel, SSOR]
     matrix_file: ["matrices/SPD/denormal/denormal.mtx",
                   "matrices/SPD/raefsky4/raefsky4.mtx",
                   "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
@@ -80,14 +80,14 @@ Tests:
     backend: [CPU, GPU]
 
   large1:
-    precond: [Jacobi]
+    precond: [jacobi]
     matrix_file: ["matrices/SPD/crankseg_1/crankseg_1.mtx",
                   "matrices/SPD/crankseg_2/crankseg_2.mtx"]
     max_iters: [300]
     backend: [CPU, GPU]
 
   slow2:
-      precond: [Jacobi]
+      precond: [jacobi]
       matrix_file: ["matrices/SPD/nos1/nos1.mtx",
                     "matrices/SPD/Kuu/Kuu.mtx",
                     "matrices/SPD/s1rmq4m1/s1rmq4m1.mtx",

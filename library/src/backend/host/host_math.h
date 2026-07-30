@@ -38,6 +38,7 @@
 #include "host_csrtrsv.h"
 #include "host_extract.h"
 #include "host_matrix_vector.h"
+#include "host_ruiz_scaling.h"
 #include "host_scale.h"
 #include "host_ssor.h"
 #include "host_tridiagonal.h"

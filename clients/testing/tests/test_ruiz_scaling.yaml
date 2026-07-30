@@ -12,12 +12,23 @@ Tests:
                   "matrices/SPD/bodyy4/bodyy4.mtx",
                   "matrices/SPD/shallow_water1/shallow_water1.mtx",
                   "matrices/SPD/shallow_water2/shallow_water2.mtx",
+                  "matrices/SPD/gyro_m/gyro_m.mtx",
+                  "matrices/SPD/crystm02/crystm02.mtx",
+                  "matrices/SPD/crystm03/crystm03.mtx",
                   "matrices/SPD/finan512/finan512.mtx",
                   "matrices/SPD/thermomech_TC/thermomech_TC.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx",
-                  "matrices/SPD/bundle1/bundle1.mtx"]
-    uplo: [lower, upper]
-    backend: [CPU, GPU]
+                  "matrices/SPD/bundle1/bundle1.mtx",
+                  "matrices/SPD/nos6/nos6.mtx",
+                  "matrices/SPD/bodyy6/bodyy6.mtx",
+                  "matrices/SPD/cvxbqp1/cvxbqp1.mtx",
+                  "matrices/SPD/bcsstk38/bcsstk38.mtx",
+                  "matrices/SPD/wathen100/wathen100.mtx",
+                  "matrices/SPD/apache1/apache1.mtx",
+                  "matrices/SPD/wathen120/wathen120.mtx"]
+    max_iters: [30]
+    tol: [1e-6]
+    backend: [CPU]
 
   medium:
     matrix_file: ["matrices/SPD/olafu/olafu.mtx",
@@ -27,7 +38,9 @@ Tests:
                   "matrices/SPD/bcsstk36/bcsstk36.mtx",
                   "matrices/SPD/msc10848/msc10848.mtx",
                   "matrices/SPD/raefsky4/raefsky4.mtx",
+                  "matrices/SPD/thermomech_dM/thermomech_dM.mtx",
                   "matrices/SPD/2cubes_sphere/2cubes_sphere.mtx",
+                  "matrices/SPD/qa8fm/qa8fm.mtx",
                   "matrices/SPD/denormal/denormal.mtx",
                   "matrices/SPD/cfd1/cfd1.mtx",
                   "matrices/SPD/oilpan/oilpan.mtx",
@@ -57,7 +70,9 @@ Tests:
                   "matrices/SPD/bmw7st_1/bmw7st_1.mtx",
                   "matrices/SPD/G3_circuit/G3_circuit.mtx",
                   "matrices/SPD/thermal2/thermal2.mtx",
+                  "matrices/SPD/x104/x104.mtx",
                   "matrices/SPD/m_t1/m_t1.mtx",
                   "matrices/SPD/hood/hood.mtx"]
-    uplo: [lower, upper]
-    backend: [CPU, GPU]
+    max_iters: [30]
+    tol: [1e-6]
+    backend: [CPU]

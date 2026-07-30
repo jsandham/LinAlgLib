@@ -74,16 +74,16 @@ bool testing::test_krylov(krylov_solver solver_type, Arguments arg)
     linalg::preconditioner* p = nullptr;
     switch(arg.precond_type)
     {
-    case testing::preconditioner::Jacobi:
+    case testing::preconditioner::jacobi:
         p = new linalg::jacobi_precond;
         break;
-    case testing::preconditioner::GaussSeidel:
+    case testing::preconditioner::gauss_seidel:
         p = new linalg::gauss_seidel_precond;
         break;
     case testing::preconditioner::SOR:
         p = new linalg::SOR_precond(0.3);
         break;
-    case testing::preconditioner::SymmGaussSeidel:
+    case testing::preconditioner::symmetric_gauss_seidel:
         p = new linalg::symmetric_gauss_seidel_precond;
         break;
     case testing::preconditioner::SSOR:

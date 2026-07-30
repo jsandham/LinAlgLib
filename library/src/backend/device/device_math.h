@@ -38,6 +38,7 @@
 #include "device_csrtrsv.h"
 #include "device_extract.h"
 #include "device_matrix_vector.h"
+#include "device_ruiz_scaling.h"
 #include "device_scale.h"
 #include "device_ssor.h"
 #include "device_tridiagonal.h"

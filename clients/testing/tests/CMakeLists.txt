@@ -49,4 +49,6 @@ target_sources(test_main
     test_transpose_dense.cpp
     test_tridiagonal_solver.cpp
     test_exclusive_scan.cpp
+    test_ruiz_scaling.cpp
+    test_symmetric_ruiz_scaling.cpp
 )

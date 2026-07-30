@@ -152,7 +152,7 @@ namespace linalg
  * at various levels of the multigrid hierarchy. This enumeration defines the
  * commonly used cycle types.
  */
-    enum class Cycle
+    enum class cycle
     {
         /*! \brief V-cycle.
     *
@@ -162,7 +162,7 @@ namespace linalg
     * back to the finer level followed by another smoothing step. The process resembles
     * the shape of the letter "V".
     */
-        Vcycle,
+        vcycle,
 
         /*! \brief W-cycle.
     *
@@ -172,7 +172,7 @@ namespace linalg
     * can be more effective at reducing low-frequency errors but is also more computationally
     * expensive. The process resembles the shape of the letter "W".
     */
-        Wcycle,
+        wcycle,
 
         /*! \brief F-cycle (or Full Multigrid cycle).
     *
@@ -183,7 +183,7 @@ namespace linalg
     * and often leads to faster convergence overall. The process resembles the shape
     * of the letter "F" if visualized across multiple levels.
     */
-        Fcycle
+        fcycle
     };
 
     /*! \ingroup iterative_solvers_amg
@@ -196,7 +196,7 @@ namespace linalg
  * smoother can significantly impact the convergence rate and efficiency of the
  * amg method.
  */
-    enum class Smoother
+    enum class smoother
     {
         /*! \brief Jacobi smoother.
     *
@@ -204,7 +204,7 @@ namespace linalg
     * based on the values of all other unknowns from the previous iteration. It is
     * easy to parallelize but often converges slowly.
     */
-        Jacobi,
+        jacobi,
 
         /*! \brief Gauss-Seidel smoother.
     *
@@ -213,7 +213,7 @@ namespace linalg
     * iteration. This sequential dependency can lead to faster convergence than Jacobi
     * in many cases.
     */
-        Gauss_Seidel,
+        gauss_seidel,
 
         /*! \brief Symmetric Gauss-Seidel (SGS) smoother.
     *
@@ -222,7 +222,7 @@ namespace linalg
     * application can improve the smoothing properties, particularly for symmetric
     * positive definite systems.
     */
-        Symm_Gauss_Seidel,
+        symmetric_gauss_seidel,
 
         /*! \brief Successive Over-Relaxation (SOR) smoother.
     *
@@ -277,12 +277,12 @@ namespace linalg
  * high-frequency errors.
  *
  * The `Cycle` enumeration defines how the coarse-grid problem (step 2c) is handled recursively:
- * - \b V-Cycle (`Cycle::Vcycle`): The coarse-grid problem is solved by recursively applying
+ * - \b V-Cycle (`cycle::vcycle`): The coarse-grid problem is solved by recursively applying
  * a single amg V-cycle. This is the simplest and most common cycle type.
- * - \b W-Cycle (`Cycle::Wcycle`): The coarse-grid problem is solved by recursively applying
+ * - \b W-Cycle (`cycle::wcycle`): The coarse-grid problem is solved by recursively applying
  * *more than one* V-cycle (typically two) on the coarser level before interpolating back.
  * This can lead to more thorough error reduction at the cost of increased computation per cycle.
- * - \b F-Cycle (`Cycle::Fcycle`): The F-cycle starts by recursively solving the problem on the
+ * - \b F-Cycle (`cycle::fcycle`): The F-cycle starts by recursively solving the problem on the
  * coarsest level, then interpolates the solution to the next finer level and performs
  * one or more V-cycles. This process is repeated, gradually moving to finer levels.
  * It's often used to provide a good initial guess and can lead to faster overall convergence.
@@ -296,9 +296,9 @@ namespace linalg
  * \param b The right-hand side vector of the linear system.
  * \param n1 The number of pre-smoothing iterations to perform at each level.
  * \param n2 The number of post-smoothing iterations to perform at each level.
- * \param cycle An enumeration value (`Cycle::Vcycle`, `Cycle::Wcycle`, or `Cycle::Fcycle`)
+ * \param cycle An enumeration value (`cycle::vcycle`, `cycle::wcycle`, or `cycle::fcycle`)
  * specifying the type of multigrid cycle to be performed.
- * \param smoother An enumeration value (`Smoother::Jacobi`, `Smoother::Gauss_Seidel`, `Smoother::Symm_Gauss_Seidel`, `Smoother::SOR`, `Smoother::SSOR`)
+ * \param smoother An enumeration value (`smoother::jacobi`, `smoother::gauss_seidel`, `smoother::symmetric_gauss_seidel`, `smoother::SOR`, `smoother::SSOR`)
  * specifying the type of stationary iterative method to be used as a smoother at each level.
  * \param control An `iter_control` object that manages the overall iterative process,
  * including convergence tolerance (`rel_tol`, `abs_tol`) and maximum number of cycles (`max_cycle`).
@@ -310,8 +310,8 @@ namespace linalg
  *
  * \section amg_example Example Usage
  * Below is a simplified example demonstrating how to use the `amg_solve` function.
- * This assumes `csr_matrix`, `vector`, `hierarchy`, `iter_control`, `Cycle` enum,
- * and `Smoother` enum are properly defined and functional.
+ * This assumes `csr_matrix`, `vector`, `hierarchy`, `iter_control`, `cycle` enum,
+ * and `smoother` enum are properly defined and functional.
  *
  * \code
  * #include "linalglib.h"
@@ -379,8 +379,8 @@ namespace linalg
  * // 3. Set amg parameters
  * int n1 = 2; // Number of pre-smoothing iterations
  * int n2 = 2; // Number of post-smoothing iterations
- * Cycle cycle_type = Cycle::Vcycle; // Use V-cycle
- * Smoother smoother_type = Smoother::Jacobi; // Use Jacobi smoother
+ * cycle cycle_type = cycle::vcycle; // Use V-cycle
+ * smoother smoother_type = smoother::jacobi; // Use Jacobi smoother
  *
  * // 4. Set up iteration control
  * iter_control control;
@@ -413,8 +413,8 @@ namespace linalg
                                 const vector<double>& b,
                                 int                   n1,
                                 int                   n2,
-                                Cycle                 cycle,
-                                Smoother              smoother,
+                                cycle                 cycle,
+                                smoother              smoother,
                                 iter_control          control);
 }
 
