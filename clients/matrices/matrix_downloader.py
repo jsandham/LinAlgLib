@@ -143,7 +143,7 @@ MATRICES_BY_CATEGORY = {
 
 
 def download_matrices_for_category(category):
-    normalized_category = category.lower().replace("_", "-")
+    normalized_category = category.lower().replace("-", "_")
     if normalized_category not in MATRICES_BY_CATEGORY:
         raise ValueError(
             "Unknown category '{}'. Expected one of: {}".format(
