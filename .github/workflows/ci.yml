@@ -50,16 +50,10 @@ jobs:
       - name: Download quick_ci matrices (Linux)
         if: runner.os == 'Linux'
         run: |
-          if command -v python3 >/dev/null 2>&1; then
-            PYTHON_BIN=python3
-          elif command -v python >/dev/null 2>&1; then
-            PYTHON_BIN=python
-          else
-            echo "Python interpreter not found" >&2
-            exit 1
-          fi
+          sudo apt-get update
+          sudo apt-get install -y python3
           cd clients/matrices
-          "$PYTHON_BIN" matrix_downloader.py quick_ci
+          python3 matrix_downloader.py quick_ci
 
       - name: Download quick_ci matrices (Windows)
         if: runner.os == 'Windows'
@@ -123,16 +117,17 @@ jobs:
 
       - name: Download quick_ci matrices
         run: |
-          if command -v python3 >/dev/null 2>&1; then
-            PYTHON_BIN=python3
-          elif command -v python >/dev/null 2>&1; then
-            PYTHON_BIN=python
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y python3
+          elif command -v yum >/dev/null 2>&1; then
+            sudo yum -y install python3
           else
-            echo "Python interpreter not found" >&2
+            echo "Package manager not found for Python installation" >&2
             exit 1
           fi
           cd clients/matrices
-          "$PYTHON_BIN" matrix_downloader.py quick_ci
+          python3 matrix_downloader.py quick_ci
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -184,16 +179,17 @@ jobs:
 
       - name: Download quick_ci matrices
         run: |
-          if command -v python3 >/dev/null 2>&1; then
-            PYTHON_BIN=python3
-          elif command -v python >/dev/null 2>&1; then
-            PYTHON_BIN=python
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y python3
+          elif command -v yum >/dev/null 2>&1; then
+            sudo yum -y install python3
           else
-            echo "Python interpreter not found" >&2
+            echo "Package manager not found for Python installation" >&2
             exit 1
           fi
           cd clients/matrices
-          "$PYTHON_BIN" matrix_downloader.py quick_ci
+          python3 matrix_downloader.py quick_ci
 
       - name: Configure coverage build
         run: |

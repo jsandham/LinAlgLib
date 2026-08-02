@@ -1,4 +1,21 @@
 Tests:
+  quick_ci:
+    precond: [none, jacobi, SOR]
+    matrix_file: ["matrices/SPD/nos7/nos7.mtx"]
+    max_iters: [400]
+    backend: [CPU]
+
+  quick_ci_2:
+    precond: [jacobi]
+    matrix_file: ["matrices/SPD/nos1/nos1.mtx",
+                  "matrices/SPD/nos2/nos2.mtx",
+                  "matrices/SPD/nos3/nos3.mtx",
+                  "matrices/SPD/nos4/nos4.mtx",
+                  "matrices/SPD/nos5/nos5.mtx",
+                  "matrices/SPD/nos6/nos6.mtx"]
+    max_iters: [1500]
+    backend: [CPU]
+
   small1:
     precond: [none, jacobi, SOR]
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
