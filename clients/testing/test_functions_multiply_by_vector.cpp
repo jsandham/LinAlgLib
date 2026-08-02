@@ -89,13 +89,27 @@ bool testing::test_multiply_by_vector(Arguments arg)
     // Inline host solution
     linalg::vector<double> host_y(mat_A.get_m());
     host_y.zeros();
+
+    int max_nnz_per_row = 0;
     for(int i = 0; i < mat_A.get_m(); ++i)
     {
-        for(int j = mat_A.get_row_ptr()[i]; j < mat_A.get_row_ptr()[i + 1]; ++j)
+        const int start = mat_A.get_row_ptr()[i];
+        const int end   = mat_A.get_row_ptr()[i + 1];
+
+        max_nnz_per_row = std::max(max_nnz_per_row, end - start);
+
+        for(int j = start; j < end; ++j)
         {
             host_y[i] += mat_A.get_val()[j] * vec_x.get_vec()[mat_A.get_col_ind()[j]];
         }
     }
+
+    std::cout << "max_nnz_per_row: " << max_nnz_per_row << std::endl;
+
+    // mat_A.print_matrix("A");
+
+    // vec_y.print_vector("Computed solution");
+    // host_y.print_vector("Reference solution");
 
     // Compare solutions
     bool success = check_vector_equality(vec_y, host_y);

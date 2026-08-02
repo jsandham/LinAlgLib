@@ -25,7 +25,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates wget
+          sudo apt-get install -y build-essential ca-certificates wget python3
           CMAKE_VERSION=4.4.0
           echo "Installing CMake ${CMAKE_VERSION}"
           wget -qO /tmp/cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
@@ -46,6 +46,21 @@ jobs:
           # Prepend so it wins over the pre-installed CMake on the runner image.
           Add-Content -Path $env:GITHUB_PATH -Value $cmakeBin
           & "$cmakeBin\cmake.exe" --version
+
+      - name: Download quick_ci matrices (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
+          cd clients/matrices
+          python3 matrix_downloader.py quick_ci
+
+      - name: Download quick_ci matrices (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Location clients/matrices
+          python matrix_downloader.py quick_ci
 
       - name: Configure
         run: |
@@ -79,7 +94,7 @@ jobs:
           set -e
           if command -v apt-get >/dev/null 2>&1; then
             apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential ca-certificates git wget
+            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential ca-certificates git wget python3
           elif command -v yum >/dev/null 2>&1; then
             yum -y install gcc gcc-c++ make wget git
             if ! command -v cmake >/dev/null 2>&1; then
@@ -99,6 +114,20 @@ jobs:
           tar -xzf /tmp/cmake.tar.gz -C /tmp
           ln -sfn /tmp/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ || true
           cmake --version || true
+
+      - name: Download quick_ci matrices
+        run: |
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y python3
+          elif command -v yum >/dev/null 2>&1; then
+            yum -y install python3
+          else
+            echo "Package manager not found for Python installation" >&2
+            exit 1
+          fi
+          cd clients/matrices
+          python3 matrix_downloader.py quick_ci
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -144,9 +173,22 @@ jobs:
       - name: Install coverage dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential ca-certificates wget python3-pip
+          sudo apt-get install -y build-essential ca-certificates wget python3 python3-pip
           python3 -m pip install --user gcovr
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Download quick_ci matrices
+        run: |
+          if command -v python3 >/dev/null 2>&1; then
+            cd clients/matrices
+            python3 matrix_downloader.py quick_ci
+          elif command -v python >/dev/null 2>&1; then
+            cd clients/matrices
+            python matrix_downloader.py quick_ci
+          else
+            echo "Python interpreter not found" >&2
+            exit 1
+          fi
 
       - name: Configure coverage build
         run: |

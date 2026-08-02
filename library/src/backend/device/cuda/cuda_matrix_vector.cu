@@ -24,6 +24,8 @@
 //
 //********************************************************************************
 
+#include <vector>
+
 #include "cuda_matrix_vector.h"
 
 #include "../../../descriptors/csrmv_descr_internal.h"
@@ -128,28 +130,41 @@ void linalg::cuda_csrmv_solve(int                m,
 {
     ROUTINE_TRACE("linalg::cuda_csrmv_solve");
 
-    int avg_nnz_per_row = nnz / m;
+    // const int avg_nnz_per_row = nnz / m;
 
-    if(avg_nnz_per_row <= 8)
-    {
-        csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
+    // if(avg_nnz_per_row <= 8)
+    // {
+    //     csrmv_vector_kernel<256, 4><<<((m - 1) / (256 / 4) + 1), 256>>>(
+    //         m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    // }
+    // else if(avg_nnz_per_row <= 16)
+    // {
+    //     csrmv_vector_kernel<256, 8><<<((m - 1) / (256 / 8) + 1), 256>>>(
+    //         m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    // }
+    // else if(avg_nnz_per_row <= 32)
+    // {
+    //     csrmv_vector_kernel<256, 16><<<((m - 1) / (256 / 16) + 1), 256>>>(
+    //         m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    // }
+    // else
+    // {
+    //     csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
+    //         m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
+    // }
+
+    //int grid_size = ((nnz - 1) / (8 * 256) + 1);
+    //std::cout << "AAAAAA nnz: " << nnz << " grid_size: " << grid_size << std::endl;
+
+
+
+
+
+    CHECK_CUDA(cudaMemset(y, 0, sizeof(T) * m)); // need to call kernel to handle beta
+
+    csrmv_stream_kernel<256, 32, 8><<<((nnz - 1) / (8 * 256) + 1), 256>>>(
             m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
-    }
-    else if(avg_nnz_per_row <= 16)
-    {
-        csrmv_vector_kernel<256, 8><<<((m - 1) / (256 / 8) + 1), 256>>>(
-            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
-    }
-    else if(avg_nnz_per_row <= 32)
-    {
-        csrmv_vector_kernel<256, 16><<<((m - 1) / (256 / 16) + 1), 256>>>(
-            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
-    }
-    else
-    {
-        csrmv_vector_kernel<256, 32><<<((m - 1) / (256 / 32) + 1), 256>>>(
-            m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
-    }
+
 }
 
 template void linalg::cuda_matrix_vector_product<double>(

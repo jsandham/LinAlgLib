@@ -317,13 +317,9 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
     csrgemm_descr* descr = nullptr;
     create_csrgemm_descr(&descr);
 
-    std::cout << "Computing C = A * B using sparse matrix-matrix multiplication..." << std::endl;
     csrgemm_nnz(*this, B, D, C, csrgemm_algorithm::default_algorithm, descr);
 
-    std::cout << "Computing C = A * B using sparse matrix-matrix multiplication..." << std::endl;
     csrgemm_solve(1.0, *this, B, 0.0, D, C, csrgemm_algorithm::default_algorithm, descr);
-
-    std::cout << "Done." << std::endl;
 
     destroy_csrgemm_descr(descr);
 }

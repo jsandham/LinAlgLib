@@ -41,23 +41,23 @@ __global__ void csrmv_vector_kernel(int     m,
                                     const T beta,
                                     T* __restrict__ y)
 {
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int gid = tid + BLOCKSIZE * bid;
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
 
-    int lid = tid & WARPSIZE - 1;
-    //int wid = tid / WARPSIZE;
+    const int lid = tid & WARPSIZE - 1;
+    //const int wid = tid / WARPSIZE;
 
     for(int row = gid / WARPSIZE; row < m; row += (BLOCKSIZE / WARPSIZE) * gridDim.x)
     {
-        int row_start = csr_row_ptr[row];
-        int row_end   = csr_row_ptr[row + 1];
+        const int row_start = csr_row_ptr[row];
+        const int row_end   = csr_row_ptr[row + 1];
 
         T sum = static_cast<T>(0);
         for(int j = row_start + lid; j < row_end; j += WARPSIZE)
         {
-            int col = csr_col_ind[j];
-            T   val = csr_val[j];
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
 
             sum = std::fma(x[col], val, sum);
         }
@@ -78,17 +78,8 @@ __global__ void csrmv_vector_kernel(int     m,
     }
 }
 
-
-
-
-
-
-
-
-
-__device__ inline int csr_row_from_index(const int* __restrict__ row_ptr,
-                                            int row_ptr_size,
-                                            int nnz_index)
+__device__ inline int
+    csr_row_from_index(const int* __restrict__ row_ptr, int row_ptr_size, int nnz_index)
 {
     // row_ptr has size m+1 and is non-decreasing
     // find r such that row_ptr[r] <= nnz_index < row_ptr[r + 1]
@@ -111,7 +102,7 @@ __device__ inline int csr_row_from_index(const int* __restrict__ row_ptr,
     return lo - 1;
 }
 
-template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, uint32_t NNZ_PER_THREAD,typename T>
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, uint32_t NNZ_PER_THREAD, typename T>
 __global__ void csrmv_stream_kernel(int     m,
                                     int     n,
                                     int     nnz,
@@ -129,6 +120,42 @@ __global__ void csrmv_stream_kernel(int     m,
     const int lid = tid & WARPSIZE - 1;
     const int wid = tid / WARPSIZE;
 
+    const int start_row
+        = (NNZ_PER_THREAD * BLOCKSIZE * bid < nnz)
+              ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * bid)
+              : -1;
+    const int end_row
+        = (NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1 < nnz)
+              ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1)
+              : -1;
+
+    if(start_row == end_row && end_row != -1)
+    {
+        __shared__ T shared[BLOCKSIZE];
+
+        T sum = static_cast<T>(0);
+        for(int i = 0; i < NNZ_PER_THREAD; ++i)
+        {
+            const int index = NNZ_PER_THREAD * BLOCKSIZE * bid + BLOCKSIZE * i + tid;
+
+            const int col = csr_col_ind[index];
+            const T   val = csr_val[index];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        shared[tid] = sum;
+        __syncthreads();
+
+        block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+        if(tid == 0)
+        {
+            atomicAdd(&y[start_row], alpha * shared[0]);
+        }
+        return;
+    }
+
     const int start = NNZ_PER_THREAD * (BLOCKSIZE * bid + WARPSIZE * wid);
 
     int prev_row = -1;
@@ -140,15 +167,16 @@ __global__ void csrmv_stream_kernel(int     m,
         const int index = start + i * WARPSIZE + lid;
 
         const int row = (index < nnz) ? csr_row_from_index(csr_row_ptr, m + 1, index) : -1;
-        const int col = csr_col_ind[index];
-        const T   val = csr_val[index];
+        const int col = (index < nnz) ? csr_col_ind[index] : 0; //nnz - 1;
+        const T   val = (index < nnz) ? csr_val[index] : static_cast<T>(0);
 
-        const int left_row = __shfl_sync(0xffffffff, row, lid - 1);
-        const int right_row = __shfl_sync(0xffffffff, row, lid + 1);
+        const int left_row  = __shfl_sync(FULL_MASK, row, lid - 1);
+        const int right_row = __shfl_sync(FULL_MASK, row, lid + 1);
 
-        const bool predicate = (row != -1 && row == left_row) || (row != -1 && row == right_row);
+        const bool predicate = (row == -1) || (row != left_row) || (row != right_row)
+                               || (prev_row >= 0 && prev_row != row);
 
-        if(__any_sync(0xffffffff, predicate))
+        if(__any_sync(FULL_MASK, predicate))
         {
             // write out old values
             warp_reduction_sum<WARPSIZE>(&sum);
@@ -164,7 +192,7 @@ __global__ void csrmv_stream_kernel(int     m,
             sum = x[col] * val;
 
             // segmented reduction for current values
-            sum = warp_segmented_reduction_sum(row, sum);
+            sum = warp_segmented_reduction_sum<WARPSIZE>(row, sum);
 
             if(lid < WARPSIZE - 1)
             {
@@ -180,6 +208,9 @@ __global__ void csrmv_stream_kernel(int     m,
                     atomicAdd(&y[row], alpha * sum);
                 }
             }
+
+            prev_row = -1;
+            sum      = static_cast<T>(0);
         }
         else
         {
@@ -188,10 +219,17 @@ __global__ void csrmv_stream_kernel(int     m,
 
         prev_row = row;
     }
+
+    // write out final values
+    warp_reduction_sum<WARPSIZE>(&sum);
+
+    if(lid == 0)
+    {
+        if(prev_row >= 0)
+        {
+            atomicAdd(&y[prev_row], alpha * sum);
+        }
+    }
 }
-
-
-
-
 
 #endif
