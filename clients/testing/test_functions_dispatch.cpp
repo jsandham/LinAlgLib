@@ -83,6 +83,12 @@ namespace testing
     {
         switch(arg.fixture)
         {
+        case fixture::axpy:
+            return test_axpy(arg);
+        case fixture::axpby:
+            return test_axpby(arg);
+        case fixture::axpbypgz:
+            return test_axpbypgz(arg);
         case fixture::SpTRSV:
             return test_sptrsv(arg);
         case fixture::SpGEAM:

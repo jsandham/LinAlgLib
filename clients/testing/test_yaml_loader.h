@@ -407,7 +407,10 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"tridiagonal_solver", testing::fixture::tridiagonal_solver},
            {"ruiz_scaling", testing::fixture::ruiz_scaling},
            {"symmetric_ruiz_scaling", testing::fixture::symmetric_ruiz_scaling},
-           {"exclusive_scan", testing::fixture::exclusive_scan}};
+           {"exclusive_scan", testing::fixture::exclusive_scan},
+           {"axpy", testing::fixture::axpy},
+           {"axpby", testing::fixture::axpby},
+           {"axpbypgz", testing::fixture::axpbypgz}};
 
     // Find the string in the map
     auto it = fixture_map.find(str);
