@@ -120,8 +120,14 @@ __global__ void csrmv_stream_kernel(int     m,
     const int lid = tid & WARPSIZE - 1;
     const int wid = tid / WARPSIZE;
 
-    const int start_row = (NNZ_PER_THREAD * BLOCKSIZE * bid < nnz) ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * bid) : -1;
-    const int end_row   = (NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1 < nnz) ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1) : -1;
+    const int start_row
+        = (NNZ_PER_THREAD * BLOCKSIZE * bid < nnz)
+              ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * bid)
+              : -1;
+    const int end_row
+        = (NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1 < nnz)
+              ? csr_row_from_index(csr_row_ptr, m + 1, NNZ_PER_THREAD * BLOCKSIZE * (bid + 1) - 1)
+              : -1;
 
     if(start_row == end_row && end_row != -1)
     {
@@ -161,7 +167,7 @@ __global__ void csrmv_stream_kernel(int     m,
         const int index = start + i * WARPSIZE + lid;
 
         const int row = (index < nnz) ? csr_row_from_index(csr_row_ptr, m + 1, index) : -1;
-        const int col = (index < nnz) ? csr_col_ind[index] : 0;//nnz - 1;
+        const int col = (index < nnz) ? csr_col_ind[index] : 0; //nnz - 1;
         const T   val = (index < nnz) ? csr_val[index] : static_cast<T>(0);
 
         const int left_row  = __shfl_sync(FULL_MASK, row, lid - 1);
@@ -204,7 +210,7 @@ __global__ void csrmv_stream_kernel(int     m,
             }
 
             prev_row = -1;
-            sum = static_cast<T>(0);
+            sum      = static_cast<T>(0);
         }
         else
         {
