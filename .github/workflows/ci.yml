@@ -179,17 +179,16 @@ jobs:
 
       - name: Download quick_ci matrices
         run: |
-          if command -v apt-get >/dev/null 2>&1; then
-            apt-get update
-            apt-get install -y python3
-          elif command -v yum >/dev/null 2>&1; then
-            yum -y install python3
+          if command -v python3 >/dev/null 2>&1; then
+            cd clients/matrices
+            python3 matrix_downloader.py quick_ci
+          elif command -v python >/dev/null 2>&1; then
+            cd clients/matrices
+            python matrix_downloader.py quick_ci
           else
-            echo "Package manager not found for Python installation" >&2
+            echo "Python interpreter not found" >&2
             exit 1
           fi
-          cd clients/matrices
-          python3 matrix_downloader.py quick_ci
 
       - name: Configure coverage build
         run: |
