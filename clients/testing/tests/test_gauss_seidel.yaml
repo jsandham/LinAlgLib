@@ -1,4 +1,15 @@
 Tests:
+  quick_ci:
+    matrix_file: ["matrices/SPD/nos1/nos1.mtx",
+                  "matrices/SPD/nos2/nos2.mtx",
+                  "matrices/SPD/nos3/nos3.mtx",
+                  "matrices/SPD/nos4/nos4.mtx",
+                  "matrices/SPD/nos5/nos5.mtx",
+                  "matrices/SPD/nos6/nos6.mtx",
+                  "matrices/SPD/nos7/nos7.mtx"]
+    max_iters: [200]
+    backend: [CPU]
+
   small:
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/ex5/ex5.mtx",

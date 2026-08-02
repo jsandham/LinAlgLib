@@ -21,7 +21,7 @@ def download_and_extract_matrix(url, filepath):
 
 
 MATRICES_BY_CATEGORY = {
-    "quick-ci": [
+    "quick_ci": [
         ("https://suitesparse-collection-website.herokuapp.com/MM/HB/nos1.tar.gz", "SPD/nos1.tar.gz"),
         ("https://suitesparse-collection-website.herokuapp.com/MM/HB/nos2.tar.gz", "SPD/nos2.tar.gz"),
         ("https://suitesparse-collection-website.herokuapp.com/MM/HB/nos3.tar.gz", "SPD/nos3.tar.gz"),
@@ -161,5 +161,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         download_matrices_for_category(sys.argv[1])
     else:
-        for category in ("quick-ci", "small", "medium", "large"):
+        for category in ("quick_ci", "small", "medium", "large"):
             download_matrices_for_category(category)

@@ -47,18 +47,26 @@ jobs:
           Add-Content -Path $env:GITHUB_PATH -Value $cmakeBin
           & "$cmakeBin\cmake.exe" --version
 
-      - name: Download quick-ci matrices (Linux)
+      - name: Download quick_ci matrices (Linux)
         if: runner.os == 'Linux'
         run: |
+          if command -v python3 >/dev/null 2>&1; then
+            PYTHON_BIN=python3
+          elif command -v python >/dev/null 2>&1; then
+            PYTHON_BIN=python
+          else
+            echo "Python interpreter not found" >&2
+            exit 1
+          fi
           cd clients/matrices
-          python3 matrix_downloader.py quick-ci
+          "$PYTHON_BIN" matrix_downloader.py quick_ci
 
-      - name: Download quick-ci matrices (Windows)
+      - name: Download quick_ci matrices (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Set-Location clients/matrices
-          python matrix_downloader.py quick-ci
+          python matrix_downloader.py quick_ci
 
       - name: Configure
         run: |
@@ -113,10 +121,18 @@ jobs:
           ln -sfn /tmp/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ || true
           cmake --version || true
 
-      - name: Download quick-ci matrices
+      - name: Download quick_ci matrices
         run: |
+          if command -v python3 >/dev/null 2>&1; then
+            PYTHON_BIN=python3
+          elif command -v python >/dev/null 2>&1; then
+            PYTHON_BIN=python
+          else
+            echo "Python interpreter not found" >&2
+            exit 1
+          fi
           cd clients/matrices
-          python3 matrix_downloader.py quick-ci
+          "$PYTHON_BIN" matrix_downloader.py quick_ci
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -166,10 +182,18 @@ jobs:
           python3 -m pip install --user gcovr
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
-      - name: Download quick-ci matrices
+      - name: Download quick_ci matrices
         run: |
+          if command -v python3 >/dev/null 2>&1; then
+            PYTHON_BIN=python3
+          elif command -v python >/dev/null 2>&1; then
+            PYTHON_BIN=python
+          else
+            echo "Python interpreter not found" >&2
+            exit 1
+          fi
           cd clients/matrices
-          python3 matrix_downloader.py quick-ci
+          "$PYTHON_BIN" matrix_downloader.py quick_ci
 
       - name: Configure coverage build
         run: |
