@@ -33,7 +33,7 @@
 
 #include "linalg.h"
 
-bool testing::test_axpby(Arguments arg)
+bool testing::test_dot_product(Arguments arg)
 {
     const size_t size = arg.m;
 
@@ -42,29 +42,26 @@ bool testing::test_axpby(Arguments arg)
     x.fill(2.0);
     y.fill(3.0);
 
-    linalg::vector<double> y_copy(size);
-    y_copy.copy_from(y);
-
     if(arg.backend == backend::GPU)
     {
         x.move_to_device();
         y.move_to_device();
-        y_copy.move_to_device();
     }
+
+    double result = 0.0;
 
     // Warmup
     for(int i = 0; i < 4; i++)
     {
-        linalg::axpby(arg.alpha, x, arg.beta, y);
+        result = linalg::dot_product(x, y);
     }
-    y.copy_from(y_copy);
     linalg::synchronize();
 
     // Timed solve
     auto t1 = std::chrono::high_resolution_clock::now();
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 100; i++)
     {
-        linalg::axpby(arg.alpha, x, arg.beta, y);
+        result = linalg::dot_product(x, y);
     }
     linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -72,33 +69,20 @@ bool testing::test_axpby(Arguments arg)
     std::chrono::duration<double, std::milli> ms_float = t2 - t1;
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
-    y.copy_from(y_copy);
-    linalg::axpby(arg.alpha, x, arg.beta, y);
-
     if(arg.backend == backend::GPU)
     {
         x.move_to_host();
         y.move_to_host();
-        y_copy.move_to_host();
     }
 
-    bool success = true;
-    for(size_t i = 0; i < size; ++i)
-    {
-        const double expected = arg.alpha * 2.0 + arg.beta * 3.0;
-        if(std::abs(y[i] - expected) > 1e-12)
-        {
-            std::cout << "axpby mismatch at index " << i << ": got " << y[i] << ", expected "
-                      << expected << std::endl;
-            success = false;
-        }
-    }
+    std::cout << "Dot product result: " << result << std::endl;
 
-    size_t total_bytes_read = sizeof(double) * ((arg.alpha != 0.0) ? size : 0)
-                              + sizeof(double) * ((arg.beta != 0.0) ? size : 0);
-    size_t total_bytes_written    = sizeof(double) * size;
+    bool success = (size * 2.0 * 3.0 == result);
+
+    size_t total_bytes_read       = sizeof(double) * 2 * size;
+    size_t total_bytes_written    = sizeof(double);
     size_t total_bytes_read_write = total_bytes_read + total_bytes_written;
-    double total_gbytes           = (double)10 * total_bytes_read_write / 1e9;
+    double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
     double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 
     std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;

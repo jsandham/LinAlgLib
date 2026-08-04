@@ -55,14 +55,10 @@ bool testing::test_axpbypgz(Arguments arg)
         z_copy.move_to_device();
     }
 
-    const double alpha = 1.5;
-    const double beta  = -0.5;
-    const double gamma = 2.0;
-
     // Warmup
     for(int i = 0; i < 4; i++)
     {
-        linalg::axpbypgz(alpha, x, beta, y, gamma, z);
+        linalg::axpbypgz(arg.alpha, x, arg.beta, y, arg.gamma, z);
     }
     z.copy_from(z_copy);
     linalg::synchronize();
@@ -71,7 +67,7 @@ bool testing::test_axpbypgz(Arguments arg)
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 10; i++)
     {
-        linalg::axpbypgz(alpha, x, beta, y, gamma, z);
+        linalg::axpbypgz(arg.alpha, x, arg.beta, y, arg.gamma, z);
     }
     linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -80,7 +76,7 @@ bool testing::test_axpbypgz(Arguments arg)
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     z.copy_from(z_copy);
-    linalg::axpbypgz(alpha, x, beta, y, gamma, z);
+    linalg::axpbypgz(arg.alpha, x, arg.beta, y, arg.gamma, z);
 
     if(arg.backend == backend::GPU)
     {
@@ -93,7 +89,7 @@ bool testing::test_axpbypgz(Arguments arg)
     bool success = true;
     for(size_t i = 0; i < size; ++i)
     {
-        const double expected = alpha * 2.0 + beta * 3.0 + gamma * 4.0;
+        const double expected = arg.alpha * 2.0 + arg.beta * 3.0 + arg.gamma * 4.0;
         if(std::abs(z[i] - expected) > 1e-12)
         {
             std::cout << "axpbypgz mismatch at index " << i << ": got " << z[i] << ", expected "
@@ -102,9 +98,9 @@ bool testing::test_axpbypgz(Arguments arg)
         }
     }
 
-    size_t total_bytes_read = sizeof(double) * ((alpha != 0.0) ? size : 0)
-                              + sizeof(double) * ((beta != 0.0) ? size : 0)
-                              + sizeof(double) * ((gamma != 0.0) ? size : 0);
+    size_t total_bytes_read = sizeof(double) * ((arg.alpha != 0.0) ? size : 0)
+                              + sizeof(double) * ((arg.beta != 0.0) ? size : 0)
+                              + sizeof(double) * ((arg.gamma != 0.0) ? size : 0);
     size_t total_bytes_written    = sizeof(double) * size;
     size_t total_bytes_read_write = total_bytes_read + total_bytes_written;
     double total_gbytes           = (double)10 * total_bytes_read_write / 1e9;

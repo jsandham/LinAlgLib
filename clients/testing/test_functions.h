@@ -45,6 +45,7 @@ namespace testing
     bool test_axpy(Arguments arg);
     bool test_axpby(Arguments arg);
     bool test_axpbypgz(Arguments arg);
+    bool test_dot_product(Arguments arg);
     bool test_sptrsv(Arguments arg);
     bool test_spgeam(Arguments arg);
     bool test_csric0(Arguments arg);

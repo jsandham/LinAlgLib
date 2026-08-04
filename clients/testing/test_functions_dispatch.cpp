@@ -89,6 +89,8 @@ namespace testing
             return test_axpby(arg);
         case fixture::axpbypgz:
             return test_axpbypgz(arg);
+        case fixture::dot_product:
+            return test_dot_product(arg);
         case fixture::SpTRSV:
             return test_sptrsv(arg);
         case fixture::SpGEAM:

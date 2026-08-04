@@ -53,6 +53,9 @@ namespace testing
         int                        m;
         int                        n;
         double                     tol;
+        double                     alpha;
+        double                     beta;
+        double                     gamma;
         double                     omega;
 
         std::string generate_test_name() const
@@ -113,6 +116,54 @@ namespace testing
                     }
                 }
                 name += "_" + tol_str;
+            }
+            if(this->alpha >= -98.0)
+            {
+                std::string alpha_str = std::to_string(this->alpha);
+                for(size_t i = 0; i < alpha_str.length(); i++)
+                {
+                    if(alpha_str[i] == '.')
+                    {
+                        alpha_str[i] = '_';
+                    }
+                    if(alpha_str[i] == '-')
+                    {
+                        alpha_str[i] = 'n';
+                    }
+                }
+                name += "_" + alpha_str;
+            }
+            if(this->beta >= -98.0)
+            {
+                std::string beta_str = std::to_string(this->beta);
+                for(size_t i = 0; i < beta_str.length(); i++)
+                {
+                    if(beta_str[i] == '.')
+                    {
+                        beta_str[i] = '_';
+                    }
+                    if(beta_str[i] == '-')
+                    {
+                        beta_str[i] = 'n';
+                    }
+                }
+                name += "_" + beta_str;
+            }
+            if(this->gamma >= -98.0)
+            {
+                std::string gamma_str = std::to_string(this->gamma);
+                for(size_t i = 0; i < gamma_str.length(); i++)
+                {
+                    if(gamma_str[i] == '.')
+                    {
+                        gamma_str[i] = '_';
+                    }
+                    if(gamma_str[i] == '-')
+                    {
+                        gamma_str[i] = 'n';
+                    }
+                }
+                name += "_" + gamma_str;
             }
             if(this->omega >= 0)
             {

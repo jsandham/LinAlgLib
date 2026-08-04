@@ -53,12 +53,10 @@ bool testing::test_axpy(Arguments arg)
         y_copy.move_to_device();
     }
 
-    const double alpha = 1.5;
-
     // Warmup
     for(int i = 0; i < 4; i++)
     {
-        linalg::axpy(alpha, x, y);
+        linalg::axpy(arg.alpha, x, y);
     }
     y.copy_from(y_copy);
     linalg::synchronize();
@@ -67,7 +65,7 @@ bool testing::test_axpy(Arguments arg)
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 10; i++)
     {
-        linalg::axpy(alpha, x, y);
+        linalg::axpy(arg.alpha, x, y);
     }
     linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -76,7 +74,7 @@ bool testing::test_axpy(Arguments arg)
     std::cout << "Solve time: " << ms_float.count() << "ms" << std::endl;
 
     y.copy_from(y_copy);
-    linalg::axpy(alpha, x, y);
+    linalg::axpy(arg.alpha, x, y);
 
     if(arg.backend == backend::GPU)
     {
@@ -88,7 +86,7 @@ bool testing::test_axpy(Arguments arg)
     bool success = true;
     for(size_t i = 0; i < size; ++i)
     {
-        const double expected = alpha * 2.0 + 3.0;
+        const double expected = arg.alpha * 2.0 + 3.0;
         if(std::abs(y[i] - expected) > 1e-12)
         {
             std::cout << "axpy mismatch at index " << i << ": got " << y[i] << ", expected "
@@ -97,7 +95,8 @@ bool testing::test_axpy(Arguments arg)
         }
     }
 
-    size_t total_bytes_read = sizeof(double) * ((alpha != 0.0) ? size : 0) + sizeof(double) * size;
+    size_t total_bytes_read
+        = sizeof(double) * ((arg.alpha != 0.0) ? size : 0) + sizeof(double) * size;
     size_t total_bytes_written    = sizeof(double) * size;
     size_t total_bytes_read_write = total_bytes_read + total_bytes_written;
     double total_gbytes           = (double)10 * total_bytes_read_write / 1e9;

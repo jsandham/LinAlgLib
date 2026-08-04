@@ -93,6 +93,7 @@ target_sources(test_main
     test_functions_axpy.cpp
     test_functions_axpby.cpp
     test_functions_axpbypgz.cpp
+    test_functions_dot_product.cpp
     test_functions_transpose.cpp
     test_functions_transpose_dense.cpp
     test_functions_ruiz_scaling.cpp
