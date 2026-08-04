@@ -69,6 +69,10 @@ namespace testing
         CSRILU0,
         tridiagonal_solver,
         exclusive_scan,
+        axpy,
+        axpby,
+        axpbypgz,
+        dot_product,
         ruiz_scaling,
         symmetric_ruiz_scaling,
         unknown
@@ -218,6 +222,14 @@ namespace testing
             return "tridiagonal_solver";
         case fixture::exclusive_scan:
             return "exclusive_scan";
+        case fixture::axpy:
+            return "axpy";
+        case fixture::axpby:
+            return "axpby";
+        case fixture::axpbypgz:
+            return "axpbypgz";
+        case fixture::dot_product:
+            return "dot_product";
         case fixture::ruiz_scaling:
             return "ruiz_scaling";
         case fixture::symmetric_ruiz_scaling:

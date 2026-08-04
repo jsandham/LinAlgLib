@@ -407,7 +407,11 @@ inline testing::fixture string_to_fixture(const std::string& str)
            {"tridiagonal_solver", testing::fixture::tridiagonal_solver},
            {"ruiz_scaling", testing::fixture::ruiz_scaling},
            {"symmetric_ruiz_scaling", testing::fixture::symmetric_ruiz_scaling},
-           {"exclusive_scan", testing::fixture::exclusive_scan}};
+           {"exclusive_scan", testing::fixture::exclusive_scan},
+           {"axpy", testing::fixture::axpy},
+           {"axpby", testing::fixture::axpby},
+           {"axpbypgz", testing::fixture::axpbypgz},
+           {"dot_product", testing::fixture::dot_product}};
 
     // Find the string in the map
     auto it = fixture_map.find(str);
@@ -437,6 +441,9 @@ struct TestParameters
     std::vector<int>                        m_values;
     std::vector<int>                        n_values;
     std::vector<double>                     tols;
+    std::vector<double>                     alphas;
+    std::vector<double>                     betas;
+    std::vector<double>                     gammas;
     std::vector<double>                     omegas;
 };
 
@@ -511,6 +518,9 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         params.m_values       = read_group_values("m", -1);
         params.n_values       = read_group_values("n", -1);
         params.tols           = read_group_values("tol", -1.0);
+        params.alphas         = read_group_values("alpha", -99.0);
+        params.betas          = read_group_values("beta", -99.0);
+        params.gammas         = read_group_values("gamma", -99.0);
         params.omegas         = read_group_values("omega", -1.0);
 
         size_t total_tests = 1;
@@ -527,6 +537,9 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         total_tests *= params.m_values.size();
         total_tests *= params.n_values.size();
         total_tests *= params.tols.size();
+        total_tests *= params.alphas.size();
+        total_tests *= params.betas.size();
+        total_tests *= params.gammas.size();
         total_tests *= params.omegas.size();
 
         std::cout << "total_tests: " << total_tests << std::endl;
@@ -548,6 +561,9 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                 int                        m,
                 int                        n,
                 double                     tol,
+                double                     alpha,
+                double                     beta,
+                double                     gamma,
                 double                     omega) {
                 tests.emplace_back(testing::Arguments{
                     category_enum,
@@ -566,6 +582,9 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                     m,
                     n,
                     tol,
+                    alpha,
+                    beta,
+                    gamma,
                     omega,
                 });
             },
@@ -582,6 +601,9 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
             params.m_values,
             params.n_values,
             params.tols,
+            params.alphas,
+            params.betas,
+            params.gammas,
             params.omegas);
 
         // for(size_t i = 0; i < total_tests; i++)
