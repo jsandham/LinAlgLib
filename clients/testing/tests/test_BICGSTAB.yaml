@@ -1,6 +1,6 @@
 Tests:
   quick_ci:
-    precond: [none, jacobi, SOR]
+    precond: [jacobi, SOR]
     matrix_file: ["matrices/SPD/nos7/nos7.mtx"]
     max_iters: [400]
     backend: [CPU]

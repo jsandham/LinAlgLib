@@ -99,11 +99,14 @@ void linalg::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
 }
 
 // Dot product
-double linalg::dot_product(const vector<double>& x, const vector<double>& y)
+double linalg::dot_product(const vector<double>&  x,
+                           const vector<double>&  y,
+                           dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::dot_product");
 
-    return backend_dispatch("linalg::dot_product", host_dot_product, device_dot_product, x, y);
+    return backend_dispatch(
+        "linalg::dot_product", host_dot_product, device_dot_product, x, y, buffer);
 }
 
 // Compute residual
@@ -127,11 +130,12 @@ void linalg::diagonal(const csr_matrix& A, vector<double>& d)
 }
 
 // Euclidean norm
-double linalg::norm_euclid(const vector<double>& array)
+double linalg::norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::norm_euclid");
 
-    return backend_dispatch("linalg::norm_euclid", host_norm_euclid, device_norm_euclid, array);
+    return backend_dispatch(
+        "linalg::norm_euclid", host_norm_euclid, device_norm_euclid, array, buffer);
 }
 
 // Infinity norm

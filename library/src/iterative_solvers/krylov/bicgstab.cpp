@@ -59,6 +59,8 @@ void bicgstab_solver::build(const csr_matrix& A)
     t.resize(A.get_m());
     z.resize(A.get_m());
     q.resize(A.get_m());
+
+    buffer.allocate_buffer(A.get_m());
 }
 
 int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
@@ -76,7 +78,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
     // r0 = r
     r0.copy_from(r);
 
-    double rho = dot_product(r0, r);
+    double rho = dot_product(r0, r, buffer);
 
     // p = r
     p.copy_from(r);
@@ -89,7 +91,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
         // v = Ap
         A.multiply_by_vector(v, p);
 
-        double alpha = rho / dot_product(r0, v);
+        double alpha = rho / dot_product(r0, v, buffer);
 
         // r = r - alpha * v
         axpy(-1.0 * alpha, v, r);
@@ -97,8 +99,8 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
         // t = A * r
         A.multiply_by_vector(t, r);
 
-        double omega1 = dot_product(t, r);
-        double omega2 = dot_product(t, t);
+        double omega1 = dot_product(t, r, buffer);
+        double omega2 = dot_product(t, t, buffer);
 
         if(omega1 == 0.0 || omega2 == 0.0)
         {
@@ -122,7 +124,7 @@ int bicgstab_solver::solve_nonprecond(const csr_matrix&     A,
         }
 
         double rho_prev = rho;
-        rho             = dot_product(r0, r);
+        rho             = dot_product(r0, r, buffer);
         double beta     = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * v)
@@ -158,7 +160,7 @@ int bicgstab_solver::solve_precond(const csr_matrix&     A,
     // r0 = r
     r0.copy_from(r);
 
-    double rho = dot_product(r0, r);
+    double rho = dot_product(r0, r, buffer);
 
     // p = r
     p.copy_from(r);
@@ -174,7 +176,7 @@ int bicgstab_solver::solve_precond(const csr_matrix&     A,
         // q = A*z
         A.multiply_by_vector(q, z);
 
-        double alpha = rho / dot_product(r0, q);
+        double alpha = rho / dot_product(r0, q, buffer);
 
         // r = r - alpha * q
         axpy(-1.0 * alpha, q, r);
@@ -185,8 +187,8 @@ int bicgstab_solver::solve_precond(const csr_matrix&     A,
         // t = A * v
         A.multiply_by_vector(t, v);
 
-        double omega1 = dot_product(t, r);
-        double omega2 = dot_product(t, t);
+        double omega1 = dot_product(t, r, buffer);
+        double omega2 = dot_product(t, t, buffer);
 
         if(omega1 == 0.0 || omega2 == 0.0)
         {
@@ -210,7 +212,7 @@ int bicgstab_solver::solve_precond(const csr_matrix&     A,
         }
 
         double rho_prev = rho;
-        rho             = dot_product(r0, r);
+        rho             = dot_product(r0, r, buffer);
         double beta     = (rho / rho_prev) * (alpha / omega);
 
         // p = r + beta * (p - omega * q)

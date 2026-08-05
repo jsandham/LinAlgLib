@@ -38,10 +38,6 @@ bool testing::test_krylov(krylov_solver solver_type, Arguments arg)
     linalg::csr_matrix mat_A;
     mat_A.read_mtx(arg.filename);
 
-    linalg::vector<double> D1(mat_A.get_m());
-    linalg::vector<double> D2(mat_A.get_m());
-    mat_A.apply_ruiz_scaling(D1, D2, 30, 1e-03);
-
     // Solution vector
     linalg::vector<double> vec_x(mat_A.get_m());
     vec_x.zeros();

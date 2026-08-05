@@ -430,6 +430,8 @@ bool check_solution(const linalg::csr_matrix&     A,
                     double                        tol,
                     int                           norm_type)
 {
+    linalg::dp_opt_buffer<double> buffer;
+
     for(size_t i = 0; i < x.get_size(); i++)
     {
         if(std::isnan(x[i]) || std::isinf(x[i]))
@@ -448,7 +450,7 @@ bool check_solution(const linalg::csr_matrix&     A,
     }
     else
     {
-        initial_residual_norm = linalg::norm_euclid(initial_residual);
+        initial_residual_norm = linalg::norm_euclid(initial_residual, buffer);
     }
 
     linalg::vector<double> residual(A.get_m());
@@ -461,7 +463,7 @@ bool check_solution(const linalg::csr_matrix&     A,
     }
     else
     {
-        residual_norm = linalg::norm_euclid(residual);
+        residual_norm = linalg::norm_euclid(residual, buffer);
     }
 
     std::cout << "absolute residual: " << residual_norm

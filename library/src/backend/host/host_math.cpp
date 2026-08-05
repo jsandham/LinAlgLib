@@ -64,11 +64,11 @@ namespace linalg
     }
 }
 
-double linalg::host_norm_euclid(const vector<double>& array)
+double linalg::host_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::host_norm_euclid");
 
-    return std::sqrt(host_dot_product(array, array));
+    return std::sqrt(host_dot_product(array, array, buffer));
 }
 
 double linalg::host_norm_inf(const vector<double>& array)

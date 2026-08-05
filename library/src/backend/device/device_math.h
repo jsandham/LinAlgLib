@@ -43,6 +43,7 @@
 #include "device_ssor.h"
 #include "device_tridiagonal.h"
 
+#include "linalg_buffers.h"
 #include "linalg_export.h"
 
 /*! \file
@@ -51,7 +52,7 @@
 namespace linalg
 {
     // Euclidean norm
-    double device_norm_euclid(const vector<double>& array);
+    double device_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer);
 
     // Infinity norm
     double device_norm_inf(const vector<double>& array);

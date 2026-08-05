@@ -27,6 +27,7 @@
 #ifndef CG_H
 #define CG_H
 
+#include "../../linalg_buffers.h"
 #include "../../linalg_export.h"
 
 #include "../iter_control.h"
@@ -199,6 +200,9 @@ namespace linalg
         vector<double> p;
         /*! \brief Residual vector in the CG algorithm. */
         vector<double> res;
+
+        dp_opt_buffer<double>
+            buffer; /*!< \brief Buffer for optimization data used in dot products. */
 
         /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.

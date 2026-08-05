@@ -120,7 +120,9 @@ void linalg::host_axpbypgz(double                alpha,
     host_axpbypgz_impl(x.get_size(), alpha, x.get_vec(), beta, y.get_vec(), gamma, z.get_vec());
 }
 
-double linalg::host_dot_product(const vector<double>& x, const vector<double>& y)
+double linalg::host_dot_product(const vector<double>&  x,
+                                const vector<double>&  y,
+                                dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::host_dot_product");
     return host_dot_product_impl(x.get_vec(), y.get_vec(), x.get_size());

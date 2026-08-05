@@ -55,6 +55,8 @@ void cg_solver::build(const csr_matrix& A)
     p.resize(A.get_m());
     z.resize(A.get_m());
     res.resize(A.get_m());
+
+    buffer.allocate_buffer(A.get_m());
 }
 
 int cg_solver::solve_nonprecond(const csr_matrix&     A,
@@ -77,7 +79,7 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
         // p = res
         p.copy_from(res);
 
-        gamma = dot_product(res, res);
+        gamma = dot_product(res, res, buffer);
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -94,12 +96,12 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
             // p = res
             p.copy_from(res);
 
-            gamma = dot_product(res, res);
+            gamma = dot_product(res, res, buffer);
         }
 
         // z = A * p and alpha = (r, r) / (A * p, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p);
+        double alpha = gamma / dot_product(z, p, buffer);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -116,7 +118,7 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
 
         // find beta
         double old_gamma = gamma;
-        gamma            = dot_product(res, res);
+        gamma            = dot_product(res, res, buffer);
         double beta      = gamma / old_gamma;
 
         // update p = res + beta * p
@@ -159,7 +161,7 @@ int cg_solver::solve_precond(const csr_matrix&     A,
         // p = z
         p.copy_from(z);
 
-        gamma = dot_product(z, res);
+        gamma = dot_product(z, res, buffer);
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -179,12 +181,12 @@ int cg_solver::solve_precond(const csr_matrix&     A,
             // p = z
             p.copy_from(z);
 
-            gamma = dot_product(z, res);
+            gamma = dot_product(z, res, buffer);
         }
 
         // z = A * p and alpha = (z, r) / (Ap, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p);
+        double alpha = gamma / dot_product(z, p, buffer);
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -204,7 +206,7 @@ int cg_solver::solve_precond(const csr_matrix&     A,
 
         // find beta
         double old_gamma = gamma;
-        gamma            = dot_product(z, res);
+        gamma            = dot_product(z, res, buffer);
         double beta      = gamma / old_gamma;
 
         // update p = z + beta * p
