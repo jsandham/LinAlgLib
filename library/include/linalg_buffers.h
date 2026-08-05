@@ -27,6 +27,8 @@
 #ifndef OPTIMIZATION_BUFFERS_H
 #define OPTIMIZATION_BUFFERS_H
 
+#include <cstddef>
+
 namespace linalg
 {
     template <typename T>
