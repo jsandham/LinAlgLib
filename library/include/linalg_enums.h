@@ -63,6 +63,7 @@ namespace linalg
     enum class csrmv_algorithm
     {
         default_algorithm, /*!< Default algorithm */
+        lrb,
         merge_path,
         rowsplit,
         nnzsplit

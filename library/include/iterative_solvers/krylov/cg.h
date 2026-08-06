@@ -27,6 +27,7 @@
 #ifndef CG_H
 #define CG_H
 
+#include "../../linalg_buffers.h"
 #include "../../linalg_export.h"
 
 #include "../iter_control.h"
@@ -200,6 +201,9 @@ namespace linalg
         /*! \brief Residual vector in the CG algorithm. */
         vector<double> res;
 
+        dp_opt_buffer<double>
+            buffer; /*!< \brief Buffer for optimization data used in dot products. */
+
         /*! \brief Number of iterations after which the solver should restart.
      * A value of 0 or a very large number typically means no restart.
      * For CG, restarts are usually not needed for exact arithmetic but can
@@ -252,10 +256,7 @@ namespace linalg
      * \param b The right-hand side vector.
      * \param control An `iter_control` object that manages the iteration process,
      * including convergence tolerance and maximum iterations.
-     * \return An integer status code:
-     * - `0` if the solver converged successfully within the specified tolerance.
-     * - `1` if the maximum number of iterations was reached without convergence.
-     * - Negative values might indicate issues like a non-positive definite matrix or division by zero.
+     * \return The number of iterations performed by the solver.
      */
         int solve_nonprecond(const csr_matrix&     A,
                              vector<double>&       x,
@@ -278,10 +279,7 @@ namespace linalg
      * of the preconditioner should have been called previously for matrix `A`.
      * \param control An `iter_control` object that manages the iteration process,
      * including convergence tolerance and maximum iterations.
-     * \return An integer status code:
-     * - `0` if the solver converged successfully within the specified tolerance.
-     * - `1` if the maximum number of iterations was reached without convergence.
-     * - Negative values might indicate issues with the matrix, preconditioner, or numerical stability.
+     * \return The number of iterations performed by the solver.
      */
         int solve_precond(const csr_matrix&     A,
                           vector<double>&       x,
@@ -302,7 +300,7 @@ namespace linalg
      * \param precond A pointer to a `preconditioner` object to be used. If `nullptr`, no preconditioning is applied.
      * \param control An `iter_control` object that manages the iteration process,
      * including convergence tolerance and maximum iterations.
-     * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
+     * \return The number of iterations performed by the solver.
      */
         int solve(const csr_matrix&     A,
                   vector<double>&       x,

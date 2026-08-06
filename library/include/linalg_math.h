@@ -30,6 +30,7 @@
 #include <string>
 
 #include "csr_matrix.h"
+#include "linalg_buffers.h"
 #include "linalg_enums.h"
 #include "linalg_export.h"
 #include "linalg_types.h"
@@ -126,9 +127,12 @@ namespace linalg
      *
      * @param x The first input vector.
      * @param y The second input vector.
+     * @param buffer Buffer storing optimization data.
      * @return The double-precision floating-point result of the dot product.
      */
-    LINALGLIB_API double dot_product(const vector<double>& x, const vector<double>& y);
+    LINALGLIB_API double dot_product(const vector<double>&  x,
+                                     const vector<double>&  y,
+                                     dp_opt_buffer<double>& buffer);
 
     /**
      * @brief Computes the residual vector for a linear system: \f$res = b - A \cdot x\f$.
@@ -159,9 +163,10 @@ namespace linalg
      * The Euclidean norm is calculated as \f$\sqrt{\sum_{i=0}^{n-1} |array_i|^2}\f$.
      *
      * @param array The input vector.
+     * @param buffer Buffer storing optimization data.
      * @return The double-precision floating-point value of the Euclidean norm.
      */
-    LINALGLIB_API double norm_euclid(const vector<double>& array);
+    LINALGLIB_API double norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer);
 
     /**
      * @brief Computes the infinity (maximum absolute value) norm of a vector.

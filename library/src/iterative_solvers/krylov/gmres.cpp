@@ -33,7 +33,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -220,6 +219,8 @@ void gmres_solver::build(const csr_matrix& A, int restart)
     Q.resize(A.get_m() * (restart + 1));
     c.resize(restart);
     s.resize(restart);
+
+    buffer.allocate_buffer(A.get_m());
 }
 
 int gmres_solver::solve_nonprecond(const csr_matrix&     A,
@@ -232,7 +233,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix&     A,
     // res = b - A * x
     compute_residual(A, x, b, res);
 
-    double res_norm         = norm_euclid(res);
+    double res_norm         = norm_euclid(res, buffer);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -340,7 +341,7 @@ int gmres_solver::solve_nonprecond(const csr_matrix&     A,
         // res = b - A * x
         compute_residual(A, x, b, res);
 
-        res_norm = norm_euclid(res);
+        res_norm = norm_euclid(res, buffer);
 
         // Check norm of residual against tolerance
         if(control.residual_converges(res_norm, initial_res_norm))
@@ -384,7 +385,7 @@ int gmres_solver::solve_precond(const csr_matrix&     A,
     // z = (M^-1) * res
     precond->solve(res, z);
 
-    double res_norm         = norm_euclid(z);
+    double res_norm         = norm_euclid(z, buffer);
     double initial_res_norm = res_norm;
 
     // Check norm of residual against tolerance
@@ -495,7 +496,7 @@ int gmres_solver::solve_precond(const csr_matrix&     A,
         // z = (M^-1) * res
         precond->solve(res, z);
 
-        res_norm = norm_euclid(z);
+        res_norm = norm_euclid(z, buffer);
 
         // Check norm of residual against tolerance
         if(control.residual_converges(res_norm, initial_res_norm))

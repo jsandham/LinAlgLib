@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,34 +24,29 @@
 //
 //********************************************************************************
 
-#ifndef HOST_MATH_H
-#define HOST_MATH_H
+#ifndef OPTIMIZATION_BUFFERS_H
+#define OPTIMIZATION_BUFFERS_H
 
-#include <string>
-
-#include "host_axpy.h"
-#include "host_csr2csc.h"
-#include "host_csrgeam.h"
-#include "host_csrgemm.h"
-#include "host_csric0.h"
-#include "host_csrilu0.h"
-#include "host_csrtrsv.h"
-#include "host_extract.h"
-#include "host_matrix_vector.h"
-#include "host_ruiz_scaling.h"
-#include "host_scale.h"
-#include "host_ssor.h"
-#include "host_tridiagonal.h"
-
-#include "linalg_buffers.h"
-#include "linalg_export.h"
+#include <cstddef>
 
 namespace linalg
 {
-    double host_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer);
-    double host_norm_inf(const vector<double>& array);
-    void
-        host_jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
+    template <typename T>
+    class dp_opt_buffer
+    {
+    private:
+        T*   data;
+        bool on_host;
+
+    public:
+        dp_opt_buffer();
+        ~dp_opt_buffer();
+
+        void allocate_buffer(size_t size);
+        void free_buffer();
+
+        T* get_buffer();
+    };
 }
 
-#endif
+#endif // OPTIMIZATION_BUFFERS_H

@@ -27,6 +27,7 @@
 #ifndef HOST_AXPY_H
 #define HOST_AXPY_H
 
+#include "linalg_buffers.h"
 #include "vector.h"
 
 namespace linalg
@@ -39,7 +40,9 @@ namespace linalg
                          const vector<double>& y,
                          double                gamma,
                          vector<double>&       z);
-    double host_dot_product(const vector<double>& x, const vector<double>& y);
+    double host_dot_product(const vector<double>&  x,
+                            const vector<double>&  y,
+                            dp_opt_buffer<double>& buffer);
 }
 
 #endif

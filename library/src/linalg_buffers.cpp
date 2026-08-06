@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -24,34 +24,46 @@
 //
 //********************************************************************************
 
-#ifndef HOST_MATH_H
-#define HOST_MATH_H
+#include "../include/linalg_buffers.h"
 
-#include <string>
+#include "backend/device/device_memory.h"
 
-#include "host_axpy.h"
-#include "host_csr2csc.h"
-#include "host_csrgeam.h"
-#include "host_csrgemm.h"
-#include "host_csric0.h"
-#include "host_csrilu0.h"
-#include "host_csrtrsv.h"
-#include "host_extract.h"
-#include "host_matrix_vector.h"
-#include "host_ruiz_scaling.h"
-#include "host_scale.h"
-#include "host_ssor.h"
-#include "host_tridiagonal.h"
+using namespace linalg;
 
-#include "linalg_buffers.h"
-#include "linalg_export.h"
-
-namespace linalg
+template <typename T>
+dp_opt_buffer<T>::dp_opt_buffer()
+    : data(nullptr)
+    , on_host(true)
 {
-    double host_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer);
-    double host_norm_inf(const vector<double>& array);
-    void
-        host_jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);
 }
 
-#endif
+template <typename T>
+dp_opt_buffer<T>::~dp_opt_buffer()
+{
+    free_buffer();
+}
+
+template <typename T>
+void dp_opt_buffer<T>::allocate_buffer(size_t size)
+{
+    device_allocate<T>(&data, 256);
+}
+
+template <typename T>
+void dp_opt_buffer<T>::free_buffer()
+{
+    if(data)
+    {
+        device_free(data);
+        data = nullptr;
+    }
+}
+
+template <typename T>
+T* dp_opt_buffer<T>::get_buffer()
+{
+    return data;
+}
+
+template class dp_opt_buffer<float>;
+template class dp_opt_buffer<double>;
