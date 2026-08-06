@@ -29,7 +29,9 @@
 
 #include <assert.h>
 #include <chrono>
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #include "../../trace.h"
@@ -88,7 +90,7 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
     while(!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
-        if(iter > 0 && iter % restart_iter == 0)
+        if(restart_iter > 0 && iter > 0 && iter % restart_iter == 0)
         {
             // res = b - A * x
             compute_residual(A, x, b, res);
@@ -101,7 +103,12 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
 
         // z = A * p and alpha = (r, r) / (A * p, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p, buffer);
+        double denominator = dot_product(z, p, buffer);
+        if(std::abs(denominator) <= std::numeric_limits<double>::epsilon())
+        {
+            break;
+        }
+        double alpha = gamma / denominator;
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -113,13 +120,18 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
 
         if(control.residual_converges(res_norm, initial_res_norm))
         {
+            iter++;
             break;
         }
 
         // find beta
         double old_gamma = gamma;
         gamma            = dot_product(res, res, buffer);
-        double beta      = gamma / old_gamma;
+        if(std::abs(old_gamma) <= std::numeric_limits<double>::epsilon())
+        {
+            break;
+        }
+        double beta = gamma / old_gamma;
 
         // update p = res + beta * p
         axpby(1.0, res, beta, p);
@@ -170,7 +182,7 @@ int cg_solver::solve_precond(const csr_matrix&     A,
     while(!control.exceed_max_iter(iter))
     {
         // restart algorithm to better handle round off error
-        if(restart_iter != -1 && iter > 0 && iter % restart_iter == 0)
+        if(restart_iter > 0 && iter > 0 && iter % restart_iter == 0)
         {
             // res = b - A * x
             compute_residual(A, x, b, res);
@@ -186,7 +198,12 @@ int cg_solver::solve_precond(const csr_matrix&     A,
 
         // z = A * p and alpha = (z, r) / (Ap, p)
         A.multiply_by_vector(z, p);
-        double alpha = gamma / dot_product(z, p, buffer);
+        double denominator = dot_product(z, p, buffer);
+        if(std::abs(denominator) <= std::numeric_limits<double>::epsilon())
+        {
+            break;
+        }
+        double alpha = gamma / denominator;
 
         // update x = x + alpha * p
         axpy(alpha, p, x);
@@ -198,6 +215,7 @@ int cg_solver::solve_precond(const csr_matrix&     A,
 
         if(control.residual_converges(res_norm, initial_res_norm))
         {
+            iter++;
             break;
         }
 
@@ -207,7 +225,11 @@ int cg_solver::solve_precond(const csr_matrix&     A,
         // find beta
         double old_gamma = gamma;
         gamma            = dot_product(z, res, buffer);
-        double beta      = gamma / old_gamma;
+        if(std::abs(old_gamma) <= std::numeric_limits<double>::epsilon())
+        {
+            break;
+        }
+        double beta = gamma / old_gamma;
 
         // update p = z + beta * p
         axpby(1.0, z, beta, p);
