@@ -360,7 +360,7 @@ namespace linalg
      *
      * \param T The output `csr_matrix` that will store the transpose of this matrix.
      */
-        void transpose(csr_matrix<T>& T) const;
+        void transpose(csr_matrix<T>& Trans) const;
 
         void apply_ruiz_scaling(vector<T>& D1, vector<T>& D2, int max_k, T tol);
         void apply_symmetric_ruiz_scaling(vector<T>& D, int max_k, T tol);

@@ -435,7 +435,7 @@ void csr_matrix<T>::compute_incomplete_LU_factorization()
 }
 
 template <typename T>
-void csr_matrix<T>::transpose(csr_matrix<T>& T) const
+void csr_matrix<T>::transpose(csr_matrix<T>& Trans) const
 {
     ROUTINE_TRACE("csr_matrix<T>::transpose");
 
@@ -443,7 +443,7 @@ void csr_matrix<T>::transpose(csr_matrix<T>& T) const
                      host_transpose_matrix,
                      device_transpose_matrix,
                      *this,
-                     T);
+                     Trans);
 }
 
 template <typename T>
