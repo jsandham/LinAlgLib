@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,8 +30,12 @@
 
 namespace linalg
 {
-    void device_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega);
-    void device_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega);
+    void device_ssor_fill_lower_precond(const csr_matrix<double>& A,
+                                        csr_matrix<double>&       L,
+                                        double                    omega);
+    void device_ssor_fill_upper_precond(const csr_matrix<double>& A,
+                                        csr_matrix<double>&       U,
+                                        double                    omega);
 }
 
 #endif

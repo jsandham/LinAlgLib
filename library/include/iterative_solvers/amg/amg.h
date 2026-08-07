@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -72,8 +72,8 @@ namespace linalg
     * operators between consecutive levels, where `prolongations[i]` maps from
     * level `i+1` to level `i`.
     */
-        //std::vector<csr_matrix> prolongations;
-        std::array<csr_matrix, 20> prolongations;
+        //std::vector<csr_matrix<double>> prolongations;
+        std::array<csr_matrix<double>, 20> prolongations;
 
         /**
     * @brief Restriction matrices.
@@ -84,8 +84,8 @@ namespace linalg
     * Typically, the restriction operator is related to the transpose of the
     * prolongation operator.
     */
-        // std::vector<csr_matrix> restrictions;
-        std::array<csr_matrix, 20> restrictions;
+        // std::vector<csr_matrix<double>> restrictions;
+        std::array<csr_matrix<double>, 20> restrictions;
 
         /**
     * @brief Coarse level matrices.
@@ -96,7 +96,7 @@ namespace linalg
     * The size of these matrices decreases as the level number increases.
     */
         // std::vector<csr_matrix> A_cs;
-        std::array<csr_matrix, 21> A_cs;
+        std::array<csr_matrix<double>, 21> A_cs;
 
         /**
     * @brief Number of levels in the hierarchy.

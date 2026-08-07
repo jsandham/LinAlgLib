@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -31,8 +31,8 @@
 
 int main()
 {
-    int m = 5;
-    int n = 5;
+    int m   = 5;
+    int n   = 5;
     int nnz = 15;
 
     // 4 3 0 0 2
@@ -40,11 +40,12 @@ int main()
     // 0 5 4 3 0
     // 0 0 1 3 2
     // 9 0 0 6 7
-    std::vector<int> csr_row_ptr = {0, 3, 6, 9, 12, 15};
-    std::vector<int> csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
-    std::vector<double> csr_val = {4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0};
+    std::vector<int>    csr_row_ptr = {0, 3, 6, 9, 12, 15};
+    std::vector<int>    csr_col_ind = {0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4};
+    std::vector<double> csr_val
+        = {4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 5.0, 4.0, 3.0, 1.0, 3.0, 2.0, 9.0, 6.0, 7.0};
 
-    linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    linalg::csr_matrix<double> A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     // Solution vector
     linalg::vector<double> x(A.get_m());
@@ -65,7 +66,7 @@ int main()
 
     // Print solution
     std::cout << "x" << std::endl;
-    for (int i = 0; i < x.get_size(); i++)
+    for(int i = 0; i < x.get_size(); i++)
     {
         std::cout << x[i] << " ";
     }

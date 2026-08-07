@@ -31,8 +31,12 @@
 
 namespace linalg
 {
-    void host_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega);
-    void host_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega);
+    void host_ssor_fill_lower_precond(const csr_matrix<double>& A,
+                                      csr_matrix<double>&       L,
+                                      double                    omega);
+    void host_ssor_fill_upper_precond(const csr_matrix<double>& A,
+                                      csr_matrix<double>&       U,
+                                      double                    omega);
 }
 
 #endif

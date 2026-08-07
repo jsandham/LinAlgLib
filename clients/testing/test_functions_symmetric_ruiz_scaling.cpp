@@ -42,7 +42,7 @@ bool testing::test_symmetric_ruiz_scaling(Arguments arg)
 {
     std::cout << "max_iters: " << arg.max_iters << " tol: " << arg.tol << std::endl;
 
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     linalg::vector<double> D(mat_A.get_m());

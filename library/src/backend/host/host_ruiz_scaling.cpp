@@ -224,7 +224,7 @@ namespace linalg
 }
 
 void linalg::host_ruiz_scaling(
-    vector<double>& D1, csr_matrix& A, vector<double>& D2, int max_k, double tol)
+    vector<double>& D1, csr_matrix<double>& A, vector<double>& D2, int max_k, double tol)
 {
     ROUTINE_TRACE("linalg::host_ruiz_scaling");
 
@@ -242,7 +242,10 @@ void linalg::host_ruiz_scaling(
                            tol);
 }
 
-void linalg::host_symmetric_ruiz_scaling(vector<double>& D, csr_matrix& A, int max_k, double tol)
+void linalg::host_symmetric_ruiz_scaling(vector<double>&     D,
+                                         csr_matrix<double>& A,
+                                         int                 max_k,
+                                         double              tol)
 {
     ROUTINE_TRACE("linalg::host_ruiz_scaling");
 

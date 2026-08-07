@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -42,7 +42,8 @@
 
 using namespace linalg;
 
-csr_matrix::csr_matrix()
+template <typename T>
+csr_matrix<T>::csr_matrix()
     : m(0)
     , n(0)
     , nnz(0)
@@ -50,12 +51,13 @@ csr_matrix::csr_matrix()
 {
 }
 
-csr_matrix::csr_matrix(const std::vector<int>&    csr_row_ptr,
-                       const std::vector<int>&    csr_col_ind,
-                       const std::vector<double>& csr_val,
-                       int                        m,
-                       int                        n,
-                       int                        nnz)
+template <typename T>
+csr_matrix<T>::csr_matrix(const std::vector<int>& csr_row_ptr,
+                          const std::vector<int>& csr_col_ind,
+                          const std::vector<T>&   csr_val,
+                          int                     m,
+                          int                     n,
+                          int                     nnz)
 {
     this->csr_row_ptr.resize(csr_row_ptr.size());
     this->csr_col_ind.resize(csr_col_ind.size());
@@ -70,61 +72,76 @@ csr_matrix::csr_matrix(const std::vector<int>&    csr_row_ptr,
 
     this->on_host = true;
 }
-csr_matrix::~csr_matrix() {}
 
-bool csr_matrix::is_on_host() const
+template <typename T>
+csr_matrix<T>::~csr_matrix()
+{
+}
+
+template <typename T>
+bool csr_matrix<T>::is_on_host() const
 {
     return on_host;
 }
 
-int csr_matrix::get_m() const
+template <typename T>
+int csr_matrix<T>::get_m() const
 {
     return this->m;
 }
 
-int csr_matrix::get_n() const
+template <typename T>
+int csr_matrix<T>::get_n() const
 {
     return this->n;
 }
 
-int csr_matrix::get_nnz() const
+template <typename T>
+int csr_matrix<T>::get_nnz() const
 {
     return this->nnz;
 }
 
-const int* csr_matrix::get_row_ptr() const
+template <typename T>
+const int* csr_matrix<T>::get_row_ptr() const
 {
     return csr_row_ptr.get_vec();
 }
 
-const int* csr_matrix::get_col_ind() const
+template <typename T>
+const int* csr_matrix<T>::get_col_ind() const
 {
     return csr_col_ind.get_vec();
 }
 
-const double* csr_matrix::get_val() const
+template <typename T>
+const T* csr_matrix<T>::get_val() const
 {
     return csr_val.get_vec();
 }
 
-int* csr_matrix::get_row_ptr()
+template <typename T>
+int* csr_matrix<T>::get_row_ptr()
 {
     return csr_row_ptr.get_vec();
 }
 
-int* csr_matrix::get_col_ind()
+template <typename T>
+int* csr_matrix<T>::get_col_ind()
 {
     return csr_col_ind.get_vec();
 }
 
-double* csr_matrix::get_val()
+template <typename T>
+T* csr_matrix<T>::get_val()
 {
     return csr_val.get_vec();
 }
 
-void csr_matrix::resize(int m, int n, int nnz)
+template <typename T>
+void csr_matrix<T>::resize(int m, int n, int nnz)
 {
-    ROUTINE_TRACE("csr_matrix::resize");
+    ROUTINE_TRACE("csr_matrix<T>::resize");
     this->csr_row_ptr.resize(m + 1);
     this->csr_col_ind.resize(nnz);
     this->csr_val.resize(nnz);
@@ -133,9 +150,10 @@ void csr_matrix::resize(int m, int n, int nnz)
     this->nnz = nnz;
 }
 
-void csr_matrix::copy_from(const csr_matrix& A)
+template <typename T>
+void csr_matrix<T>::copy_from(const csr_matrix<T>& A)
 {
-    ROUTINE_TRACE("csr_matrix::copy_from");
+    ROUTINE_TRACE("csr_matrix<T>::copy_from");
 
     this->m   = A.get_m();
     this->n   = A.get_n();
@@ -149,9 +167,10 @@ void csr_matrix::copy_from(const csr_matrix& A)
     this->csr_val.copy_from(A.csr_val);
 }
 
-void csr_matrix::copy_lower_triangular_from(const csr_matrix& A, bool unit_diag)
+template <typename T>
+void csr_matrix<T>::copy_lower_triangular_from(const csr_matrix<T>& A, bool unit_diag)
 {
-    ROUTINE_TRACE("csr_matrix::copy_lower_triangular_from");
+    ROUTINE_TRACE("csr_matrix<T>::copy_lower_triangular_from");
 
     this->m = A.get_m();
     this->n = A.get_n();
@@ -159,7 +178,7 @@ void csr_matrix::copy_lower_triangular_from(const csr_matrix& A, bool unit_diag)
     this->csr_row_ptr.resize(A.get_m() + 1);
 
     // Determine non-zero count in lower triangular portion of A
-    backend_dispatch("linalg::csr_matrix::copy_lower_triangular_from",
+    backend_dispatch("linalg::csr_matrix<T>::copy_lower_triangular_from",
                      host_extract_lower_triangular_nnz,
                      device_extract_lower_triangular_nnz,
                      A,
@@ -169,16 +188,17 @@ void csr_matrix::copy_lower_triangular_from(const csr_matrix& A, bool unit_diag)
     this->csr_col_ind.resize(this->nnz);
     this->csr_val.resize(this->nnz);
 
-    backend_dispatch("linalg::csr_matrix::copy_lower_triangular_from",
+    backend_dispatch("linalg::csr_matrix<T>::copy_lower_triangular_from",
                      host_extract_lower_triangular,
                      device_extract_lower_triangular,
                      A,
                      *this);
 }
 
-void csr_matrix::copy_upper_triangular_from(const csr_matrix& A, bool unit_diag)
+template <typename T>
+void csr_matrix<T>::copy_upper_triangular_from(const csr_matrix<T>& A, bool unit_diag)
 {
-    ROUTINE_TRACE("csr_matrix::copy_upper_triangular_from");
+    ROUTINE_TRACE("csr_matrix<T>::copy_upper_triangular_from");
 
     this->m = A.get_m();
     this->n = A.get_n();
@@ -186,7 +206,7 @@ void csr_matrix::copy_upper_triangular_from(const csr_matrix& A, bool unit_diag)
     this->csr_row_ptr.resize(A.get_m() + 1);
 
     // Determine non-zero count in upper triangular portion of A
-    backend_dispatch("linalg::csr_matrix::copy_upper_triangular_from",
+    backend_dispatch("linalg::csr_matrix<T>::copy_upper_triangular_from",
                      host_extract_upper_triangular_nnz,
                      device_extract_upper_triangular_nnz,
                      A,
@@ -196,16 +216,17 @@ void csr_matrix::copy_upper_triangular_from(const csr_matrix& A, bool unit_diag)
     this->csr_col_ind.resize(this->nnz);
     this->csr_val.resize(this->nnz);
 
-    backend_dispatch("linalg::csr_matrix::copy_upper_triangular_from",
+    backend_dispatch("linalg::csr_matrix<T>::copy_upper_triangular_from",
                      host_extract_upper_triangular,
                      device_extract_upper_triangular,
                      A,
                      *this);
 }
 
-void csr_matrix::move_to_device()
+template <typename T>
+void csr_matrix<T>::move_to_device()
 {
-    ROUTINE_TRACE("csr_matrix::move_to_device");
+    ROUTINE_TRACE("csr_matrix<T>::move_to_device");
 
     if(!is_device_available())
     {
@@ -220,9 +241,10 @@ void csr_matrix::move_to_device()
     on_host = false;
 }
 
-void csr_matrix::move_to_host()
+template <typename T>
+void csr_matrix<T>::move_to_host()
 {
-    ROUTINE_TRACE("csr_matrix::move_to_host");
+    ROUTINE_TRACE("csr_matrix<T>::move_to_host");
 
     csr_row_ptr.move_to_host();
     csr_col_ind.move_to_host();
@@ -231,30 +253,33 @@ void csr_matrix::move_to_host()
     on_host = true;
 }
 
-void csr_matrix::extract_diagonal(vector<double>& diag) const
+template <typename T>
+void csr_matrix<T>::extract_diagonal(vector<T>& diag) const
 {
-    ROUTINE_TRACE("csr_matrix::extract_diagonal");
+    ROUTINE_TRACE("csr_matrix<T>::extract_diagonal");
 
     backend_dispatch(
-        "linalg::csr_matrix::extract_diagonal", host_diagonal, device_diagonal, *this, diag);
+        "linalg::csr_matrix<T>::extract_diagonal", host_diagonal, device_diagonal, *this, diag);
 }
 
-void csr_matrix::scale_diagonal_by(double scalar)
+template <typename T>
+void csr_matrix<T>::scale_diagonal_by(T scalar)
 {
-    ROUTINE_TRACE("csr_matrix::scale_diagonal_by");
+    ROUTINE_TRACE("csr_matrix<T>::scale_diagonal_by");
 
-    backend_dispatch("linalg::csr_matrix::scale_diagonal_by",
+    backend_dispatch("linalg::csr_matrix<T>::scale_diagonal_by",
                      host_scale_diagonal,
                      device_scale_diagonal,
                      *this,
                      scalar);
 }
 
-void csr_matrix::scale_by_inverse_diagonal()
+template <typename T>
+void csr_matrix<T>::scale_by_inverse_diagonal()
 {
-    ROUTINE_TRACE("csr_matrix::scale_by_inverse_diagonal");
+    ROUTINE_TRACE("csr_matrix<T>::scale_by_inverse_diagonal");
 
-    vector<double> diag(this->m);
+    vector<T> diag(this->m);
     if(this->is_on_host())
     {
         diag.move_to_host();
@@ -267,16 +292,17 @@ void csr_matrix::scale_by_inverse_diagonal()
     this->extract_diagonal(diag);
 
     // Scale each row by the inverse of its diagonal element
-    backend_dispatch("linalg::csr_matrix::scale_by_inverse_diagonal",
+    backend_dispatch("linalg::csr_matrix<T>::scale_by_inverse_diagonal",
                      host_scale_by_inverse_diagonal,
                      device_scale_by_inverse_diagonal,
                      *this,
                      diag);
 }
 
-void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) const
+template <typename T>
+void csr_matrix<T>::multiply_by_vector(vector<T>& y, const vector<T>& x) const
 {
-    ROUTINE_TRACE("csr_matrix::multiply_by_vector");
+    ROUTINE_TRACE("csr_matrix<T>::multiply_by_vector");
 
     csrmv_descr* descr = nullptr;
     create_csrmv_descr(&descr);
@@ -288,9 +314,10 @@ void csr_matrix::multiply_by_vector(vector<double>& y, const vector<double>& x) 
     destroy_csrmv_descr(descr);
 }
 
-void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const
+template <typename T>
+void csr_matrix<T>::multiply_by_vector_and_add(vector<T>& y, const vector<T>& x) const
 {
-    ROUTINE_TRACE("csr_matrix::multiply_by_vector_and_add");
+    ROUTINE_TRACE("csr_matrix<T>::multiply_by_vector_and_add");
 
     csrmv_descr* descr = nullptr;
     create_csrmv_descr(&descr);
@@ -302,9 +329,10 @@ void csr_matrix::multiply_by_vector_and_add(vector<double>& y, const vector<doub
     destroy_csrmv_descr(descr);
 }
 
-void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
+template <typename T>
+void csr_matrix<T>::multiply_by_matrix(csr_matrix<T>& C, const csr_matrix<T>& B) const
 {
-    ROUTINE_TRACE("csr_matrix::multiply_by_matrix");
+    ROUTINE_TRACE("csr_matrix<T>::multiply_by_matrix");
 
     csr_matrix D; // Empty matrix for D
 
@@ -324,11 +352,10 @@ void csr_matrix::multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const
     destroy_csrgemm_descr(descr);
 }
 
-void csr_matrix::triangular_solve_lower(vector<double>&       x,
-                                        const vector<double>& y,
-                                        bool                  unit_diag) const
+template <typename T>
+void csr_matrix<T>::triangular_solve_lower(vector<T>& x, const vector<T>& y, bool unit_diag) const
 {
-    ROUTINE_TRACE("csr_matrix::triangular_solve_lower");
+    ROUTINE_TRACE("csr_matrix<T>::triangular_solve_lower");
 
     csrtrsv_descr* descr = nullptr;
     create_csrtrsv_descr(&descr);
@@ -342,7 +369,7 @@ void csr_matrix::triangular_solve_lower(vector<double>&       x,
     csrtrsv_solve(*this,
                   y,
                   x,
-                  static_cast<double>(1.0),
+                  static_cast<T>(1.0),
                   triangular_type::lower,
                   unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
                   descr);
@@ -350,11 +377,10 @@ void csr_matrix::triangular_solve_lower(vector<double>&       x,
     destroy_csrtrsv_descr(descr);
 }
 
-void csr_matrix::triangular_solve_upper(vector<double>&       x,
-                                        const vector<double>& y,
-                                        bool                  unit_diag) const
+template <typename T>
+void csr_matrix<T>::triangular_solve_upper(vector<T>& x, const vector<T>& y, bool unit_diag) const
 {
-    ROUTINE_TRACE("csr_matrix::triangular_solve_upper");
+    ROUTINE_TRACE("csr_matrix<T>::triangular_solve_upper");
 
     csrtrsv_descr* descr = nullptr;
     create_csrtrsv_descr(&descr);
@@ -368,7 +394,7 @@ void csr_matrix::triangular_solve_upper(vector<double>&       x,
     csrtrsv_solve(*this,
                   y,
                   x,
-                  static_cast<double>(1.0),
+                  static_cast<T>(1.0),
                   triangular_type::upper,
                   unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
                   descr);
@@ -376,9 +402,10 @@ void csr_matrix::triangular_solve_upper(vector<double>&       x,
     destroy_csrtrsv_descr(descr);
 }
 
-void csr_matrix::compute_incomplete_cholesky_factorization()
+template <typename T>
+void csr_matrix<T>::compute_incomplete_cholesky_factorization()
 {
-    ROUTINE_TRACE("csr_matrix::compute_incomplete_cholesky_factorization");
+    ROUTINE_TRACE("csr_matrix<T>::compute_incomplete_cholesky_factorization");
 
     csric0_descr* descr = nullptr;
     create_csric0_descr(&descr);
@@ -391,9 +418,10 @@ void csr_matrix::compute_incomplete_cholesky_factorization()
     destroy_csric0_descr(descr);
 }
 
-void csr_matrix::compute_incomplete_LU_factorization()
+template <typename T>
+void csr_matrix<T>::compute_incomplete_LU_factorization()
 {
-    ROUTINE_TRACE("csr_matrix::compute_incomplete_LU_factorization");
+    ROUTINE_TRACE("csr_matrix<T>::compute_incomplete_LU_factorization");
 
     csrilu0_descr* descr = nullptr;
     create_csrilu0_descr(&descr);
@@ -406,19 +434,24 @@ void csr_matrix::compute_incomplete_LU_factorization()
     destroy_csrilu0_descr(descr);
 }
 
-void csr_matrix::transpose(csr_matrix& T) const
+template <typename T>
+void csr_matrix<T>::transpose(csr_matrix<T>& T) const
 {
-    ROUTINE_TRACE("csr_matrix::transpose");
+    ROUTINE_TRACE("csr_matrix<T>::transpose");
 
-    backend_dispatch(
-        "linalg::csr_matrix::transpose", host_transpose_matrix, device_transpose_matrix, *this, T);
+    backend_dispatch("linalg::csr_matrix<T>::transpose",
+                     host_transpose_matrix,
+                     device_transpose_matrix,
+                     *this,
+                     T);
 }
 
-void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2, int max_k, double tol)
+template <typename T>
+void csr_matrix<T>::apply_ruiz_scaling(vector<T>& D1, vector<T>& D2, int max_k, T tol)
 {
-    ROUTINE_TRACE("csr_matrix::apply_ruiz_scaling");
+    ROUTINE_TRACE("csr_matrix<T>::apply_ruiz_scaling");
 
-    backend_dispatch("linalg::csr_matrix::apply_ruiz_scaling",
+    backend_dispatch("linalg::csr_matrix<T>::apply_ruiz_scaling",
                      host_ruiz_scaling,
                      device_ruiz_scaling,
                      D1,
@@ -428,11 +461,12 @@ void csr_matrix::apply_ruiz_scaling(vector<double>& D1, vector<double>& D2, int 
                      tol);
 }
 
-void csr_matrix::apply_symmetric_ruiz_scaling(vector<double>& D, int max_k, double tol)
+template <typename T>
+void csr_matrix<T>::apply_symmetric_ruiz_scaling(vector<T>& D, int max_k, T tol)
 {
-    ROUTINE_TRACE("csr_matrix::apply_symmetric_ruiz_scaling");
+    ROUTINE_TRACE("csr_matrix<T>::apply_symmetric_ruiz_scaling");
 
-    backend_dispatch("linalg::csr_matrix::apply_symmetric_ruiz_scaling",
+    backend_dispatch("linalg::csr_matrix<T>::apply_symmetric_ruiz_scaling",
                      host_symmetric_ruiz_scaling,
                      device_symmetric_ruiz_scaling,
                      D,
@@ -442,14 +476,15 @@ void csr_matrix::apply_symmetric_ruiz_scaling(vector<double>& D, int max_k, doub
 }
 
 // Structure to hold triplet (COO) format data
+template <typename T>
 struct triplet
 {
-    int    row;
-    int    col;
-    double value;
+    int row;
+    int col;
+    T   value;
 
     // For sorting: primarily by row, then by column
-    bool operator<(const triplet& other) const
+    bool operator<(const triplet<T>& other) const
     {
         if(row != other.row)
         {
@@ -485,9 +520,10 @@ static bool read_file_into_string(const std::string& filename, std::string& file
     return false;
 }
 
-bool csr_matrix::read_mtx(const std::string& filename)
+template <typename T>
+bool csr_matrix<T>::read_mtx(const std::string& filename)
 {
-    ROUTINE_TRACE("csr_matrix::read_mtx");
+    ROUTINE_TRACE("csr_matrix<T>::read_mtx");
 
     if(!this->is_on_host())
     {
@@ -590,7 +626,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
         return false;
     }
 
-    std::vector<triplet> triplets;
+    std::vector<triplet<T>> triplets;
     triplets.reserve(is_symmetric ? nnz_coo * 2
                                   : nnz_coo); // Reserve enough space for symmetric case
 
@@ -611,9 +647,9 @@ bool csr_matrix::read_mtx(const std::string& filename)
         size_t second_space = line.find(' ', first_space + 1);
 
         // Extract substrings and convert to numbers
-        int    r   = std::stoi(line.substr(0, first_space));
-        int    c   = std::stoi(line.substr(first_space + 1, second_space - (first_space + 1)));
-        double val = std::stod(line.substr(second_space + 1));
+        int r   = std::stoi(line.substr(0, first_space));
+        int c   = std::stoi(line.substr(first_space + 1, second_space - (first_space + 1)));
+        T   val = std::stod(line.substr(second_space + 1));
 
         triplets.push_back({r - 1, c - 1, val}); // Matrix Market is 1-indexed
 
@@ -634,7 +670,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
     // Also, sum values if multiple entries refer to the same (row, col)
     if(!triplets.empty())
     {
-        std::vector<triplet> unique_triplets;
+        std::vector<triplet<T>> unique_triplets;
         unique_triplets.reserve(triplets.size());
         unique_triplets.push_back(triplets[0]);
 
@@ -676,7 +712,7 @@ bool csr_matrix::read_mtx(const std::string& filename)
 
     for(int64_t i = 0; i < nnz; ++i)
     {
-        const triplet& t = triplets[i];
+        const triplet<T>& t = triplets[i];
 
         csr_row_ptr[t.row + 1]++;
         csr_col_ind[i] = t.col;
@@ -692,9 +728,10 @@ bool csr_matrix::read_mtx(const std::string& filename)
     return true;
 }
 
-bool csr_matrix::write_mtx(const std::string& filename)
+template <typename T>
+bool csr_matrix<T>::write_mtx(const std::string& filename)
 {
-    ROUTINE_TRACE("csr_matrix::write_mtx");
+    ROUTINE_TRACE("csr_matrix<T>::write_mtx");
 
     if(!this->is_on_host())
     {
@@ -717,11 +754,11 @@ bool csr_matrix::write_mtx(const std::string& filename)
 
     // Determine data type for the header
     std::string data_type_str;
-    if(std::is_floating_point<double>::value)
+    if(std::is_floating_point<T>::value)
     {
         data_type_str = "real";
     }
-    else if(std::is_integral<double>::value)
+    else if(std::is_integral<T>::value)
     {
         data_type_str = "integer";
     }
@@ -737,7 +774,7 @@ bool csr_matrix::write_mtx(const std::string& filename)
     file << m << " " << n << " " << nnz << "\n";
 
     // Set precision for floating-point numbers if applicable
-    if(std::is_floating_point<double>::value)
+    if(std::is_floating_point<T>::value)
     {
         file << std::fixed << std::setprecision(10); // Adjust precision as needed
     }
@@ -756,9 +793,10 @@ bool csr_matrix::write_mtx(const std::string& filename)
     return true;
 }
 
-void csr_matrix::make_diagonally_dominant()
+template <typename T>
+void csr_matrix<T>::make_diagonally_dominant()
 {
-    ROUTINE_TRACE("csr_matrix::make_diagonally_dominant");
+    ROUTINE_TRACE("csr_matrix<T>::make_diagonally_dominant");
 
     if(!this->is_on_host())
     {
@@ -797,7 +835,7 @@ void csr_matrix::make_diagonally_dominant()
         int start = csr_row_ptr[i];
         int end   = csr_row_ptr[i + 1];
 
-        double row_sum = 0;
+        T row_sum = 0;
         for(int j = start; j < end; j++)
         {
             if(csr_col_ind[j] != i)
@@ -810,16 +848,17 @@ void csr_matrix::make_diagonally_dominant()
         {
             if(csr_col_ind[j] == i)
             {
-                csr_val[j] = std::max(std::abs(csr_val[j]), 1.1 * row_sum);
+                csr_val[j] = std::max(std::abs(csr_val[j]), static_cast<T>(1.1) * row_sum);
                 break;
             }
         }
     }
 }
 
-void csr_matrix::print_matrix(const std::string name) const
+template <typename T>
+void csr_matrix<T>::print_matrix(const std::string name) const
 {
-    ROUTINE_TRACE("csr_matrix::print_matrix");
+    ROUTINE_TRACE("csr_matrix<T>::print_matrix");
 
     if(!this->is_on_host())
     {
@@ -833,7 +872,7 @@ void csr_matrix::print_matrix(const std::string name) const
         int start = csr_row_ptr[i];
         int end   = csr_row_ptr[i + 1];
 
-        std::vector<double> temp(n, 0.0);
+        std::vector<T> temp(n, 0.0);
         for(int j = start; j < end; j++)
         {
             temp[csr_col_ind[j]] = (csr_val.get_size() != 0) ? csr_val[j] : 1.0;
@@ -848,9 +887,10 @@ void csr_matrix::print_matrix(const std::string name) const
     std::cout << "" << std::endl;
 }
 
-void csr_matrix::print_row_ptr(const std::string name) const
+template <typename T>
+void csr_matrix<T>::print_row_ptr(const std::string name) const
 {
-    ROUTINE_TRACE("csr_matrix::print_row_ptr");
+    ROUTINE_TRACE("csr_matrix<T>::print_row_ptr");
 
     if(!this->is_on_host())
     {
@@ -865,9 +905,11 @@ void csr_matrix::print_row_ptr(const std::string name) const
     }
     std::cout << "" << std::endl;
 }
-void csr_matrix::print_col_ind(const std::string name) const
+
+template <typename T>
+void csr_matrix<T>::print_col_ind(const std::string name) const
 {
-    ROUTINE_TRACE("csr_matrix::print_col_ind");
+    ROUTINE_TRACE("csr_matrix<T>::print_col_ind");
 
     if(!this->is_on_host())
     {
@@ -882,9 +924,11 @@ void csr_matrix::print_col_ind(const std::string name) const
     }
     std::cout << "" << std::endl;
 }
-void csr_matrix::print_values(const std::string name) const
+
+template <typename T>
+void csr_matrix<T>::print_values(const std::string name) const
 {
-    ROUTINE_TRACE("csr_matrix::print_values");
+    ROUTINE_TRACE("csr_matrix<T>::print_values");
 
     if(!this->is_on_host())
     {
@@ -900,15 +944,16 @@ void csr_matrix::print_values(const std::string name) const
     std::cout << "" << std::endl;
 }
 
-void csr_matrix::print_matrix(const std::string          name,
-                              int                        m,
-                              int                        n,
-                              int                        nnz,
-                              const std::vector<int>&    csr_row_ptr,
-                              const std::vector<int>&    csr_col_ind,
-                              const std::vector<double>& csr_val)
+template <typename T>
+void csr_matrix<T>::print_matrix(const std::string       name,
+                                 int                     m,
+                                 int                     n,
+                                 int                     nnz,
+                                 const std::vector<int>& csr_row_ptr,
+                                 const std::vector<int>& csr_col_ind,
+                                 const std::vector<T>&   csr_val)
 {
-    ROUTINE_TRACE("csr_matrix::print_matrix");
+    ROUTINE_TRACE("csr_matrix<T>::print_matrix");
 
     std::cout << name << std::endl;
     for(int i = 0; i < m; i++)
@@ -916,7 +961,7 @@ void csr_matrix::print_matrix(const std::string          name,
         int start = csr_row_ptr[i];
         int end   = csr_row_ptr[i + 1];
 
-        std::vector<double> temp(n, 0.0);
+        std::vector<T> temp(n, 0.0);
         for(int j = start; j < end; j++)
         {
             temp[csr_col_ind[j]] = (nnz != 0) ? csr_val[j] : 1.0;
@@ -930,3 +975,6 @@ void csr_matrix::print_matrix(const std::string          name,
     }
     std::cout << "" << std::endl;
 }
+
+// template class linalg::csr_matrix<float>;
+template class linalg::csr_matrix<double>;

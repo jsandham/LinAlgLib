@@ -35,7 +35,7 @@
 #include "cuda/cuda_extract.h"
 #endif
 
-void linalg::device_diagonal(const csr_matrix& A, vector<double>& d)
+void linalg::device_diagonal(const csr_matrix<double>& A, vector<double>& d)
 {
     ROUTINE_TRACE("linalg::device_diagonal");
     if constexpr(is_cuda_available())
@@ -55,7 +55,9 @@ void linalg::device_diagonal(const csr_matrix& A, vector<double>& d)
     }
 }
 
-void linalg::device_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L)
+void linalg::device_extract_lower_triangular_nnz(const csr_matrix<double>& A,
+                                                 csr_matrix<double>&       L,
+                                                 int&                      nnz_L)
 {
     ROUTINE_TRACE("linalg::device_extract_lower_triangular_nnz");
     if constexpr(is_cuda_available())
@@ -75,7 +77,7 @@ void linalg::device_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix
     }
 }
 
-void linalg::device_extract_lower_triangular(const csr_matrix& A, csr_matrix& L)
+void linalg::device_extract_lower_triangular(const csr_matrix<double>& A, csr_matrix<double>& L)
 {
     ROUTINE_TRACE("linalg::device_extract_lower_triangular");
     if constexpr(is_cuda_available())
@@ -100,7 +102,9 @@ void linalg::device_extract_lower_triangular(const csr_matrix& A, csr_matrix& L)
     }
 }
 
-void linalg::device_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U)
+void linalg::device_extract_upper_triangular_nnz(const csr_matrix<double>& A,
+                                                 csr_matrix<double>&       U,
+                                                 int&                      nnz_U)
 {
     ROUTINE_TRACE("linalg::device_extract_upper_triangular_nnz_count");
     if constexpr(is_cuda_available())
@@ -120,7 +124,7 @@ void linalg::device_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix
     }
 }
 
-void linalg::device_extract_upper_triangular(const csr_matrix& A, csr_matrix& U)
+void linalg::device_extract_upper_triangular(const csr_matrix<double>& A, csr_matrix<double>& U)
 {
     ROUTINE_TRACE("linalg::device_extract_upper_triangular");
     if constexpr(is_cuda_available())

@@ -69,13 +69,13 @@ namespace linalg
     }
 }
 
-void linalg::host_scale_diagonal(csr_matrix& A, double scalar)
+void linalg::host_scale_diagonal(csr_matrix<double>& A, double scalar)
 {
     ROUTINE_TRACE("linalg::host_scale_diagonal");
     host_scale_diagonal_impl(A.get_row_ptr(), A.get_col_ind(), A.get_val(), A.get_m(), scalar);
 }
 
-void linalg::host_scale_by_inverse_diagonal(csr_matrix& A, const vector<double>& diag)
+void linalg::host_scale_by_inverse_diagonal(csr_matrix<double>& A, const vector<double>& diag)
 {
     ROUTINE_TRACE("linalg::host_scale_by_inverse_diagonal");
     host_scale_by_inverse_diagonal_impl(

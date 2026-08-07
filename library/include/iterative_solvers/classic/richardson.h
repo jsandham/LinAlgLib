@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -194,7 +194,7 @@ namespace linalg
      * or a copy of the matrix `A` if needed for residual computation.
      * \param A The sparse matrix in CSR format for which the solver is being built.
      */
-        void build(const csr_matrix& A);
+        void build(const csr_matrix<double>& A);
 
         /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the Richardson method.
      *
@@ -213,11 +213,11 @@ namespace linalg
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Other negative values for errors (e.g., invalid input).
      */
-        int solve(const csr_matrix&     A,
-                  vector<double>&       x,
-                  const vector<double>& b,
-                  iter_control          control,
-                  double                theta);
+        int solve(const csr_matrix<double>& A,
+                  vector<double>&           x,
+                  const vector<double>&     b,
+                  iter_control              control,
+                  double                    theta);
     };
 }
 

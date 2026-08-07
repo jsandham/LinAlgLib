@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -88,27 +88,29 @@ namespace linalg
         on_host = true;
     }
 
-    void jacobi_iteration(const csr_matrix&     A,
-                          vector<double>&       x,
-                          const vector<double>& xold,
-                          const vector<double>& b);
-    void gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b);
-    void symm_gauss_seidel_iteration(const csr_matrix&     A,
-                                     vector<double>&       x,
-                                     const vector<double>& b);
-    void sor_iteration(const csr_matrix&     A,
-                       vector<double>&       x,
-                       const vector<double>& b,
-                       const double          omega);
-    void ssor_iteration(const csr_matrix&     A,
-                        vector<double>&       x,
-                        const vector<double>& b,
-                        const double          omega);
+    void jacobi_iteration(const csr_matrix<double>& A,
+                          vector<double>&           x,
+                          const vector<double>&     xold,
+                          const vector<double>&     b);
+    void gauss_seidel_iteration(const csr_matrix<double>& A,
+                                vector<double>&           x,
+                                const vector<double>&     b);
+    void symm_gauss_seidel_iteration(const csr_matrix<double>& A,
+                                     vector<double>&           x,
+                                     const vector<double>&     b);
+    void sor_iteration(const csr_matrix<double>& A,
+                       vector<double>&           x,
+                       const vector<double>&     b,
+                       const double              omega);
+    void ssor_iteration(const csr_matrix<double>& A,
+                        vector<double>&           x,
+                        const vector<double>&     b,
+                        const double              omega);
 
-    static void apply_smoother(const csr_matrix&     A,
-                               vector<double>&       x,
-                               const vector<double>& b,
-                               smoother              smoother)
+    static void apply_smoother(const csr_matrix<double>& A,
+                               vector<double>&           x,
+                               const vector<double>&     b,
+                               smoother                  smoother)
     {
         ROUTINE_TRACE("apply_smoother");
 
@@ -150,15 +152,15 @@ namespace linalg
         ROUTINE_TRACE("vcycle");
 
         // A_coarse = R*A*P
-        const csr_matrix& A = hierarchy.A_cs[currentLevel];
+        const csr_matrix<double>& A = hierarchy.A_cs[currentLevel];
 
         int N = A.get_m(); // size of A at current level
 
         if(currentLevel < hierarchy.total_levels)
         {
-            const csr_matrix& R        = hierarchy.restrictions[currentLevel];
-            const csr_matrix& P        = hierarchy.prolongations[currentLevel];
-            const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+            const csr_matrix<double>& R        = hierarchy.restrictions[currentLevel];
+            const csr_matrix<double>& P        = hierarchy.prolongations[currentLevel];
+            const csr_matrix<double>& A_coarse = hierarchy.A_cs[currentLevel + 1];
 
             int Nc = A_coarse.get_m(); // size of A at next course level
 
@@ -276,15 +278,15 @@ namespace linalg
         ROUTINE_TRACE("wcycle");
 
         // A_coarse = R*A*P
-        const csr_matrix& A = hierarchy.A_cs[currentLevel];
+        const csr_matrix<double>& A = hierarchy.A_cs[currentLevel];
 
         int N = A.get_m(); // size of A at current level
 
         if(currentLevel < hierarchy.total_levels)
         {
-            const csr_matrix& R        = hierarchy.restrictions[currentLevel];
-            const csr_matrix& P        = hierarchy.prolongations[currentLevel];
-            const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+            const csr_matrix<double>& R        = hierarchy.restrictions[currentLevel];
+            const csr_matrix<double>& P        = hierarchy.prolongations[currentLevel];
+            const csr_matrix<double>& A_coarse = hierarchy.A_cs[currentLevel + 1];
 
             int Nc = A_coarse.get_m(); // size of A at next course level
 
@@ -399,15 +401,15 @@ namespace linalg
         ROUTINE_TRACE("fcycle");
 
         // A_coarse = R*A*P
-        const csr_matrix& A = hierarchy.A_cs[currentLevel];
+        const csr_matrix<double>& A = hierarchy.A_cs[currentLevel];
 
         int N = A.get_m(); // size of A at current level
 
         if(currentLevel < hierarchy.total_levels)
         {
-            const csr_matrix& R        = hierarchy.restrictions[currentLevel];
-            const csr_matrix& P        = hierarchy.prolongations[currentLevel];
-            const csr_matrix& A_coarse = hierarchy.A_cs[currentLevel + 1];
+            const csr_matrix<double>& R        = hierarchy.restrictions[currentLevel];
+            const csr_matrix<double>& P        = hierarchy.prolongations[currentLevel];
+            const csr_matrix<double>& A_coarse = hierarchy.A_cs[currentLevel + 1];
 
             int Nc = A_coarse.get_m(); // size of A at next course level
 
@@ -524,7 +526,7 @@ int linalg::amg_solve(const hierarchy&      hierarchy,
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    const csr_matrix& A = hierarchy.A_cs[0];
+    const csr_matrix<double>& A = hierarchy.A_cs[0];
 
     vector<double> residual(A.get_m());
     compute_residual(A, x, b, residual);

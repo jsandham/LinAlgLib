@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -35,10 +35,10 @@
 
 bool testing::test_transpose(Arguments arg)
 {
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
-    linalg::csr_matrix mat_A_transpose;
+    linalg::csr_matrix<double> mat_A_transpose;
 
     mat_A_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
 

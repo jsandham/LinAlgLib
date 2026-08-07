@@ -41,12 +41,12 @@ bool testing::test_triangular_solve(Arguments arg)
 {
     std::cout << "Testing triangular solve with matrix: " << arg.filename << std::endl;
 
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     assert(mat_A.get_m() == mat_A.get_n());
 
-    linalg::csr_matrix mat_B;
+    linalg::csr_matrix<double> mat_B;
 
     switch(arg.uplo)
     {

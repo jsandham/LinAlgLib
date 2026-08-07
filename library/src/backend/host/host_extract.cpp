@@ -182,13 +182,15 @@ namespace linalg
     }
 }
 
-void linalg::host_diagonal(const csr_matrix& A, vector<double>& d)
+void linalg::host_diagonal(const csr_matrix<double>& A, vector<double>& d)
 {
     ROUTINE_TRACE("linalg::host_diagonal");
     host_diagonal_impl(A.get_row_ptr(), A.get_col_ind(), A.get_val(), d.get_vec(), A.get_m());
 }
 
-void linalg::host_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L)
+void linalg::host_extract_lower_triangular_nnz(const csr_matrix<double>& A,
+                                               csr_matrix<double>&       L,
+                                               int&                      nnz_L)
 {
     ROUTINE_TRACE("linalg::host_extract_lower_triangular_nnz");
     host_extract_lower_triangular_nnz_impl(A.get_m(),
@@ -200,7 +202,7 @@ void linalg::host_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& 
                                            &nnz_L);
 }
 
-void linalg::host_extract_lower_triangular(const csr_matrix& A, csr_matrix& L)
+void linalg::host_extract_lower_triangular(const csr_matrix<double>& A, csr_matrix<double>& L)
 {
     ROUTINE_TRACE("linalg::host_extract_lower_triangular");
     host_extract_lower_triangular_impl(A.get_m(),
@@ -217,7 +219,9 @@ void linalg::host_extract_lower_triangular(const csr_matrix& A, csr_matrix& L)
                                        L.get_val());
 }
 
-void linalg::host_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U)
+void linalg::host_extract_upper_triangular_nnz(const csr_matrix<double>& A,
+                                               csr_matrix<double>&       U,
+                                               int&                      nnz_U)
 {
     ROUTINE_TRACE("linalg::host_extract_upper_triangular_nnz");
     host_extract_upper_triangular_nnz_impl(A.get_m(),
@@ -229,7 +233,7 @@ void linalg::host_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& 
                                            &nnz_U);
 }
 
-void linalg::host_extract_upper_triangular(const csr_matrix& A, csr_matrix& U)
+void linalg::host_extract_upper_triangular(const csr_matrix<double>& A, csr_matrix<double>& U)
 {
     ROUTINE_TRACE("linalg::host_extract_upper_triangular");
     host_extract_upper_triangular_impl(A.get_m(),

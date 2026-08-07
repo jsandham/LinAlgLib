@@ -105,7 +105,7 @@ namespace linalg
     }
 }
 
-void linalg::host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
+void linalg::host_csrilu0(csr_matrix<double>& LU, int* structural_zero, int* numeric_zero)
 {
     ROUTINE_TRACE("linalg::host_csrilu0");
     host_csrilu0_impl(LU.get_m(),
@@ -118,12 +118,12 @@ void linalg::host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zer
                       numeric_zero);
 }
 
-void linalg::host_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)
+void linalg::host_csrilu0_analysis(const csr_matrix<double>& A, csrilu0_descr* descr)
 {
     ROUTINE_TRACE("linalg::host_csrilu0_analysis");
 }
 
-void linalg::host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
+void linalg::host_csrilu0_compute(csr_matrix<double>& A, const csrilu0_descr* descr)
 {
     ROUTINE_TRACE("linalg::host_csrilu0_compute");
     host_csrilu0_impl(A.get_m(),

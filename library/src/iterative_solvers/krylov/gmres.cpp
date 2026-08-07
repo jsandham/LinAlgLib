@@ -33,7 +33,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -209,7 +208,7 @@ gmres_solver::gmres_solver()
 
 gmres_solver::~gmres_solver() {}
 
-void gmres_solver::build(const csr_matrix& A, int restart)
+void gmres_solver::build(const csr_matrix<double>& A, int restart)
 {
     this->restart = std::min(restart, A.get_m() - 1);
 
@@ -222,10 +221,10 @@ void gmres_solver::build(const csr_matrix& A, int restart)
     s.resize(restart);
 }
 
-int gmres_solver::solve_nonprecond(const csr_matrix&     A,
-                                   vector<double>&       x,
-                                   const vector<double>& b,
-                                   iter_control          control)
+int gmres_solver::solve_nonprecond(const csr_matrix<double>& A,
+                                   vector<double>&           x,
+                                   const vector<double>&     b,
+                                   iter_control              control)
 {
     ROUTINE_TRACE("gmres_solver::solve_nonprecond");
 
@@ -368,11 +367,11 @@ int gmres_solver::solve_nonprecond(const csr_matrix&     A,
     return iter;
 }
 
-int gmres_solver::solve_precond(const csr_matrix&     A,
-                                vector<double>&       x,
-                                const vector<double>& b,
-                                const preconditioner* precond,
-                                iter_control          control)
+int gmres_solver::solve_precond(const csr_matrix<double>& A,
+                                vector<double>&           x,
+                                const vector<double>&     b,
+                                const preconditioner*     precond,
+                                iter_control              control)
 {
     ROUTINE_TRACE("gmres_solver::solve_precond");
 
@@ -523,11 +522,11 @@ int gmres_solver::solve_precond(const csr_matrix&     A,
     return iter;
 }
 
-int gmres_solver::solve(const csr_matrix&     A,
-                        vector<double>&       x,
-                        const vector<double>& b,
-                        const preconditioner* precond,
-                        iter_control          control)
+int gmres_solver::solve(const csr_matrix<double>& A,
+                        vector<double>&           x,
+                        const vector<double>&     b,
+                        const preconditioner*     precond,
+                        iter_control              control)
 {
     ROUTINE_TRACE("gmres_solver::solve");
 

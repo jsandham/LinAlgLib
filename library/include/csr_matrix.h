@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -45,6 +45,7 @@ namespace linalg
  * The CSR format is efficient for storing and operating on sparse matrices, as it only
  * stores the non-zero elements along with information about their row and column indices.
  */
+    template <typename T>
     class csr_matrix
     {
     private:
@@ -89,7 +90,7 @@ namespace linalg
      * non-zero element. The values for the non-zero elements in row `i` are stored
      * in `csr_val[csr_row_ptr[i] : csr_row_ptr[i+1] - 1]`.
      */
-        vector<double> csr_val;
+        vector<T> csr_val;
 
         /*! \brief Flag indicating if the matrix data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -109,12 +110,12 @@ namespace linalg
      * \param n The number of columns in the matrix.
      * \param nnz The total number of non-zero elements in the matrix.
      */
-        csr_matrix(const std::vector<int>&    csr_row_ptr,
-                   const std::vector<int>&    csr_col_ind,
-                   const std::vector<double>& csr_val,
-                   int                        m,
-                   int                        n,
-                   int                        nnz);
+        csr_matrix(const std::vector<int>& csr_row_ptr,
+                   const std::vector<int>& csr_col_ind,
+                   const std::vector<T>&   csr_val,
+                   int                     m,
+                   int                     n,
+                   int                     nnz);
 
         /*! \brief Destructor.
      * Cleans up any resources allocated by the CSR matrix.
@@ -125,13 +126,13 @@ namespace linalg
      * Prevents direct copying of `csr_matrix` objects to avoid shallow copies and
      * ensure proper memory management. Use `copy_from` for explicit copying.
      */
-        csr_matrix(const csr_matrix&) = delete;
+        csr_matrix(const csr_matrix<T>&) = delete;
 
         /*! \brief Deleted copy assignment operator.
      * Prevents direct assignment of one `csr_matrix` to another to avoid shallow copies
      * and ensure proper memory management. Use `copy_from` for explicit copying.
      */
-        csr_matrix& operator=(const csr_matrix&) = delete;
+        csr_matrix<T>& operator=(const csr_matrix<T>&) = delete;
 
         /*! \brief Checks if the matrix data is currently stored on the host (CPU).
      * \return `true` if the matrix data is on the host, `false` otherwise (e.g., on a device).
@@ -164,9 +165,9 @@ namespace linalg
         const int* get_col_ind() const;
 
         /*! \brief Returns a constant pointer to the beginning of the values array.
-     * \return A `const double*` to `csr_val`.
+     * \return A `const T*` to `csr_val`.
      */
-        const double* get_val() const;
+        const T* get_val() const;
 
         /*! \brief Returns a non-constant pointer to the beginning of the row pointer array.
      * \return An `int*` to `csr_row_ptr`. This allows modification of the array.
@@ -179,9 +180,9 @@ namespace linalg
         int* get_col_ind();
 
         /*! \brief Returns a non-constant pointer to the beginning of the values array.
-     * \return A `double*` to `csr_val`. This allows modification of the array.
+     * \return A `T*` to `csr_val`. This allows modification of the array.
      */
-        double* get_val();
+        T* get_val();
 
         /*! \brief Resizes the CSR matrix and reallocates memory for its internal arrays.
      *
@@ -199,7 +200,7 @@ namespace linalg
      * and values) are duplicated.
      * \param A The source `csr_matrix` to copy from.
      */
-        void copy_from(const csr_matrix& A);
+        void copy_from(const csr_matrix<T>& A);
 
         /*! \brief Copies the lower triangular portion of another csr_matrix into this object.
     *
@@ -211,7 +212,7 @@ namespace linalg
     * \param A The source csr_matrix to copy from.
     * \param unit_diag A flag to specify whether the diagonal should be treated as all ones.
     */
-        void copy_lower_triangular_from(const csr_matrix& A, bool unit_diag);
+        void copy_lower_triangular_from(const csr_matrix<T>& A, bool unit_diag);
 
         /*! \brief Copies the upper triangular portion of another csr_matrix into this object.
     *
@@ -223,7 +224,7 @@ namespace linalg
     * \param A The source csr_matrix to copy from.
     * \param unit_diag A flag to specify whether the diagonal should be treated as all ones.
     */
-        void copy_upper_triangular_from(const csr_matrix& A, bool unit_diag);
+        void copy_upper_triangular_from(const csr_matrix<T>& A, bool unit_diag);
 
         /*! \brief Moves the matrix data from host memory to device memory (e.g., GPU).
      * \details This method handles the necessary memory transfers if a device is available
@@ -242,7 +243,7 @@ namespace linalg
      * This method populates the provided `vector` with the diagonal elements of the CSR matrix.
      * \param diag An output `vector` that will store the diagonal elements.
      */
-        void extract_diagonal(vector<double>& diag) const;
+        void extract_diagonal(vector<T>& diag) const;
 
         /*! \brief Scales the diagonal elements of the matrix by a scalar value.
      *
@@ -250,7 +251,7 @@ namespace linalg
      * Non-diagonal elements remain unchanged.
      * \param scalar The scalar value by which to multiply the diagonal elements.
      */
-        void scale_diagonal_by(double scalar);
+        void scale_diagonal_by(T scalar);
 
         /*! \brief Scales the matrix by the inverse of its diagonal elements.
      *
@@ -266,7 +267,7 @@ namespace linalg
      * \param y The output `vector` to store the result of the multiplication.
      * \param x The input `vector` to multiply with the matrix.
      */
-        void multiply_by_vector(vector<double>& y, const vector<double>& x) const;
+        void multiply_by_vector(vector<T>& y, const vector<T>& x) const;
 
         /*! \brief Multiplies the CSR matrix by a vector and adds the result: \f$y = y + A \cdot x\f$.
      *
@@ -275,7 +276,7 @@ namespace linalg
      * it contains the accumulated result.
      * \param x The input `vector` to multiply with the matrix.
      */
-        void multiply_by_vector_and_add(vector<double>& y, const vector<double>& x) const;
+        void multiply_by_vector_and_add(vector<T>& y, const vector<T>& x) const;
 
         /*! \brief Multiplies this CSR matrix by another CSR matrix: \f$C = A \cdot B\f$.
      *
@@ -283,7 +284,7 @@ namespace linalg
      * \param C The output `csr_matrix` to store the product \f$A \cdot B\f$.
      * \param B The right-hand side `csr_matrix` in the multiplication.
      */
-        void multiply_by_matrix(csr_matrix& C, const csr_matrix& B) const;
+        void multiply_by_matrix(csr_matrix<T>& C, const csr_matrix<T>& B) const;
 
         /*! \brief Solves the lower triangular system \f$L \cdot x = y\f$ using forward substitution.
      *
@@ -294,9 +295,7 @@ namespace linalg
      * \param unit_diag If `true`, the diagonal is assumed to be all ones and its stored
      * values are ignored. If `false`, the actual diagonal values from the matrix are used.
      */
-        void triangular_solve_lower(vector<double>&       x,
-                                    const vector<double>& y,
-                                    bool                  unit_diag) const;
+        void triangular_solve_lower(vector<T>& x, const vector<T>& y, bool unit_diag) const;
 
         /*! \brief Solves the upper triangular system \f$U \cdot x = y\f$ using back substitution.
      *
@@ -307,9 +306,7 @@ namespace linalg
      * \param unit_diag If `true`, the diagonal is assumed to be all ones and its stored
      * values are ignored. If `false`, the actual diagonal values from the matrix are used.
      */
-        void triangular_solve_upper(vector<double>&       x,
-                                    const vector<double>& y,
-                                    bool                  unit_diag) const;
+        void triangular_solve_upper(vector<T>& x, const vector<T>& y, bool unit_diag) const;
 
         /*! \brief Compute incomplete Cholesky factorization (IC(0)) in-place.
        *
@@ -363,10 +360,10 @@ namespace linalg
      *
      * \param T The output `csr_matrix` that will store the transpose of this matrix.
      */
-        void transpose(csr_matrix& T) const;
+        void transpose(csr_matrix<T>& T) const;
 
-        void apply_ruiz_scaling(vector<double>& D1, vector<double>& D2, int max_k, double tol);
-        void apply_symmetric_ruiz_scaling(vector<double>& D, int max_k, double tol);
+        void apply_ruiz_scaling(vector<T>& D1, vector<T>& D2, int max_k, T tol);
+        void apply_symmetric_ruiz_scaling(vector<T>& D, int max_k, T tol);
 
         /*! \brief Reads a sparse matrix from a Matrix Market (.mtx) file into this CSR object.
      * \param filename The path to the .mtx file.
@@ -442,13 +439,13 @@ namespace linalg
          * \param csr_col_ind Reference to the column indices vector (length nnz).
          * \param csr_val Reference to the values vector (length nnz).
          */
-        static void print_matrix(const std::string          name,
-                                 int                        m,
-                                 int                        n,
-                                 int                        nnz,
-                                 const std::vector<int>&    csr_row_ptr,
-                                 const std::vector<int>&    csr_col_ind,
-                                 const std::vector<double>& csr_val);
+        static void print_matrix(const std::string       name,
+                                 int                     m,
+                                 int                     n,
+                                 int                     nnz,
+                                 const std::vector<int>& csr_row_ptr,
+                                 const std::vector<int>& csr_col_ind,
+                                 const std::vector<T>&   csr_val);
     };
 }
 

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -47,11 +47,11 @@
 namespace linalg
 {
     static bool construct_prolongation_using_unsmoothed_aggregation(
-        const csr_matrix&      A,
-        const vector<int>&     connections,
-        const vector<int64_t>& aggregates,
-        const vector<int64_t>& aggregate_root_nodes,
-        csr_matrix&            prolongation)
+        const csr_matrix<double>& A,
+        const vector<int>&        connections,
+        const vector<int64_t>&    aggregates,
+        const vector<int64_t>&    aggregate_root_nodes,
+        csr_matrix<double>&       prolongation)
     {
         ROUTINE_TRACE("construct_prolongation_using_unsmoothed_aggregation");
 
@@ -128,7 +128,7 @@ namespace linalg
     }
 }
 
-void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy)
+void linalg::uaamg_setup(const csr_matrix<double>& A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("uaamg_setup");
 
@@ -160,10 +160,10 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix& A_fine   = hierarchy.A_cs[level];
-        csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
-        csr_matrix&       P        = hierarchy.prolongations[level];
-        csr_matrix&       R        = hierarchy.restrictions[level];
+        const csr_matrix<double>& A_fine   = hierarchy.A_cs[level];
+        csr_matrix<double>&       A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix<double>&       P        = hierarchy.prolongations[level];
+        csr_matrix<double>&       R        = hierarchy.restrictions[level];
 
         // A_fine.print_matrix("A_fine");
 
@@ -202,9 +202,9 @@ void linalg::uaamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
         // Compute coarse grid matrix using Galarkin triple product A_c = R * A_f * P
         galarkin_triple_product(R, A_fine, P, A_coarse);
 
-        std::cout << "R.m: " << R.get_m() << " R.n: " << R.get_n() 
+        std::cout << "R.m: " << R.get_m() << " R.n: " << R.get_n()
                   << " A_fine.get_m(): " << A_fine.get_m() << " A_fine.get_n(): " << A_fine.get_n()
-                  << " P.m: " << P.get_m() << " P.n: " << P.get_n() << std::endl; 
+                  << " P.m: " << P.get_m() << " P.n: " << P.get_n() << std::endl;
 
         level++;
         eps *= 0.5;

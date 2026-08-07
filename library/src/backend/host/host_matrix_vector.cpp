@@ -84,10 +84,10 @@ namespace linalg
     }
 }
 
-void linalg::host_compute_residual(const csr_matrix&     A,
-                                   const vector<double>& x,
-                                   const vector<double>& b,
-                                   vector<double>&       res)
+void linalg::host_compute_residual(const csr_matrix<double>& A,
+                                   const vector<double>&     x,
+                                   const vector<double>&     b,
+                                   vector<double>&           res)
 {
     ROUTINE_TRACE("linalg::host_compute_residual");
     host_compute_residual_impl(A.get_row_ptr(),
@@ -99,18 +99,20 @@ void linalg::host_compute_residual(const csr_matrix&     A,
                                A.get_m());
 }
 
-void linalg::host_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr)
+void linalg::host_csrmv_analysis(const csr_matrix<double>& A,
+                                 csrmv_algorithm           alg,
+                                 csrmv_descr*              descr)
 {
     ROUTINE_TRACE("linalg::host_csrmv_analysis");
 }
 
-void linalg::host_csrmv_solve(double                alpha,
-                              const csr_matrix&     A,
-                              const vector<double>& x,
-                              double                beta,
-                              vector<double>&       y,
-                              csrmv_algorithm       alg,
-                              const csrmv_descr*    descr)
+void linalg::host_csrmv_solve(double                    alpha,
+                              const csr_matrix<double>& A,
+                              const vector<double>&     x,
+                              double                    beta,
+                              vector<double>&           y,
+                              csrmv_algorithm           alg,
+                              const csrmv_descr*        descr)
 {
     ROUTINE_TRACE("linalg::host_csrmv_solve");
     switch(alg)

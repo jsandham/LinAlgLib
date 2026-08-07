@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -31,11 +31,15 @@
 
 namespace linalg
 {
-    void device_diagonal(const csr_matrix& A, vector<double>& d);
-    void device_extract_lower_triangular_nnz(const csr_matrix& A, csr_matrix& L, int& nnz_L);
-    void device_extract_lower_triangular(const csr_matrix& A, csr_matrix& L);
-    void device_extract_upper_triangular_nnz(const csr_matrix& A, csr_matrix& U, int& nnz_U);
-    void device_extract_upper_triangular(const csr_matrix& A, csr_matrix& U);
+    void device_diagonal(const csr_matrix<double>& A, vector<double>& d);
+    void device_extract_lower_triangular_nnz(const csr_matrix<double>& A,
+                                             csr_matrix<double>&       L,
+                                             int&                      nnz_L);
+    void device_extract_lower_triangular(const csr_matrix<double>& A, csr_matrix<double>& L);
+    void device_extract_upper_triangular_nnz(const csr_matrix<double>& A,
+                                             csr_matrix<double>&       U,
+                                             int&                      nnz_U);
+    void device_extract_upper_triangular(const csr_matrix<double>& A, csr_matrix<double>& U);
 }
 
 #endif

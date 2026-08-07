@@ -143,7 +143,9 @@ namespace linalg
     }
 }
 
-void linalg::host_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega)
+void linalg::host_ssor_fill_lower_precond(const csr_matrix<double>& A,
+                                          csr_matrix<double>&       L,
+                                          double                    omega)
 {
     ROUTINE_TRACE("linalg::host_ssor_fill_lower_precond");
     host_ssor_fill_lower_precond_impl(A.get_m(),
@@ -161,7 +163,9 @@ void linalg::host_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, do
                                       omega);
 }
 
-void linalg::host_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega)
+void linalg::host_ssor_fill_upper_precond(const csr_matrix<double>& A,
+                                          csr_matrix<double>&       U,
+                                          double                    omega)
 {
     ROUTINE_TRACE("linalg::host_ssor_fill_upper_precond");
     host_ssor_fill_upper_precond_impl(A.get_m(),

@@ -32,9 +32,12 @@
 namespace linalg
 {
     void device_ruiz_scaling(
-        vector<double>& D1, csr_matrix& A, vector<double>& D2, int max_k, double tol);
+        vector<double>& D1, csr_matrix<double>& A, vector<double>& D2, int max_k, double tol);
 
-    void device_symmetric_ruiz_scaling(vector<double>& D, csr_matrix& A, int max_k, double tol);
+    void device_symmetric_ruiz_scaling(vector<double>&     D,
+                                       csr_matrix<double>& A,
+                                       int                 max_k,
+                                       double              tol);
 }
 
 #endif

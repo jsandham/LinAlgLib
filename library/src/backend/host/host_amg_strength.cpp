@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,9 +30,9 @@
 
 #include "../../trace.h"
 
-void linalg::host_compute_strong_connections(const csr_matrix& A,
-                                             double            eps,
-                                             vector<int>&      connections)
+void linalg::host_compute_strong_connections(const csr_matrix<double>& A,
+                                             double                    eps,
+                                             vector<int>&              connections)
 {
     ROUTINE_TRACE("linalg::host_compute_strong_connections");
     const int*    csr_row_ptr_A = A.get_row_ptr();
@@ -69,10 +69,10 @@ void linalg::host_compute_strong_connections(const csr_matrix& A,
     }
 }
 
-void linalg::host_compute_classical_strong_connections(const csr_matrix& A,
-                                                       double            theta,
-                                                       csr_matrix&       S,
-                                                       vector<int>&      connections)
+void linalg::host_compute_classical_strong_connections(const csr_matrix<double>& A,
+                                                       double                    theta,
+                                                       csr_matrix<double>&       S,
+                                                       vector<int>&              connections)
 {
     ROUTINE_TRACE("linalg::host_compute_classical_strong_connections");
     //S.m = A.m;

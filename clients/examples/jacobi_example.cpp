@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -59,11 +59,11 @@ int main()
     std::vector<double> csr_val
         = {4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0};
 
-    linalg::csr_matrix A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
+    linalg::csr_matrix<double> A(csr_row_ptr, csr_col_ind, csr_val, m, n, nnz);
 
     A.print_matrix("A");
 
-    linalg::csr_matrix A_copy;
+    linalg::csr_matrix<double> A_copy;
     A_copy.copy_from(A);
 
     linalg::csric0_descr* descr_IC = nullptr;

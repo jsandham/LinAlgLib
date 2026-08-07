@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024-2025 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -50,17 +50,17 @@ cg_solver::cg_solver()
 
 cg_solver::~cg_solver() {}
 
-void cg_solver::build(const csr_matrix& A)
+void cg_solver::build(const csr_matrix<double>& A)
 {
     p.resize(A.get_m());
     z.resize(A.get_m());
     res.resize(A.get_m());
 }
 
-int cg_solver::solve_nonprecond(const csr_matrix&     A,
-                                vector<double>&       x,
-                                const vector<double>& b,
-                                iter_control          control)
+int cg_solver::solve_nonprecond(const csr_matrix<double>& A,
+                                vector<double>&           x,
+                                const vector<double>&     b,
+                                iter_control              control)
 {
     ROUTINE_TRACE("cg_solver::solve_nonprecond");
 
@@ -133,11 +133,11 @@ int cg_solver::solve_nonprecond(const csr_matrix&     A,
     return iter;
 }
 
-int cg_solver::solve_precond(const csr_matrix&     A,
-                             vector<double>&       x,
-                             const vector<double>& b,
-                             const preconditioner* precond,
-                             iter_control          control)
+int cg_solver::solve_precond(const csr_matrix<double>& A,
+                             vector<double>&           x,
+                             const vector<double>&     b,
+                             const preconditioner*     precond,
+                             iter_control              control)
 {
     ROUTINE_TRACE("cg_solver::solve_precond");
 
@@ -222,11 +222,11 @@ int cg_solver::solve_precond(const csr_matrix&     A,
     return iter;
 }
 
-int cg_solver::solve(const csr_matrix&     A,
-                     vector<double>&       x,
-                     const vector<double>& b,
-                     const preconditioner* precond,
-                     iter_control          control)
+int cg_solver::solve(const csr_matrix<double>& A,
+                     vector<double>&           x,
+                     const vector<double>&     b,
+                     const preconditioner*     precond,
+                     iter_control              control)
 {
     ROUTINE_TRACE("cg_solver::solve");
 

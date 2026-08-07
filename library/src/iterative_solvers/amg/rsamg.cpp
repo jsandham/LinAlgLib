@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -38,7 +38,6 @@
 #include <map>
 #include <unordered_set>
 #include <vector>
-
 
 #include "../../trace.h"
 
@@ -670,10 +669,10 @@
 
 namespace linalg
 {
-    static void direct_interpolation(const csr_matrix& A,
-                                     const csr_matrix& S,
-                                     csr_matrix&       P,
-                                     vector<uint32_t>& cfpoints)
+    static void direct_interpolation(const csr_matrix<double>& A,
+                                     const csr_matrix<double>& S,
+                                     csr_matrix<double>&       P,
+                                     vector<uint32_t>&         cfpoints)
     {
         // Determine number of C points. The prolongation operator will have number
         // of columns equal to the number of C points
@@ -867,7 +866,7 @@ namespace linalg
     }
 }
 
-void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarchy)
+void linalg::rsamg_setup(const csr_matrix<double>& A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("rsamg_setup");
 
@@ -888,13 +887,13 @@ void linalg::rsamg_setup(const csr_matrix& A, int max_level, hierarchy& hierarch
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix& A_fine   = hierarchy.A_cs[level];
-        csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
-        csr_matrix&       P        = hierarchy.prolongations[level];
-        csr_matrix&       R        = hierarchy.restrictions[level];
+        const csr_matrix<double>& A_fine   = hierarchy.A_cs[level];
+        csr_matrix<double>&       A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix<double>&       P        = hierarchy.prolongations[level];
+        csr_matrix<double>&       R        = hierarchy.restrictions[level];
 
-        csr_matrix S;
-        csr_matrix ST;
+        csr_matrix<double> S;
+        csr_matrix<double> ST;
 
         vector<int>      connections(A_fine.get_nnz(), 0);
         vector<uint32_t> cfpoints(A_fine.get_m(), 0);

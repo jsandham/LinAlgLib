@@ -27,7 +27,7 @@
 #include "host_csr2csc.h"
 #include "../../trace.h"
 
-void linalg::host_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
+void linalg::host_transpose_matrix(const csr_matrix<double>& A, csr_matrix<double>& transposeA)
 {
     ROUTINE_TRACE("linalg::host_transpose_matrix");
     transposeA.resize(A.get_n(), A.get_m(), A.get_nnz());

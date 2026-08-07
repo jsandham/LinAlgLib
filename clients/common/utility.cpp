@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -423,12 +423,12 @@ bool load_diagonally_dominant_mtx_file(const std::string&   filename,
 //     return true;
 // }
 
-bool check_solution(const linalg::csr_matrix&     A,
-                    const linalg::vector<double>& b,
-                    const linalg::vector<double>& x,
-                    const linalg::vector<double>& initial_x,
-                    double                        tol,
-                    int                           norm_type)
+bool check_solution(const linalg::csr_matrix<double>& A,
+                    const linalg::vector<double>&     b,
+                    const linalg::vector<double>&     x,
+                    const linalg::vector<double>&     initial_x,
+                    double                            tol,
+                    int                               norm_type)
 {
     for(size_t i = 0; i < x.get_size(); i++)
     {
@@ -475,7 +475,7 @@ bool check_solution(const linalg::csr_matrix&     A,
     return false;
 }
 
-bool check_matrix_equality(const linalg::csr_matrix& A, const linalg::csr_matrix& B)
+bool check_matrix_equality(const linalg::csr_matrix<double>& A, const linalg::csr_matrix<double>& B)
 {
     const int*    csr_row_ptr_A = A.get_row_ptr();
     const int*    csr_col_ind_A = A.get_col_ind();

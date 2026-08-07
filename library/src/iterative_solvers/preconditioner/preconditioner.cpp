@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -44,7 +44,7 @@ jacobi_precond::jacobi_precond()
 }
 jacobi_precond::~jacobi_precond() {}
 
-void jacobi_precond::build(const csr_matrix& A)
+void jacobi_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("jacobi_precond::build");
 
@@ -87,7 +87,7 @@ gauss_seidel_precond::~gauss_seidel_precond()
     destroy_csrtrsv_descr(descr_M);
 }
 
-void gauss_seidel_precond::build(const csr_matrix& A)
+void gauss_seidel_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("gauss_seidel_precond::build");
 
@@ -134,7 +134,7 @@ SOR_precond::~SOR_precond()
     destroy_csrtrsv_descr(descr_M);
 }
 
-void SOR_precond::build(const csr_matrix& A)
+void SOR_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("SOR_precond::build");
 
@@ -184,7 +184,7 @@ symmetric_gauss_seidel_precond::~symmetric_gauss_seidel_precond()
     destroy_csrtrsv_descr(descr_U);
 }
 
-void symmetric_gauss_seidel_precond::build(const csr_matrix& A)
+void symmetric_gauss_seidel_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("symmetric_gauss_seidel_precond::build");
 
@@ -280,7 +280,7 @@ SSOR_precond::~SSOR_precond()
     destroy_csrtrsv_descr(descr_U);
 }
 
-void SSOR_precond::build(const csr_matrix& A)
+void SSOR_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("SSOR_precond::build");
 
@@ -429,7 +429,7 @@ ilu_precond::~ilu_precond()
     destroy_csrtrsv_descr(descr_U);
 }
 
-void ilu_precond::build(const csr_matrix& A)
+void ilu_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("ilu_precond::build");
 
@@ -492,7 +492,7 @@ ic_precond::~ic_precond()
     destroy_csrtrsv_descr(descr_LT);
 }
 
-void ic_precond::build(const csr_matrix& A)
+void ic_precond::build(const csr_matrix<double>& A)
 {
     ROUTINE_TRACE("ic_precond::build");
 
@@ -547,7 +547,7 @@ itilu_precond::itilu_precond()
 }
 itilu_precond::~itilu_precond() {}
 
-void itilu_precond::build(const csr_matrix& A)
+void itilu_precond::build(const csr_matrix<double>& A)
 {
 
     // this->LU.copy_from(A);

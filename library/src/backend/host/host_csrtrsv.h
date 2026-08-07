@@ -35,17 +35,17 @@ namespace linalg
 {
     struct csrtrsv_descr;
 
-    void host_csrtrsv_analysis(const csr_matrix& A,
-                               triangular_type   tri_type,
-                               diagonal_type     diag_type,
-                               csrtrsv_descr*    descr);
-    void host_csrtrsv_solve(const csr_matrix&     A,
-                            const vector<double>& b,
-                            vector<double>&       x,
-                            double                alpha,
-                            triangular_type       tri_type,
-                            diagonal_type         diag_type,
-                            const csrtrsv_descr*  descr);
+    void host_csrtrsv_analysis(const csr_matrix<double>& A,
+                               triangular_type           tri_type,
+                               diagonal_type             diag_type,
+                               csrtrsv_descr*            descr);
+    void host_csrtrsv_solve(const csr_matrix<double>& A,
+                            const vector<double>&     b,
+                            vector<double>&           x,
+                            double                    alpha,
+                            triangular_type           tri_type,
+                            diagonal_type             diag_type,
+                            const csrtrsv_descr*      descr);
 }
 
 #endif

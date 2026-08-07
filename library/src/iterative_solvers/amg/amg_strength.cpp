@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -37,7 +37,9 @@
 #include "../../backend/device/device_amg_strength.h"
 #include "../../backend/host/host_amg_strength.h"
 
-void linalg::compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections)
+void linalg::compute_strong_connections(const csr_matrix<double>& A,
+                                        double                    eps,
+                                        vector<int>&              connections)
 {
     ROUTINE_TRACE("compute_strong_connections");
 
@@ -52,10 +54,10 @@ void linalg::compute_strong_connections(const csr_matrix& A, double eps, vector<
 //-------------------------------------------------------------------------------
 // -A[i,j] >= theta * max( -A[i,k] )   where k != i
 //-------------------------------------------------------------------------------
-void linalg::compute_classical_strong_connections(const csr_matrix& A,
-                                                  double            theta,
-                                                  csr_matrix&       S,
-                                                  vector<int>&      connections)
+void linalg::compute_classical_strong_connections(const csr_matrix<double>& A,
+                                                  double                    theta,
+                                                  csr_matrix<double>&       S,
+                                                  vector<int>&              connections)
 {
     ROUTINE_TRACE("compute_classical_strong_connections");
 

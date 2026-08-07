@@ -35,7 +35,7 @@
 #include "cuda/cuda_csric0.h"
 #endif
 
-void linalg::device_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
+void linalg::device_csric0(csr_matrix<double>& LL, int* structural_zero, int* numeric_zero)
 {
     std::cout << "Error: csric0 on device not implemented" << std::endl;
 }
@@ -54,7 +54,7 @@ void linalg::free_csric0_device_data(csric0_descr* descr)
     }
 }
 
-void linalg::device_csric0_analysis(const csr_matrix& A, csric0_descr* descr)
+void linalg::device_csric0_analysis(const csr_matrix<double>& A, csric0_descr* descr)
 {
     ROUTINE_TRACE("linalg::device_csric0_analysis");
     if constexpr(is_cuda_available())
@@ -74,7 +74,7 @@ void linalg::device_csric0_analysis(const csr_matrix& A, csric0_descr* descr)
     }
 }
 
-void linalg::device_csric0_compute(csr_matrix& A, const csric0_descr* descr)
+void linalg::device_csric0_compute(csr_matrix<double>& A, const csric0_descr* descr)
 {
     ROUTINE_TRACE("linalg::device_csric0_compute");
     if constexpr(is_cuda_available())

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -61,10 +61,10 @@ namespace linalg
 * where \f$n_f\f$ is the number of degrees of freedom on the fine level and \f$n_c\f$ is the
 * number of degrees of freedom on the coarse level.
 */
-    LINALGLIB_API void galarkin_triple_product(const csr_matrix& R,
-                                               const csr_matrix& A,
-                                               const csr_matrix& P,
-                                               csr_matrix&       A_coarse);
+    LINALGLIB_API void galarkin_triple_product(const csr_matrix<double>& R,
+                                               const csr_matrix<double>& A,
+                                               const csr_matrix<double>& P,
+                                               csr_matrix<double>&       A_coarse);
 }
 
 /*! @} */
