@@ -31,7 +31,7 @@
 
 namespace linalg
 {
-    void host_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
+    void host_transpose_matrix(const csr_matrix<double>& A, csr_matrix<double>& transposeA);
 }
 
 #endif

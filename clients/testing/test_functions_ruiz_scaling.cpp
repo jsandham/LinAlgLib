@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2026 James Sandham
+// Copyright(c) 2026-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -40,7 +40,7 @@
 
 bool testing::test_ruiz_scaling(Arguments arg)
 {
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     linalg::vector<double> D1(mat_A.get_m());

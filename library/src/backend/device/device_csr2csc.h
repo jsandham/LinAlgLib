@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -30,7 +30,7 @@
 
 namespace linalg
 {
-    void device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
+    void device_transpose_matrix(const csr_matrix<double>& A, csr_matrix<double>& transposeA);
 }
 
 #endif

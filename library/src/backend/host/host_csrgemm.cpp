@@ -183,12 +183,12 @@ namespace linalg
     }
 }
 
-void linalg::host_csrgemm_nnz(const csr_matrix& A,
-                              const csr_matrix& B,
-                              const csr_matrix& D,
-                              csr_matrix&       C,
-                              csrgemm_algorithm alg,
-                              csrgemm_descr*    descr)
+void linalg::host_csrgemm_nnz(const csr_matrix<double>& A,
+                              const csr_matrix<double>& B,
+                              const csr_matrix<double>& D,
+                              csr_matrix<double>&       C,
+                              csrgemm_algorithm         alg,
+                              csrgemm_descr*            descr)
 {
     ROUTINE_TRACE("linalg::host_csrgemm_nnz");
     C.resize(A.get_m(), B.get_n(), 0);
@@ -212,14 +212,14 @@ void linalg::host_csrgemm_nnz(const csr_matrix& A,
     C.resize(A.get_m(), B.get_n(), nnz_C);
 }
 
-void linalg::host_csrgemm_solve(double               alpha,
-                                const csr_matrix&    A,
-                                const csr_matrix&    B,
-                                double               beta,
-                                const csr_matrix&    D,
-                                csr_matrix&          C,
-                                csrgemm_algorithm    alg,
-                                const csrgemm_descr* descr)
+void linalg::host_csrgemm_solve(double                    alpha,
+                                const csr_matrix<double>& A,
+                                const csr_matrix<double>& B,
+                                double                    beta,
+                                const csr_matrix<double>& D,
+                                csr_matrix<double>&       C,
+                                csrgemm_algorithm         alg,
+                                const csrgemm_descr*      descr)
 {
     ROUTINE_TRACE("linalg::host_csrgemm_solve");
     host_csrgemm_impl(A.get_m(),

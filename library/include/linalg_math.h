@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -92,7 +92,7 @@ namespace linalg
      * @param numeric_zero An optional pointer to an integer that will be set to 1 if a numeric zero
      * (pivot element is zero) is encountered during factorization, 0 otherwise. Can be `nullptr`.
      */
-    LINALGLIB_API void csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
+    LINALGLIB_API void csric0(csr_matrix<double>& LL, int* structural_zero, int* numeric_zero);
 
     /**
      * @brief Performs an Incomplete LU (ILU) factorization with zero fill-in (ILU(0)).
@@ -106,7 +106,7 @@ namespace linalg
      * @param numeric_zero An optional pointer to an integer that will be set to 1 if a numeric zero
      * (pivot element is zero) is encountered during factorization, 0 otherwise. Can be `nullptr`.
      */
-    LINALGLIB_API void csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
+    LINALGLIB_API void csrilu0(csr_matrix<double>& LU, int* structural_zero, int* numeric_zero);
 
     /**
      * @brief Computes the transpose of a CSR matrix.
@@ -116,7 +116,8 @@ namespace linalg
      * @param A The input `csr_matrix` to transpose.
      * @param transposeA The output `csr_matrix` to store the transposed matrix.
      */
-    LINALGLIB_API void transpose_matrix(const csr_matrix& A, csr_matrix& transposeA);
+    LINALGLIB_API void transpose_matrix(const csr_matrix<double>& A,
+                                        csr_matrix<double>&       transposeA);
 
     /**
      * @brief Computes the dot product of two vectors.
@@ -140,10 +141,10 @@ namespace linalg
      * @param b The input right-hand side vector \f$b\f$.
      * @param res The output vector to store the computed residual $res$.
      */
-    LINALGLIB_API void compute_residual(const csr_matrix&     A,
-                                        const vector<double>& x,
-                                        const vector<double>& b,
-                                        vector<double>&       res);
+    LINALGLIB_API void compute_residual(const csr_matrix<double>& A,
+                                        const vector<double>&     x,
+                                        const vector<double>&     b,
+                                        vector<double>&           res);
 
     /**
      * @brief Extracts the diagonal entries of a CSR matrix.
@@ -151,7 +152,7 @@ namespace linalg
      * @param A The input `csr_matrix` from which to extract the diagonal.
      * @param d The output vector that will store the diagonal elements.
      */
-    LINALGLIB_API void diagonal(const csr_matrix& A, vector<double>& d);
+    LINALGLIB_API void diagonal(const csr_matrix<double>& A, vector<double>& d);
 
     /**
      * @brief Computes the Euclidean (L2) norm of a vector.
@@ -225,10 +226,10 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csrtrsv_solve
      */
-    LINALGLIB_API void csrtrsv_analysis(const csr_matrix& A,
-                                        triangular_type   tri_type,
-                                        diagonal_type     diag_type,
-                                        csrtrsv_descr*    descr);
+    LINALGLIB_API void csrtrsv_analysis(const csr_matrix<double>& A,
+                                        triangular_type           tri_type,
+                                        diagonal_type             diag_type,
+                                        csrtrsv_descr*            descr);
 
     /**
      * @brief Solves a triangular system \f$A \cdot x = \alpha \cdot b\f$ using CSR format.
@@ -244,13 +245,13 @@ namespace linalg
      * @param descr The descriptor populated by a prior csrtrsv_analysis() call.
      * @see csrtrsv_analysis
      */
-    LINALGLIB_API void csrtrsv_solve(const csr_matrix&     A,
-                                     const vector<double>& b,
-                                     vector<double>&       x,
-                                     double                alpha,
-                                     triangular_type       tri_type,
-                                     diagonal_type         diag_type,
-                                     const csrtrsv_descr*  descr);
+    LINALGLIB_API void csrtrsv_solve(const csr_matrix<double>& A,
+                                     const vector<double>&     b,
+                                     vector<double>&           x,
+                                     double                    alpha,
+                                     triangular_type           tri_type,
+                                     diagonal_type             diag_type,
+                                     const csrtrsv_descr*      descr);
 
     /**
      * @brief Creates an opaque descriptor for CSR matrix-vector product operations.
@@ -283,7 +284,8 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csrmv_solve
      */
-    LINALGLIB_API void csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr);
+    LINALGLIB_API void
+        csrmv_analysis(const csr_matrix<double>& A, csrmv_algorithm alg, csrmv_descr* descr);
 
     /**
      * @brief Computes a CSR matrix-vector product \f$y = \alpha A x + \beta y\f$.
@@ -299,13 +301,13 @@ namespace linalg
      * @param descr The descriptor populated by a prior csrmv_analysis() call.
      * @see csrmv_analysis
      */
-    LINALGLIB_API void csrmv_solve(double                alpha,
-                                   const csr_matrix&     A,
-                                   const vector<double>& x,
-                                   double                beta,
-                                   vector<double>&       y,
-                                   csrmv_algorithm       alg,
-                                   const csrmv_descr*    descr);
+    LINALGLIB_API void csrmv_solve(double                    alpha,
+                                   const csr_matrix<double>& A,
+                                   const vector<double>&     x,
+                                   double                    beta,
+                                   vector<double>&           y,
+                                   csrmv_algorithm           alg,
+                                   const csrmv_descr*        descr);
 
     /**
      * @brief Creates an opaque descriptor for CSR matrix-matrix addition operations.
@@ -340,11 +342,11 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csrgeam_solve
      */
-    LINALGLIB_API void csrgeam_nnz(const csr_matrix& A,
-                                   const csr_matrix& B,
-                                   csr_matrix&       C,
-                                   csrgeam_algorithm alg,
-                                   csrgeam_descr*    descr);
+    LINALGLIB_API void csrgeam_nnz(const csr_matrix<double>& A,
+                                   const csr_matrix<double>& B,
+                                   csr_matrix<double>&       C,
+                                   csrgeam_algorithm         alg,
+                                   csrgeam_descr*            descr);
 
     /**
      * @brief Computes CSR matrix-matrix addition \f$C = \alpha A + \beta B\f$.
@@ -361,13 +363,13 @@ namespace linalg
      * @param descr The descriptor populated by a prior csrgeam_nnz() call.
      * @see csrgeam_nnz
      */
-    LINALGLIB_API void csrgeam_solve(double               alpha,
-                                     const csr_matrix&    A,
-                                     double               beta,
-                                     const csr_matrix&    B,
-                                     csr_matrix&          C,
-                                     csrgeam_algorithm    alg,
-                                     const csrgeam_descr* descr);
+    LINALGLIB_API void csrgeam_solve(double                    alpha,
+                                     const csr_matrix<double>& A,
+                                     double                    beta,
+                                     const csr_matrix<double>& B,
+                                     csr_matrix<double>&       C,
+                                     csrgeam_algorithm         alg,
+                                     const csrgeam_descr*      descr);
 
     /**
      * @brief Creates an opaque descriptor for CSR matrix-matrix multiplication operations.
@@ -403,12 +405,12 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csrgemm_solve
      */
-    LINALGLIB_API void csrgemm_nnz(const csr_matrix& A,
-                                   const csr_matrix& B,
-                                   const csr_matrix& D,
-                                   csr_matrix&       C,
-                                   csrgemm_algorithm alg,
-                                   csrgemm_descr*    descr);
+    LINALGLIB_API void csrgemm_nnz(const csr_matrix<double>& A,
+                                   const csr_matrix<double>& B,
+                                   const csr_matrix<double>& D,
+                                   csr_matrix<double>&       C,
+                                   csrgemm_algorithm         alg,
+                                   csrgemm_descr*            descr);
 
     /**
      * @brief Computes CSR matrix-matrix multiplication \f$C = \alpha A \cdot B + \beta D\f$.
@@ -426,14 +428,14 @@ namespace linalg
      * @param descr The descriptor populated by a prior csrgemm_nnz() call.
      * @see csrgemm_nnz
      */
-    LINALGLIB_API void csrgemm_solve(double               alpha,
-                                     const csr_matrix&    A,
-                                     const csr_matrix&    B,
-                                     double               beta,
-                                     const csr_matrix&    D,
-                                     csr_matrix&          C,
-                                     csrgemm_algorithm    alg,
-                                     const csrgemm_descr* descr);
+    LINALGLIB_API void csrgemm_solve(double                    alpha,
+                                     const csr_matrix<double>& A,
+                                     const csr_matrix<double>& B,
+                                     double                    beta,
+                                     const csr_matrix<double>& D,
+                                     csr_matrix<double>&       C,
+                                     csrgemm_algorithm         alg,
+                                     const csrgemm_descr*      descr);
 
     /**
      * @brief Creates an opaque descriptor for CSR incomplete Cholesky (IC(0)) factorization.
@@ -464,7 +466,7 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csric0_compute
      */
-    LINALGLIB_API void csric0_analysis(const csr_matrix& A, csric0_descr* descr);
+    LINALGLIB_API void csric0_analysis(const csr_matrix<double>& A, csric0_descr* descr);
 
     /**
      * @brief Compute an inplace CSR incomplete Cholesky (IC(0)) factorization.
@@ -474,7 +476,7 @@ namespace linalg
      * @param descr The descriptor populated by a prior csric0_analysis() call.
      * @see csric0_analysis
      */
-    LINALGLIB_API void csric0_compute(csr_matrix& A, const csric0_descr* descr);
+    LINALGLIB_API void csric0_compute(csr_matrix<double>& A, const csric0_descr* descr);
 
     /**
      * @brief Creates an opaque descriptor for CSR incomplete LU (ILU(0)) factorization.
@@ -505,7 +507,7 @@ namespace linalg
      * @param descr The descriptor to populate with analysis results.
      * @see csrilu0_compute
      */
-    LINALGLIB_API void csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
+    LINALGLIB_API void csrilu0_analysis(const csr_matrix<double>& A, csrilu0_descr* descr);
 
     /**
      * @brief Compute an inplace CSR incomplete LU (ILU(0)) factorization.
@@ -515,7 +517,7 @@ namespace linalg
      * @param descr The descriptor populated by a prior csrilu0_analysis() call.
      * @see csrilu0_analysis
      */
-    LINALGLIB_API void csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
+    LINALGLIB_API void csrilu0_compute(csr_matrix<double>& A, const csrilu0_descr* descr);
 }
 
 #endif

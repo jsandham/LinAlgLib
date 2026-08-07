@@ -53,14 +53,14 @@ bool testing::test_transpose_dense(Arguments arg)
         }
     }
 
-    linalg::csr_matrix mat_A(csr_row_ptr,
-                             csr_col_ind,
-                             csr_val,
-                             arg.m,
-                             arg.m,
-                             arg.m * arg.m); // Assuming a dense matrix for testing
+    linalg::csr_matrix<double> mat_A(csr_row_ptr,
+                                     csr_col_ind,
+                                     csr_val,
+                                     arg.m,
+                                     arg.m,
+                                     arg.m * arg.m); // Assuming a dense matrix for testing
 
-    linalg::csr_matrix mat_A_transpose;
+    linalg::csr_matrix<double> mat_A_transpose;
     mat_A_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
 
     if(arg.backend == backend::GPU)

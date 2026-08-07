@@ -34,18 +34,18 @@ namespace linalg
 {
     struct csrgeam_descr;
 
-    void host_csrgeam_nnz(const csr_matrix& A,
-                          const csr_matrix& B,
-                          csr_matrix&       C,
-                          csrgeam_algorithm alg,
-                          csrgeam_descr*    descr);
-    void host_csrgeam_solve(double               alpha,
-                            const csr_matrix&    A,
-                            double               beta,
-                            const csr_matrix&    B,
-                            csr_matrix&          C,
-                            csrgeam_algorithm    alg,
-                            const csrgeam_descr* descr);
+    void host_csrgeam_nnz(const csr_matrix<double>& A,
+                          const csr_matrix<double>& B,
+                          csr_matrix<double>&       C,
+                          csrgeam_algorithm         alg,
+                          csrgeam_descr*            descr);
+    void host_csrgeam_solve(double                    alpha,
+                            const csr_matrix<double>& A,
+                            double                    beta,
+                            const csr_matrix<double>& B,
+                            csr_matrix<double>&       C,
+                            csrgeam_algorithm         alg,
+                            const csrgeam_descr*      descr);
 }
 
 #endif

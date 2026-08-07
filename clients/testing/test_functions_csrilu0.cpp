@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -36,18 +36,18 @@
 
 bool testing::test_csrilu0(Arguments arg)
 {
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     std::cout << "Matrix: " << arg.filename << " m: " << mat_A.get_m() << " n: " << mat_A.get_n()
               << " nnz: " << mat_A.get_nnz() << std::endl;
 
     // Make a copy for host computation
-    linalg::csr_matrix mat_A_host;
+    linalg::csr_matrix<double> mat_A_host;
     mat_A_host.copy_from(mat_A);
 
     // Make a copy for device computation
-    linalg::csr_matrix mat_A_device;
+    linalg::csr_matrix<double> mat_A_device;
     mat_A_device.copy_from(mat_A);
 
     // Prepare for csrilu0 analysis

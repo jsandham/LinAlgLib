@@ -133,11 +133,11 @@ namespace linalg
     }
 }
 
-void linalg::host_csrgeam_nnz(const csr_matrix& A,
-                              const csr_matrix& B,
-                              csr_matrix&       C,
-                              csrgeam_algorithm alg,
-                              csrgeam_descr*    descr)
+void linalg::host_csrgeam_nnz(const csr_matrix<double>& A,
+                              const csr_matrix<double>& B,
+                              csr_matrix<double>&       C,
+                              csrgeam_algorithm         alg,
+                              csrgeam_descr*            descr)
 {
     ROUTINE_TRACE("linalg::host_csrgeam_nnz");
     C.resize(A.get_m(), B.get_n(), 0);
@@ -157,13 +157,13 @@ void linalg::host_csrgeam_nnz(const csr_matrix& A,
     C.resize(A.get_m(), B.get_n(), nnz_C);
 }
 
-void linalg::host_csrgeam_solve(double               alpha,
-                                const csr_matrix&    A,
-                                double               beta,
-                                const csr_matrix&    B,
-                                csr_matrix&          C,
-                                csrgeam_algorithm    alg,
-                                const csrgeam_descr* descr)
+void linalg::host_csrgeam_solve(double                    alpha,
+                                const csr_matrix<double>& A,
+                                double                    beta,
+                                const csr_matrix<double>& B,
+                                csr_matrix<double>&       C,
+                                csrgeam_algorithm         alg,
+                                const csrgeam_descr*      descr)
 {
     ROUTINE_TRACE("linalg::host_csrgeam_solve");
     host_csrgeam_impl(A.get_m(),

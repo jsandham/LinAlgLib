@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 202-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -34,8 +34,8 @@
 
 #include "linalg.h"
 
-static bool compute_reference_incomplete_cholesky(const linalg::csr_matrix& A,
-                                                  linalg::csr_matrix&       L)
+static bool compute_reference_incomplete_cholesky(const linalg::csr_matrix<double>& A,
+                                                  linalg::csr_matrix<double>&       L)
 {
     L.copy_from(A);
 
@@ -114,7 +114,7 @@ static bool compute_reference_incomplete_cholesky(const linalg::csr_matrix& A,
 
 bool testing::test_compute_incomplete_cholesky_factorization(Arguments arg)
 {
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     if(mat_A.get_m() != mat_A.get_n())
@@ -123,10 +123,10 @@ bool testing::test_compute_incomplete_cholesky_factorization(Arguments arg)
         return false;
     }
 
-    linalg::csr_matrix mat_A_copy;
+    linalg::csr_matrix<double> mat_A_copy;
     mat_A_copy.copy_from(mat_A);
 
-    linalg::csr_matrix mat_A_reference;
+    linalg::csr_matrix<double> mat_A_reference;
     if(!compute_reference_incomplete_cholesky(mat_A, mat_A_reference))
     {
         std::cerr << "Failed to compute reference Cholesky factorization." << std::endl;

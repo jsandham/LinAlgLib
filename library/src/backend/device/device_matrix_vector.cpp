@@ -35,10 +35,10 @@
 #include "cuda/cuda_matrix_vector.h"
 #endif
 
-void linalg::device_compute_residual(const csr_matrix&     A,
-                                     const vector<double>& x,
-                                     const vector<double>& b,
-                                     vector<double>&       res)
+void linalg::device_compute_residual(const csr_matrix<double>& A,
+                                     const vector<double>&     x,
+                                     const vector<double>&     b,
+                                     vector<double>&           res)
 {
     ROUTINE_TRACE("linalg::device_compute_residual");
     if constexpr(is_cuda_available())
@@ -74,7 +74,9 @@ void linalg::free_csrmv_device_data(csrmv_descr* descr)
     }
 }
 
-void linalg::device_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr)
+void linalg::device_csrmv_analysis(const csr_matrix<double>& A,
+                                   csrmv_algorithm           alg,
+                                   csrmv_descr*              descr)
 {
     ROUTINE_TRACE("linalg::device_csrmv_analysis");
     if constexpr(is_cuda_available())
@@ -95,13 +97,13 @@ void linalg::device_csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csr
     }
 }
 
-void linalg::device_csrmv_solve(double                alpha,
-                                const csr_matrix&     A,
-                                const vector<double>& x,
-                                double                beta,
-                                vector<double>&       y,
-                                csrmv_algorithm       alg,
-                                const csrmv_descr*    descr)
+void linalg::device_csrmv_solve(double                    alpha,
+                                const csr_matrix<double>& A,
+                                const vector<double>&     x,
+                                double                    beta,
+                                vector<double>&           y,
+                                csrmv_algorithm           alg,
+                                const csrmv_descr*        descr)
 {
     ROUTINE_TRACE("linalg::device_csrmv_solve");
     if constexpr(is_cuda_available())

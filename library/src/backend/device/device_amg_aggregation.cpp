@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -34,10 +34,10 @@
 #include "cuda/cuda_amg_aggregation.h"
 #endif
 
-void linalg::device_initialize_pmis_state(const csr_matrix&  A,
-                                          const vector<int>& connections,
-                                          vector<int>&       state,
-                                          vector<int>&       hash)
+void linalg::device_initialize_pmis_state(const csr_matrix<double>& A,
+                                          const vector<int>&        connections,
+                                          vector<int>&              state,
+                                          vector<int>&              hash)
 {
     ROUTINE_TRACE("linalg::device_initialize_pmis_state");
 
@@ -67,13 +67,13 @@ void linalg::device_initialize_pmis_state(const csr_matrix&  A,
     //                                   hash.get_vec());
 }
 
-void linalg::device_find_maximum_distance_two_node(const csr_matrix&  A,
-                                                   const vector<int>& connections,
-                                                   const vector<int>& state,
-                                                   const vector<int>& hash,
-                                                   vector<int64_t>&   aggregates,
-                                                   vector<int>&       max_state,
-                                                   bool&              complete)
+void linalg::device_find_maximum_distance_two_node(const csr_matrix<double>& A,
+                                                   const vector<int>&        connections,
+                                                   const vector<int>&        state,
+                                                   const vector<int>&        hash,
+                                                   vector<int64_t>&          aggregates,
+                                                   vector<int>&              max_state,
+                                                   bool&                     complete)
 {
     ROUTINE_TRACE("linalg::device_find_maximum_distance_two_node");
 
@@ -112,12 +112,12 @@ void linalg::device_find_maximum_distance_two_node(const csr_matrix&  A,
 }
 
 void linalg::device_add_unassigned_nodes_to_closest_aggregation(
-    const csr_matrix&  A,
-    const vector<int>& connections,
-    const vector<int>& state,
-    vector<int64_t>&   aggregates,
-    vector<int64_t>&   aggregate_root_nodes,
-    vector<int>&       max_state)
+    const csr_matrix<double>& A,
+    const vector<int>&        connections,
+    const vector<int>&        state,
+    vector<int64_t>&          aggregates,
+    vector<int64_t>&          aggregate_root_nodes,
+    vector<int>&              max_state)
 {
     ROUTINE_TRACE("linalg::device_add_unassigned_nodes_to_closest_aggregation");
 
@@ -153,10 +153,13 @@ void linalg::device_add_unassigned_nodes_to_closest_aggregation(
     //                                                         max_state.get_vec());
 }
 
-void linalg::device_compute_cfpoint_first_pass(const csr_matrix& S,
-                                               const csr_matrix& ST,
-                                               vector<uint32_t>& cfpoints)
+void linalg::device_compute_cfpoint_first_pass(const csr_matrix<double>& S,
+                                               const csr_matrix<double>& ST,
+                                               vector<uint32_t>&         cfpoints)
 {
 }
 
-void linalg::device_compute_cfpoint_second_pass(const csr_matrix& S, vector<uint32_t>& cfpoints) {}
+void linalg::device_compute_cfpoint_second_pass(const csr_matrix<double>& S,
+                                                vector<uint32_t>&         cfpoints)
+{
+}

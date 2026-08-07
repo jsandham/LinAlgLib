@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -179,7 +179,7 @@ namespace linalg
  * for (int level = 0; level <= max_levels; ++level) {
  * // Assuming hierarchy has a method to get matrix at a level
  * // This part is illustrative as hierarchy class structure is not provided
- * const csr_matrix& A_level = mg_hierarchy.get_matrix(level);
+ * const csr_matrix<double>& A_level = mg_hierarchy.get_matrix(level);
  * std::cout << "Level " << level << ": Matrix size = " << A_level.get_num_rows() << "x" << A_level.get_num_cols() << std::endl;
  * }
  *
@@ -192,7 +192,8 @@ namespace linalg
  * }
  * \endcode
  */
-    LINALGLIB_API void saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hierarchy);
+    LINALGLIB_API void
+        saamg_setup(const csr_matrix<double>& mat_A, int max_level, hierarchy& hierarchy);
 }
 
 /*! @} */

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -35,8 +35,8 @@
 
 #include "linalg.h"
 
-static linalg::csr_matrix compute_reference_spgemm(const linalg::csr_matrix& A,
-                                                   const linalg::csr_matrix& B)
+static linalg::csr_matrix<double> compute_reference_spgemm(const linalg::csr_matrix<double>& A,
+                                                           const linalg::csr_matrix<double>& B)
 {
     int m = A.get_m();
     int n = B.get_n();
@@ -137,7 +137,7 @@ bool testing::test_multiply_by_matrix(Arguments arg)
 {
     std::cout << "Testing multiply_by_matrix with arguments: " << std::endl;
 
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
     for(int i = 0; i < mat_A.get_nnz(); i++)
@@ -146,10 +146,10 @@ bool testing::test_multiply_by_matrix(Arguments arg)
         csr_val[i]      = 1;
     }
 
-    linalg::csr_matrix mat_B;
+    linalg::csr_matrix<double> mat_B;
     mat_B.copy_from(mat_A);
 
-    linalg::csr_matrix mat_C;
+    linalg::csr_matrix<double> mat_C;
     mat_C.resize(mat_A.get_m(), mat_B.get_n(), 0);
 
     if(arg.backend == backend::GPU)
@@ -188,7 +188,7 @@ bool testing::test_multiply_by_matrix(Arguments arg)
     // mat_C.print_matrix("C");
 
     // Inline host solution
-    linalg::csr_matrix mat_C_host = compute_reference_spgemm(mat_A, mat_B);
+    linalg::csr_matrix<double> mat_C_host = compute_reference_spgemm(mat_A, mat_B);
 
     // mat_C_host.print_matrix("C_host");
 

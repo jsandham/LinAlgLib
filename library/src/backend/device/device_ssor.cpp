@@ -35,7 +35,9 @@
 #include "cuda/cuda_ssor.h"
 #endif
 
-void linalg::device_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, double omega)
+void linalg::device_ssor_fill_lower_precond(const csr_matrix<double>& A,
+                                            csr_matrix<double>&       L,
+                                            double                    omega)
 {
     ROUTINE_TRACE("linalg::device_ssor_fill_lower_precond");
     if constexpr(is_cuda_available())
@@ -61,7 +63,9 @@ void linalg::device_ssor_fill_lower_precond(const csr_matrix& A, csr_matrix& L, 
     }
 }
 
-void linalg::device_ssor_fill_upper_precond(const csr_matrix& A, csr_matrix& U, double omega)
+void linalg::device_ssor_fill_upper_precond(const csr_matrix<double>& A,
+                                            csr_matrix<double>&       U,
+                                            double                    omega)
 {
     ROUTINE_TRACE("linalg::device_ssor_fill_upper_precond");
     if constexpr(is_cuda_available())

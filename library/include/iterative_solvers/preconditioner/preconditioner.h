@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -68,7 +68,7 @@ namespace linalg
     *
     * \param A The input matrix for which the preconditioner is to be built.
     */
-        virtual void build(const csr_matrix& A) = 0;
+        virtual void build(const csr_matrix<double>& A) = 0;
 
         /*! \brief Solves the preconditioning system M*x = rhs.
     *
@@ -128,7 +128,7 @@ namespace linalg
      * of the input matrix `A`.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$.
      *
@@ -176,8 +176,8 @@ namespace linalg
      * \details The Gauss-Seidel preconditioner requires access to the
      * lower triangular part of the original matrix during the solve phase.
      */
-        csr_matrix     M;
-        csrtrsv_descr* descr_M;
+        csr_matrix<double> M;
+        csrtrsv_descr*     descr_M;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -196,7 +196,7 @@ namespace linalg
      * part of the original matrix.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using forward substitution.
      *
@@ -242,8 +242,8 @@ namespace linalg
         /*! \brief The relaxation parameter (\f$\omega\f$) for SOR. */
         double omega;
 
-        csr_matrix     M;
-        csrtrsv_descr* descr_M;
+        csr_matrix<double> M;
+        csrtrsv_descr*     descr_M;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -264,7 +264,7 @@ namespace linalg
      * that are used in the SOR solve.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the SOR method.
      *
@@ -305,10 +305,10 @@ namespace linalg
     class symmetric_gauss_seidel_precond : public preconditioner
     {
     private:
-        csr_matrix     L;
-        csr_matrix     U;
-        csrtrsv_descr* descr_L;
-        csrtrsv_descr* descr_U;
+        csr_matrix<double> L;
+        csr_matrix<double> U;
+        csrtrsv_descr*     descr_L;
+        csrtrsv_descr*     descr_U;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -326,7 +326,7 @@ namespace linalg
      * pre-calculating the diagonal elements needed for the SGS sweeps.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using Symmetric Gauss-Seidel.
      *
@@ -373,10 +373,10 @@ namespace linalg
 
         //   vector<double> y;
 
-        csr_matrix     L;
-        csr_matrix     U;
-        csrtrsv_descr* descr_L;
-        csrtrsv_descr* descr_U;
+        csr_matrix<double> L;
+        csr_matrix<double> U;
+        csrtrsv_descr*     descr_L;
+        csrtrsv_descr*     descr_U;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -394,7 +394,7 @@ namespace linalg
      *
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the SSOR method.
      *
@@ -443,7 +443,7 @@ namespace linalg
      * of both L (lower triangular) and U (upper triangular) factors,
      * potentially in a merged format.
      */
-        csr_matrix LU;
+        csr_matrix<double> LU;
 
         csrilu0_descr* descr_ILU;
 
@@ -467,7 +467,7 @@ namespace linalg
      * is determined by the internal implementation of this method.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the ILU factors.
      *
@@ -516,7 +516,7 @@ namespace linalg
      * \details For a symmetric positive definite matrix, the `LLT` matrix
      * will store the lower triangular factor L.
      */
-        csr_matrix LLT;
+        csr_matrix<double> LLT;
 
         csric0_descr* descr_IC;
 
@@ -541,7 +541,7 @@ namespace linalg
      * internal implementation of this method.
      * \param A The input symmetric positive definite matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the IC factors.
      *
@@ -583,7 +583,7 @@ namespace linalg
     {
     private:
         /*! \brief Stores the lower triangular factor L from the iterative ILU factorization. */
-        csr_matrix L;
+        csr_matrix<double> L;
 
         /*! \brief Flag indicating if the preconditioner data is currently on the host (CPU) or device (GPU). */
         bool on_host;
@@ -601,7 +601,7 @@ namespace linalg
      * of the input matrix `A`.
      * \param A The input matrix for which the preconditioner is to be built.
      */
-        void build(const csr_matrix& A) override;
+        void build(const csr_matrix<double>& A) override;
 
         /*! \brief Solves the preconditioning system \f$M \cdot x = \text{rhs}\f$ using the iterative ILU factors.
      *

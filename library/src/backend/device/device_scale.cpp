@@ -35,7 +35,7 @@
 #include "cuda/cuda_scale.h"
 #endif
 
-void linalg::device_scale_diagonal(csr_matrix& A, double scalar)
+void linalg::device_scale_diagonal(csr_matrix<double>& A, double scalar)
 {
     ROUTINE_TRACE("linalg::device_scale_diagonal");
     if constexpr(is_cuda_available())
@@ -50,7 +50,7 @@ void linalg::device_scale_diagonal(csr_matrix& A, double scalar)
     }
 }
 
-void linalg::device_scale_by_inverse_diagonal(csr_matrix& A, const vector<double>& diag)
+void linalg::device_scale_by_inverse_diagonal(csr_matrix<double>& A, const vector<double>& diag)
 {
     ROUTINE_TRACE("linalg::device_scale_by_inverse_diagonal");
     if constexpr(is_cuda_available())

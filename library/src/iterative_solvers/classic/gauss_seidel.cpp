@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -31,7 +31,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -48,7 +47,9 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-    void gauss_seidel_iteration(const csr_matrix& A, vector<double>& x, const vector<double>& b)
+    void gauss_seidel_iteration(const csr_matrix<double>& A,
+                                vector<double>&           x,
+                                const vector<double>&     b)
     {
         ROUTINE_TRACE("gauss_seidel_iteration");
 
@@ -90,15 +91,15 @@ gs_solver::gs_solver() {}
 
 gs_solver::~gs_solver() {}
 
-void gs_solver::build(const csr_matrix& A)
+void gs_solver::build(const csr_matrix<double>& A)
 {
     res.resize(A.get_m());
 }
 
-int gs_solver::solve(const csr_matrix&     A,
-                     vector<double>&       x,
-                     const vector<double>& b,
-                     iter_control          control)
+int gs_solver::solve(const csr_matrix<double>& A,
+                     vector<double>&           x,
+                     const vector<double>&     b,
+                     iter_control              control)
 {
     ROUTINE_TRACE("gs_solver::solve");
 

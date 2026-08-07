@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -37,10 +37,10 @@ static unsigned int hash1(unsigned int x)
     return x / 2;
 }
 
-void linalg::host_initialize_pmis_state(const csr_matrix&  A,
-                                        const vector<int>& connections,
-                                        vector<int>&       state,
-                                        vector<int>&       hash)
+void linalg::host_initialize_pmis_state(const csr_matrix<double>& A,
+                                        const vector<int>&        connections,
+                                        vector<int>&              state,
+                                        vector<int>&              hash)
 {
     ROUTINE_TRACE("initialize_pmis_state");
 
@@ -92,13 +92,13 @@ static pmis_node lexographical_max(const pmis_node* ti, const pmis_node* tj)
     return *ti;
 }
 
-void linalg::host_find_maximum_distance_two_node(const csr_matrix&  A,
-                                                 const vector<int>& connections,
-                                                 const vector<int>& state,
-                                                 const vector<int>& hash,
-                                                 vector<int64_t>&   aggregates,
-                                                 vector<int>&       max_state,
-                                                 bool&              complete)
+void linalg::host_find_maximum_distance_two_node(const csr_matrix<double>& A,
+                                                 const vector<int>&        connections,
+                                                 const vector<int>&        state,
+                                                 const vector<int>&        hash,
+                                                 vector<int64_t>&          aggregates,
+                                                 vector<int>&              max_state,
+                                                 bool&                     complete)
 {
     ROUTINE_TRACE("find_maximum_distance_two_node");
 
@@ -179,10 +179,10 @@ void linalg::host_find_maximum_distance_two_node(const csr_matrix&  A,
     }
 }
 
-void linalg::host_add_unassigned_nodes_to_closest_aggregation(const csr_matrix&  A,
-                                                              const vector<int>& connections,
-                                                              const vector<int>& state,
-                                                              vector<int64_t>&   aggregates,
+void linalg::host_add_unassigned_nodes_to_closest_aggregation(const csr_matrix<double>& A,
+                                                              const vector<int>&        connections,
+                                                              const vector<int>&        state,
+                                                              vector<int64_t>&          aggregates,
                                                               vector<int64_t>& aggregate_root_nodes,
                                                               vector<int>&     max_state)
 {
@@ -225,9 +225,9 @@ void linalg::host_add_unassigned_nodes_to_closest_aggregation(const csr_matrix& 
 #define U_POINT 2 // Unassigned point
 #define FF_POINT 3 // Future F-point
 
-void linalg::host_compute_cfpoint_first_pass(const csr_matrix& S,
-                                             const csr_matrix& ST,
-                                             vector<uint32_t>& cfpoints)
+void linalg::host_compute_cfpoint_first_pass(const csr_matrix<double>& S,
+                                             const csr_matrix<double>& ST,
+                                             vector<uint32_t>&         cfpoints)
 {
     ROUTINE_TRACE("linalg::host_compute_cfpoint_first_pass");
 
@@ -438,7 +438,8 @@ void linalg::host_compute_cfpoint_first_pass(const csr_matrix& S,
     }
 }
 
-void linalg::host_compute_cfpoint_second_pass(const csr_matrix& S, vector<uint32_t>& cfpoints)
+void linalg::host_compute_cfpoint_second_pass(const csr_matrix<double>& S,
+                                              vector<uint32_t>&         cfpoints)
 {
     ROUTINE_TRACE("linalg::host_compute_cfpoint_second_pass");
 

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -35,13 +35,13 @@
 
 bool testing::test_spgeam(Arguments arg)
 {
-    linalg::csr_matrix mat_A;
+    linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
-    linalg::csr_matrix mat_B;
+    linalg::csr_matrix<double> mat_B;
     mat_B.copy_from(mat_A);
 
-    linalg::csr_matrix mat_C;
+    linalg::csr_matrix<double> mat_C;
 
     auto t1 = std::chrono::high_resolution_clock::now();
     mat_A.multiply_by_matrix(mat_C, mat_B);

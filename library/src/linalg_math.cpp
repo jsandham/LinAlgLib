@@ -72,7 +72,7 @@ void linalg::axpbypgz(double                alpha,
 }
 
 // Incomplete IC factorization
-void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
+void linalg::csric0(csr_matrix<double>& LL, int* structural_zero, int* numeric_zero)
 {
     ROUTINE_TRACE("linalg::csric0");
 
@@ -81,7 +81,7 @@ void linalg::csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero)
 }
 
 // Incomplete LU factorization
-void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
+void linalg::csrilu0(csr_matrix<double>& LU, int* structural_zero, int* numeric_zero)
 {
     ROUTINE_TRACE("linalg::csrilu0");
 
@@ -90,7 +90,7 @@ void linalg::csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero)
 }
 
 // Transpose matrix
-void linalg::transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
+void linalg::transpose_matrix(const csr_matrix<double>& A, csr_matrix<double>& transposeA)
 {
     ROUTINE_TRACE("linalg::transpose_matrix");
 
@@ -107,10 +107,10 @@ double linalg::dot_product(const vector<double>& x, const vector<double>& y)
 }
 
 // Compute residual
-void linalg::compute_residual(const csr_matrix&     A,
-                              const vector<double>& x,
-                              const vector<double>& b,
-                              vector<double>&       res)
+void linalg::compute_residual(const csr_matrix<double>& A,
+                              const vector<double>&     x,
+                              const vector<double>&     b,
+                              vector<double>&           res)
 {
     ROUTINE_TRACE("linalg::compute_residual");
 
@@ -119,7 +119,7 @@ void linalg::compute_residual(const csr_matrix&     A,
 }
 
 // Extract diagonal entries
-void linalg::diagonal(const csr_matrix& A, vector<double>& d)
+void linalg::diagonal(const csr_matrix<double>& A, vector<double>& d)
 {
     ROUTINE_TRACE("linalg::diagonal");
 
@@ -164,10 +164,10 @@ void linalg::destroy_csrtrsv_descr(csrtrsv_descr* descr)
     }
 }
 
-void linalg::csrtrsv_analysis(const csr_matrix& A,
-                              triangular_type   tri_type,
-                              diagonal_type     diag_type,
-                              csrtrsv_descr*    descr)
+void linalg::csrtrsv_analysis(const csr_matrix<double>& A,
+                              triangular_type           tri_type,
+                              diagonal_type             diag_type,
+                              csrtrsv_descr*            descr)
 {
     ROUTINE_TRACE("linalg::csrtrsv_analysis");
 
@@ -180,13 +180,13 @@ void linalg::csrtrsv_analysis(const csr_matrix& A,
                             descr);
 }
 
-void linalg::csrtrsv_solve(const csr_matrix&     A,
-                           const vector<double>& b,
-                           vector<double>&       x,
-                           double                alpha,
-                           triangular_type       tri_type,
-                           diagonal_type         diag_type,
-                           const csrtrsv_descr*  descr)
+void linalg::csrtrsv_solve(const csr_matrix<double>& A,
+                           const vector<double>&     b,
+                           vector<double>&           x,
+                           double                    alpha,
+                           triangular_type           tri_type,
+                           diagonal_type             diag_type,
+                           const csrtrsv_descr*      descr)
 {
     ROUTINE_TRACE("linalg::csrtrsv_solve");
 
@@ -221,7 +221,7 @@ void linalg::destroy_csrmv_descr(csrmv_descr* descr)
     }
 }
 
-void linalg::csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_descr* descr)
+void linalg::csrmv_analysis(const csr_matrix<double>& A, csrmv_algorithm alg, csrmv_descr* descr)
 {
     ROUTINE_TRACE("linalg::csrmv_analysis");
 
@@ -229,13 +229,13 @@ void linalg::csrmv_analysis(const csr_matrix& A, csrmv_algorithm alg, csrmv_desc
         "linalg::csrmv_analysis", host_csrmv_analysis, device_csrmv_analysis, A, alg, descr);
 }
 
-void linalg::csrmv_solve(double                alpha,
-                         const csr_matrix&     A,
-                         const vector<double>& x,
-                         double                beta,
-                         vector<double>&       y,
-                         csrmv_algorithm       alg,
-                         const csrmv_descr*    descr)
+void linalg::csrmv_solve(double                    alpha,
+                         const csr_matrix<double>& A,
+                         const vector<double>&     x,
+                         double                    beta,
+                         vector<double>&           y,
+                         csrmv_algorithm           alg,
+                         const csrmv_descr*        descr)
 {
     ROUTINE_TRACE("linalg::csrmv_solve");
 
@@ -272,11 +272,11 @@ void linalg::destroy_csrgeam_descr(csrgeam_descr* descr)
     }
 }
 
-void linalg::csrgeam_nnz(const csr_matrix& A,
-                         const csr_matrix& B,
-                         csr_matrix&       C,
-                         csrgeam_algorithm alg,
-                         csrgeam_descr*    descr)
+void linalg::csrgeam_nnz(const csr_matrix<double>& A,
+                         const csr_matrix<double>& B,
+                         csr_matrix<double>&       C,
+                         csrgeam_algorithm         alg,
+                         csrgeam_descr*            descr)
 {
     ROUTINE_TRACE("linalg::csrgeam_nnz");
 
@@ -284,13 +284,13 @@ void linalg::csrgeam_nnz(const csr_matrix& A,
         "linalg::csrgeam_nnz", host_csrgeam_nnz, device_csrgeam_nnz, A, B, C, alg, descr);
 }
 
-void linalg::csrgeam_solve(double               alpha,
-                           const csr_matrix&    A,
-                           double               beta,
-                           const csr_matrix&    B,
-                           csr_matrix&          C,
-                           csrgeam_algorithm    alg,
-                           const csrgeam_descr* descr)
+void linalg::csrgeam_solve(double                    alpha,
+                           const csr_matrix<double>& A,
+                           double                    beta,
+                           const csr_matrix<double>& B,
+                           csr_matrix<double>&       C,
+                           csrgeam_algorithm         alg,
+                           const csrgeam_descr*      descr)
 {
     ROUTINE_TRACE("linalg::csrgeam_solve");
 
@@ -327,26 +327,26 @@ void linalg::destroy_csrgemm_descr(csrgemm_descr* descr)
     }
 }
 
-void linalg::csrgemm_nnz(const csr_matrix& A,
-                         const csr_matrix& B,
-                         const csr_matrix& D,
-                         csr_matrix&       C,
-                         csrgemm_algorithm alg,
-                         csrgemm_descr*    descr)
+void linalg::csrgemm_nnz(const csr_matrix<double>& A,
+                         const csr_matrix<double>& B,
+                         const csr_matrix<double>& D,
+                         csr_matrix<double>&       C,
+                         csrgemm_algorithm         alg,
+                         csrgemm_descr*            descr)
 {
     ROUTINE_TRACE("linalg::csrgemm_nnz");
 
     return backend_dispatch(
         "linalg::csrgemm_nnz", host_csrgemm_nnz, device_csrgemm_nnz, A, B, D, C, alg, descr);
 }
-void linalg::csrgemm_solve(double               alpha,
-                           const csr_matrix&    A,
-                           const csr_matrix&    B,
-                           double               beta,
-                           const csr_matrix&    D,
-                           csr_matrix&          C,
-                           csrgemm_algorithm    alg,
-                           const csrgemm_descr* descr)
+void linalg::csrgemm_solve(double                    alpha,
+                           const csr_matrix<double>& A,
+                           const csr_matrix<double>& B,
+                           double                    beta,
+                           const csr_matrix<double>& D,
+                           csr_matrix<double>&       C,
+                           csrgemm_algorithm         alg,
+                           const csrgemm_descr*      descr)
 {
     ROUTINE_TRACE("linalg::csrgemm_solve");
 
@@ -385,7 +385,7 @@ void linalg::destroy_csric0_descr(csric0_descr* descr)
     }
 }
 
-void linalg::csric0_analysis(const csr_matrix& A, csric0_descr* descr)
+void linalg::csric0_analysis(const csr_matrix<double>& A, csric0_descr* descr)
 {
     ROUTINE_TRACE("linalg::csric0_analysis");
 
@@ -393,7 +393,7 @@ void linalg::csric0_analysis(const csr_matrix& A, csric0_descr* descr)
         "linalg::csric0_analysis", host_csric0_analysis, device_csric0_analysis, A, descr);
 }
 
-void linalg::csric0_compute(csr_matrix& A, const csric0_descr* descr)
+void linalg::csric0_compute(csr_matrix<double>& A, const csric0_descr* descr)
 {
     ROUTINE_TRACE("linalg::csric0_compute");
 
@@ -422,7 +422,7 @@ void linalg::destroy_csrilu0_descr(csrilu0_descr* descr)
     }
 }
 
-void linalg::csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)
+void linalg::csrilu0_analysis(const csr_matrix<double>& A, csrilu0_descr* descr)
 {
     ROUTINE_TRACE("linalg::csrilu0_analysis");
 
@@ -430,7 +430,7 @@ void linalg::csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr)
         "linalg::csrilu0_analysis", host_csrilu0_analysis, device_csrilu0_analysis, A, descr);
 }
 
-void linalg::csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr)
+void linalg::csrilu0_compute(csr_matrix<double>& A, const csrilu0_descr* descr)
 {
     ROUTINE_TRACE("linalg::csrilu0_compute");
 

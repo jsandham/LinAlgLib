@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -49,12 +49,12 @@
 namespace linalg
 {
     static bool construct_prolongation_using_smoothed_aggregation(
-        const csr_matrix&      A,
-        const vector<int>&     connections,
-        const vector<int64_t>& aggregates,
-        const vector<int64_t>& aggregate_root_nodes,
-        double                 relax,
-        csr_matrix&            prolongation)
+        const csr_matrix<double>& A,
+        const vector<int>&        connections,
+        const vector<int64_t>&    aggregates,
+        const vector<int64_t>&    aggregate_root_nodes,
+        double                    relax,
+        csr_matrix<double>&       prolongation)
     {
         ROUTINE_TRACE("construct_prolongation_using_smoothed_aggregation");
 
@@ -62,7 +62,6 @@ namespace linalg
         {
             aggregates.print_vector("aggregates");
         }
-
 
         // Determine number of columns in the prolongation matrix. This will be
         // the maximum aggregate plus one.
@@ -208,7 +207,7 @@ namespace linalg
     }
 }
 
-void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hierarchy)
+void linalg::saamg_setup(const csr_matrix<double>& mat_A, int max_level, hierarchy& hierarchy)
 {
     ROUTINE_TRACE("saamg_setup");
 
@@ -234,10 +233,10 @@ void linalg::saamg_setup(const csr_matrix& mat_A, int max_level, hierarchy& hier
     {
         std::cout << "Compute operators at coarse level: " << level << std::endl;
 
-        const csr_matrix& A_fine   = hierarchy.A_cs[level];
-        csr_matrix&       A_coarse = hierarchy.A_cs[level + 1];
-        csr_matrix&       P        = hierarchy.prolongations[level];
-        csr_matrix&       R        = hierarchy.restrictions[level];
+        const csr_matrix<double>& A_fine   = hierarchy.A_cs[level];
+        csr_matrix<double>&       A_coarse = hierarchy.A_cs[level + 1];
+        csr_matrix<double>&       P        = hierarchy.prolongations[level];
+        csr_matrix<double>&       R        = hierarchy.restrictions[level];
 
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);

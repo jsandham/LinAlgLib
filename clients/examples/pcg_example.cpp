@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -32,16 +32,16 @@
 
 int main()
 {
-    linalg::csr_matrix A;
+    linalg::csr_matrix<double> A;
     A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
 
     // Solution vector
     linalg::vector<double> x(A.get_m());
-    
+
     x.move_to_device();
     x.zeros();
     x.move_to_host();
-    
+
     x.zeros();
 
     // Righthand side vector

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -33,9 +33,9 @@
 #include "cuda/cuda_amg_strength.h"
 #endif
 
-void linalg::device_compute_strong_connections(const csr_matrix& A,
-                                               double            eps,
-                                               vector<int>&      connections)
+void linalg::device_compute_strong_connections(const csr_matrix<double>& A,
+                                               double                    eps,
+                                               vector<int>&              connections)
 {
     ROUTINE_TRACE("linalg::device_compute_strong_connections");
 
@@ -75,10 +75,10 @@ void linalg::device_compute_strong_connections(const csr_matrix& A,
     //                                        connections.get_vec());
 }
 
-void linalg::device_compute_classical_strong_connections(const csr_matrix& A,
-                                                         double            theta,
-                                                         csr_matrix&       S,
-                                                         vector<int>&      connections)
+void linalg::device_compute_classical_strong_connections(const csr_matrix<double>& A,
+                                                         double                    theta,
+                                                         csr_matrix<double>&       S,
+                                                         vector<int>&              connections)
 {
     ROUTINE_TRACE("linalg::device_compute_classical_strong_connections");
 

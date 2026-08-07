@@ -98,21 +98,21 @@ namespace linalg
     }
 }
 
-void linalg::host_csrtrsv_analysis(const csr_matrix& A,
-                                   triangular_type   tri_type,
-                                   diagonal_type     diag_type,
-                                   csrtrsv_descr*    descr)
+void linalg::host_csrtrsv_analysis(const csr_matrix<double>& A,
+                                   triangular_type           tri_type,
+                                   diagonal_type             diag_type,
+                                   csrtrsv_descr*            descr)
 {
     ROUTINE_TRACE("linalg::host_csrtrsv_analysis");
 }
 
-void linalg::host_csrtrsv_solve(const csr_matrix&     A,
-                                const vector<double>& b,
-                                vector<double>&       x,
-                                double                alpha,
-                                triangular_type       tri_type,
-                                diagonal_type         diag_type,
-                                const csrtrsv_descr*  descr)
+void linalg::host_csrtrsv_solve(const csr_matrix<double>& A,
+                                const vector<double>&     b,
+                                vector<double>&           x,
+                                double                    alpha,
+                                triangular_type           tri_type,
+                                diagonal_type             diag_type,
+                                const csrtrsv_descr*      descr)
 {
     ROUTINE_TRACE("linalg::host_csrtrsv_solve");
     if(tri_type == triangular_type::upper)

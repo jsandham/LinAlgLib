@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019-2025 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -278,7 +278,7 @@ namespace linalg
      * \param A The sparse matrix in CSR format for which the solver is being built.
      * \param restart The restart parameter `m` for GMRES(m).
      */
-        void build(const csr_matrix& A, int restart);
+        void build(const csr_matrix<double>& A, int restart);
 
         /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the non-preconditioned GMRES method.
      *
@@ -296,10 +296,10 @@ namespace linalg
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns (e.g., null vectors).
      */
-        int solve_nonprecond(const csr_matrix&     A,
-                             vector<double>&       x,
-                             const vector<double>& b,
-                             iter_control          control);
+        int solve_nonprecond(const csr_matrix<double>& A,
+                             vector<double>&           x,
+                             const vector<double>&     b,
+                             iter_control              control);
 
         /*! \brief Solves the linear system \f$A \cdot x = b\f$ using the preconditioned GMRES method.
      *
@@ -319,11 +319,11 @@ namespace linalg
      * - `1` if the maximum number of iterations was reached without convergence.
      * - Negative values indicate potential breakdowns or issues with the preconditioner.
      */
-        int solve_precond(const csr_matrix&     A,
-                          vector<double>&       x,
-                          const vector<double>& b,
-                          const preconditioner* precond,
-                          iter_control          control);
+        int solve_precond(const csr_matrix<double>& A,
+                          vector<double>&           x,
+                          const vector<double>&     b,
+                          const preconditioner*     precond,
+                          iter_control              control);
 
         /*! \brief Generic solve method for the GMRES solver (delegates to non-preconditioned or preconditioned).
      *
@@ -338,11 +338,11 @@ namespace linalg
      * including convergence tolerance and total maximum iterations.
      * \return An integer status code, consistent with `solve_nonprecond` or `solve_precond`.
      */
-        int solve(const csr_matrix&     A,
-                  vector<double>&       x,
-                  const vector<double>& b,
-                  const preconditioner* precond,
-                  iter_control          control);
+        int solve(const csr_matrix<double>& A,
+                  vector<double>&           x,
+                  const vector<double>&     b,
+                  const preconditioner*     precond,
+                  iter_control              control);
     };
 }
 

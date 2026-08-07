@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2025 James Sandham
+// Copyright(c) 2025-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -55,12 +55,12 @@ bool testing::test_compute_incomplete_LU_factorization_dense(Arguments arg)
         }
     }
 
-    linalg::csr_matrix mat_A(csr_row_ptr,
-                             csr_col_ind,
-                             csr_val,
-                             arg.m,
-                             arg.m,
-                             arg.m * arg.m); // dense
+    linalg::csr_matrix<double> mat_A(csr_row_ptr,
+                                     csr_col_ind,
+                                     csr_val,
+                                     arg.m,
+                                     arg.m,
+                                     arg.m * arg.m); // dense
     mat_A.make_diagonally_dominant();
 
     linalg::vector<double> ones(mat_A.get_n());
@@ -75,7 +75,7 @@ bool testing::test_compute_incomplete_LU_factorization_dense(Arguments arg)
     linalg::vector<double> z(mat_A.get_n());
     z.zeros();
 
-    linalg::csr_matrix mat_transpose;
+    linalg::csr_matrix<double> mat_transpose;
     mat_transpose.resize(mat_A.get_n(), mat_A.get_m(), mat_A.get_nnz());
 
     if(arg.backend == backend::GPU)

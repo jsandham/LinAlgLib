@@ -31,12 +31,12 @@
 
 namespace linalg
 {
-    void host_csrilu0(csr_matrix& LU, int* structural_zero, int* numeric_zero);
+    void host_csrilu0(csr_matrix<double>& LU, int* structural_zero, int* numeric_zero);
 
     struct csrilu0_descr;
 
-    void host_csrilu0_analysis(const csr_matrix& A, csrilu0_descr* descr);
-    void host_csrilu0_compute(csr_matrix& A, const csrilu0_descr* descr);
+    void host_csrilu0_analysis(const csr_matrix<double>& A, csrilu0_descr* descr);
+    void host_csrilu0_compute(csr_matrix<double>& A, const csrilu0_descr* descr);
 }
 
 #endif

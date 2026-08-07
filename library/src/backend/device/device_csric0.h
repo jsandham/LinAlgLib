@@ -31,13 +31,13 @@
 
 namespace linalg
 {
-    void device_csric0(csr_matrix& LL, int* structural_zero, int* numeric_zero);
+    void device_csric0(csr_matrix<double>& LL, int* structural_zero, int* numeric_zero);
 
     struct csric0_descr;
 
     void free_csric0_device_data(csric0_descr* descr);
-    void device_csric0_analysis(const csr_matrix& A, csric0_descr* descr);
-    void device_csric0_compute(csr_matrix& A, const csric0_descr* descr);
+    void device_csric0_analysis(const csr_matrix<double>& A, csric0_descr* descr);
+    void device_csric0_compute(csr_matrix<double>& A, const csric0_descr* descr);
 }
 
 #endif

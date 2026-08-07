@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -31,7 +31,6 @@
 #include <iostream>
 #include <vector>
 
-
 #include "../../trace.h"
 
 using namespace linalg;
@@ -41,10 +40,10 @@ using namespace linalg;
 //-------------------------------------------------------------------------------
 namespace linalg
 {
-    void jacobi_iteration(const csr_matrix&     A,
-                          vector<double>&       x,
-                          const vector<double>& xold,
-                          const vector<double>& b)
+    void jacobi_iteration(const csr_matrix<double>& A,
+                          vector<double>&           x,
+                          const vector<double>&     xold,
+                          const vector<double>&     b)
     {
         ROUTINE_TRACE("jacobi_iteration");
 
@@ -80,16 +79,16 @@ jacobi_solver::jacobi_solver() {}
 
 jacobi_solver::~jacobi_solver() {}
 
-void jacobi_solver::build(const csr_matrix& A)
+void jacobi_solver::build(const csr_matrix<double>& A)
 {
     xold.resize(A.get_m());
     res.resize(A.get_m());
 }
 
-int jacobi_solver::solve(const csr_matrix&     A,
-                         vector<double>&       x,
-                         const vector<double>& b,
-                         iter_control          control)
+int jacobi_solver::solve(const csr_matrix<double>& A,
+                         vector<double>&           x,
+                         const vector<double>&     b,
+                         iter_control              control)
 {
     ROUTINE_TRACE("jacobi_solver::solve");
 

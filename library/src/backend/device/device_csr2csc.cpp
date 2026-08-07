@@ -37,7 +37,7 @@
 #include "cuda/cuda_memory.h"
 #endif
 
-void linalg::device_transpose_matrix(const csr_matrix& A, csr_matrix& transposeA)
+void linalg::device_transpose_matrix(const csr_matrix<double>& A, csr_matrix<double>& transposeA)
 {
     ROUTINE_TRACE("linalg::device_transpose_matrix");
     if constexpr(is_cuda_available())

@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2024 James Sandham
+// Copyright(c) 2024-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -56,8 +56,9 @@ namespace linalg
  *  \param eps Strength threshold used to decide whether a connection is strong.
  *  \param connections Output vector encoding the detected strong connections.
  */
-    LINALGLIB_API void
-        compute_strong_connections(const csr_matrix& A, double eps, vector<int>& connections);
+    LINALGLIB_API void compute_strong_connections(const csr_matrix<double>& A,
+                                                  double                    eps,
+                                                  vector<int>&              connections);
 
     /*! \ingroup iterative_solvers_amg
  *  \brief Compute the classical AMG strength matrix.
@@ -71,10 +72,10 @@ namespace linalg
  *  \param S Output CSR matrix storing the strength-of-connection pattern.
  *  \param connections Output vector describing strong connections per node.
  */
-    LINALGLIB_API void compute_classical_strong_connections(const csr_matrix& A,
-                                                            double            theta,
-                                                            csr_matrix&       S,
-                                                            vector<int>&      connections);
+    LINALGLIB_API void compute_classical_strong_connections(const csr_matrix<double>& A,
+                                                            double                    theta,
+                                                            csr_matrix<double>&       S,
+                                                            vector<int>&              connections);
 }
 
 /*! @} */

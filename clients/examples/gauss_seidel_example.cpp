@@ -2,7 +2,7 @@
 //
 // MIT License
 //
-// Copyright(c) 2019 James Sandham
+// Copyright(c) 2019-2026 James Sandham
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this softwareand associated documentation files(the "Software"), to deal
@@ -43,7 +43,7 @@ int main()
     // std::vector<int> csr_col_ind = { 0, 1, 4, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 3, 4 };
     // std::vector<double> csr_val = { 4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0,
     // -1.0, 4.0 };
-    linalg::csr_matrix A;
+    linalg::csr_matrix<double> A;
     A.read_mtx("../matrices/SPD/shallow_water2/shallow_water2.mtx");
 
     // Solution vector
@@ -59,8 +59,8 @@ int main()
 
     linalg::iter_control control;
     control.max_iter = 1000;
-    control.rel_tol = 1e-08;
-    control.abs_tol = 1e-08;
+    control.rel_tol  = 1e-08;
+    control.abs_tol  = 1e-08;
 
     int iter = gs.solve(A, x, b, control);
 
