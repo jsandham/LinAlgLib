@@ -28,6 +28,13 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
 project(linalglib LANGUAGES CXX)
 
+if(MSVC)
+  # Keep the project and all fetched dependencies on the DLL-based MSVC runtime
+  # so that targets like yaml-cpp do not end up linked against /MTd while the
+  # executable is built against /MDd.
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 option(ENABLE_COVERAGE "Build with code coverage support" OFF)
