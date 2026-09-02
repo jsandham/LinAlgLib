@@ -206,7 +206,10 @@ void linalg::create_csrmv_descr(csrmv_descr** descr)
 {
     ROUTINE_TRACE("linalg::create_csrmv_descr");
 
-    *descr = new csrmv_descr;
+    *descr                            = new csrmv_descr;
+    (*descr)->bin_start_ptr           = nullptr;
+    (*descr)->row_index_in_bin        = nullptr;
+    (*descr)->row_index_in_bin_sorted = nullptr;
 }
 
 void linalg::destroy_csrmv_descr(csrmv_descr* descr)

@@ -70,6 +70,9 @@ void linalg::cuda_csrilu0_analysis(int            m,
                                    const T*       csr_val,
                                    csrilu0_descr* descr)
 {
+    // Free cuda memory that may have been allocated from previous calls to analysis
+    free_csrilu0_cuda_data(descr);
+
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
     assert(descr->row_perm == nullptr);

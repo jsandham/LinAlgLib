@@ -9,7 +9,7 @@ Tests:
                   "matrices/SPD/nos7/nos7.mtx"]
     max_iters: [30]
     tol: [1e-6]
-    backend: [GPU]
+    backend: [CPU]
 
   small:
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",

@@ -49,6 +49,11 @@ csr_matrix<T>::csr_matrix()
     , nnz(0)
     , on_host(true)
 {
+    create_csrmv_descr(&this->descr_mv);
+    create_csrgemm_descr(&this->descr_gemm);
+    create_csrtrsv_descr(&this->descr_sv);
+    create_csric0_descr(&this->descr_ic);
+    create_csrilu0_descr(&this->descr_ilu);
 }
 
 template <typename T>
@@ -71,11 +76,22 @@ csr_matrix<T>::csr_matrix(const std::vector<int>& csr_row_ptr,
     this->nnz = nnz;
 
     this->on_host = true;
+
+    create_csrmv_descr(&this->descr_mv);
+    create_csrgemm_descr(&this->descr_gemm);
+    create_csrtrsv_descr(&this->descr_sv);
+    create_csric0_descr(&this->descr_ic);
+    create_csrilu0_descr(&this->descr_ilu);
 }
 
 template <typename T>
 csr_matrix<T>::~csr_matrix()
 {
+    destroy_csrmv_descr(this->descr_mv);
+    destroy_csrgemm_descr(this->descr_gemm);
+    destroy_csrtrsv_descr(this->descr_sv);
+    destroy_csric0_descr(this->descr_ic);
+    destroy_csrilu0_descr(this->descr_ilu);
 }
 
 template <typename T>
@@ -304,14 +320,16 @@ void csr_matrix<T>::multiply_by_vector(vector<T>& y, const vector<T>& x) const
 {
     ROUTINE_TRACE("csr_matrix<T>::multiply_by_vector");
 
-    csrmv_descr* descr = nullptr;
-    create_csrmv_descr(&descr);
+    // csrmv_descr* descr = nullptr;
+    // create_csrmv_descr(&descr);
 
-    csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
+    csrmv_analysis(*this, csrmv_algorithm::lrb, descr_mv);
+    // csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
 
-    csrmv_solve(1.0, *this, x, 0.0, y, csrmv_algorithm::default_algorithm, descr);
+    csrmv_solve(1.0, *this, x, 0.0, y, csrmv_algorithm::lrb, descr_mv);
+    // csrmv_solve(1.0, *this, x, 0.0, y, csrmv_algorithm::default_algorithm, descr);
 
-    destroy_csrmv_descr(descr);
+    // destroy_csrmv_descr(descr);
 }
 
 template <typename T>
@@ -319,14 +337,14 @@ void csr_matrix<T>::multiply_by_vector_and_add(vector<T>& y, const vector<T>& x)
 {
     ROUTINE_TRACE("csr_matrix<T>::multiply_by_vector_and_add");
 
-    csrmv_descr* descr = nullptr;
-    create_csrmv_descr(&descr);
+    // csrmv_descr* descr = nullptr;
+    // create_csrmv_descr(&descr);
 
-    csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr);
+    csrmv_analysis(*this, csrmv_algorithm::default_algorithm, descr_mv);
 
-    csrmv_solve(1.0, *this, x, 1.0, y, csrmv_algorithm::default_algorithm, descr);
+    csrmv_solve(1.0, *this, x, 1.0, y, csrmv_algorithm::default_algorithm, descr_mv);
 
-    destroy_csrmv_descr(descr);
+    // destroy_csrmv_descr(descr);
 }
 
 template <typename T>
@@ -342,14 +360,14 @@ void csr_matrix<T>::multiply_by_matrix(csr_matrix<T>& C, const csr_matrix<T>& B)
         D.move_to_device();
     }
 
-    csrgemm_descr* descr = nullptr;
-    create_csrgemm_descr(&descr);
+    // csrgemm_descr* descr = nullptr;
+    // create_csrgemm_descr(&descr);
 
-    csrgemm_nnz(*this, B, D, C, csrgemm_algorithm::default_algorithm, descr);
+    csrgemm_nnz(*this, B, D, C, csrgemm_algorithm::default_algorithm, descr_gemm);
 
-    csrgemm_solve(1.0, *this, B, 0.0, D, C, csrgemm_algorithm::default_algorithm, descr);
+    csrgemm_solve(1.0, *this, B, 0.0, D, C, csrgemm_algorithm::default_algorithm, descr_gemm);
 
-    destroy_csrgemm_descr(descr);
+    // destroy_csrgemm_descr(descr);
 }
 
 template <typename T>
@@ -357,13 +375,13 @@ void csr_matrix<T>::triangular_solve_lower(vector<T>& x, const vector<T>& y, boo
 {
     ROUTINE_TRACE("csr_matrix<T>::triangular_solve_lower");
 
-    csrtrsv_descr* descr = nullptr;
-    create_csrtrsv_descr(&descr);
+    // csrtrsv_descr* descr = nullptr;
+    // create_csrtrsv_descr(&descr);
 
     csrtrsv_analysis(*this,
                      triangular_type::lower,
                      unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
-                     descr);
+                     descr_sv);
 
     // Perform the triangular solve
     csrtrsv_solve(*this,
@@ -372,9 +390,9 @@ void csr_matrix<T>::triangular_solve_lower(vector<T>& x, const vector<T>& y, boo
                   static_cast<T>(1.0),
                   triangular_type::lower,
                   unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
-                  descr);
+                  descr_sv);
 
-    destroy_csrtrsv_descr(descr);
+    // destroy_csrtrsv_descr(descr);
 }
 
 template <typename T>
@@ -382,13 +400,13 @@ void csr_matrix<T>::triangular_solve_upper(vector<T>& x, const vector<T>& y, boo
 {
     ROUTINE_TRACE("csr_matrix<T>::triangular_solve_upper");
 
-    csrtrsv_descr* descr = nullptr;
-    create_csrtrsv_descr(&descr);
+    // csrtrsv_descr* descr = nullptr;
+    // create_csrtrsv_descr(&descr);
 
     csrtrsv_analysis(*this,
                      triangular_type::upper,
                      unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
-                     descr);
+                     descr_sv);
 
     // Perform the triangular solve
     csrtrsv_solve(*this,
@@ -397,9 +415,9 @@ void csr_matrix<T>::triangular_solve_upper(vector<T>& x, const vector<T>& y, boo
                   static_cast<T>(1.0),
                   triangular_type::upper,
                   unit_diag ? diagonal_type::unit : diagonal_type::non_unit,
-                  descr);
+                  descr_sv);
 
-    destroy_csrtrsv_descr(descr);
+    // destroy_csrtrsv_descr(descr);
 }
 
 template <typename T>
@@ -407,15 +425,15 @@ void csr_matrix<T>::compute_incomplete_cholesky_factorization()
 {
     ROUTINE_TRACE("csr_matrix<T>::compute_incomplete_cholesky_factorization");
 
-    csric0_descr* descr = nullptr;
-    create_csric0_descr(&descr);
+    // csric0_descr* descr = nullptr;
+    // create_csric0_descr(&descr);
 
-    csric0_analysis(*this, descr);
+    csric0_analysis(*this, descr_ic);
 
     // Compute Cholesky factorization inplace
-    csric0_compute(*this, descr);
+    csric0_compute(*this, descr_ic);
 
-    destroy_csric0_descr(descr);
+    // destroy_csric0_descr(descr);
 }
 
 template <typename T>
@@ -423,15 +441,15 @@ void csr_matrix<T>::compute_incomplete_LU_factorization()
 {
     ROUTINE_TRACE("csr_matrix<T>::compute_incomplete_LU_factorization");
 
-    csrilu0_descr* descr = nullptr;
-    create_csrilu0_descr(&descr);
+    // csrilu0_descr* descr = nullptr;
+    // create_csrilu0_descr(&descr);
 
-    csrilu0_analysis(*this, descr);
+    csrilu0_analysis(*this, descr_ilu);
 
     // Compute ILU factorization inplace
-    csrilu0_compute(*this, descr);
+    csrilu0_compute(*this, descr_ilu);
 
-    destroy_csrilu0_descr(descr);
+    // destroy_csrilu0_descr(descr);
 }
 
 template <typename T>

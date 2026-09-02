@@ -31,15 +31,6 @@
 namespace linalg
 {
     template <typename T>
-    void cuda_matrix_vector_product(int        m,
-                                    int        n,
-                                    int        nnz,
-                                    const int* csr_row_ptr,
-                                    const int* csr_col_ind,
-                                    const T*   csr_val,
-                                    const T*   x,
-                                    T*         y);
-    template <typename T>
     void cuda_compute_residual(int        m,
                                int        n,
                                int        nnz,

@@ -61,10 +61,7 @@ namespace testing
         std::string generate_test_name() const
         {
             std::string name = group;
-            if(this->backend != backend::CPU)
-            {
-                name += "_" + backend_to_string(this->backend);
-            }
+            name += "_" + backend_to_string(this->backend);
             if(this->uplo != uplo::lower)
             {
                 name += "_" + uplo_to_string(this->uplo);

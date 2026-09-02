@@ -69,6 +69,9 @@ void linalg::cuda_csrtrsv_analysis(int             m,
                                    diagonal_type   diag_type,
                                    csrtrsv_descr*  descr)
 {
+    // Free cuda memory that may have been allocated from previous calls to analysis
+    free_csrtrsv_cuda_data(descr);
+
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
     assert(descr->row_perm == nullptr);
