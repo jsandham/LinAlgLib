@@ -30,16 +30,16 @@
 #include "common.cuh"
 
 template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
-__global__ void csrmv_vector_kernel(int     m,
-                                    int     n,
-                                    int     nnz,
-                                    const T alpha,
-                                    const int* __restrict__ csr_row_ptr,
-                                    const int* __restrict__ csr_col_ind,
-                                    const T* __restrict__ csr_val,
-                                    const T* __restrict__ x,
-                                    const T beta,
-                                    T* __restrict__ y)
+__global__ void csrmv_row_split_kernel(int     m,
+                                       int     n,
+                                       int     nnz,
+                                       const T alpha,
+                                       const int* __restrict__ csr_row_ptr,
+                                       const int* __restrict__ csr_col_ind,
+                                       const T* __restrict__ csr_val,
+                                       const T* __restrict__ x,
+                                       const T beta,
+                                       T* __restrict__ y)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -103,16 +103,16 @@ __device__ inline int
 }
 
 template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, uint32_t NNZ_PER_THREAD, typename T>
-__global__ void csrmv_stream_kernel(int     m,
-                                    int     n,
-                                    int     nnz,
-                                    const T alpha,
-                                    const int* __restrict__ csr_row_ptr,
-                                    const int* __restrict__ csr_col_ind,
-                                    const T* __restrict__ csr_val,
-                                    const T* __restrict__ x,
-                                    const T beta,
-                                    T* __restrict__ y)
+__global__ void csrmv_nnz_split_kernel(int     m,
+                                       int     n,
+                                       int     nnz,
+                                       const T alpha,
+                                       const int* __restrict__ csr_row_ptr,
+                                       const int* __restrict__ csr_col_ind,
+                                       const T* __restrict__ csr_val,
+                                       const T* __restrict__ x,
+                                       const T beta,
+                                       T* __restrict__ y)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -230,6 +230,338 @@ __global__ void csrmv_stream_kernel(int     m,
             atomicAdd(&y[prev_row], alpha * sum);
         }
     }
+}
+
+
+__device__ int ilog2(unsigned int x) {
+    // 31 minus leading zeros equals floor(log2(x)) for x > 0
+    return 31 - __clz(x);
+}
+
+__device__ __forceinline__ int ceil_log2_32(unsigned int x) {
+    if (x <= 1) return 0;
+    return 32 - __clz(x - 1);
+}
+
+template <uint32_t BLOCKSIZE>
+__global__ void compute_analysis_pass1(int m,
+                                       const int* __restrict__ csr_row_ptr,
+                                       int* __restrict__ bin_count,
+                                       int* __restrict__ row_index_in_bin)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    if(gid < m)
+    {
+        const int row_length = csr_row_ptr[gid + 1] - csr_row_ptr[gid];
+        const int bin        = (row_length != 0) ? ceil_log2_32(row_length) : 0;
+
+        row_index_in_bin[gid] = atomicAdd(&bin_count[bin], 1);
+    }
+}
+
+template <uint32_t BLOCKSIZE>
+__global__ void compute_analysis_pass2(int m,
+                                       const int* __restrict__ csr_row_ptr,
+                                       const int* __restrict__ bin_count,
+                                       const int* __restrict__ row_index_in_bin,
+                                       int* __restrict__ bin_start_ptr,
+                                       int* __restrict__ row_index_in_bin_sorted)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ int bin_start_ptr_shared[32];
+
+    if(tid == 0)
+    {
+        int count = 0;
+        for(int i = 0; i < 32; i++)
+        {
+            const int tmp    = bin_count[i];
+            bin_start_ptr[i] = count;
+            bin_start_ptr_shared[i] = count;
+            count += tmp;
+        }
+    }
+
+    __syncthreads();
+
+    if(gid < m)
+    {
+        const int row_length = csr_row_ptr[gid + 1] - csr_row_ptr[gid];
+        const int bin        = (row_length != 0) ? ceil_log2_32(row_length) : 0;
+
+        row_index_in_bin_sorted[bin_start_ptr_shared[bin] + row_index_in_bin[gid]] = gid;
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void csrmv_lrb_small_kernel(int     m,
+                                       int     n,
+                                       int     nnz,
+                                       int     bin,
+                                       int     bin_count,
+                                       const T alpha,
+                                       const int* __restrict__ bin_start_ptr,
+                                       const int* __restrict__ row_index_in_bin_sorted,
+                                       const int* __restrict__ csr_row_ptr,
+                                       const int* __restrict__ csr_col_ind,
+                                       const T* __restrict__ csr_val,
+                                       const T* __restrict__ x,
+                                       const T beta,
+                                       T* __restrict__ y)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    if(gid < bin_count)
+    {
+        const int row = row_index_in_bin_sorted[bin_start_ptr[bin] + gid];
+
+        assert(row < m);
+
+        const int start = csr_row_ptr[row];
+        const int end   = csr_row_ptr[row + 1];
+
+        T sum = static_cast<T>(0);
+        for(int j = start; j < end; j++)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        if(beta == static_cast<T>(0))
+        {
+            y[row] = alpha * sum;
+        }
+        else
+        {
+            y[row] = std::fma(alpha, sum, beta * y[row]);
+        }
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
+__global__ void csrmv_lrb_medium_kernel(int     m,
+                                        int     n,
+                                        int     nnz,
+                                        int     bin,
+                                        int     bin_count,
+                                        const T alpha,
+                                        const int* __restrict__ bin_start_ptr,
+                                        const int* __restrict__ row_index_in_bin_sorted,
+                                        const int* __restrict__ csr_row_ptr,
+                                        const int* __restrict__ csr_col_ind,
+                                        const T* __restrict__ csr_val,
+                                        const T* __restrict__ x,
+                                        const T beta,
+                                        T* __restrict__ y)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    const int lid = tid & WARPSIZE - 1;
+    //const int wid = tid / WARPSIZE;
+
+    for(int i = gid / WARPSIZE; i < bin_count; i += (BLOCKSIZE / WARPSIZE) * gridDim.x)
+    {
+        const int row = row_index_in_bin_sorted[bin_start_ptr[bin] + i];
+
+        const int row_start = csr_row_ptr[row];
+        const int row_end   = csr_row_ptr[row + 1];
+
+        T sum = static_cast<T>(0);
+        for(int j = row_start + lid; j < row_end; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            if(beta == static_cast<T>(0))
+            {
+                y[row] = alpha * sum;
+            }
+            else
+            {
+                y[row] = std::fma(alpha, sum, beta * y[row]);
+            }
+        }
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void csrmv_lrb_medium_large_kernel(int     m,
+                                              int     n,
+                                              int     nnz,
+                                              int     bin,
+                                              int     bin_count,
+                                              const T alpha,
+                                              const int* __restrict__ bin_start_ptr,
+                                              const int* __restrict__ row_index_in_bin_sorted,
+                                              const int* __restrict__ csr_row_ptr,
+                                              const int* __restrict__ csr_col_ind,
+                                              const T* __restrict__ csr_val,
+                                              const T* __restrict__ x,
+                                              const T beta,
+                                              T* __restrict__ y)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    for(int i = bid; i < bin_count; i += gridDim.x)
+    {
+        const int row = row_index_in_bin_sorted[bin_start_ptr[bin] + i];
+
+        const int row_start = csr_row_ptr[row];
+        const int row_end   = csr_row_ptr[row + 1];
+
+        T sum = static_cast<T>(0);
+        for(int j = row_start + tid; j < row_end; j += BLOCKSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        shared[tid] = sum;
+        __syncthreads();
+
+        block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+        if(tid == 0)
+        {
+            if(beta == static_cast<T>(0))
+            {
+                y[row] = alpha * shared[0];
+            }
+            else
+            {
+                y[row] = std::fma(alpha, shared[0], beta * y[row]);
+            }
+        }
+    }
+}
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void csrmv_lrb_large_kernel(int     m,
+                                       int     n,
+                                       int     nnz,
+                                       int     bin,
+                                       int     bin_count,
+                                       const T alpha,
+                                       const int* __restrict__ bin_start_ptr,
+                                       const int* __restrict__ row_index_in_bin_sorted,
+                                       const int* __restrict__ csr_row_ptr,
+                                       const int* __restrict__ csr_col_ind,
+                                       const T* __restrict__ csr_val,
+                                       const T* __restrict__ x,
+                                       const T beta,
+                                       T* __restrict__ y)
+{
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+    const int gid = tid + BLOCKSIZE * bid;
+
+    __shared__ T shared[BLOCKSIZE];
+
+    const int bin_size = 1 << bin;
+
+    const int blocks_per_row = bin_size / BLOCKSIZE;
+
+    const int row
+        = row_index_in_bin_sorted[bin_start_ptr[bid / blocks_per_row] + bid % blocks_per_row];
+
+    const int row_start = csr_row_ptr[row] + BLOCKSIZE * (bid % blocks_per_row);
+    const int row_end   = csr_row_ptr[row + 1];
+
+    T sum = static_cast<T>(0);
+    for(int j = row_start + tid; j < row_end; j += BLOCKSIZE * blocks_per_row)
+    {
+        const int col = csr_col_ind[j];
+        const T   val = csr_val[j];
+
+        sum = std::fma(x[col], val, sum);
+    }
+
+    shared[tid] = sum;
+    __syncthreads();
+
+    block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+    if(tid == 0)
+    {
+        if(beta == static_cast<T>(0))
+        {
+            atomicAdd(&y[row], alpha * shared[0]);
+        }
+        else
+        {
+            // if(bid / blocks_per_row == 0)
+            // {
+            //     // atomicAdd(&y[row], alpha * shared[0] + beta);
+            // }
+            // else
+            // {
+            //     atomicAdd(&y[row], alpha * shared[0]);
+            // }
+        }
+    }
+
+    // __shared__ T shared[BLOCKSIZE];
+
+    // for(int i = bid; i < bin_count; i += gridDim.x)
+    // {
+    //     const int row = row_index_in_bin_sorted[bin_start_ptr[bin] + i];
+
+    //     const int row_start = csr_row_ptr[row];
+    //     const int row_end   = csr_row_ptr[row + 1];
+
+    //     T sum = static_cast<T>(0);
+    //     for(int j = row_start + tid; j < row_end; j += BLOCKSIZE)
+    //     {
+    //         const int col = csr_col_ind[j];
+    //         const T   val = csr_val[j];
+
+    //         sum = std::fma(x[col], val, sum);
+    //     }
+
+    //     shared[tid] = sum;
+    //     __syncthreads();
+
+    //     block_reduction_sum<BLOCKSIZE>(shared, tid);
+
+    //     if(tid == 0)
+    //     {
+    //         if(beta == static_cast<T>(0))
+    //         {
+    //             y[row] = alpha * shared[0];
+    //         }
+    //         else
+    //         {
+    //             y[row] = std::fma(alpha, shared[0], beta * y[row]);
+    //         }
+    //     }
+    // }
 }
 
 #endif

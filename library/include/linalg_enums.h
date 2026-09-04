@@ -65,7 +65,8 @@ namespace linalg
         default_algorithm, /*!< Default algorithm */
         merge_path,
         rowsplit,
-        nnzsplit
+        nnzsplit,
+        lrb
     };
 
     /*! \brief Enumeration for CSR matrix-matrix addition algorithms.

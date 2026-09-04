@@ -32,6 +32,14 @@
 
 #include "vector.h"
 
+#include "linalg_types.h"
+
+// struct csrmv_descr;
+// struct csrgemm_descr;
+// struct csrsv_descr;
+// struct csric0_descr;
+// struct csrilu0_descr;
+
 /*! \file
  *  \brief csr_matrx.h provides class for CSR sparse matrices
  */
@@ -94,6 +102,12 @@ namespace linalg
 
         /*! \brief Flag indicating if the matrix data is currently on the host (CPU) or device (GPU). */
         bool on_host;
+
+        csrmv_descr*   descr_mv;
+        csrgemm_descr* descr_gemm;
+        csrtrsv_descr* descr_sv;
+        csric0_descr*  descr_ic;
+        csrilu0_descr* descr_ilu;
 
     public:
         /*! \brief Default constructor.

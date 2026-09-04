@@ -121,6 +121,7 @@ void linalg::host_csrmv_solve(double                    alpha,
     case csrmv_algorithm::merge_path:
     case csrmv_algorithm::rowsplit:
     case csrmv_algorithm::nnzsplit:
+    case csrmv_algorithm::lrb:
         host_csrmv_impl(A.get_m(),
                         A.get_n(),
                         A.get_nnz(),

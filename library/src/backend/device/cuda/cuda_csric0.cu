@@ -74,6 +74,9 @@ void linalg::cuda_csric0_analysis(int           m,
 {
     std::cout << "cuda_csric0_analysis m: " << m << " n: " << n << " nnz: " << nnz << std::endl;
 
+    // Free cuda memory that may have been allocated from previous calls to analysis
+    free_csric0_cuda_data(descr);
+
     // Free any previous allocations?
     assert(descr->done_array == nullptr);
     assert(descr->row_perm == nullptr);
