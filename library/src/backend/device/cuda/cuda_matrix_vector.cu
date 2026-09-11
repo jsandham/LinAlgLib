@@ -75,140 +75,88 @@ namespace linalg
         CHECK_CUDA(cudaMemset(descr->bin_count, 0, sizeof(int) * 32));
 
         compute_analysis_pass1<256><<<((m - 1) / 256 + 1), 256>>>(
-                                        m,
-                                       csr_row_ptr,
-                                       descr->bin_count,
-                                       descr->row_index_in_bin);
+            m, csr_row_ptr, descr->bin_count, descr->row_index_in_bin);
 
-        CHECK_CUDA(cudaMemcpy(descr->hbin_count.data(),
-                              descr->bin_count,
-                              sizeof(int) * 32,
-                              cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(
+            descr->hbin_count.data(), descr->bin_count, sizeof(int) * 32, cudaMemcpyDeviceToHost));
 
-        compute_analysis_pass2<256><<<((m - 1) / 256 + 1), 256>>>(
-                                        m,
-                                       csr_row_ptr,
-                                       descr->bin_count,
-                                       descr->row_index_in_bin,
-                                       descr->bin_start_ptr,
-                                       descr->row_index_in_bin_sorted);
-
-
-
-
-
-
-
-
-        // // Free any previous allocations?
-        // assert(descr->bin_start_ptr == nullptr);
-        // assert(descr->row_index_in_bin == nullptr);
-        // assert(descr->row_index_in_bin_sorted == nullptr);
-
-        // CHECK_CUDA(cudaMalloc((void**)&(descr->bin_start_ptr), sizeof(int) * (32 + 1)));
-        // CHECK_CUDA(cudaMalloc((void**)&(descr->row_index_in_bin), sizeof(int) * m));
-        // CHECK_CUDA(cudaMalloc((void**)&(descr->row_index_in_bin_sorted), sizeof(int) * m));
-
-        // CHECK_CUDA(cudaMemset(descr->row_index_in_bin_sorted, 0, sizeof(int) * m));
-
-        // for(int i = 0; i < 32; i++)
-        // {
-        //     descr->hbin_count[i] = 0;
-        // }
-
-        // std::vector<int> hcsr_row_ptr(m + 1);
-        // CHECK_CUDA(cudaMemcpy(
-        //     hcsr_row_ptr.data(), csr_row_ptr, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
-
-        // std::vector<int>        row_index_in_bin(m, 0);
-        // std::array<int, 32 + 1> bin_start_ptr = {};
-
-        // for(int i = 0; i < m; i++)
-        // {
-        //     const int row_length = hcsr_row_ptr[i + 1] - hcsr_row_ptr[i];
-        //     const int bin        = (row_length != 0) ? std::ceil(std::log2(row_length)) : 0;
-
-        //     row_index_in_bin[i] = descr->hbin_count[bin];
-        //     descr->hbin_count[bin]++;
-        //     bin_start_ptr[bin]++;
-        // }
-
-        // // std::cout << "descr->hbin_count" << std::endl;
-        // // for(int i = 0; i < 32; i++)
-        // // {
-        // //     std::cout << descr->hbin_count[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // // std::cout << "bin_start_ptr" << std::endl;
-        // // for(int i = 0; i < 32 + 1; i++)
-        // // {
-        // //     std::cout << bin_start_ptr[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // // std::cout << "row_index_in_bin" << std::endl;
-        // // for(int i = 0; i < m; i++)
-        // // {
-        // //     std::cout << row_index_in_bin[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // int count = 0;
-        // for(int i = 0; i < 32; i++)
-        // {
-        //     const int tmp    = bin_start_ptr[i];
-        //     bin_start_ptr[i] = count;
-        //     count += tmp;
-        // }
-
-        // // std::cout << "bin_start_ptr" << std::endl;
-        // // for(int i = 0; i < 32 + 1; i++)
-        // // {
-        // //     std::cout << bin_start_ptr[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // std::vector<int> row_index_in_bin_sorted(m, 0);
-        // for(int i = 0; i < m; i++)
-        // {
-        //     const int row_length = hcsr_row_ptr[i + 1] - hcsr_row_ptr[i];
-        //     const int bin        = (row_length != 0) ? std::ceil(std::log2(row_length)) : 0;
-
-        //     row_index_in_bin_sorted[bin_start_ptr[bin] + row_index_in_bin[i]] = i;
-        // }
-
-        // // std::cout << "bin_start_ptr" << std::endl;
-        // // for(int i = 0; i < 32 + 1; i++)
-        // // {
-        // //     std::cout << bin_start_ptr[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // // std::cout << "row_index_in_bin_sorted" << std::endl;
-        // // for(int i = 0; i < m; i++)
-        // // {
-        // //     std::cout << row_index_in_bin_sorted[i] << " ";
-        // // }
-        // // std::cout << "" << std::endl;
-
-        // CHECK_CUDA(cudaMemcpy(descr->bin_start_ptr,
-        //                       bin_start_ptr.data(),
-        //                       sizeof(int) * (32 + 1),
-        //                       cudaMemcpyHostToDevice));
-        // CHECK_CUDA(cudaMemcpy(descr->row_index_in_bin,
-        //                       row_index_in_bin.data(),
-        //                       sizeof(int) * m,
-        //                       cudaMemcpyHostToDevice));
-        // CHECK_CUDA(cudaMemcpy(descr->row_index_in_bin_sorted,
-        //                       row_index_in_bin_sorted.data(),
-        //                       sizeof(int) * m,
-        //                       cudaMemcpyHostToDevice));
+        compute_analysis_pass2<256><<<((m - 1) / 256 + 1), 256>>>(m,
+                                                                  csr_row_ptr,
+                                                                  descr->bin_count,
+                                                                  descr->row_index_in_bin,
+                                                                  descr->bin_start_ptr,
+                                                                  descr->row_index_in_bin_sorted);
     }
 
     static void csrmv_analysis_merge_path_dispatch(
         int m, int n, int nnz, const int* csr_row_ptr, const int* csr_col_ind, csrmv_descr* descr)
     {
+        std::vector<int> hcsr_row_ptr(m + 1);
+        CHECK_CUDA(cudaMemcpy(
+            hcsr_row_ptr.data(), csr_row_ptr, sizeof(int) * (m + 1), cudaMemcpyDeviceToHost));
+
+        constexpr int chunk_size = 8;
+
+        const int num_chunks = (m + nnz - 1) / chunk_size + 1;
+
+        //std::cout << "num_chunks: " << num_chunks << std::endl;
+
+        std::vector<coord> coordinates(num_chunks + 1);
+
+        coordinates[0].x = 0;
+        coordinates[0].y = 0;
+
+        int chunk = 0;
+        int count = 0;
+        for(int i = 0; i < m; i++)
+        {
+            assert(chunk < num_chunks + 1);
+
+            const int start = hcsr_row_ptr[i];
+            const int end   = hcsr_row_ptr[i + 1];
+
+            const int row_length = end - start;
+
+            if((count + row_length) < chunk_size)
+            {
+                count += row_length;
+            }
+            else if((count + row_length) == chunk_size)
+            {
+                coordinates[chunk + 1].x = i;
+                coordinates[chunk + 1].y = end;
+                chunk++;
+                count = 0;
+            }
+            else
+            {
+                coordinates[chunk + 1].x = i;
+                coordinates[chunk + 1].y = start + (chunk_size - count);
+                chunk++;
+                count = row_length - (chunk_size - count);
+            }
+
+            count++;
+        }
+
+        std::cout << "chunk: " << chunk << std::endl;
+        std::cout << "count: " << count << std::endl;
+
+        coordinates[chunk + 1].x = m;
+        coordinates[chunk + 1].y = nnz - 1;
+
+        std::cout << "coordinates: " << std::endl;
+        for(int i = 0; i < num_chunks + 1; i++)
+        {
+            std::cout << "(" << coordinates[i].x << ", " << coordinates[i].y << ") ";
+        }
+        std::cout << "" << std::endl;
+
+        CHECK_CUDA(cudaMalloc((void**)&(descr->coordinates), sizeof(coord) * (num_chunks + 1)));
+        CHECK_CUDA(cudaMemcpy(descr->coordinates,
+                              coordinates.data(),
+                              sizeof(coord) * (num_chunks + 1),
+                              cudaMemcpyHostToDevice));
     }
 
     static void csrmv_analysis_algorithm_dispatch(int             m,
@@ -286,7 +234,14 @@ namespace linalg
                                          T*                 y,
                                          const csrmv_descr* descr)
     {
-        CHECK_CUDA(cudaMemset(y, 0, sizeof(T) * m)); // need to call kernel to handle beta
+        if(beta == static_cast<T>(0))
+        {
+            CHECK_CUDA(cudaMemset(y, 0, sizeof(T) * m));
+        }
+        else
+        {
+            scale_array<256><<<((m - 1) / 256 + 1), 256>>>(m, beta, y);
+        }
 
         csrmv_nnz_split_kernel<256, 32, 8><<<((nnz - 1) / (8 * 256) + 1), 256>>>(
             m, n, nnz, alpha, csr_row_ptr, csr_col_ind, csr_val, x, beta, y);
@@ -312,21 +267,21 @@ namespace linalg
             {
                 // std::cout << "small bin: " << bin << " hbin_count[bin]: " << descr->hbin_count[bin]
                 //           << std::endl;
-                csrmv_lrb_small_kernel<256>
-                    <<<((descr->hbin_count[bin] - 1) / 256 + 1), 256>>>(m,
-                                                   n,
-                                                   nnz,
-                                                   bin,
-                                                   descr->hbin_count[bin],
-                                                   alpha,
-                                                   descr->bin_start_ptr,
-                                                   descr->row_index_in_bin_sorted,
-                                                   csr_row_ptr,
-                                                   csr_col_ind,
-                                                   csr_val,
-                                                   x,
-                                                   beta,
-                                                   y);
+                csrmv_lrb_small_kernel<256><<<((descr->hbin_count[bin] - 1) / 256 + 1), 256>>>(
+                    m,
+                    n,
+                    nnz,
+                    bin,
+                    descr->hbin_count[bin],
+                    alpha,
+                    descr->bin_start_ptr,
+                    descr->row_index_in_bin_sorted,
+                    csr_row_ptr,
+                    csr_col_ind,
+                    csr_val,
+                    x,
+                    beta,
+                    y);
             }
         }
 
@@ -425,6 +380,23 @@ namespace linalg
                                           T*                 y,
                                           const csrmv_descr* descr)
     {
+        constexpr int chunk_size = 8;
+
+        const int num_chunks = (m + nnz - 1) / chunk_size + 1;
+
+        if(beta == static_cast<T>(0))
+        {
+            CHECK_CUDA(cudaMemset(y, 0, sizeof(T) * m));
+        }
+        else
+        {
+            scale_array<256><<<((m - 1) / 256 + 1), 256>>>(m, beta, y);
+        }
+
+        // std::cout << "num_chunks: " << num_chunks << std::endl;
+        // std::cout << "grid x: " << ((num_chunks - 1) / (256 / 4) + 1) << std::endl;
+        csrmv_merge_path_kernel<256, 4, 8><<<(num_chunks - 1) / (256 / 4) + 1, 256>>>(
+            m, n, nnz, alpha, descr->coordinates, csr_row_ptr, csr_col_ind, csr_val, x, y);
     }
 
     template <typename T>
@@ -492,6 +464,7 @@ void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
 {
     if(descr != nullptr)
     {
+        // LRB
         if(descr->bin_start_ptr != nullptr)
         {
             CHECK_CUDA(cudaFree(descr->bin_start_ptr));
@@ -506,6 +479,13 @@ void linalg::free_csrmv_cuda_data(csrmv_descr* descr)
         {
             CHECK_CUDA(cudaFree(descr->row_index_in_bin_sorted));
             descr->row_index_in_bin_sorted = nullptr;
+        }
+
+        // Merge path
+        if(descr->coordinates != nullptr)
+        {
+            CHECK_CUDA(cudaFree(descr->coordinates));
+            descr->coordinates = nullptr;
         }
     }
 }

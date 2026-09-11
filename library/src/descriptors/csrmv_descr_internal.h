@@ -31,15 +31,24 @@
 
 namespace linalg
 {
+    struct coord
+    {
+        int x;
+        int y;
+    };
+
     struct csrmv_descr
     {
         // LRB algorithm
         std::array<int, 32> hbin_count; // how many rows belong to each bin
 
-        int* bin_count; // desvice array of size 32, how many rows belong to each bin
+        int* bin_count; // device array of size 32, how many rows belong to each bin
         int* bin_start_ptr; // device array of size (32 + 1)
         int* row_index_in_bin; // device array of size m         row_indices_perm?
         int* row_index_in_bin_sorted; // device array of size m  row_indices?
+
+        // Merge path algorithm
+        coord* coordinates; // device array of size (num_chunks + 1)
     };
 }
 

@@ -29,6 +29,8 @@
 
 #include "common.cuh"
 
+#include "../../../descriptors/csrmv_descr_internal.h"
+
 template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, typename T>
 __global__ void csrmv_row_split_kernel(int     m,
                                        int     n,
@@ -232,14 +234,16 @@ __global__ void csrmv_nnz_split_kernel(int     m,
     }
 }
 
-
-__device__ int ilog2(unsigned int x) {
+__device__ int ilog2(unsigned int x)
+{
     // 31 minus leading zeros equals floor(log2(x)) for x > 0
     return 31 - __clz(x);
 }
 
-__device__ __forceinline__ int ceil_log2_32(unsigned int x) {
-    if (x <= 1) return 0;
+__device__ __forceinline__ int ceil_log2_32(unsigned int x)
+{
+    if(x <= 1)
+        return 0;
     return 32 - __clz(x - 1);
 }
 
@@ -281,8 +285,8 @@ __global__ void compute_analysis_pass2(int m,
         int count = 0;
         for(int i = 0; i < 32; i++)
         {
-            const int tmp    = bin_count[i];
-            bin_start_ptr[i] = count;
+            const int tmp           = bin_count[i];
+            bin_start_ptr[i]        = count;
             bin_start_ptr_shared[i] = count;
             count += tmp;
         }
@@ -561,6 +565,276 @@ __global__ void csrmv_lrb_large_kernel(int     m,
     //             y[row] = std::fma(alpha, shared[0], beta * y[row]);
     //         }
     //     }
+    // }
+}
+
+// Given the sparse A matrix:
+// 1 2 3 4 0 5 6 7
+// 0 0 2 3 1 0 0 4
+// 0 0 0 0 0 0 0 0
+// 1 0 0 0 0 0 0 7
+// 0 0 3 4 5 6 7 0
+// 0 1 0 0 3 0 0 4   ----- 3 is start of (5, 19)
+// 1 2 3 4 5 6 0 0
+// 1 2 3 4 0 0 0 0
+//
+// total work = m + nnz = 8 + 31 = 39
+// block_size = 8
+// block_count = 5
+//
+// This results in the following merge-path
+//   0  1  2  3  4  5  6  7  8
+// 0 |........................  --- (0,0)
+//   |  :  :  :  :  :  :  :  :   |
+// 1 |........................   |
+//   |  :  :  :  :  :  :  :  :   |
+// 2 |........................   |
+//   |  :  :  :  :  :  :  :  :   |
+// 3 |........................   block 0
+//   |  :  :  :  :  :  :  :  :   |
+// 4 |........................   |
+//   |  :  :  :  :  :  :  :  :   |
+// 5 |........................   |
+//   |  :  :  :  :  :  :  :  :   |
+// 6 |___.....................  --- (1,7)
+//   :  |  :  :  :  :  :  :  :   |
+// 7 ...|.....................   |
+//   :  |  :  :  :  :  :  :  :   |
+// 8 ...|.....................   |
+//   :  |  :  :  :  :  :  :  :   |
+// 9 ...|.....................   block 1
+//   :  |  :  :  :  :  :  :  :   |
+//10 ...|______...............   |
+//   :  :  :  |  :  :  :  :  :   |
+//11 .........|...............   |
+//   :  :  :  |  :  :  :  :  :   |
+//12 .........|___............  --- (3,13)
+//   :  :  :  :  |  :  :  :  :   |
+//13 ............|............   |
+//   :  :  :  :  |  :  :  :  :   |
+//14 ............|............   |
+//   :  :  :  :  |  :  :  :  :   |
+//15 ............|............   block 2
+//   :  :  :  :  |  :  :  :  :   |
+//16 ............|............   |
+//   :  :  :  :  |  :  :  :  :   |
+//17 ............|___.........   |
+//   :  :  :  :  :  |  :  :  :   |
+//18 ...............|.........  --- (5,19)
+//   :  :  :  :  :  |  :  :  :   |
+//19 ...............|.........   |
+//   :  :  :  :  :  |  :  :  :   |
+//20 ...............|___......   |
+//   :  :  :  :  :  :  |  :  :   |
+//21 ..................|......   |
+//   :  :  :  :  :  :  |  :  :   block 3
+//22 ..................|......   |
+//   :  :  :  :  :  :  |  :  :   |
+//23 ..................|......   |
+//   :  :  :  :  :  :  |  :  :   |
+//24 ..................|......   |
+//   :  :  :  :  :  :  |  :  :   |
+//25 ..................|......  --- (6,26)
+//   :  :  :  :  :  :  |  :  :   |
+//26 ..................|___...   |
+//   :  :  :  :  :  :  :  |  :   |
+//27 .....................|...   |
+//   :  :  :  :  :  :  :  |  :   block 4
+//28 .....................|...   |
+//   :  :  :  :  :  :  :  |  :   |
+//29 .....................|...   |
+//   :  :  :  :  :  :  :  |  :   |
+//30 .....................|___  --- (8, 30)
+
+template <uint32_t BLOCKSIZE, typename T>
+__global__ void scale_array(int size, const T beta, T* __restrict__ y)
+{
+    const int gid = threadIdx.x + blockIdx.x * blockDim.x;
+    if(gid < size)
+    {
+        y[gid] *= beta;
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t WARPSIZE, uint32_t CHUNKSIZE, typename T>
+__global__ void csrmv_merge_path_kernel(int     m,
+                                        int     n,
+                                        int     nnz,
+                                        const T alpha,
+                                        const linalg::coord* __restrict__ coordinates,
+                                        const int* __restrict__ csr_row_ptr,
+                                        const int* __restrict__ csr_col_ind,
+                                        const T* __restrict__ csr_val,
+                                        const T* __restrict__ x,
+                                        T* __restrict__ y)
+{
+    assert(BLOCKSIZE % WARPSIZE == 0);
+
+    const int tid = threadIdx.x;
+    const int bid = blockIdx.x;
+
+    const int lid = tid & WARPSIZE - 1;
+    const int wid = tid / WARPSIZE;
+
+    const int total_work = m + nnz;
+    const int num_chunks = (total_work - 1) / CHUNKSIZE + 1;
+
+    const int chunk_id = (BLOCKSIZE / WARPSIZE) * bid + wid;
+
+    if(chunk_id >= num_chunks)
+    {
+        return;
+    }
+
+    // One warp per chunk, each warp processes CHUNKSIZE elements of the merge path
+    const linalg::coord start = coordinates[chunk_id];
+    const linalg::coord end   = coordinates[chunk_id + 1];
+
+    const int row_start = start.x;
+    const int nnz_start = start.y;
+
+    const int row_end = end.x;
+    const int nnz_end = end.y;
+
+    if(row_start == row_end)
+    {
+        T sum = static_cast<T>(0);
+        for(int j = nnz_start + lid; j < nnz_end; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            atomicAdd(&y[row_start], alpha * sum);
+        }
+    }
+    else if((row_start + 1) == row_end)
+    {
+        T sum = static_cast<T>(0);
+        for(int j = nnz_start + lid; j < csr_row_ptr[row_start + 1]; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            atomicAdd(&y[row_start], alpha * sum);
+        }
+
+        sum = static_cast<T>(0);
+        for(int j = csr_row_ptr[row_end] + lid; j < nnz_end; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            atomicAdd(&y[row_end], alpha * sum);
+        }
+    }
+    else
+    {
+        T sum = static_cast<T>(0);
+        for(int j = nnz_start + lid; j < csr_row_ptr[row_start + 1]; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            atomicAdd(&y[row_start], alpha * sum);
+        }
+
+        // handle middle rows (1 thread per row? or 1 warp per row?)
+        for(int i = row_start + 1; i < row_end; i++)
+        {
+            T sum = static_cast<T>(0);
+            for(int j = csr_row_ptr[i] + lid; j < csr_row_ptr[i + 1]; j += WARPSIZE)
+            {
+                const int col = csr_col_ind[j];
+                const T   val = csr_val[j];
+
+                sum = std::fma(x[col], val, sum);
+            }
+
+            warp_reduction_sum<WARPSIZE>(&sum);
+
+            if(lid == 0)
+            {
+                y[i] = alpha * sum;
+            }
+        }
+
+        sum = static_cast<T>(0);
+        for(int j = csr_row_ptr[row_end] + lid; j < nnz_end; j += WARPSIZE)
+        {
+            const int col = csr_col_ind[j];
+            const T   val = csr_val[j];
+
+            sum = std::fma(x[col], val, sum);
+        }
+
+        warp_reduction_sum<WARPSIZE>(&sum);
+
+        if(lid == 0)
+        {
+            atomicAdd(&y[row_end], alpha * sum);
+        }
+    }
+
+    // const int temp = csr_row_ptr[row_end];
+
+    // T sum = static_cast<T>(0);
+    // for(int j = nnz_start + lid; j < nnz_end; j += WARPSIZE)
+    // {
+    //     const int col = csr_col_ind[j];
+    //     const T   val = csr_val[j];
+
+    //     bool predicate = (j >= temp);
+
+    //     if(__any_sync(FULL_MASK, predicate))
+    //     {
+    //         // write out old values
+    //         warp_reduction_sum<WARPSIZE>(&sum);
+
+    //         if(lid == 0)
+    //         {
+    //             atomicAdd(&y[row_start], alpha * sum);
+    //         }
+
+    //         int row = (j < temp) ? row_start : row_end;
+    //         sum = warp_segmented_reduction_sum<WARPSIZE>(row, sum);
+
+    //         if(lid == 0)
+    //         {
+    //             atomicAdd(&y[row_start], alpha * sum);
+    //         }
+
+    //         sum = static_cast<T>(0);
+    //     }
+
+    //     sum = std::fma(x[col], val, sum);
     // }
 }
 
