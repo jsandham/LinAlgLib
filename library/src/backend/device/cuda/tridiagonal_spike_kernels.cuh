@@ -832,7 +832,7 @@ __global__ void backward_solve_kernel(
 //     h_B_pad[i]                                       = h_y[2 * i];
 //     h_B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)] = h_y[2 * i + 1];
 // }
-template <uint32_t BLOCKDIM, uint32_t BLOCKSIZE, typename T>
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void scatter_S_B_to_B_pad_kernel(
     int s_size, int m_pad, int n, const T* __restrict__ S_B, T* __restrict__ B_pad)
 {

@@ -33,6 +33,7 @@
 
 #if defined(LINALGLIB_HAS_CUDA)
 #include "cuda/cuda_tridiagonal.h"
+#include "cuda/cuda_tridiagonal_partial_pivoting.h"
 #endif
 
 template <typename T>

@@ -41,6 +41,7 @@ target_sources(linalglib
     cuda_csrgemm.cu
     cuda_csrgeam.cu
     cuda_tridiagonal.cu
+    cuda_tridiagonal_partial_pivoting.cu
     cuda_math.cu
     cuda_memory.cu
     cuda_primitives.cu

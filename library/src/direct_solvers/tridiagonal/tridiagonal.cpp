@@ -106,7 +106,8 @@ namespace linalg
     }
 }
 
-linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy strategy)
+template <typename T>
+linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strategy strategy)
     : m(m)
     , n(n)
     , strategy(strategy)
@@ -118,8 +119,7 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     {
         constexpr int BLOCKSIZE = 256;
         int           current_m = m;
-        for(int level = 0; level < non_pivoting_data<double>::tridiagonal_max_recursion_levels;
-            level++)
+        for(int level = 0; level < non_pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
         {
             if(current_m <= 1024)
                 break;
@@ -144,11 +144,10 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     }
     case pivoting_strategy::partial:
     {
-        constexpr int BLOCKDIM = pivoting_data<double>::block_dim;
+        constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
         int current_m = m;
-        for(int level = 0; level < non_pivoting_data<double>::tridiagonal_max_recursion_levels;
-            level++)
+        for(int level = 0; level < non_pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
         {
             std::cout << "level: " << level << " current_m: " << current_m << std::endl;
             //if(current_m <= 1024)
@@ -180,16 +179,18 @@ linalg::tridiagonal_solver::tridiagonal_solver(int m, int n, pivoting_strategy s
     }
 }
 
-linalg::tridiagonal_solver::~tridiagonal_solver()
+template <typename T>
+linalg::tridiagonal_solver<T>::~tridiagonal_solver()
 {
     // No dynamic memory to free in this implementation, but if we had device buffers, we would free them here.
 }
 
-void linalg::tridiagonal_solver::move_to_device()
+template <typename T>
+void linalg::tridiagonal_solver<T>::move_to_device()
 {
     if(on_host)
     {
-        for(int i = 0; i < non_pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < non_pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             non_pivot_data.lower_modified[i].move_to_device();
             non_pivot_data.main_modified[i].move_to_device();
@@ -203,7 +204,7 @@ void linalg::tridiagonal_solver::move_to_device()
             non_pivot_data.spike_X[i].move_to_device();
         }
 
-        for(int i = 0; i < pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_device();
             pivot_data.main_pad[i].move_to_device();
@@ -222,11 +223,12 @@ void linalg::tridiagonal_solver::move_to_device()
     }
 }
 
-void linalg::tridiagonal_solver::move_to_host()
+template <typename T>
+void linalg::tridiagonal_solver<T>::move_to_host()
 {
     if(!on_host)
     {
-        for(int i = 0; i < non_pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < non_pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             non_pivot_data.lower_modified[i].move_to_host();
             non_pivot_data.main_modified[i].move_to_host();
@@ -240,7 +242,7 @@ void linalg::tridiagonal_solver::move_to_host()
             non_pivot_data.spike_X[i].move_to_host();
         }
 
-        for(int i = 0; i < pivoting_data<double>::tridiagonal_max_recursion_levels; i++)
+        for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_host();
             pivot_data.main_pad[i].move_to_host();
@@ -259,21 +261,25 @@ void linalg::tridiagonal_solver::move_to_host()
     }
 }
 
-void linalg::tridiagonal_solver::solve(const vector<double>& lower_diag,
-                                       const vector<double>& main_diag,
-                                       const vector<double>& upper_diag,
-                                       const vector<double>& rhs,
-                                       vector<double>&       solution)
+template <typename T>
+void linalg::tridiagonal_solver<T>::solve(const vector<T>& lower_diag,
+                                          const vector<T>& main_diag,
+                                          const vector<T>& upper_diag,
+                                          const vector<T>& rhs,
+                                          vector<T>&       solution)
 {
     switch(strategy)
     {
     case pivoting_strategy::none:
-        non_pivoting_algorithm<double>(
+        non_pivoting_algorithm<T>(
             m, n, lower_diag, main_diag, upper_diag, rhs, solution, non_pivot_data);
         break;
     case pivoting_strategy::partial:
-        partial_pivoting_algorithm<double>(
+        partial_pivoting_algorithm<T>(
             m, n, lower_diag, main_diag, upper_diag, rhs, solution, pivot_data);
         break;
     }
 }
+
+template class linalg::tridiagonal_solver<float>;
+template class linalg::tridiagonal_solver<double>;

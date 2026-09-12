@@ -95,7 +95,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
         pivoting = linalg::pivoting_strategy::partial;
         break;
     }
-    linalg::tridiagonal_solver solver(m, n, pivoting);
+    linalg::tridiagonal_solver<double> solver(m, n, pivoting);
 
     if(arg.backend == backend::GPU)
     {
