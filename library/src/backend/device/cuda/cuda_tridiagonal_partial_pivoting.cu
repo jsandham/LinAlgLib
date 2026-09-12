@@ -329,7 +329,6 @@ namespace linalg
         int m_pad = next_power_of_two(m);
         m_pad     = std::max(m_pad, BLOCKDIM);
 
-        const int nblocks = m_pad / BLOCKDIM;
         const int s_size = 2 * m_pad / BLOCKDIM;
 
         launch_data_marshaling<BLOCKSIZE, BLOCKDIM>(m,
@@ -399,11 +398,11 @@ namespace linalg
             {8, launch_s_solve_kernel<T, 8>},
             {16, launch_s_solve_kernel<T, 16>},
             {32, launch_s_solve_kernel<T, 32>},
-            {64, launch_s_solve_kernel<T, 64>},
-            {128, launch_s_solve_kernel<T, 128>},
-            {256, launch_s_solve_kernel<T, 256>},
-            {512, launch_s_solve_kernel<T, 512>},
-            {1024, launch_s_solve_kernel<T, 1024>},
+            // {64, launch_s_solve_kernel<T, 64>},
+            // {128, launch_s_solve_kernel<T, 128>},
+            // {256, launch_s_solve_kernel<T, 256>},
+            // {512, launch_s_solve_kernel<T, 512>},
+            // {1024, launch_s_solve_kernel<T, 1024>},
         };
 
         auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
@@ -414,6 +413,12 @@ namespace linalg
         }
         else
         {
+            if((level + 1) > pivoting_data<T>::tridiagonal_max_recursion_levels)
+            {
+                std::cout << "Error: Too many levels required " << level << std::endl;
+                return;
+            }
+
             tridiagonal_partial_pivoting_solver_dispatch(
                 s_size,
                 n,

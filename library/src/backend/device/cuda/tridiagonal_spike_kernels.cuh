@@ -61,7 +61,7 @@ __global__ void data_marshaling_kernel(int m,
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void data_marshaling_B_kernel(
+__device__ void data_marshaling_B_device(
     int m, int m_pad, int n, const T* __restrict__ B, T* __restrict__ B_pad)
 {
     const int tid = threadIdx.x;
@@ -76,17 +76,23 @@ __global__ void data_marshaling_B_kernel(
         return;
     }
 
-    for(int batch = blockIdx.y; batch < n; batch += 32768)
+    B_pad[gid] = (BLOCKDIM * glid + gwid < m) ? B[BLOCKDIM * glid + gwid] : static_cast<T>(0);
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void data_marshaling_B_kernel(
+    int m, int m_pad, int n, const T* __restrict__ B, T* __restrict__ B_pad)
+{
+    for(int batch = blockIdx.y; batch < n; batch += gridDim.y)
     {
-        B_pad[gid + m_pad * batch] = (BLOCKDIM * glid + gwid < m)
-                                         ? B[BLOCKDIM * glid + gwid + m * batch]
-                                         : static_cast<T>(0);
+        data_marshaling_B_device<BLOCKSIZE, BLOCKDIM>(
+            m, m_pad, n, B + m * batch, B_pad + m_pad * batch);
     }
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void
-    data_marshaling_kernel2(int m, int m_pad, int n, const T* __restrict__ B_pad, T* __restrict__ B)
+__device__ void
+    data_marshaling_device2(int m, int m_pad, int n, const T* __restrict__ B_pad, T* __restrict__ B)
 {
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
@@ -102,10 +108,18 @@ __global__ void
 
     if(BLOCKDIM * glid + gwid < m)
     {
-        for(int batch = blockIdx.y; batch < n; batch += 32768)
-        {
-            B[BLOCKDIM * glid + gwid + m * batch] = B_pad[gid + m_pad * batch];
-        }
+        B[BLOCKDIM * glid + gwid] = B_pad[gid];
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void
+    data_marshaling_kernel2(int m, int m_pad, int n, const T* __restrict__ B_pad, T* __restrict__ B)
+{
+    for(int batch = blockIdx.y; batch < n; batch += gridDim.y)
+    {
+        data_marshaling_device2<BLOCKSIZE, BLOCKDIM>(
+            m, m_pad, n, B_pad + m_pad * batch, B + m * batch);
     }
 }
 
@@ -115,18 +129,18 @@ __host__ __device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T
     const T kappa = double(0.5) * (sqrt(double(5.0)) - double(1.0));
 
     T sigma = static_cast<T>(0);
-    sigma        = max(static_cast<T>(abs(ak_1)), static_cast<T>(abs(ak_2)));
-    sigma        = max(static_cast<T>(abs(bk_1)), sigma);
-    sigma        = max(static_cast<T>(abs(ck)), sigma);
-    sigma        = max(static_cast<T>(abs(ck_1)), sigma);
+    sigma   = max(static_cast<T>(abs(ak_1)), static_cast<T>(abs(ak_2)));
+    sigma   = max(static_cast<T>(abs(bk_1)), sigma);
+    sigma   = max(static_cast<T>(abs(ck)), sigma);
+    sigma   = max(static_cast<T>(abs(ck_1)), sigma);
 
     return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
 }
 
-template <int WORDS>
+template <uint32_t BLOCKDIM>
 struct PivotMask
 {
-    unsigned int bits[WORDS];
+    unsigned int bits[(BLOCKDIM + 31) / 32];
 
     // Sets bit k to 0 to record a 1x1 pivot at row k.
     __device__ __forceinline__ void set_pivoting_to_1x1(int k)
@@ -171,8 +185,7 @@ __global__ void LBMT_solve_wvmt_kernel(int m_pad,
 
     T bk = main[gid];
 
-    constexpr int               PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
-    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+    PivotMask<BLOCKDIM> pivot_mask;
 
     w[gid]                            = lower[gid];
     v[gid + (BLOCKDIM - 1) * nblocks] = upper[gid + (BLOCKDIM - 1) * nblocks];
@@ -317,8 +330,7 @@ __global__ void LBMT_solve_rhs_kernel(int m_pad,
 
     T bk = main[gid];
 
-    constexpr int               PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
-    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+    PivotMask<BLOCKDIM> pivot_mask;
 
     int k = 0;
     while(k < BLOCKDIM)
@@ -455,8 +467,7 @@ __global__ void LBMT_solve_kernel(int m_pad,
 
     T bk = main[gid];
 
-    constexpr int               PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
-    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+    PivotMask<BLOCKDIM> pivot_mask;
 
     w[gid]                            = lower[gid];
     v[gid + (BLOCKDIM - 1) * nblocks] = upper[gid + (BLOCKDIM - 1) * nblocks];
@@ -603,7 +614,7 @@ __global__ void LBMT_solve_kernel(int m_pad,
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void fill_s_matrix_kernel(int m_pad,
+__device__ void fill_s_matrix_device(int m_pad,
                                      int n,
                                      const T* __restrict__ w,
                                      const T* __restrict__ v,
@@ -644,12 +655,28 @@ __global__ void fill_s_matrix_kernel(int m_pad,
 
     if(gid < s_size / 2)
     {
-        for(int batch = blockIdx.y; batch < n; batch += 32768)
-        {
-            S_rhs[2 * gid + s_size * batch] = rhs[gid + m_pad * batch];
-            S_rhs[2 * gid + 1 + s_size * batch]
-                = rhs[gid + (m_pad / BLOCKDIM) * (BLOCKDIM - 1) + m_pad * batch];
-        }
+        S_rhs[2 * gid]     = rhs[gid];
+        S_rhs[2 * gid + 1] = rhs[gid + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void fill_s_matrix_kernel(int m_pad,
+                                     int n,
+                                     const T* __restrict__ w,
+                                     const T* __restrict__ v,
+                                     const T* __restrict__ rhs,
+                                     T* __restrict__ S_lower,
+                                     T* __restrict__ S_main,
+                                     T* __restrict__ S_upper,
+                                     T* __restrict__ S_rhs)
+{
+    const int s_size = 2 * m_pad / BLOCKDIM;
+
+    for(int batch = blockIdx.y; batch < n; batch += gridDim.y)
+    {
+        fill_s_matrix_device<BLOCKSIZE, BLOCKDIM>(
+            m_pad, n, w, v, rhs + m_pad * batch, S_lower, S_main, S_upper, S_rhs + s_size * batch);
     }
 }
 
@@ -667,8 +694,7 @@ __global__ void S_solve_kernel(int m,
 
     T mt[S_SIZE];
 
-    constexpr int               PIVOT_MASK_WORDS = (S_SIZE + 31) / 32;
-    PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+    PivotMask<S_SIZE> pivot_mask;
 
     int k  = 0;
     T   bk = S_main[k];
@@ -778,7 +804,7 @@ __global__ void S_solve_kernel(int m,
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void backward_solve_kernel(
+__device__ void backward_solve_device(
     int m_pad, int n, const T* __restrict__ w, const T* __restrict__ v, T* __restrict__ rhs)
 {
     const int tid = threadIdx.x;
@@ -792,20 +818,25 @@ __global__ void backward_solve_kernel(
         return;
     }
 
-    for(int batch = blockIdx.y; batch < n; batch += 32768)
-    {
-        // backward solve (S * x = B_pad)
-        T x1 = (gid >= 1)
-                        ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (gid - 1) + m_pad * batch]
-                        : static_cast<T>(0);
-        T x2 = (gid < (m_pad / BLOCKDIM - 1)) ? rhs[gid + 1 + m_pad * batch] : static_cast<T>(0);
+    // backward solve (S * x = B_pad)
+    T x1 = (gid >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (gid - 1)] : static_cast<T>(0);
+    T x2 = (gid < (m_pad / BLOCKDIM - 1)) ? rhs[gid + 1] : static_cast<T>(0);
 
-        for(int j = 1; j < BLOCKDIM - 1; j++)
-        {
-            rhs[(m_pad / BLOCKDIM) * j + gid + m_pad * batch]
-                = rhs[(m_pad / BLOCKDIM) * j + gid + m_pad * batch]
-                  - w[(m_pad / BLOCKDIM) * j + gid] * x1 - v[(m_pad / BLOCKDIM) * j + gid] * x2;
-        }
+    for(int j = 1; j < BLOCKDIM - 1; j++)
+    {
+        rhs[(m_pad / BLOCKDIM) * j + gid] = rhs[(m_pad / BLOCKDIM) * j + gid]
+                                            - w[(m_pad / BLOCKDIM) * j + gid] * x1
+                                            - v[(m_pad / BLOCKDIM) * j + gid] * x2;
+    }
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void backward_solve_kernel(
+    int m_pad, int n, const T* __restrict__ w, const T* __restrict__ v, T* __restrict__ rhs)
+{
+    for(int batch = blockIdx.y; batch < n; batch += gridDim.y)
+    {
+        backward_solve_device<BLOCKSIZE, BLOCKDIM>(m_pad, n, w, v, rhs + m_pad * batch);
     }
 }
 
@@ -833,7 +864,7 @@ __global__ void backward_solve_kernel(
 //     h_B_pad[i + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)] = h_y[2 * i + 1];
 // }
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void scatter_S_B_to_B_pad_kernel(
+__device__ void scatter_S_B_to_B_pad_device(
     int s_size, int m_pad, int n, const T* __restrict__ S_B, T* __restrict__ B_pad)
 {
     const int i = blockIdx.x * BLOCKSIZE + threadIdx.x; // [0, s_size/2)
@@ -841,25 +872,30 @@ __global__ void scatter_S_B_to_B_pad_kernel(
     if(i >= s_size / 2)
         return;
 
-    for(int batch = blockIdx.y; batch < n; batch += 32768)
+    const int stride = (m_pad / BLOCKDIM) * (BLOCKDIM - 1);
+
+    // After the swap loop, element at position 2*i is:
+    //   i == 0  -> S_B[0]       (not touched by the swap)
+    //   i  > 0  -> S_B[2*i - 1] (position 2*i was swapped with 2*i-1)
+    const T val_even = (i == 0) ? S_B[0] : S_B[2 * i - 1];
+
+    // After the swap loop, element at position 2*i+1 is:
+    //   2*i+1 < s_size-1  -> S_B[2*i + 2] (swapped with its right neighbour)
+    //   2*i+1 == s_size-1 -> S_B[s_size-1] (last element, not touched)
+    const T val_odd = (2 * i + 1 < s_size - 1) ? S_B[2 * i + 2] : S_B[s_size - 1];
+
+    B_pad[i]          = val_even;
+    B_pad[i + stride] = val_odd;
+}
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+__global__ void scatter_S_B_to_B_pad_kernel(
+    int s_size, int m_pad, int n, const T* __restrict__ S_B, T* __restrict__ B_pad)
+{
+    for(int batch = blockIdx.y; batch < n; batch += gridDim.y)
     {
-        const T* S_B_j   = S_B + batch * s_size;
-        T*       B_pad_j = B_pad + batch * m_pad;
-
-        const int stride = (m_pad / BLOCKDIM) * (BLOCKDIM - 1);
-
-        // After the swap loop, element at position 2*i is:
-        //   i == 0  -> S_B[0]       (not touched by the swap)
-        //   i  > 0  -> S_B[2*i - 1] (position 2*i was swapped with 2*i-1)
-        const T val_even = (i == 0) ? S_B_j[0] : S_B_j[2 * i - 1];
-
-        // After the swap loop, element at position 2*i+1 is:
-        //   2*i+1 < s_size-1  -> S_B[2*i + 2] (swapped with its right neighbour)
-        //   2*i+1 == s_size-1 -> S_B[s_size-1] (last element, not touched)
-        const T val_odd = (2 * i + 1 < s_size - 1) ? S_B_j[2 * i + 2] : S_B_j[s_size - 1];
-
-        B_pad_j[i]          = val_even;
-        B_pad_j[i + stride] = val_odd;
+        scatter_S_B_to_B_pad_device<BLOCKSIZE, BLOCKDIM>(
+            s_size, m_pad, n, S_B + batch * s_size, B_pad + batch * m_pad);
     }
 }
 

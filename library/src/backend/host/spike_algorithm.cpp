@@ -110,10 +110,10 @@ namespace linalg
         return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
     }
 
-    template <int WORDS>
+    template <uint32_t BLOCKDIM>
     struct PivotMask
     {
-        unsigned int bits[WORDS];
+        unsigned int bits[(BLOCKDIM + 31) / 32];
 
         void set_pivoting_to_1x1(int k)
         {
@@ -145,8 +145,7 @@ namespace linalg
         {
             T bk = main[i];
 
-            constexpr int               PIVOT_MASK_WORDS = (BLOCKDIM + 31) / 32;
-            PivotMask<PIVOT_MASK_WORDS> pivot_mask;
+            PivotMask<BLOCKDIM> pivot_mask;
 
             w[i]                            = lower[i];
             v[i + (BLOCKDIM - 1) * nblocks] = upper[i + (BLOCKDIM - 1) * nblocks];

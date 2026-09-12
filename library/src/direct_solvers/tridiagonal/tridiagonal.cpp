@@ -147,7 +147,7 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
         constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
         int current_m = m;
-        for(int level = 0; level < non_pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
+        for(int level = 0; level < pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
         {
             std::cout << "level: " << level << " current_m: " << current_m << std::endl;
             //if(current_m <= 1024)

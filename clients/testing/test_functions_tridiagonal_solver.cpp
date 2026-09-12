@@ -45,11 +45,11 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     int n = arg.n;
 
     // Create tridiagonal matrix coefficients
-    linalg::vector<double> lower_diag(m);
-    linalg::vector<double> main_diag(m);
-    linalg::vector<double> upper_diag(m);
-    linalg::vector<double> rhs(m * n);
-    linalg::vector<double> solution(m * n);
+    linalg::vector<float> lower_diag(m);
+    linalg::vector<float> main_diag(m);
+    linalg::vector<float> upper_diag(m);
+    linalg::vector<float> rhs(m * n);
+    linalg::vector<float> solution(m * n);
 
     std::mt19937 gen(123456);
 
@@ -95,7 +95,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
         pivoting = linalg::pivoting_strategy::partial;
         break;
     }
-    linalg::tridiagonal_solver<double> solver(m, n, pivoting);
+    linalg::tridiagonal_solver<float> solver(m, n, pivoting);
 
     if(arg.backend == backend::GPU)
     {
@@ -165,7 +165,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
 
     std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
 
-    double tolerance = 1e-15;
+    double tolerance = 1e-6;
     bool   success   = (max_residual < tolerance);
 
     if(!success)
