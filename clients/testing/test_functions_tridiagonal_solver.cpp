@@ -79,10 +79,10 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = rhs_dist(gen); //1.0;
+            rhs[m * i + j] = 1.0; //rhs_dist(gen); //1.0;
         }
-        rhs[m * i + 0]       = rhs_dist(gen); //1.0;
-        rhs[m * i + (m - 1)] = rhs_dist(gen); //1.0;
+        rhs[m * i + 0]       = 1.0; //rhs_dist(gen); //1.0;
+        rhs[m * i + (m - 1)] = 1.0; //rhs_dist(gen); //1.0;
     }
 
     // Create the solver

@@ -437,6 +437,23 @@ namespace linalg
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
+    static void launch_data_untranspose_backward_solve_gemini(
+        int m, int m_pad, int n, const T* w, const T* v, const T* B_pad, T* X)
+    {
+        ROUTINE_TRACE("launch_data_untranspose_backward_solve_gemini");
+
+        const int nblocks = m_pad / BLOCKDIM;
+        const int grid_x = (nblocks + PARTITIONS_PER_GROUP - 1) / PARTITIONS_PER_GROUP;
+        const int grid_y = std::min(n, 32768);
+        const dim3 grid(grid_x, grid_y, 1);
+        const dim3 block(BLOCKSIZE, 1, 1);
+
+        data_untranspose_backward_solve_kernel_gemini<BLOCKSIZE, BLOCKDIM, PARTITIONS_PER_GROUP>
+            <<<grid, block>>>(m, m_pad, n, w, v, B_pad, X);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void launch_data_marshaling2(int m, int m_pad, int n, const T* B_pad, T* X)
     {
@@ -470,52 +487,52 @@ namespace linalg
                                                              int      level = 0)
     {
 
-        // Throw away code for testing
-        {
-            std::vector<T> hdata(32, 0);
-            std::vector<T> hdata_pad(32, 0);
-            for(size_t i = 0; i < hdata.size(); i++)
-            {
-                hdata[i] = i + 1;
-            }
+        // // Throw away code for testing
+        // {
+        //     std::vector<T> hdata(32, 0);
+        //     std::vector<T> hdata_pad(32, 0);
+        //     for(size_t i = 0; i < hdata.size(); i++)
+        //     {
+        //         hdata[i] = i + 1;
+        //     }
 
-            std::cout << "hdata" << std::endl;
-            for(size_t i = 0; i < hdata.size(); i++)
-            {
-                std::cout << hdata[i] << " ";
-            }
-            std::cout << "" << std::endl;
+        //     std::cout << "hdata" << std::endl;
+        //     for(size_t i = 0; i < hdata.size(); i++)
+        //     {
+        //         std::cout << hdata[i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
 
-            T* ddata = nullptr;
-            T* ddata_pad = nullptr;
-            CHECK_CUDA(cudaMalloc((void**)&ddata, sizeof(T) * 32));
-            CHECK_CUDA(cudaMalloc((void**)&ddata_pad, sizeof(T) * 32));
-            CHECK_CUDA(cudaMemcpy(ddata, hdata.data(), sizeof(T) * 32, cudaMemcpyHostToDevice));
+        //     T* ddata = nullptr;
+        //     T* ddata_pad = nullptr;
+        //     CHECK_CUDA(cudaMalloc((void**)&ddata, sizeof(T) * 32));
+        //     CHECK_CUDA(cudaMalloc((void**)&ddata_pad, sizeof(T) * 32));
+        //     CHECK_CUDA(cudaMemcpy(ddata, hdata.data(), sizeof(T) * 32, cudaMemcpyHostToDevice));
 
-            launch_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata, ddata_pad);
+        //     launch_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata, ddata_pad);
 
-            CHECK_CUDA(cudaMemcpy(hdata_pad.data(), ddata_pad, sizeof(T) * 32, cudaMemcpyDeviceToHost));
+        //     CHECK_CUDA(cudaMemcpy(hdata_pad.data(), ddata_pad, sizeof(T) * 32, cudaMemcpyDeviceToHost));
 
-            std::cout << "hdata_pad" << std::endl;
-            for(size_t i = 0; i < hdata_pad.size(); i++)
-            {
-                std::cout << hdata_pad[i] << " ";
-            }
-            std::cout << "" << std::endl;
+        //     std::cout << "hdata_pad" << std::endl;
+        //     for(size_t i = 0; i < hdata_pad.size(); i++)
+        //     {
+        //         std::cout << hdata_pad[i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
 
-            launch_reverse_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata_pad, ddata);
+        //     launch_reverse_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata_pad, ddata);
 
-            CHECK_CUDA(cudaMemcpy(hdata.data(), ddata, sizeof(T) * 32, cudaMemcpyDeviceToHost));
+        //     CHECK_CUDA(cudaMemcpy(hdata.data(), ddata, sizeof(T) * 32, cudaMemcpyDeviceToHost));
 
-            std::cout << "hdata" << std::endl;
-            for(size_t i = 0; i < hdata.size(); i++)
-            {
-                std::cout << hdata[i] << " ";
-            }
-            std::cout << "" << std::endl;
+        //     std::cout << "hdata" << std::endl;
+        //     for(size_t i = 0; i < hdata.size(); i++)
+        //     {
+        //         std::cout << hdata[i] << " ";
+        //     }
+        //     std::cout << "" << std::endl;
 
-            CHECK_CUDA(cudaFree(ddata));
-        }
+        //     CHECK_CUDA(cudaFree(ddata));
+        // }
 
 
 
@@ -540,6 +557,8 @@ namespace linalg
 
         int m_pad = next_power_of_two(m);
         m_pad     = std::max(m_pad, BLOCKDIM);
+
+        //std::cout << "m_pad: " << m_pad << " nblocks: " << (m_pad / BLOCKDIM) << std::endl;
 
         const int s_size = 2 * m_pad / BLOCKDIM;
 
@@ -659,9 +678,11 @@ namespace linalg
 
         launch_scatter_S_B_to_B_pad<BLOCKSIZE, BLOCKDIM>(m_pad, n, S_B[level], B_pad[level]);
 
-        launch_data_marshaling3<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
+        //launch_data_marshaling3<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
         // launch_backward_solve<BLOCKSIZE, BLOCKDIM>(
         //    m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
+        launch_data_untranspose_backward_solve_gemini<128, BLOCKDIM, 256>(
+            m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
 
         // launch_data_marshaling2<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
     }

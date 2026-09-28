@@ -80,7 +80,7 @@ namespace linalg
     struct pivoting_data
     {
         /*! \brief Maximum number of recursion levels used by the tridiagonal solver. */
-        constexpr static int tridiagonal_max_recursion_levels = 4;
+        constexpr static int tridiagonal_max_recursion_levels = 5;
         /*! \brief Block dimension for pivoting operations and recursion. */
         constexpr static int block_dim = 32;
 
