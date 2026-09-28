@@ -149,9 +149,9 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
         int current_m = m;
         for(int level = 0; level < pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
         {
-            std::cout << "level: " << level << " current_m: " << current_m << std::endl;
-            //if(current_m <= 1024)
-            //    break;
+            // std::cout << "level: " << level << " current_m: " << current_m << std::endl;
+            // if(current_m <= 2)
+            //     break;
 
             int m_pad = static_cast<int>(next_power_of_two(static_cast<uint64_t>(current_m)));
             m_pad     = std::max(m_pad, BLOCKDIM);
@@ -171,6 +171,9 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
             pivot_data.S_main[level].resize(S_size);
             pivot_data.S_upper[level].resize(S_size);
             pivot_data.S_B[level].resize(S_size * n);
+
+            std::cout << "level: " << level << " current_m: " << current_m << " m_pad: " << m_pad
+                      << " S_size: " << S_size << std::endl;
 
             current_m = S_size;
         }

@@ -138,6 +138,146 @@ namespace linalg
         return m + 1;
     }
 
+
+
+
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
+    static void launch_data_marshaling_gemini(int      m,
+                                       int      m_pad,
+                                       const T* lower,
+                                       const T* main,
+                                       const T* upper,
+                                       T*       lower_pad,
+                                       T*       main_pad,
+                                       T*       upper_pad)
+    {
+        ROUTINE_TRACE("launch_data_marshaling_gemini");
+
+        const int nblocks = m_pad / BLOCKDIM;
+
+        const int grid_size = (nblocks + PARTITIONS_PER_GROUP - 1) / PARTITIONS_PER_GROUP;
+
+        data_marshaling_kernel_gemini<BLOCKSIZE, BLOCKDIM, PARTITIONS_PER_GROUP><<<grid_size, BLOCKSIZE>>>(
+            m, m_pad, lower, main, upper, lower_pad, main_pad, upper_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
+    static void launch_data_marshaling_B_gemini(int      m,
+                                       int      m_pad,
+                                       int      n,
+                                       const T* B,
+                                       T*       B_pad)
+    {
+        ROUTINE_TRACE("launch_data_marshaling_gemini");
+
+        const int nblocks = m_pad / BLOCKDIM;
+
+        const int grid_x = (nblocks + PARTITIONS_PER_GROUP - 1) / PARTITIONS_PER_GROUP;
+        const int grid_y = std::min(n, 32768);
+        const int grid_z = 1;
+
+        // std::cout << "grid_x: " << grid_x << std::endl;
+
+        const dim3 grid(grid_x, grid_y, grid_z);
+        const dim3 block(BLOCKSIZE, 1, 1);
+
+        data_marshaling_B_kernel_gemini<BLOCKSIZE, BLOCKDIM, PARTITIONS_PER_GROUP><<<grid, block>>>(
+            m, m_pad, n, B, B_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
+    static void launch_reverse_data_marshaling_B_gemini(int      m,
+                                       int      m_pad,
+                                       int      n,
+                                       const T* B_pad,
+                                       T*       B)
+    {
+        ROUTINE_TRACE("launch_reverse_data_marshaling_B_gemini");
+
+        const int nblocks = m_pad / BLOCKDIM;
+
+        const int grid_x = (nblocks + PARTITIONS_PER_GROUP - 1) / PARTITIONS_PER_GROUP;
+        const int grid_y = std::min(n, 32768);
+        const int grid_z = 1;
+
+        // std::cout << "grid_x: " << grid_x << std::endl;
+
+        const dim3 grid(grid_x, grid_y, grid_z);
+        const dim3 block(BLOCKSIZE, 1, 1);
+
+        reverse_data_marshaling_B_kernel_gemini<BLOCKSIZE, BLOCKDIM, PARTITIONS_PER_GROUP><<<grid, block>>>(
+            m, m_pad, n, B_pad, B);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    template <uint32_t BLOCKSIZE_X, uint32_t BLOCKSIZE_Y, uint32_t BLOCKDIM, typename T>
+    static void launch_data_marshaling_fast(int      m,
+                                       int      m_pad,
+                                       const T* lower,
+                                       const T* main,
+                                       const T* upper,
+                                       T*       lower_pad,
+                                       T*       main_pad,
+                                       T*       upper_pad)
+    {
+        ROUTINE_TRACE("launch_data_marshaling_fast");
+
+        const int nblocks = m_pad / BLOCKDIM;
+
+        const int grid_x = (BLOCKDIM - 1) / BLOCKSIZE_X + 1;
+        const int grid_y = (nblocks - 1) / BLOCKSIZE_Y + 1;
+
+        const dim3 grid(grid_x, grid_y, 1);
+        const dim3 block(BLOCKSIZE_X, BLOCKSIZE_Y, 1);
+
+        data_marshaling_kernel_fast<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKDIM><<<grid, block>>>(
+            m, m_pad, lower, main, upper, lower_pad, main_pad, upper_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    template <uint32_t BLOCKSIZE_X, uint32_t BLOCKSIZE_Y, uint32_t BLOCKDIM, typename T>
+    static void launch_data_marshaling_B_fast(int m, int m_pad, int n, const T* B, T* B_pad)
+    {
+        ROUTINE_TRACE("launch_data_marshaling_B_fast");
+
+        const int nblocks = m_pad / BLOCKDIM;
+
+        const int grid_x = (BLOCKDIM - 1) / BLOCKSIZE_X + 1;
+        const int grid_y = (nblocks - 1) / BLOCKSIZE_Y + 1;
+        const int grid_z = std::min(n, 32768);
+
+        const dim3 grid(grid_x, grid_y, grid_z);
+        const dim3 block(BLOCKSIZE_X, BLOCKSIZE_Y, 1);
+
+        data_marshaling_B_kernel_fast<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKDIM>
+            <<<grid, block>>>(m, m_pad, n, B, B_pad);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void launch_data_marshaling(int      m,
                                        int      m_pad,
@@ -185,37 +325,20 @@ namespace linalg
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void launch_LBMT_solve_wvmt(int           m_pad,
-                                       T*      lower,
-                                       T*      main,
-                                       T*      upper,
-                                       T*            w,
-                                       T*            v,
-                                       T*            mt)
+    static void launch_LBMT_solve_wvmt(int m_pad, T* lower, T* main, T* upper, T* w, T* v, T* mt)
     {
         ROUTINE_TRACE("launch_LBMT_solve_wvmt");
 
         const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
 
-        LBMT_solve_wvmt_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(grid, 1, 1), dim3(BLOCKSIZE, 1, 1)>>>(
-            m_pad,
-            lower,
-            main,
-            upper,
-            w,
-            v,
-            mt);
+        LBMT_solve_wvmt_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<dim3(grid, 1, 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, lower, main, upper, w, v, mt);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void launch_LBMT_solve_rhs(int           m_pad,
-                                      int           n,
-                                      const T*      lower,
-                                      const T*      main,
-                                      const T*      upper,
-                                      const T*      mt,
-                                      T*            rhs)
+    static void launch_LBMT_solve_rhs(
+        int m_pad, int n, const T* lower, const T* main, const T* upper, const T* mt, T* rhs)
     {
         ROUTINE_TRACE("launch_LBMT_solve_rhs");
 
@@ -223,14 +346,8 @@ namespace linalg
 
         // std::cout << "grid: " << grid << std::endl;
 
-        LBMT_solve_rhs_kernel<BLOCKSIZE, BLOCKDIM><<<dim3(grid, n, 1), dim3(BLOCKSIZE, 1, 1)>>>(
-            m_pad,
-            n,
-            lower,
-            main,
-            upper,
-            mt,
-            rhs);
+        LBMT_solve_rhs_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<dim3(grid, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, n, lower, main, upper, mt, rhs);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
@@ -255,16 +372,31 @@ namespace linalg
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
-    template <typename T, uint32_t S_SIZE>
+    template <uint32_t S_SIZE, typename T>
     static void launch_s_solve_kernel(int m,
                                       int n,
                                       const T* __restrict__ S_lower,
                                       const T* __restrict__ S_main,
                                       const T* __restrict__ S_upper,
-                                      T* __restrict__ rhs)
+                                      T* __restrict__ S_rhs)
     {
         ROUTINE_TRACE("launch_s_solve_kernel");
-        S_solve_kernel<S_SIZE><<<n, 1>>>(m, n, S_lower, S_main, S_upper, rhs);
+        S_solve_kernel<S_SIZE><<<n, 1>>>(m, n, S_lower, S_main, S_upper, S_rhs);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+    static void launch_s_solve_fused_kernel(int m,
+                                            int n,
+                                            const T* __restrict__ S_lower,
+                                            const T* __restrict__ S_main,
+                                            const T* __restrict__ S_upper,
+                                            T* __restrict__ S_rhs)
+    {
+        ROUTINE_TRACE("launch_s_solve_fused_kernel");
+
+        S_solve_fused_kernel<BLOCKSIZE, BLOCKDIM>
+            <<<n, BLOCKSIZE>>>(S_lower, S_main, S_upper, S_rhs);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
@@ -285,9 +417,23 @@ namespace linalg
     {
         ROUTINE_TRACE("launch_backward_solve");
 
-        const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
+        //const int grid = ((m_pad / BLOCKDIM) - 1) / BLOCKSIZE + 1;
+        //backward_solve_kernel<BLOCKSIZE, BLOCKDIM>
+        //    <<<dim3(grid, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, n, w, v, rhs);
+        const int grid = (m_pad - 1) / BLOCKSIZE + 1;
         backward_solve_kernel<BLOCKSIZE, BLOCKDIM>
             <<<dim3(grid, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(m_pad, n, w, v, rhs);
+        CHECK_CUDA_LAUNCH_ERROR();
+    }
+
+    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+    static void launch_data_marshaling3(int m, int m_pad, int n, const T* w_pad, const T* v_pad, const T* B_pad, T* X)
+    {
+        ROUTINE_TRACE("launch_data_marshaling2");
+
+        data_marshaling_kernel3<BLOCKSIZE, BLOCKDIM>
+            <<<dim3((m_pad - 1) / BLOCKSIZE + 1, std::min(n, 32768), 1), dim3(BLOCKSIZE, 1, 1)>>>(
+                m, m_pad, n, w_pad, v_pad, B_pad, X);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
@@ -303,26 +449,92 @@ namespace linalg
     }
 
     template <typename T>
-    static void tridiagonal_partial_pivoting_solver_dispatch(int            m,
-                                                             int            n,
-                                                             const T*       lower_diag,
-                                                             const T*       main_diag,
-                                                             const T*       upper_diag,
-                                                             const T*       B,
-                                                             T*             X,
-                                                             T**            lower_pad,
-                                                             T**            main_pad,
-                                                             T**            upper_pad,
-                                                             T**            B_pad,
-                                                             T**            w_pad,
-                                                             T**            v_pad,
-                                                             T**            mt,
-                                                             T**            S_lower,
-                                                             T**            S_main,
-                                                             T**            S_upper,
-                                                             T**            S_B,
-                                                             int            level = 0)
+    static void tridiagonal_partial_pivoting_solver_dispatch(int      m,
+                                                             int      n,
+                                                             const T* lower_diag,
+                                                             const T* main_diag,
+                                                             const T* upper_diag,
+                                                             const T* B,
+                                                             T*       X,
+                                                             T**      lower_pad,
+                                                             T**      main_pad,
+                                                             T**      upper_pad,
+                                                             T**      B_pad,
+                                                             T**      w_pad,
+                                                             T**      v_pad,
+                                                             T**      mt,
+                                                             T**      S_lower,
+                                                             T**      S_main,
+                                                             T**      S_upper,
+                                                             T**      S_B,
+                                                             int      level = 0)
     {
+
+        // Throw away code for testing
+        {
+            std::vector<T> hdata(32, 0);
+            std::vector<T> hdata_pad(32, 0);
+            for(size_t i = 0; i < hdata.size(); i++)
+            {
+                hdata[i] = i + 1;
+            }
+
+            std::cout << "hdata" << std::endl;
+            for(size_t i = 0; i < hdata.size(); i++)
+            {
+                std::cout << hdata[i] << " ";
+            }
+            std::cout << "" << std::endl;
+
+            T* ddata = nullptr;
+            T* ddata_pad = nullptr;
+            CHECK_CUDA(cudaMalloc((void**)&ddata, sizeof(T) * 32));
+            CHECK_CUDA(cudaMalloc((void**)&ddata_pad, sizeof(T) * 32));
+            CHECK_CUDA(cudaMemcpy(ddata, hdata.data(), sizeof(T) * 32, cudaMemcpyHostToDevice));
+
+            launch_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata, ddata_pad);
+
+            CHECK_CUDA(cudaMemcpy(hdata_pad.data(), ddata_pad, sizeof(T) * 32, cudaMemcpyDeviceToHost));
+
+            std::cout << "hdata_pad" << std::endl;
+            for(size_t i = 0; i < hdata_pad.size(); i++)
+            {
+                std::cout << hdata_pad[i] << " ";
+            }
+            std::cout << "" << std::endl;
+
+            launch_reverse_data_marshaling_B_gemini<4, 4, 4>(32, 32, 1, ddata_pad, ddata);
+
+            CHECK_CUDA(cudaMemcpy(hdata.data(), ddata, sizeof(T) * 32, cudaMemcpyDeviceToHost));
+
+            std::cout << "hdata" << std::endl;
+            for(size_t i = 0; i < hdata.size(); i++)
+            {
+                std::cout << hdata[i] << " ";
+            }
+            std::cout << "" << std::endl;
+
+            CHECK_CUDA(cudaFree(ddata));
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         constexpr int BLOCKDIM  = linalg::pivoting_data<T>::block_dim;
         constexpr int BLOCKSIZE = 256;
 
@@ -331,7 +543,27 @@ namespace linalg
 
         const int s_size = 2 * m_pad / BLOCKDIM;
 
-        launch_data_marshaling<BLOCKSIZE, BLOCKDIM>(m,
+        // launch_data_marshaling<BLOCKSIZE, BLOCKDIM>(m,
+        //                                             m_pad,
+        //                                             lower_diag,
+        //                                             main_diag,
+        //                                             upper_diag,
+        //                                             lower_pad[level],
+        //                                             main_pad[level],
+        //                                             upper_pad[level]);
+        // launch_data_marshaling_B<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B, B_pad[level]);
+
+        // launch_data_marshaling_fast<32, 32, BLOCKDIM>(m,
+        //                                             m_pad,
+        //                                             lower_diag,
+        //                                             main_diag,
+        //                                             upper_diag,
+        //                                             lower_pad[level],
+        //                                             main_pad[level],
+        //                                             upper_pad[level]);
+        // launch_data_marshaling_B_fast<32, 32, BLOCKDIM>(m, m_pad, n, B, B_pad[level]);
+
+        launch_data_marshaling_gemini<128, BLOCKDIM, 256>(m,
                                                     m_pad,
                                                     lower_diag,
                                                     main_diag,
@@ -339,24 +571,7 @@ namespace linalg
                                                     lower_pad[level],
                                                     main_pad[level],
                                                     upper_pad[level]);
-
-        launch_data_marshaling_B<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B, B_pad[level]);
-
-        // for(int batch = 0; batch < n; batch++)
-        // {
-        //     CHECK_CUDA(cudaMemset(w_pad[level], 0, sizeof(double) * m_pad));
-        //     CHECK_CUDA(cudaMemset(v_pad[level], 0, sizeof(double) * m_pad));
-
-        //     launch_LBMT_solve<BLOCKSIZE, BLOCKDIM>(m_pad,
-        //                                            n,
-        //                                            lower_pad[level],
-        //                                            main_pad[level],
-        //                                            upper_pad[level],
-        //                                            w_pad[level],
-        //                                            v_pad[level],
-        //                                            mt[level],
-        //                                            B_pad[level] + batch * m_pad);
-        // }
+        launch_data_marshaling_B_gemini<128, BLOCKDIM, 256>(m, m_pad, n, B, B_pad[level]);
 
         CHECK_CUDA(cudaMemset(w_pad[level], 0, sizeof(T) * m_pad));
         CHECK_CUDA(cudaMemset(v_pad[level], 0, sizeof(T) * m_pad));
@@ -369,16 +584,13 @@ namespace linalg
                                                     v_pad[level],
                                                     mt[level]);
 
-        for(int i = 0; i < n; i += 32768)
-        {
-            launch_LBMT_solve_rhs<BLOCKSIZE, BLOCKDIM>(m_pad,
-                                                       std::min(n - i, 32768),
-                                                       lower_pad[level],
-                                                       main_pad[level],
-                                                       upper_pad[level],
-                                                       mt[level],
-                                                       B_pad[level] + m_pad * i);
-        }
+        launch_LBMT_solve_rhs<BLOCKSIZE, BLOCKDIM>(m_pad,
+                                                    n,
+                                                    lower_pad[level],
+                                                    main_pad[level],
+                                                    upper_pad[level],
+                                                    mt[level],
+                                                    B_pad[level]);
 
         launch_fill_s_matrix<BLOCKSIZE, BLOCKDIM>(m_pad,
                                                   n,
@@ -393,16 +605,20 @@ namespace linalg
         using S_solve_launch_ptr = void (*)(int, int, const T*, const T*, const T*, T*);
 
         static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
-            {2, launch_s_solve_kernel<T, 2>},
-            {4, launch_s_solve_kernel<T, 4>},
-            {8, launch_s_solve_kernel<T, 8>},
-            {16, launch_s_solve_kernel<T, 16>},
-            {32, launch_s_solve_kernel<T, 32>},
-            // {64, launch_s_solve_kernel<T, 64>},
-            // {128, launch_s_solve_kernel<T, 128>},
-            // {256, launch_s_solve_kernel<T, 256>},
-            // {512, launch_s_solve_kernel<T, 512>},
-            // {1024, launch_s_solve_kernel<T, 1024>},
+            {2, launch_s_solve_kernel<2>},
+            {4, launch_s_solve_kernel<4>},
+            {8, launch_s_solve_kernel<8>},
+            {16, launch_s_solve_kernel<16>},
+            {32, launch_s_solve_kernel<32>},
+            // {64, launch_s_solve_fused_kernel<32, 2>},
+            // {128, launch_s_solve_fused_kernel<32, 4>},
+            // {256, launch_s_solve_fused_kernel<32, 8>},
+            // {512, launch_s_solve_fused_kernel<32, 16>},
+            // {64, launch_s_solve_kernel<64>},
+            // {128, launch_s_solve_kernel<128>},
+            // {256, launch_s_solve_kernel<256>},
+            // {512, launch_s_solve_kernel<512>},
+            // {1024, launch_s_solve_kernel<1024>},
         };
 
         auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
@@ -443,32 +659,33 @@ namespace linalg
 
         launch_scatter_S_B_to_B_pad<BLOCKSIZE, BLOCKDIM>(m_pad, n, S_B[level], B_pad[level]);
 
-        launch_backward_solve<BLOCKSIZE, BLOCKDIM>(
-            m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
+        launch_data_marshaling3<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
+        // launch_backward_solve<BLOCKSIZE, BLOCKDIM>(
+        //    m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
 
-        launch_data_marshaling2<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
+        // launch_data_marshaling2<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
     }
 }
 
 template <typename T>
-void linalg::cuda_partial_pivoting_solver(int            m,
-                                          int            n,
-                                          const T*       lower_diag,
-                                          const T*       main_diag,
-                                          const T*       upper_diag,
-                                          const T*       B,
-                                          T*             X,
-                                          T**            lower_pad,
-                                          T**            main_pad,
-                                          T**            upper_pad,
-                                          T**            B_pad,
-                                          T**            w_pad,
-                                          T**            v_pad,
-                                          T**            mt,
-                                          T**            S_lower,
-                                          T**            S_main,
-                                          T**            S_upper,
-                                          T**            S_B)
+void linalg::cuda_partial_pivoting_solver(int      m,
+                                          int      n,
+                                          const T* lower_diag,
+                                          const T* main_diag,
+                                          const T* upper_diag,
+                                          const T* B,
+                                          T*       X,
+                                          T**      lower_pad,
+                                          T**      main_pad,
+                                          T**      upper_pad,
+                                          T**      B_pad,
+                                          T**      w_pad,
+                                          T**      v_pad,
+                                          T**      mt,
+                                          T**      S_lower,
+                                          T**      S_main,
+                                          T**      S_upper,
+                                          T**      S_B)
 {
     tridiagonal_partial_pivoting_solver_dispatch(m,
                                                  n,

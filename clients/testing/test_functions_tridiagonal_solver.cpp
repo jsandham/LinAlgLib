@@ -57,6 +57,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     std::uniform_real_distribution<double> main_dist(2.0, 2.5);
     std::uniform_real_distribution<double> lower_dist(0.5, 1.0);
     std::uniform_real_distribution<double> upper_dist(0.5, 1.0);
+    std::uniform_real_distribution<double> rhs_dist(0.5, 1.0);
 
     // Initialize with the same system as test_tridiagonal_solver
     lower_diag[0]     = 0.0;
@@ -78,10 +79,10 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0;
+            rhs[m * i + j] = rhs_dist(gen); //1.0;
         }
-        rhs[m * i + 0]       = 1.0;
-        rhs[m * i + (m - 1)] = 1.0;
+        rhs[m * i + 0]       = rhs_dist(gen); //1.0;
+        rhs[m * i + (m - 1)] = rhs_dist(gen); //1.0;
     }
 
     // Create the solver
