@@ -79,10 +79,10 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0; //rhs_dist(gen); //1.0;
+            rhs[m * i + j] = rhs_dist(gen); //1.0;
         }
-        rhs[m * i + 0]       = 1.0; //rhs_dist(gen); //1.0;
-        rhs[m * i + (m - 1)] = 1.0; //rhs_dist(gen); //1.0;
+        rhs[m * i + 0]       = rhs_dist(gen); //1.0;
+        rhs[m * i + (m - 1)] = rhs_dist(gen); //1.0;
     }
 
     // Create the solver
@@ -160,7 +160,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 
-    size_t total_bytes_read_write = sizeof(double) * (3 * m + 2 * m * n);
+    size_t total_bytes_read_write = sizeof(float) * (3 * m + 2 * m * n);
     double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
     double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 

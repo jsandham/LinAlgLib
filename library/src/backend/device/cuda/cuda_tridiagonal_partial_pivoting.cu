@@ -582,6 +582,12 @@ namespace linalg
         //                                             upper_pad[level]);
         // launch_data_marshaling_B_fast<32, 32, BLOCKDIM>(m, m_pad, n, B, B_pad[level]);
 
+
+
+
+
+
+
         launch_data_marshaling_gemini<128, BLOCKDIM, 256>(m,
                                                     m_pad,
                                                     lower_diag,
@@ -678,13 +684,21 @@ namespace linalg
 
         launch_scatter_S_B_to_B_pad<BLOCKSIZE, BLOCKDIM>(m_pad, n, S_B[level], B_pad[level]);
 
-        //launch_data_marshaling3<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
-        // launch_backward_solve<BLOCKSIZE, BLOCKDIM>(
-        //    m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
-        launch_data_untranspose_backward_solve_gemini<128, BLOCKDIM, 256>(
-            m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
+        launch_backward_solve<BLOCKSIZE, BLOCKDIM>(
+           m_pad, n, w_pad[level], v_pad[level], B_pad[level]);
+
+        launch_reverse_data_marshaling_B_gemini<128, BLOCKDIM, 256>(
+            m, m_pad, n, B_pad[level], X);
+
+
+
+
+
+        // launch_data_untranspose_backward_solve_gemini<128, BLOCKDIM, 256>(
+        //     m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
 
         // launch_data_marshaling2<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, B_pad[level], X);
+        // launch_data_marshaling3<BLOCKSIZE, BLOCKDIM>(m, m_pad, n, w_pad[level], v_pad[level], B_pad[level], X);
     }
 }
 
