@@ -85,25 +85,6 @@ namespace linalg
                          solution,
                          pivot_data);
     }
-
-    static uint64_t next_power_of_two(uint64_t m)
-    {
-        if(m == 0)
-        {
-            return 1;
-        }
-
-        m--;
-
-        m |= m >> 1;
-        m |= m >> 2;
-        m |= m >> 4;
-        m |= m >> 8;
-        m |= m >> 16;
-        m |= m >> 32;
-
-        return m + 1;
-    }
 }
 
 template <typename T>
@@ -153,8 +134,7 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
             // if(current_m <= 2)
             //     break;
 
-            int m_pad = static_cast<int>(next_power_of_two(static_cast<uint64_t>(current_m)));
-            m_pad     = std::max(m_pad, BLOCKDIM);
+            const int m_pad = ((current_m + BLOCKDIM - 1) / BLOCKDIM) * BLOCKDIM;
 
             // For partial pivoting, we would initialize the padded buffers here.
             pivot_data.lower_pad[level].resize(m_pad);

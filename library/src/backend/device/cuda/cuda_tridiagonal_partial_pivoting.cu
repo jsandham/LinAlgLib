@@ -116,31 +116,6 @@
 
 namespace linalg
 {
-    static uint64_t next_power_of_two(uint64_t m)
-    {
-        // If m is already a power of 2 or 0, return m (or 1 if you prefer 2^0)
-        if(m == 0)
-            return 1;
-
-        // Decrement m so that if it is already a power of 2,
-        // the operations below don't jump it to the next one.
-        m--;
-
-        // Fill all bits to the right of the most significant bit with 1s
-        m |= m >> 1;
-        m |= m >> 2;
-        m |= m >> 4;
-        m |= m >> 8;
-        m |= m >> 16;
-        m |= m >> 32; // Include this if using 64-bit integers
-
-        // Adding 1 results in a single bit set at the next power of 2
-        return m + 1;
-    }
-
-
-
-
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
     static void launch_data_marshaling_gemini(int      m,
                                        int      m_pad,
@@ -555,8 +530,7 @@ namespace linalg
         constexpr int BLOCKDIM  = linalg::pivoting_data<T>::block_dim;
         constexpr int BLOCKSIZE = 256;
 
-        int m_pad = next_power_of_two(m);
-        m_pad     = std::max(m_pad, BLOCKDIM);
+        const int m_pad = ((m + BLOCKDIM - 1) / BLOCKDIM) * BLOCKDIM;
 
         //std::cout << "m_pad: " << m_pad << " nblocks: " << (m_pad / BLOCKDIM) << std::endl;
 
@@ -632,8 +606,19 @@ namespace linalg
         static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
             {2, launch_s_solve_kernel<2>},
             {4, launch_s_solve_kernel<4>},
+            {6, launch_s_solve_kernel<6>},
             {8, launch_s_solve_kernel<8>},
+            {10, launch_s_solve_kernel<10>},
+            {12, launch_s_solve_kernel<12>},
+            {14, launch_s_solve_kernel<14>},
             {16, launch_s_solve_kernel<16>},
+            {18, launch_s_solve_kernel<18>},
+            {20, launch_s_solve_kernel<20>},
+            {22, launch_s_solve_kernel<22>},
+            {24, launch_s_solve_kernel<24>},
+            {26, launch_s_solve_kernel<26>},
+            {28, launch_s_solve_kernel<28>},
+            {30, launch_s_solve_kernel<30>},
             {32, launch_s_solve_kernel<32>},
             // {64, launch_s_solve_fused_kernel<32, 2>},
             // {128, launch_s_solve_fused_kernel<32, 4>},

@@ -99,13 +99,13 @@ namespace linalg
     template <typename T>
     bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T ck, T ck_1)
     {
-        double kappa = double(0.5) * (sqrt(double(5.0)) - double(1.0));
+        T kappa = static_cast<T>(0.5) * (sqrt(static_cast<T>(5.0)) - static_cast<T>(1.0));
 
-        double sigma = double(0);
-        sigma        = std::max(double(abs(ak_1)), double(abs(ak_2)));
-        sigma        = std::max(double(abs(bk_1)), sigma);
-        sigma        = std::max(double(abs(ck)), sigma);
-        sigma        = std::max(double(abs(ck_1)), sigma);
+        T sigma = static_cast<T>(0);
+        sigma   = std::max(static_cast<T>(abs(ak_1)), static_cast<T>(abs(ak_2)));
+        sigma   = std::max(static_cast<T>(abs(bk_1)), sigma);
+        sigma   = std::max(static_cast<T>(abs(ck)), sigma);
+        sigma   = std::max(static_cast<T>(abs(ck_1)), sigma);
 
         return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
     }
@@ -145,7 +145,7 @@ namespace linalg
         {
             T bk = main[i];
 
-            PivotMask<BLOCKDIM> pivot_mask;
+            PivotMask<BLOCKDIM> pivot_mask{};
 
             w[i]                            = lower[i];
             v[i + (BLOCKDIM - 1) * nblocks] = upper[i + (BLOCKDIM - 1) * nblocks];
@@ -303,25 +303,6 @@ namespace linalg
         }
     }
 
-    static inline uint64_t next_power_of_two(uint64_t m)
-    {
-        if(m == 0)
-        {
-            return 1;
-        }
-
-        m--;
-
-        m |= m >> 1;
-        m |= m >> 2;
-        m |= m >> 4;
-        m |= m >> 8;
-        m |= m >> 16;
-        m |= m >> 32;
-
-        return m + 1;
-    }
-
     template <typename T, uint32_t BLOCKDIM>
     static void fill_S_matrix(int      m_pad,
                               int      n,
@@ -345,16 +326,6 @@ namespace linalg
             S_lower[i]
                 = (i % 2 == 0) ? static_cast<T>(1) : w[i / 2 + (m_pad / BLOCKDIM) * (BLOCKDIM - 1)];
 
-            if(i == 0)
-            {
-                S_lower[0]          = static_cast<T>(0);
-                S_lower[1]          = static_cast<T>(0);
-                S_upper[S_size - 2] = static_cast<T>(0);
-                S_upper[S_size - 1] = static_cast<T>(0);
-                S_main[0]           = static_cast<T>(1);
-                S_main[S_size - 1]  = static_cast<T>(1);
-            }
-
             if(i >= 1 && i < S_size - 1)
             {
                 S_main[i]
@@ -371,6 +342,13 @@ namespace linalg
                 }
             }
         }
+
+        S_lower[0]          = static_cast<T>(0);
+        S_lower[1]          = static_cast<T>(0);
+        S_upper[S_size - 2] = static_cast<T>(0);
+        S_upper[S_size - 1] = static_cast<T>(0);
+        S_main[0]           = static_cast<T>(1);
+        S_main[S_size - 1]  = static_cast<T>(1);
     }
 
     template <typename T>
@@ -538,9 +516,11 @@ namespace linalg
         {
             for(int i = 0; i < nblocks; i++)
             {
-                const T x1 = (i >= 1) ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1)]
-                                      : static_cast<T>(0);
-                const T x2 = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1] : static_cast<T>(0);
+                const T x1 = (i >= 1)
+                                 ? rhs[(m_pad / BLOCKDIM) * (BLOCKDIM - 1) + (i - 1) + m_pad * k]
+                                 : static_cast<T>(0);
+                const T x2
+                    = (i < (m_pad / BLOCKDIM - 1)) ? rhs[i + 1 + m_pad * k] : static_cast<T>(0);
 
                 for(int j = 1; j < BLOCKDIM - 1; j++)
                 {
@@ -579,9 +559,7 @@ namespace linalg
         ROUTINE_TRACE("spike_algorithm_template");
         constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
-        int m_pad = next_power_of_two(m);
-
-        m_pad = std::max(m_pad, BLOCKDIM);
+        const int m_pad = ((m + BLOCKDIM - 1) / BLOCKDIM) * BLOCKDIM;
 
         {
             ROUTINE_TRACE("AAAAA");

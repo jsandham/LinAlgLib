@@ -154,6 +154,17 @@ bool testing::test_tridiagonal_solver(Arguments arg)
             {
                 ax = std::fma(upper_diag[j], solution[m * i + j + 1], ax);
             }
+
+            double temp = std::abs(rhs[m * i + j] - ax);
+
+            // Check for Nan
+            if(std::isnan(temp))
+            {
+                max_residual = std::numeric_limits<double>::max();
+                std::cout << "Nan detected" << std::endl;
+                break;
+            }
+
             max_residual = std::max(max_residual, std::abs(rhs[m * i + j] - ax));
         }
     }
