@@ -24,21 +24,22 @@
 //
 //********************************************************************************
 
-#ifndef TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
-#define TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
+#ifndef TRIDIAGONAL_SPIKE_KERNELS_H
+#define TRIDIAGONAL_SPIKE_KERNELS_H
 
 #include <assert.h>
 
 #include "common.cuh"
+#include "pivot_mask.cuh"
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
-__device__ void
-    data_transpose_device_gemini(int m, int m_pad, const T* __restrict__ d_in, T* __restrict__ d_out, T pad_value)
+__device__ void data_transpose_device_gemini(
+    int m, int m_pad, const T* __restrict__ d_in, T* __restrict__ d_out, T pad_value)
 {
     // Each CUDA block handles PARTITIONS_PER_GROUP (e.g., 256) total partitions,
     // but processes them in smaller chunks dictated by BLOCKSIZE (e.g., 128).
     const int group_start_partition = blockIdx.x * PARTITIONS_PER_GROUP;
-    const int nblocks = m_pad / BLOCKDIM;
+    const int nblocks               = m_pad / BLOCKDIM;
 
     // Prevent completely out-of-bounds blocks from executing
     if(group_start_partition >= nblocks)
@@ -50,12 +51,11 @@ __device__ void
     const int tid = threadIdx.x;
 
     // Loop over the group in chunks of BLOCKSIZE (e.g., 0, then 128)
-    for (int chunk = 0; chunk < PARTITIONS_PER_GROUP; chunk += BLOCKSIZE)
+    for(int chunk = 0; chunk < PARTITIONS_PER_GROUP; chunk += BLOCKSIZE)
     {
         // ---------------------------------------------------------
         // PHASE 1: Coalesced Read from Global -> Shared Memory
         // ---------------------------------------------------------
-#pragma unroll
         for(int i = 0; i < BLOCKDIM; ++i)
         {
             int linear_idx    = i * BLOCKSIZE + tid;
@@ -81,13 +81,13 @@ __device__ void
         // ---------------------------------------------------------
         // PHASE 2: Coalesced Write from Shared -> Global Memory
         // ---------------------------------------------------------
-#pragma unroll
         for(int i = 0; i < BLOCKDIM; ++i)
         {
             int out_partition_idx = tid;
             int out_element_idx   = i;
 
-            int linear_out = out_element_idx * nblocks + group_start_partition + chunk + out_partition_idx;
+            int linear_out
+                = out_element_idx * nblocks + group_start_partition + chunk + out_partition_idx;
 
             if(group_start_partition + chunk + out_partition_idx < nblocks)
             {
@@ -101,13 +101,15 @@ __device__ void
 }
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
-__device__ void
-    data_untranspose_device_gemini(int m, int m_pad, const T* __restrict__ d_in, T* __restrict__ d_out)
+__device__ void data_untranspose_device_gemini(int m,
+                                               int m_pad,
+                                               const T* __restrict__ d_in,
+                                               T* __restrict__ d_out)
 {
     // Each CUDA block handles PARTITIONS_PER_GROUP partitions,
     // processed in smaller chunks dictated by BLOCKSIZE.
     const int group_start_partition = blockIdx.x * PARTITIONS_PER_GROUP;
-    const int nblocks = m_pad / BLOCKDIM;
+    const int nblocks               = m_pad / BLOCKDIM;
 
     // Prevent completely out-of-bounds blocks from executing
     if(group_start_partition >= nblocks)
@@ -118,18 +120,18 @@ __device__ void
     const int tid = threadIdx.x;
 
     // Loop over the group in chunks of BLOCKSIZE
-    for (int chunk = 0; chunk < PARTITIONS_PER_GROUP; chunk += BLOCKSIZE)
+    for(int chunk = 0; chunk < PARTITIONS_PER_GROUP; chunk += BLOCKSIZE)
     {
         // ---------------------------------------------------------
         // PHASE 1: Coalesced Read from Padded Layout -> Shared Memory
         // ---------------------------------------------------------
-#pragma unroll
         for(int i = 0; i < BLOCKDIM; ++i)
         {
             int in_partition_idx = tid;
             int in_element_idx   = i;
 
-            int linear_in = in_element_idx * nblocks + group_start_partition + chunk + in_partition_idx;
+            int linear_in
+                = in_element_idx * nblocks + group_start_partition + chunk + in_partition_idx;
 
             T val = T(0);
             if(group_start_partition + chunk + in_partition_idx < nblocks)
@@ -145,10 +147,9 @@ __device__ void
         // ---------------------------------------------------------
         // PHASE 2: Coalesced Write from Shared -> Global Standard Memory
         // ---------------------------------------------------------
-#pragma unroll
         for(int i = 0; i < BLOCKDIM; ++i)
         {
-            int linear_out = i * BLOCKSIZE + tid;
+            int linear_out    = i * BLOCKSIZE + tid;
             int partition_idx = linear_out / BLOCKDIM;
             int element_idx   = linear_out % BLOCKDIM;
 
@@ -177,7 +178,7 @@ __device__ void data_untranspose_backward_solve_device_gemini(int m,
                                                               T* __restrict__ d_out)
 {
     const int group_start_partition = blockIdx.x * PARTITIONS_PER_GROUP;
-    const int nblocks = m_pad / BLOCKDIM;
+    const int nblocks               = m_pad / BLOCKDIM;
 
     if(group_start_partition >= nblocks)
         return;
@@ -192,7 +193,7 @@ __device__ void data_untranspose_backward_solve_device_gemini(int m,
         for(int i = 0; i < BLOCKDIM; ++i)
         {
             const int global_partition = group_start_partition + chunk + tid;
-            const int linear_in = i * nblocks + global_partition;
+            const int linear_in        = i * nblocks + global_partition;
 
             T val = T(0);
             if(global_partition < nblocks)
@@ -208,11 +209,11 @@ __device__ void data_untranspose_backward_solve_device_gemini(int m,
 #pragma unroll
         for(int i = 0; i < BLOCKDIM; ++i)
         {
-            const int linear_out = i * BLOCKSIZE + tid;
-            const int partition_idx = linear_out / BLOCKDIM;
-            const int element_idx = linear_out % BLOCKDIM;
+            const int linear_out       = i * BLOCKSIZE + tid;
+            const int partition_idx    = linear_out / BLOCKDIM;
+            const int element_idx      = linear_out % BLOCKDIM;
             const int global_partition = group_start_partition + chunk + partition_idx;
-            const int global_out_idx = global_partition * BLOCKDIM + element_idx;
+            const int global_out_idx   = global_partition * BLOCKDIM + element_idx;
 
             if(global_partition < nblocks && global_out_idx < m)
             {
@@ -223,7 +224,8 @@ __device__ void data_untranspose_backward_solve_device_gemini(int m,
                     const T x1 = (global_partition > 0)
                                      ? d_in[(BLOCKDIM - 1) * nblocks + global_partition - 1]
                                      : T(0);
-                    const T x2 = (global_partition < nblocks - 1) ? d_in[global_partition + 1] : T(0);
+                    const T x2
+                        = (global_partition < nblocks - 1) ? d_in[global_partition + 1] : T(0);
                     const int coefficient_idx = element_idx * nblocks + global_partition;
 
                     value -= w[coefficient_idx] * x1 + v[coefficient_idx] * x2;
@@ -253,9 +255,6 @@ __global__ void data_untranspose_backward_solve_kernel_gemini(int m,
         __syncthreads();
     }
 }
-
-
-
 
 // template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 // __device__ void
@@ -327,13 +326,13 @@ __global__ void data_untranspose_backward_solve_kernel_gemini(int m,
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t PARTITIONS_PER_GROUP, typename T>
 __global__ void data_marshaling_kernel_gemini(int m,
-                                            int m_pad,
-                                            const T* __restrict__ lower,
-                                            const T* __restrict__ main,
-                                            const T* __restrict__ upper,
-                                            T* __restrict__ lower_pad,
-                                            T* __restrict__ main_pad,
-                                            T* __restrict__ upper_pad)
+                                              int m_pad,
+                                              const T* __restrict__ lower,
+                                              const T* __restrict__ main,
+                                              const T* __restrict__ upper,
+                                              T* __restrict__ lower_pad,
+                                              T* __restrict__ main_pad,
+                                              T* __restrict__ upper_pad)
 {
     data_transpose_device_gemini<BLOCKSIZE, BLOCKDIM, PARTITIONS_PER_GROUP>(
         m, m_pad, lower, lower_pad, static_cast<T>(0));
@@ -369,38 +368,6 @@ __global__ void reverse_data_marshaling_B_kernel_gemini(
         __syncthreads();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 template <uint32_t BLOCKSIZE_X, uint32_t BLOCKSIZE_Y, uint32_t BLOCKDIM, typename T>
 __device__ void data_transpose_device(
@@ -545,30 +512,6 @@ __host__ __device__ bool bunch_kaufman_criterion(T ak_1, T ak_2, T bk, T bk_1, T
 
     return abs(bk) * sigma >= kappa * abs(ak_1 * ck);
 }
-
-template <uint32_t BLOCKDIM>
-struct PivotMask
-{
-    unsigned int bits[(BLOCKDIM + 31) / 32];
-
-    // Sets bit k to 0 to record a 1x1 pivot at row k.
-    __device__ __forceinline__ void set_pivoting_to_1x1(int k)
-    {
-        bits[k >> 5] &= ~(1u << (k & 31));
-    }
-
-    // Sets bit k to 1 to record 2x2 pivoting at row k.
-    __device__ __forceinline__ void set_pivoting_to2x2(int k)
-    {
-        bits[k >> 5] |= (1u << (k & 31));
-    }
-
-    // Returns 1 if row k used 1x1 pivoting, 2 if row k is part of a 2x2 pivot.
-    __device__ __forceinline__ int get_pivoting(int k) const
-    {
-        return ((bits[k >> 5] >> (k & 31)) & 1u) ? 2 : 1;
-    }
-};
 
 template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
 __global__ void LBMT_solve_wvmt_kernel(int m_pad,
@@ -1456,11 +1399,446 @@ __global__ void scatter_S_B_to_B_pad_kernel(
     }
 }
 
-template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-__global__ void S_solve_fused_kernel(const T* __restrict__ lower,
-                                     const T* __restrict__ main,
-                                     const T* __restrict__ upper,
-                                     T* __restrict__ rhs)
+// template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
+// __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
+//                                      const T* __restrict__ main,
+//                                      const T* __restrict__ upper,
+//                                      T* __restrict__ rhs)
+// {
+//     static_assert(BLOCKDIM >= 2);
+//     static_assert(BLOCKDIM % 2 == 0);
+//     static_assert(BLOCKSIZE % 2 == 0);
+
+//     const int tid = threadIdx.x;
+//     const int bid = blockIdx.x;
+
+//     const int batch = bid;
+
+//     constexpr int M = BLOCKSIZE * BLOCKDIM;
+
+//     // Transpose data
+//     __shared__ T slower[M];
+//     __shared__ T smain[M];
+//     __shared__ T supper[M];
+//     __shared__ T srhs[M];
+
+//     __shared__ T sw[M];
+//     __shared__ T sv[M];
+//     __shared__ T smt[M];
+
+//     for(int i = 0; i < BLOCKDIM; i++)
+//     {
+//         slower[BLOCKSIZE * i + tid] = lower[BLOCKDIM * tid + i];
+//         smain[BLOCKSIZE * i + tid]  = main[BLOCKDIM * tid + i];
+//         supper[BLOCKSIZE * i + tid] = upper[BLOCKDIM * tid + i];
+//         srhs[BLOCKSIZE * i + tid]   = rhs[BLOCKDIM * tid + i + M * batch];
+
+//         sw[BLOCKSIZE * i + tid]  = static_cast<T>(0);
+//         sv[BLOCKSIZE * i + tid]  = static_cast<T>(0);
+//         smt[BLOCKSIZE * i + tid] = static_cast<T>(0);
+//     }
+
+//     __syncthreads();
+
+//     // LBMT solve
+//     T bk = smain[tid];
+
+//     PivotMask<BLOCKDIM> pivot_mask{};
+
+//     sw[tid]                              = slower[tid];
+//     sv[tid + (BLOCKDIM - 1) * BLOCKSIZE] = supper[tid + (BLOCKDIM - 1) * BLOCKSIZE];
+
+//     int k = 0;
+//     while(k < BLOCKDIM)
+//     {
+//         T ck   = supper[BLOCKSIZE * k + tid];
+//         T ck_1 = (k < (BLOCKDIM - 1)) ? supper[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
+//         T bk_1 = (k < (BLOCKDIM - 1)) ? smain[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
+//         T ak_1 = (k < (BLOCKDIM - 1)) ? slower[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
+//         T ak_2 = (k < (BLOCKDIM - 2)) ? slower[BLOCKSIZE * (k + 2) + tid] : static_cast<T>(0);
+
+//         // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+//         // pivoting criteria
+//         const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
+
+//         // 1x1 pivoting
+//         if(use_1x1_pivot || k == (BLOCKDIM - 1))
+//         {
+//             const T inv_bk = static_cast<T>(1) / bk;
+
+//             const T wk = sw[BLOCKSIZE * k + tid];
+//             const T vk = sv[BLOCKSIZE * k + tid];
+
+//             sw[BLOCKSIZE * k + tid]  = wk * inv_bk;
+//             sv[BLOCKSIZE * k + tid]  = vk * inv_bk;
+//             smt[BLOCKSIZE * k + tid] = ck * inv_bk;
+
+//             pivot_mask.set_pivoting_to_1x1(k);
+
+//             if(k < (BLOCKDIM - 1))
+//             {
+//                 sw[BLOCKSIZE * (k + 1) + tid] += -ak_1 * wk * inv_bk;
+//             }
+
+//             // L * B * x = y
+//             const T rhsk = srhs[BLOCKSIZE * k + tid] * inv_bk;
+
+//             srhs[BLOCKSIZE * k + tid] = rhsk;
+
+//             if(k < (BLOCKDIM - 1))
+//             {
+//                 srhs[BLOCKSIZE * (k + 1) + tid] += -(ak_1 * rhsk);
+
+//                 bk_1 = bk_1 - ak_1 * ck * inv_bk;
+//             }
+
+//             bk = bk_1;
+
+//             k += 1;
+//         }
+//         else
+//         {
+//             const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+
+//             const T wk   = sw[BLOCKSIZE * k + tid];
+//             const T wk_1 = sw[BLOCKSIZE * (k + 1) + tid];
+//             const T vk   = sv[BLOCKSIZE * k + tid];
+//             const T vk_1 = sv[BLOCKSIZE * (k + 1) + tid];
+
+//             sw[BLOCKSIZE * k + tid]  = (bk_1 * wk - ck * wk_1) * det;
+//             sv[BLOCKSIZE * k + tid]  = (bk_1 * vk - ck * vk_1) * det;
+//             smt[BLOCKSIZE * k + tid] = -ck * ck_1 * det;
+
+//             pivot_mask.set_pivoting_to2x2(k);
+
+//             if(k < (BLOCKDIM - 1))
+//             {
+//                 sw[BLOCKSIZE * (k + 1) + tid]  = (-ak_1 * wk + bk * wk_1) * det;
+//                 sv[BLOCKSIZE * (k + 1) + tid]  = (-ak_1 * vk + bk * vk_1) * det;
+//                 smt[BLOCKSIZE * (k + 1) + tid] = bk * ck_1 * det;
+
+//                 pivot_mask.set_pivoting_to2x2(k + 1);
+//             }
+
+//             T bk_2 = static_cast<T>(0);
+
+//             if(k < (BLOCKDIM - 2))
+//             {
+//                 sw[BLOCKSIZE * (k + 2) + tid] += -(-ak_1 * ak_2 * wk + ak_2 * bk * wk_1) * det;
+//             }
+
+//             // |bk   ck  ||xk  |   |rhsk   |
+//             // |ak_1 bk_1||xk_1| = |rhsk _1|
+//             //
+//             //inv = 1 / (bk * bk_1 - ak_1 * ck) |bk_1 -ck  |
+//             //                                  |-ak_1  bk |
+
+//             // L * B * x = y
+//             const T rhsk   = srhs[BLOCKSIZE * k + tid] * det;
+//             const T rhsk_1 = srhs[BLOCKSIZE * (k + 1) + tid] * det;
+
+//             srhs[BLOCKSIZE * k + tid]       = (bk_1 * rhsk - ck * rhsk_1);
+//             srhs[BLOCKSIZE * (k + 1) + tid] = (-ak_1 * rhsk + bk * rhsk_1);
+
+//             if(k < (BLOCKDIM - 2))
+//             {
+//                 srhs[BLOCKSIZE * (k + 2) + tid] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+
+//                 bk_2 = smain[BLOCKSIZE * (k + 2) + tid];
+//                 bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+//             }
+
+//             bk = bk_2;
+//             k += 2;
+//         }
+//     }
+
+//     assert(k == BLOCKDIM);
+//     // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
+//     k--;
+
+//     k -= pivot_mask.get_pivoting(k);
+
+//     // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
+//     while(k >= 0)
+//     {
+//         if(pivot_mask.get_pivoting(k) == 1)
+//         {
+//             const T tmp = smt[BLOCKSIZE * k + tid];
+
+//             sw[BLOCKSIZE * k + tid] += -tmp * sw[BLOCKSIZE * (k + 1) + tid];
+//             sv[BLOCKSIZE * k + tid] += -tmp * sv[BLOCKSIZE * (k + 1) + tid];
+//             srhs[BLOCKSIZE * k + tid] += -tmp * srhs[BLOCKSIZE * (k + 1) + tid];
+
+//             k -= 1;
+//         }
+//         else
+//         {
+//             const T tmp1 = smt[BLOCKSIZE * k + tid];
+//             const T tmp2 = smt[BLOCKSIZE * (k - 1) + tid];
+
+//             sw[BLOCKSIZE * k + tid] += -tmp1 * sw[BLOCKSIZE * (k + 1) + tid];
+//             sw[BLOCKSIZE * (k - 1) + tid] += -tmp2 * sw[BLOCKSIZE * (k + 1) + tid];
+//             sv[BLOCKSIZE * k + tid] += -tmp1 * sv[BLOCKSIZE * (k + 1) + tid];
+//             sv[BLOCKSIZE * (k - 1) + tid] += -tmp2 * sv[BLOCKSIZE * (k + 1) + tid];
+//             srhs[BLOCKSIZE * k + tid] += -tmp1 * srhs[BLOCKSIZE * (k + 1) + tid];
+//             srhs[BLOCKSIZE * (k - 1) + tid] += -tmp2 * srhs[BLOCKSIZE * (k + 1) + tid];
+
+//             k -= 2;
+//         }
+//     }
+
+//     __syncthreads();
+
+//     // Fill S system
+//     constexpr int S_SIZE = 2 * BLOCKSIZE;
+
+//     __shared__ T S_lower[S_SIZE];
+//     __shared__ T S_main[S_SIZE];
+//     __shared__ T S_upper[S_SIZE];
+//     __shared__ T S_rhs[S_SIZE];
+
+//     for(int i = 0; i < 2; i++)
+//     {
+//         const int gid = BLOCKSIZE * i + tid;
+
+//         S_upper[gid] = (gid % 2 == 0) ? sv[gid / 2] : static_cast<T>(1);
+//         S_lower[gid]
+//             = (gid % 2 == 0) ? static_cast<T>(1) : sw[gid / 2 + BLOCKSIZE * (BLOCKDIM - 1)];
+
+//         if(gid >= 1 && gid < S_SIZE - 1)
+//         {
+//             S_main[gid] = (gid % 2 == 0) ? sw[gid / 2] : sv[gid / 2 + BLOCKSIZE * (BLOCKDIM - 1)];
+//         }
+
+//         if(gid < S_SIZE / 2)
+//         {
+//             S_rhs[2 * gid]     = srhs[gid];
+//             S_rhs[2 * gid + 1] = srhs[gid + BLOCKSIZE * (BLOCKDIM - 1)];
+//         }
+//     }
+
+//     if(tid == 0)
+//     {
+//         S_lower[0] = static_cast<T>(0);
+//         S_main[0]  = static_cast<T>(1);
+//     }
+//     if(tid == 1)
+//     {
+//         S_lower[1] = static_cast<T>(0);
+//     }
+//     if(tid == S_SIZE - BLOCKSIZE - 2)
+//     {
+//         S_upper[S_SIZE - 2] = static_cast<T>(0);
+//     }
+//     if(tid == S_SIZE - BLOCKSIZE - 1)
+//     {
+//         S_upper[S_SIZE - 1] = static_cast<T>(0);
+//         S_main[S_SIZE - 1]  = static_cast<T>(1);
+//     }
+
+//     __syncthreads();
+
+//     __shared__ T S_mt[S_SIZE];
+
+//     // Solve S system (solved by 1 thread)
+//     if(tid == 0)
+//     {
+//         PivotMask<S_SIZE> pivot_mask{};
+
+//         int k  = 0;
+//         T   bk = S_main[k];
+
+//         while(k < S_SIZE)
+//         {
+//             T ck   = S_upper[k];
+//             T ck_1 = (k < (S_SIZE - 1)) ? S_upper[k + 1] : static_cast<T>(0);
+//             T bk_1 = (k < (S_SIZE - 1)) ? S_main[k + 1] : static_cast<T>(0);
+//             T ak_1 = (k < (S_SIZE - 1)) ? S_lower[k + 1] : static_cast<T>(0);
+//             T ak_2 = (k < (S_SIZE - 2)) ? S_lower[k + 2] : static_cast<T>(0);
+
+//             // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+//             // pivoting criteria
+//             const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
+
+//             // 1x1 pivoting
+//             if(use_1x1_pivot || k == (S_SIZE - 1))
+//             {
+//                 const T inv_bk = static_cast<T>(1) / bk;
+
+//                 S_mt[k] = ck * inv_bk;
+
+//                 pivot_mask.set_pivoting_to_1x1(k);
+
+//                 // L * B * x = y
+//                 const T rhsk = S_rhs[k] * inv_bk;
+
+//                 S_rhs[k] = rhsk;
+
+//                 if(k < (S_SIZE - 1))
+//                 {
+//                     S_rhs[k + 1] += -(ak_1 * rhsk);
+
+//                     bk_1 = bk_1 - ak_1 * ck * inv_bk;
+//                 }
+
+//                 bk = bk_1;
+
+//                 k += 1;
+//             }
+//             else
+//             {
+//                 const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+
+//                 S_mt[k] = -ck * ck_1 * det;
+
+//                 pivot_mask.set_pivoting_to2x2(k);
+
+//                 if(k < (S_SIZE - 1))
+//                 {
+//                     S_mt[k + 1] = bk * ck_1 * det;
+
+//                     pivot_mask.set_pivoting_to2x2(k + 1);
+//                 }
+
+//                 T bk_2 = static_cast<T>(0);
+
+//                 // L * B * x = y
+//                 const T rhsk   = S_rhs[k] * det;
+//                 const T rhsk_1 = S_rhs[k + 1] * det;
+
+//                 S_rhs[k]     = (bk_1 * rhsk - ck * rhsk_1);
+//                 S_rhs[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+
+//                 if(k < (S_SIZE - 2))
+//                 {
+//                     S_rhs[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+
+//                     bk_2 = S_main[k + 2];
+//                     bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+//                 }
+
+//                 bk = bk_2;
+//                 k += 2;
+//             }
+//         }
+
+//         assert(k == S_SIZE);
+//         // at this point k = S_SIZE. Could just set k = S_SIZE - 1 here
+//         k--;
+
+//         k -= pivot_mask.get_pivoting(k);
+
+//         // backward solve (M^T * rhs = rhs)
+//         while(k >= 0)
+//         {
+//             if(pivot_mask.get_pivoting(k) == 1)
+//             {
+//                 const T tmp = S_mt[k];
+
+//                 S_rhs[k] += -tmp * S_rhs[k + 1];
+
+//                 k -= 1;
+//             }
+//             else
+//             {
+//                 const T tmp1 = S_mt[k];
+//                 const T tmp2 = S_mt[k - 1];
+
+//                 S_rhs[k] += -tmp1 * S_rhs[k + 1];
+//                 S_rhs[k - 1] += -tmp2 * S_rhs[k + 1];
+
+//                 k -= 2;
+//             }
+//         }
+//     }
+
+//     __syncthreads();
+
+//     // Scatter
+//     constexpr int STRIDE = BLOCKSIZE * (BLOCKDIM - 1);
+
+//     // After the swap loop, element at position 2*tid is:
+//     //   tid == 0  -> S_rhs[0]       (not touched by the swap)
+//     //   tid  > 0  -> S_rhs[2*tid - 1] (position 2*tid was swapped with 2*tid-1)
+//     const T val_even = (tid == 0) ? S_rhs[0] : S_rhs[2 * tid - 1];
+
+//     // After the swap loop, element at position 2*i+1 is:
+//     //   2*tid+1 < S_SIZE-1  -> S_rhs[2*tid + 2] (swapped with its right neighbour)
+//     //   2*tid+1 == S_SIZE-1 -> S_rhs[S_SIZE-1] (last element, not touched)
+//     const T val_odd = (2 * tid + 1 < S_SIZE - 1) ? S_rhs[2 * tid + 2] : S_rhs[S_SIZE - 1];
+
+//     srhs[tid]          = val_even;
+//     srhs[tid + STRIDE] = val_odd;
+
+//     __syncthreads();
+
+//     // backward solve (S * x = rhs)
+//     const T x1 = (tid >= 1) ? srhs[BLOCKSIZE * (BLOCKDIM - 1) + (tid - 1)] : static_cast<T>(0);
+//     const T x2 = (tid < (BLOCKSIZE - 1)) ? srhs[tid + 1] : static_cast<T>(0);
+
+//     for(int j = 1; j < BLOCKDIM - 1; j++)
+//     {
+//         srhs[BLOCKSIZE * j + tid] = srhs[BLOCKSIZE * j + tid] - sw[BLOCKSIZE * j + tid] * x1
+//                                     - sv[BLOCKSIZE * j + tid] * x2;
+//     }
+
+//     __syncthreads();
+
+//     // Transpose back
+//     for(int i = 0; i < BLOCKDIM; i++)
+//     {
+//         rhs[BLOCKDIM * tid + i + M * batch] = srhs[BLOCKSIZE * i + tid];
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t NCOLS, typename T>
+__global__ void S_solve_fused_kernel(int m,
+                                   const T* __restrict__ lower,
+                                   const T* __restrict__ main,
+                                   const T* __restrict__ upper,
+                                   T* __restrict__ rhs)
 {
     static_assert(BLOCKDIM >= 2);
     static_assert(BLOCKDIM % 2 == 0);
@@ -1469,179 +1847,209 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
     const int tid = threadIdx.x;
     const int bid = blockIdx.x;
 
-    const int batch = bid;
-
     constexpr int M = BLOCKSIZE * BLOCKDIM;
 
-    // Transpose data
-    __shared__ T slower[M];
-    __shared__ T smain[M];
-    __shared__ T supper[M];
-    __shared__ T srhs[M];
+    T srhs[BLOCKDIM * NCOLS];
+    for(int c = 0; c < NCOLS; c++)
+    {
+        for(int i = 0; i < BLOCKDIM; i++)
+        {
+            srhs[BLOCKDIM * c + i] = (BLOCKDIM * tid + i < m)
+                                         ? rhs[BLOCKDIM * tid + i + m * (NCOLS * bid + c)]
+                                         : static_cast<T>(0);
+        }
+    }
 
+    T sw[BLOCKDIM];
+    T sv[BLOCKDIM];
     for(int i = 0; i < BLOCKDIM; i++)
     {
-        slower[BLOCKSIZE * i + tid] = lower[BLOCKDIM * tid + i];
-        smain[BLOCKSIZE * i + tid]  = main[BLOCKDIM * tid + i];
-        supper[BLOCKSIZE * i + tid] = upper[BLOCKDIM * tid + i];
-        srhs[BLOCKSIZE * i + tid]   = rhs[BLOCKDIM * tid + i + M * batch];
+        sw[i] = static_cast<T>(0);
+        sv[i] = static_cast<T>(0);
     }
 
-    __syncthreads();
-
-    // LBMT solve
-    __shared__ T sw[M];
-    __shared__ T sv[M];
-    __shared__ T smt[M];
-
-    T bk = smain[tid];
-
-    PivotMask<BLOCKDIM> pivot_mask{};
-
-    sw[tid]                              = slower[tid];
-    sv[tid + (BLOCKDIM - 1) * BLOCKSIZE] = supper[tid + (BLOCKDIM - 1) * BLOCKSIZE];
-
-    int k = 0;
-    while(k < BLOCKDIM)
     {
-        T ck   = supper[BLOCKSIZE * k + tid];
-        T ck_1 = (k < (BLOCKDIM - 1)) ? supper[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
-        T bk_1 = (k < (BLOCKDIM - 1)) ? smain[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
-        T ak_1 = (k < (BLOCKDIM - 1)) ? slower[BLOCKSIZE * (k + 1) + tid] : static_cast<T>(0);
-        T ak_2 = (k < (BLOCKDIM - 2)) ? slower[BLOCKSIZE * (k + 2) + tid] : static_cast<T>(0);
+        T slower[BLOCKDIM];
+        T smain[BLOCKDIM];
+        T supper[BLOCKDIM];
+        T smt[BLOCKDIM];
 
-        // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
-        // pivoting criteria
-        const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
-
-        // 1x1 pivoting
-        if(use_1x1_pivot || k == (BLOCKDIM - 1))
+        for(int i = 0; i < BLOCKDIM; i++)
         {
-            const T inv_bk = static_cast<T>(1) / bk;
-
-            const T wk = sw[BLOCKSIZE * k + tid];
-            const T vk = sv[BLOCKSIZE * k + tid];
-
-            sw[BLOCKSIZE * k + tid]  = wk * inv_bk;
-            sv[BLOCKSIZE * k + tid]  = vk * inv_bk;
-            smt[BLOCKSIZE * k + tid] = ck * inv_bk;
-
-            pivot_mask.set_pivoting_to_1x1(k);
-
-            if(k < (BLOCKDIM - 1))
-            {
-                sw[BLOCKSIZE * (k + 1) + tid] += -ak_1 * wk * inv_bk;
-            }
-
-            // L * B * x = y
-            const T rhsk = srhs[BLOCKSIZE * k + tid] * inv_bk;
-
-            srhs[BLOCKSIZE * k + tid] = rhsk;
-
-            if(k < (BLOCKDIM - 1))
-            {
-                srhs[BLOCKSIZE * (k + 1) + tid] += -(ak_1 * rhsk);
-
-                bk_1 = bk_1 - ak_1 * ck * inv_bk;
-            }
-
-            bk = bk_1;
-
-            k += 1;
+            slower[i] = (BLOCKDIM * tid + i < m) ? lower[BLOCKDIM * tid + i] : static_cast<T>(0);
+            smain[i]  = (BLOCKDIM * tid + i < m) ? main[BLOCKDIM * tid + i] : static_cast<T>(1);
+            supper[i] = (BLOCKDIM * tid + i < m) ? upper[BLOCKDIM * tid + i] : static_cast<T>(0);
+            smt[i]    = static_cast<T>(0);
         }
-        else
+
+        // LBMT solve
+        T bk = smain[0];
+
+        PivotMask<BLOCKDIM> pivot_mask{};
+
+        sw[0]            = slower[0];
+        sv[BLOCKDIM - 1] = supper[(BLOCKDIM - 1)];
+
+        int k = 0;
+        while(k < BLOCKDIM)
         {
-            const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+            T ck   = supper[k];
+            T ck_1 = (k < (BLOCKDIM - 1)) ? supper[(k + 1)] : static_cast<T>(0);
+            T bk_1 = (k < (BLOCKDIM - 1)) ? smain[(k + 1)] : static_cast<T>(0);
+            T ak_1 = (k < (BLOCKDIM - 1)) ? slower[(k + 1)] : static_cast<T>(0);
+            T ak_2 = (k < (BLOCKDIM - 2)) ? slower[(k + 2)] : static_cast<T>(0);
 
-            const T wk   = sw[BLOCKSIZE * k + tid];
-            const T wk_1 = sw[BLOCKSIZE * (k + 1) + tid];
-            const T vk   = sv[BLOCKSIZE * k + tid];
-            const T vk_1 = sv[BLOCKSIZE * (k + 1) + tid];
+            // decide whether we should use 1x1 or 2x2 pivoting using Bunch-Kaufman
+            // pivoting criteria
+            const bool use_1x1_pivot = bunch_kaufman_criterion(ak_1, ak_2, bk, bk_1, ck, ck_1);
 
-            sw[BLOCKSIZE * k + tid]  = (bk_1 * wk - ck * wk_1) * det;
-            sv[BLOCKSIZE * k + tid]  = (bk_1 * vk - ck * vk_1) * det;
-            smt[BLOCKSIZE * k + tid] = -ck * ck_1 * det;
-
-            pivot_mask.set_pivoting_to2x2(k);
-
-            if(k < (BLOCKDIM - 1))
+            // 1x1 pivoting
+            if(use_1x1_pivot || k == (BLOCKDIM - 1))
             {
-                sw[BLOCKSIZE * (k + 1) + tid]  = (-ak_1 * wk + bk * wk_1) * det;
-                sv[BLOCKSIZE * (k + 1) + tid]  = (-ak_1 * vk + bk * vk_1) * det;
-                smt[BLOCKSIZE * (k + 1) + tid] = bk * ck_1 * det;
+                const T inv_bk = static_cast<T>(1) / bk;
 
-                pivot_mask.set_pivoting_to2x2(k + 1);
+                const T wk = sw[k];
+                const T vk = sv[k];
+
+                sw[k]  = wk * inv_bk;
+                sv[k]  = vk * inv_bk;
+                smt[k] = ck * inv_bk;
+
+                pivot_mask.set_pivoting_to_1x1(k);
+
+                if(k < (BLOCKDIM - 1))
+                {
+                    sw[k + 1] += -ak_1 * wk * inv_bk;
+                }
+
+                // L * B * x = y
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    const T rhsk = srhs[BLOCKDIM * c + k] * inv_bk;
+
+                    srhs[BLOCKDIM * c + k] = rhsk;
+
+                    if(k < (BLOCKDIM - 1))
+                    {
+                        srhs[BLOCKDIM * c + (k + 1)] += -(ak_1 * rhsk);
+                    }
+                }
+
+                if(k < (BLOCKDIM - 1))
+                {
+                    bk_1 = bk_1 - ak_1 * ck * inv_bk;
+                }
+
+                bk = bk_1;
+
+                k += 1;
             }
-
-            T bk_2 = static_cast<T>(0);
-
-            if(k < (BLOCKDIM - 2))
+            else
             {
-                sw[BLOCKSIZE * (k + 2) + tid] += -(-ak_1 * ak_2 * wk + ak_2 * bk * wk_1) * det;
+                const T det = static_cast<T>(1) / (bk * bk_1 - ak_1 * ck);
+
+                const T wk   = sw[k];
+                const T wk_1 = sw[k + 1];
+                const T vk   = sv[k];
+                const T vk_1 = sv[k + 1];
+
+                sw[k]  = (bk_1 * wk - ck * wk_1) * det;
+                sv[k]  = (bk_1 * vk - ck * vk_1) * det;
+                smt[k] = -ck * ck_1 * det;
+
+                pivot_mask.set_pivoting_to2x2(k);
+
+                if(k < (BLOCKDIM - 1))
+                {
+                    sw[k + 1]  = (-ak_1 * wk + bk * wk_1) * det;
+                    sv[k + 1]  = (-ak_1 * vk + bk * vk_1) * det;
+                    smt[k + 1] = bk * ck_1 * det;
+
+                    pivot_mask.set_pivoting_to2x2(k + 1);
+                }
+
+                T bk_2 = static_cast<T>(0);
+
+                if(k < (BLOCKDIM - 2))
+                {
+                    sw[k + 2] += -(-ak_1 * ak_2 * wk + ak_2 * bk * wk_1) * det;
+                }
+
+                // |bk   ck  ||xk  |   |rhsk   |
+                // |ak_1 bk_1||xk_1| = |rhsk _1|
+                //
+                //inv = 1 / (bk * bk_1 - ak_1 * ck) |bk_1 -ck  |
+                //                                  |-ak_1  bk |
+
+                // L * B * x = y
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    const T rhsk   = srhs[BLOCKDIM * c + k] * det;
+                    const T rhsk_1 = srhs[BLOCKDIM * c + k + 1] * det;
+
+                    srhs[BLOCKDIM * c + k]     = (bk_1 * rhsk - ck * rhsk_1);
+                    srhs[BLOCKDIM * c + k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+
+                    if(k < (BLOCKDIM - 2))
+                    {
+                        srhs[BLOCKDIM * c + k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                    }
+                }
+
+                if(k < (BLOCKDIM - 2))
+                {
+                    bk_2 = smain[k + 2];
+                    bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+                }
+
+                bk = bk_2;
+                k += 2;
             }
+        }
 
-            // |bk   ck  ||xk  |   |rhsk   |
-            // |ak_1 bk_1||xk_1| = |rhsk _1|
-            //
-            //inv = 1 / (bk * bk_1 - ak_1 * ck) |bk_1 -ck  |
-            //                                  |-ak_1  bk |
+        assert(k == BLOCKDIM);
+        // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
+        k--;
 
-            // L * B * x = y
-            const T rhsk   = srhs[BLOCKSIZE * k + tid] * det;
-            const T rhsk_1 = srhs[BLOCKSIZE * (k + 1) + tid] * det;
+        k -= pivot_mask.get_pivoting(k);
 
-            srhs[BLOCKSIZE * k + tid]       = (bk_1 * rhsk - ck * rhsk_1);
-            srhs[BLOCKSIZE * (k + 1) + tid] = (-ak_1 * rhsk + bk * rhsk_1);
-
-            if(k < (BLOCKDIM - 2))
+        // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
+        while(k >= 0)
+        {
+            if(pivot_mask.get_pivoting(k) == 1)
             {
-                srhs[BLOCKSIZE * (k + 2) + tid] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                const T tmp = smt[k];
 
-                bk_2 = smain[BLOCKSIZE * (k + 2) + tid];
-                bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
+                sw[k] += -tmp * sw[k + 1];
+                sv[k] += -tmp * sv[k + 1];
+
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    srhs[BLOCKDIM * c + k] += -tmp * srhs[BLOCKDIM * c + k + 1];
+                }
+
+                k -= 1;
             }
+            else
+            {
+                const T tmp1 = smt[k];
+                const T tmp2 = smt[k - 1];
 
-            bk = bk_2;
-            k += 2;
+                sw[k] += -tmp1 * sw[k + 1];
+                sw[k - 1] += -tmp2 * sw[k + 1];
+                sv[k] += -tmp1 * sv[k + 1];
+                sv[k - 1] += -tmp2 * sv[k + 1];
+
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    srhs[BLOCKDIM * c + k] += -tmp1 * srhs[BLOCKDIM * c + k + 1];
+                    srhs[BLOCKDIM * c + k - 1] += -tmp2 * srhs[BLOCKDIM * c + k + 1];
+                }
+
+                k -= 2;
+            }
         }
     }
-
-    assert(k == BLOCKDIM);
-    // at this point k = BLOCKDIM. Could just set k = BLOCKDIM - 1 here
-    k--;
-
-    k -= pivot_mask.get_pivoting(k);
-
-    // backward solve (M^T * w = w, M^T * v = v, and M^T * rhs = rhs)
-    while(k >= 0)
-    {
-        if(pivot_mask.get_pivoting(k) == 1)
-        {
-            const T tmp = smt[BLOCKSIZE * k + tid];
-
-            sw[BLOCKSIZE * k + tid] += -tmp * sw[BLOCKSIZE * (k + 1) + tid];
-            sv[BLOCKSIZE * k + tid] += -tmp * sv[BLOCKSIZE * (k + 1) + tid];
-            srhs[BLOCKSIZE * k + tid] += -tmp * srhs[BLOCKSIZE * (k + 1) + tid];
-
-            k -= 1;
-        }
-        else
-        {
-            const T tmp1 = smt[BLOCKSIZE * k + tid];
-            const T tmp2 = smt[BLOCKSIZE * (k - 1) + tid];
-
-            sw[BLOCKSIZE * k + tid] += -tmp1 * sw[BLOCKSIZE * (k + 1) + tid];
-            sw[BLOCKSIZE * (k - 1) + tid] += -tmp2 * sw[BLOCKSIZE * (k + 1) + tid];
-            sv[BLOCKSIZE * k + tid] += -tmp1 * sv[BLOCKSIZE * (k + 1) + tid];
-            sv[BLOCKSIZE * (k - 1) + tid] += -tmp2 * sv[BLOCKSIZE * (k + 1) + tid];
-            srhs[BLOCKSIZE * k + tid] += -tmp1 * srhs[BLOCKSIZE * (k + 1) + tid];
-            srhs[BLOCKSIZE * (k - 1) + tid] += -tmp2 * srhs[BLOCKSIZE * (k + 1) + tid];
-
-            k -= 2;
-        }
-    }
-
-    __syncthreads();
 
     // Fill S system
     constexpr int S_SIZE = 2 * BLOCKSIZE;
@@ -1649,54 +2057,46 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
     __shared__ T S_lower[S_SIZE];
     __shared__ T S_main[S_SIZE];
     __shared__ T S_upper[S_SIZE];
-    __shared__ T S_rhs[S_SIZE];
+    __shared__ T S_rhs[S_SIZE * NCOLS];
 
-    for(int i = 0; i < 2; i++)
-    {
-        const int gid = BLOCKSIZE * i + tid;
+    S_lower[2 * tid]     = static_cast<T>(1);
+    S_lower[2 * tid + 1] = sw[(BLOCKDIM - 1)];
 
-        S_upper[gid] = (gid % 2 == 0) ? sv[gid / 2] : static_cast<T>(1);
-        S_lower[gid]
-            = (gid % 2 == 0) ? static_cast<T>(1) : sw[gid / 2 + BLOCKSIZE * (BLOCKDIM - 1)];
+    S_upper[2 * tid]     = sv[0];
+    S_upper[2 * tid + 1] = static_cast<T>(1);
 
-        if(gid >= 1 && gid < S_SIZE - 1)
-        {
-            S_main[gid] = (gid % 2 == 0) ? sw[gid / 2] : sv[gid / 2 + BLOCKSIZE * (BLOCKDIM - 1)];
-        }
-
-        if(gid < S_SIZE / 2)
-        {
-            S_rhs[2 * gid]     = srhs[gid];
-            S_rhs[2 * gid + 1] = srhs[gid + BLOCKSIZE * (BLOCKDIM - 1)];
-        }
-    }
+    S_main[2 * tid]     = sw[0];
+    S_main[2 * tid + 1] = sv[(BLOCKDIM - 1)];
 
     if(tid == 0)
     {
         S_lower[0] = static_cast<T>(0);
-        S_main[0]  = static_cast<T>(1);
-    }
-    if(tid == 1)
-    {
         S_lower[1] = static_cast<T>(0);
+
+        S_main[0] = static_cast<T>(1);
     }
-    if(tid == S_SIZE - BLOCKSIZE - 2)
+
+    if(tid == (BLOCKSIZE - 1))
     {
-        S_upper[S_SIZE - 2] = static_cast<T>(0);
+        S_upper[2 * (BLOCKSIZE - 1)]     = static_cast<T>(0);
+        S_upper[2 * (BLOCKSIZE - 1) + 1] = static_cast<T>(0);
+
+        S_main[2 * (BLOCKSIZE - 1) + 1] = static_cast<T>(1);
     }
-    if(tid == S_SIZE - BLOCKSIZE - 1)
+
+    for(int c = 0; c < NCOLS; c++)
     {
-        S_upper[S_SIZE - 1] = static_cast<T>(0);
-        S_main[S_SIZE - 1]  = static_cast<T>(1);
+        S_rhs[S_SIZE * c + 2 * tid]     = srhs[BLOCKDIM * c + 0];
+        S_rhs[S_SIZE * c + 2 * tid + 1] = srhs[BLOCKDIM * c + (BLOCKDIM - 1)];
     }
 
     __syncthreads();
 
+    __shared__ T S_mt[S_SIZE];
+
     // Solve S system (solved by 1 thread)
     if(tid == 0)
     {
-        __shared__ T S_mt[S_SIZE];
-
         PivotMask<S_SIZE> pivot_mask{};
 
         int k  = 0;
@@ -1724,14 +2124,20 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
                 pivot_mask.set_pivoting_to_1x1(k);
 
                 // L * B * x = y
-                const T rhsk = S_rhs[k] * inv_bk;
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    const T rhsk = S_rhs[S_SIZE * c + k] * inv_bk;
 
-                S_rhs[k] = rhsk;
+                    S_rhs[S_SIZE * c + k] = rhsk;
+
+                    if(k < (S_SIZE - 1))
+                    {
+                        S_rhs[S_SIZE * c + k + 1] += -(ak_1 * rhsk);
+                    }
+                }
 
                 if(k < (S_SIZE - 1))
                 {
-                    S_rhs[k + 1] += -(ak_1 * rhsk);
-
                     bk_1 = bk_1 - ak_1 * ck * inv_bk;
                 }
 
@@ -1757,16 +2163,22 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
                 T bk_2 = static_cast<T>(0);
 
                 // L * B * x = y
-                const T rhsk   = S_rhs[k] * det;
-                const T rhsk_1 = S_rhs[k + 1] * det;
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    const T rhsk   = S_rhs[S_SIZE * c + k] * det;
+                    const T rhsk_1 = S_rhs[S_SIZE * c + k + 1] * det;
 
-                S_rhs[k]     = (bk_1 * rhsk - ck * rhsk_1);
-                S_rhs[k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+                    S_rhs[S_SIZE * c + k]     = (bk_1 * rhsk - ck * rhsk_1);
+                    S_rhs[S_SIZE * c + k + 1] = (-ak_1 * rhsk + bk * rhsk_1);
+
+                    if(k < (S_SIZE - 2))
+                    {
+                        S_rhs[S_SIZE * c + k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
+                    }
+                }
 
                 if(k < (S_SIZE - 2))
                 {
-                    S_rhs[k + 2] += -(-ak_1 * ak_2 * rhsk + ak_2 * bk * rhsk_1);
-
                     bk_2 = S_main[k + 2];
                     bk_2 = bk_2 - ak_2 * bk * ck_1 * det;
                 }
@@ -1789,7 +2201,10 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
             {
                 const T tmp = S_mt[k];
 
-                S_rhs[k] += -tmp * S_rhs[k + 1];
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    S_rhs[S_SIZE * c + k] += -tmp * S_rhs[S_SIZE * c + k + 1];
+                }
 
                 k -= 1;
             }
@@ -1798,8 +2213,11 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
                 const T tmp1 = S_mt[k];
                 const T tmp2 = S_mt[k - 1];
 
-                S_rhs[k] += -tmp1 * S_rhs[k + 1];
-                S_rhs[k - 1] += -tmp2 * S_rhs[k + 1];
+                for(int c = 0; c < NCOLS; c++)
+                {
+                    S_rhs[S_SIZE * c + k] += -tmp1 * S_rhs[S_SIZE * c + k + 1];
+                    S_rhs[S_SIZE * c + k - 1] += -tmp2 * S_rhs[S_SIZE * c + k + 1];
+                }
 
                 k -= 2;
             }
@@ -1809,40 +2227,53 @@ __global__ void S_solve_fused_kernel(const T* __restrict__ lower,
     __syncthreads();
 
     // Scatter
-    constexpr int STRIDE = BLOCKSIZE * (BLOCKDIM - 1);
-
-    // After the swap loop, element at position 2*tid is:
-    //   tid == 0  -> S_rhs[0]       (not touched by the swap)
-    //   tid  > 0  -> S_rhs[2*tid - 1] (position 2*tid was swapped with 2*tid-1)
-    const T val_even = (tid == 0) ? S_rhs[0] : S_rhs[2 * tid - 1];
-
-    // After the swap loop, element at position 2*i+1 is:
-    //   2*tid+1 < S_SIZE-1  -> S_rhs[2*tid + 2] (swapped with its right neighbour)
-    //   2*tid+1 == S_SIZE-1 -> S_rhs[S_SIZE-1] (last element, not touched)
-    const T val_odd = (2 * tid + 1 < S_SIZE - 1) ? S_rhs[2 * tid + 2] : S_rhs[S_SIZE - 1];
-
-    srhs[tid]          = val_even;
-    srhs[tid + STRIDE] = val_odd;
-
-    __syncthreads();
-
-    // backward solve (S * x = rhs)
-    const T x1 = (tid >= 1) ? srhs[BLOCKSIZE * (BLOCKDIM - 1) + (tid - 1)] : static_cast<T>(0);
-    const T x2 = (tid < (BLOCKSIZE - 1)) ? srhs[tid + 1] : static_cast<T>(0);
-
-    for(int j = 1; j < BLOCKDIM - 1; j++)
+    for(int c = 0; c < NCOLS; c++)
     {
-        srhs[BLOCKSIZE * j + tid] = srhs[BLOCKSIZE * j + tid] - sw[BLOCKSIZE * j + tid] * x1
-                                    - sv[BLOCKSIZE * j + tid] * x2;
+        // After the swap loop, element at position 2*tid is:
+        //   tid == 0  -> S_rhs[0]       (not touched by the swap)
+        //   tid  > 0  -> S_rhs[2*tid - 1] (position 2*tid was swapped with 2*tid-1)
+        const T val_even = (tid == 0) ? S_rhs[S_SIZE * c + 0] : S_rhs[S_SIZE * c + 2 * tid - 1];
+
+        // After the swap loop, element at position 2*i+1 is:
+        //   2*tid+1 < S_SIZE-1  -> S_rhs[2*tid + 2] (swapped with its right neighbour)
+        //   2*tid+1 == S_SIZE-1 -> S_rhs[S_SIZE-1] (last element, not touched)
+        const T val_odd = (2 * tid + 1 < S_SIZE - 1) ? S_rhs[S_SIZE * c + 2 * tid + 2]
+                                                     : S_rhs[S_SIZE * c + S_SIZE - 1];
+
+        srhs[BLOCKDIM * c + 0]            = val_even;
+        srhs[BLOCKDIM * c + BLOCKDIM - 1] = val_odd;
+
+        // backward solve (S * x = rhs)
+        const T tmp1
+            = __shfl_sync(0xFFFFFFFF, srhs[BLOCKDIM * c + (BLOCKDIM - 1)], tid - 1, BLOCKSIZE);
+        const T tmp2 = __shfl_sync(0xFFFFFFFF, srhs[BLOCKDIM * c + 0], tid + 1, BLOCKSIZE);
+        const T x1   = (tid >= 1) ? tmp1 : static_cast<T>(0);
+        const T x2   = (tid < (BLOCKSIZE - 1)) ? tmp2 : static_cast<T>(0);
+
+        for(int j = 1; j < BLOCKDIM - 1; j++)
+        {
+            srhs[BLOCKDIM * c + j] = srhs[BLOCKDIM * c + j] - sw[j] * x1 - sv[j] * x2;
+        }
     }
 
-    __syncthreads();
-
     // Transpose back
-    for(int i = 0; i < BLOCKDIM; i++)
+    for(int c = 0; c < NCOLS; c++)
     {
-        rhs[BLOCKDIM * tid + i + M * batch] = srhs[BLOCKSIZE * i + tid];
+        for(int i = 0; i < BLOCKDIM; i++)
+        {
+            if((BLOCKDIM * tid + i) < m)
+            {
+                rhs[BLOCKDIM * tid + i + m * (NCOLS * bid + c)] = srhs[BLOCKDIM * c + i];
+            }
+        }
     }
 }
 
-#endif // TRIDIAGONAL_SOLVER_SPIKE_KERNELS_H
+
+
+
+
+
+
+
+#endif // TRIDIAGONAL_SPIKE_KERNELS_H

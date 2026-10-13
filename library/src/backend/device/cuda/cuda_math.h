@@ -38,7 +38,7 @@
 #include "cuda_ruiz_scaling.h"
 #include "cuda_scale.h"
 #include "cuda_ssor.h"
-#include "cuda_tridiagonal.h"
+#include "cuda_tridiagonal_non_pivoting.h"
 #include "cuda_tridiagonal_partial_pivoting.h"
 
 namespace linalg

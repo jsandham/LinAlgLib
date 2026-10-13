@@ -141,9 +141,9 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
             pivot_data.main_pad[level].resize(m_pad);
             pivot_data.upper_pad[level].resize(m_pad);
             pivot_data.B_pad[level].resize(m_pad * n);
-            pivot_data.w[level].resize(m_pad);
-            pivot_data.v[level].resize(m_pad);
-            pivot_data.mt[level].resize(m_pad);
+            pivot_data.w_pad[level].resize(m_pad);
+            pivot_data.v_pad[level].resize(m_pad);
+            pivot_data.mt_pad[level].resize(m_pad);
 
             const int S_size = 2 * m_pad / BLOCKDIM;
 
@@ -193,9 +193,9 @@ void linalg::tridiagonal_solver<T>::move_to_device()
             pivot_data.main_pad[i].move_to_device();
             pivot_data.upper_pad[i].move_to_device();
             pivot_data.B_pad[i].move_to_device();
-            pivot_data.w[i].move_to_device();
-            pivot_data.v[i].move_to_device();
-            pivot_data.mt[i].move_to_device();
+            pivot_data.w_pad[i].move_to_device();
+            pivot_data.v_pad[i].move_to_device();
+            pivot_data.mt_pad[i].move_to_device();
             pivot_data.S_lower[i].move_to_device();
             pivot_data.S_main[i].move_to_device();
             pivot_data.S_upper[i].move_to_device();
@@ -231,9 +231,9 @@ void linalg::tridiagonal_solver<T>::move_to_host()
             pivot_data.main_pad[i].move_to_host();
             pivot_data.upper_pad[i].move_to_host();
             pivot_data.B_pad[i].move_to_host();
-            pivot_data.w[i].move_to_host();
-            pivot_data.v[i].move_to_host();
-            pivot_data.mt[i].move_to_host();
+            pivot_data.w_pad[i].move_to_host();
+            pivot_data.v_pad[i].move_to_host();
+            pivot_data.mt_pad[i].move_to_host();
             pivot_data.S_lower[i].move_to_host();
             pivot_data.S_main[i].move_to_host();
             pivot_data.S_upper[i].move_to_host();

@@ -94,11 +94,11 @@ namespace linalg
         vector<T> B_pad[tridiagonal_max_recursion_levels];
 
         /*! Working vector used during pivoting factorization. */
-        vector<T> w[tridiagonal_max_recursion_levels];
+        vector<T> w_pad[tridiagonal_max_recursion_levels];
         /*! Working vector used during pivoting factorization. */
-        vector<T> v[tridiagonal_max_recursion_levels];
+        vector<T> v_pad[tridiagonal_max_recursion_levels];
         /*! Working vector used during pivoting factorization. */
-        vector<T> mt[tridiagonal_max_recursion_levels];
+        vector<T> mt_pad[tridiagonal_max_recursion_levels];
 
         /*! Lower block of the Schur complement for each recursion level. */
         vector<T> S_lower[tridiagonal_max_recursion_levels];

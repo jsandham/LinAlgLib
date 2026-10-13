@@ -33,7 +33,7 @@
 
 #include "../../../../include/direct_solvers/tridiagonal/tridiagonal.h"
 
-#include "cuda_tridiagonal.h"
+#include "cuda_tridiagonal_non_pivoting.h"
 
 #include "tridiagonal_cyclic_reduction_kernels.cuh"
 #include "tridiagonal_solver_kernels.cuh"

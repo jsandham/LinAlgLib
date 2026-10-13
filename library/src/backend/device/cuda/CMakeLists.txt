@@ -40,8 +40,10 @@ target_sources(linalglib
     cuda_csrtrsv.cu
     cuda_csrgemm.cu
     cuda_csrgeam.cu
-    cuda_tridiagonal.cu
+    cuda_tridiagonal_non_pivoting.cu
     cuda_tridiagonal_partial_pivoting.cu
+    cuda_tridiagonal_spike_solver.cu
+    cuda_tridiagonal_spike_solver_small.cu
     cuda_math.cu
     cuda_memory.cu
     cuda_primitives.cu

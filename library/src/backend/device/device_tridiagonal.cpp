@@ -32,7 +32,7 @@
 #include "../../utility.h"
 
 #if defined(LINALGLIB_HAS_CUDA)
-#include "cuda/cuda_tridiagonal.h"
+#include "cuda/cuda_tridiagonal_non_pivoting.h"
 #include "cuda/cuda_tridiagonal_partial_pivoting.h"
 #endif
 
@@ -47,6 +47,7 @@ void linalg::device_partial_pivoting_algorithm(int               m,
                                                pivoting_data<T>& pivot_data)
 {
     ROUTINE_TRACE("linalg::device_partial_pivoting_algorithm");
+
     if constexpr(is_cuda_available())
     {
         const int L = pivoting_data<T>::tridiagonal_max_recursion_levels;
@@ -54,9 +55,9 @@ void linalg::device_partial_pivoting_algorithm(int               m,
         T*        main_pad_ptrs[L];
         T*        upper_pad_ptrs[L];
         T*        B_pad_ptrs[L];
-        T*        w_ptrs[L];
-        T*        v_ptrs[L];
-        T*        mt_ptrs[L];
+        T*        w_pad_ptrs[L];
+        T*        v_pad_ptrs[L];
+        T*        mt_pad_ptrs[L];
         T*        S_lower_ptrs[L];
         T*        S_main_ptrs[L];
         T*        S_upper_ptrs[L];
@@ -68,9 +69,9 @@ void linalg::device_partial_pivoting_algorithm(int               m,
             main_pad_ptrs[i]  = pivot_data.main_pad[i].get_vec();
             upper_pad_ptrs[i] = pivot_data.upper_pad[i].get_vec();
             B_pad_ptrs[i]     = pivot_data.B_pad[i].get_vec();
-            w_ptrs[i]         = pivot_data.w[i].get_vec();
-            v_ptrs[i]         = pivot_data.v[i].get_vec();
-            mt_ptrs[i]        = pivot_data.mt[i].get_vec();
+            w_pad_ptrs[i]     = pivot_data.w_pad[i].get_vec();
+            v_pad_ptrs[i]     = pivot_data.v_pad[i].get_vec();
+            mt_pad_ptrs[i]    = pivot_data.mt_pad[i].get_vec();
             S_lower_ptrs[i]   = pivot_data.S_lower[i].get_vec();
             S_main_ptrs[i]    = pivot_data.S_main[i].get_vec();
             S_upper_ptrs[i]   = pivot_data.S_upper[i].get_vec();
@@ -88,9 +89,9 @@ void linalg::device_partial_pivoting_algorithm(int               m,
                                                main_pad_ptrs,
                                                upper_pad_ptrs,
                                                B_pad_ptrs,
-                                               w_ptrs,
-                                               v_ptrs,
-                                               mt_ptrs,
+                                               w_pad_ptrs,
+                                               v_pad_ptrs,
+                                               mt_pad_ptrs,
                                                S_lower_ptrs,
                                                S_main_ptrs,
                                                S_upper_ptrs,
