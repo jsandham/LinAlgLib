@@ -95,7 +95,9 @@ void linalg::device_partial_pivoting_algorithm(int               m,
                                                S_lower_ptrs,
                                                S_main_ptrs,
                                                S_upper_ptrs,
-                                               S_B_ptrs));
+                                               S_B_ptrs,
+                                               pivot_data.scratch.get_vec(),
+                                               pivot_data.mask.get_vec()));
     }
     else
     {
