@@ -141,8 +141,6 @@ namespace linalg
                                                              T**      S_B,
                                                              T*       scratch,
                                                              int*     mask,
-                                                             T*       s_scratch,
-                                                             int*     s_mask,
                                                              int      level = 0)
     {
         ROUTINE_TRACE("tridiagonal_partial_pivoting_solver_dispatch");
@@ -169,8 +167,6 @@ namespace linalg
                                            S_B,
                                            scratch,
                                            mask,
-                                           s_scratch,
-                                           s_mask,
                                            level);
         }
         else
@@ -218,9 +214,7 @@ void linalg::cuda_partial_pivoting_solver(int      m,
                                           T**      S_upper,
                                           T**      S_B,
                                           T*       scratch,
-                                          int*     mask,
-                                          T*       s_scratch,
-                                          int*     s_mask)
+                                          int*     mask)
 {
     ROUTINE_TRACE("cuda_partial_pivoting_solver");
 
@@ -243,9 +237,7 @@ void linalg::cuda_partial_pivoting_solver(int      m,
                                                  S_upper,
                                                  S_B,
                                                  scratch,
-                                                 mask,
-                                                 s_scratch,
-                                                 s_mask);
+                                                 mask);
 }
 
 // Explicit instantiations
@@ -268,8 +260,6 @@ template void linalg::cuda_partial_pivoting_solver<double>(int,
                                                            double**,
                                                            double**,
                                                            double*,
-                                                           int*,
-                                                           double*,
                                                            int*);
 template void linalg::cuda_partial_pivoting_solver<float>(int,
                                                           int,
@@ -289,7 +279,5 @@ template void linalg::cuda_partial_pivoting_solver<float>(int,
                                                           float**,
                                                           float**,
                                                           float**,
-                                                          float*,
-                                                          int*,
                                                           float*,
                                                           int*);

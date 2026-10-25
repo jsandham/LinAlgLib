@@ -82,22 +82,6 @@ namespace linalg
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
-    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t NCOLS, typename T>
-    static void launch_solve_fused(int m,
-                                   int n,
-                                   const T* __restrict__ lower,
-                                   const T* __restrict__ main,
-                                   const T* __restrict__ upper,
-                                   const T* __restrict__ B,
-                                   T* __restrict__ X)
-    {
-        ROUTINE_TRACE("launch_solve_fused");
-
-        solve_fused_kernel<BLOCKSIZE, BLOCKDIM, NCOLS>
-            <<<n / NCOLS, BLOCKSIZE>>>(m, lower, main, upper, B, X);
-        CHECK_CUDA_LAUNCH_ERROR();
-    }
-
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void launch_solve_fused_wvmt(int m,
                                         const T* __restrict__ lower,
@@ -219,38 +203,6 @@ namespace linalg
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void tridiagonal_spike_solver_fused(int m,
-                                               int n,
-                                               const T* __restrict__ lower,
-                                               const T* __restrict__ main,
-                                               const T* __restrict__ upper,
-                                               const T* __restrict__ B,
-                                               T* __restrict__ X)
-    {
-        ROUTINE_TRACE("tridiagonal_spike_solver_fused");
-
-        if(n < 500)
-        {
-            // For small number of columns we want to launch enough blocks to try and saturate the GPU
-            // as much as possible. TODO: We should tune this based on the card being used.
-            launch_solve_fused<BLOCKSIZE, BLOCKDIM, 1>(m, n, lower, main, upper, B, X);
-        }
-        else
-        {
-            int remainder = n % 8;
-            int nn        = n - remainder;
-
-            launch_solve_fused<BLOCKSIZE, BLOCKDIM, 8>(m, nn, lower, main, upper, B, X);
-
-            if(remainder > 0)
-            {
-                launch_solve_fused<BLOCKSIZE, BLOCKDIM, 1>(
-                    m, remainder, lower, main, upper, B + m * nn, X + m * nn);
-            }
-        }
-    }
-
-    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void tridiagonal_spike_solver_fused2(int m,
                                                 int n,
                                                 const T* __restrict__ lower,
                                                 const T* __restrict__ main,
@@ -258,11 +210,9 @@ namespace linalg
                                                 const T* __restrict__ B,
                                                 T* __restrict__ X,
                                                 T* __restrict__ scratch,
-                                                int* __restrict__ mask,
-                                                T* __restrict__ s_scratch,
-                                                int* __restrict__ s_mask)
+                                                int* __restrict__ mask)
     {
-        ROUTINE_TRACE("tridiagonal_spike_solver_fused2");
+        ROUTINE_TRACE("tridiagonal_spike_solver_fused");
 
         T* coeff1 = scratch + 0 * BLOCKSIZE * BLOCKDIM;
         T* coeff2 = scratch + 1 * BLOCKSIZE * BLOCKDIM;
@@ -275,12 +225,14 @@ namespace linalg
 
         constexpr int S_SIZE = 2 * BLOCKSIZE;
 
-        T* s_coeff1 = s_scratch + 0 * S_SIZE;
-        T* s_coeff2 = s_scratch + 1 * S_SIZE;
-        T* s_coeff3 = s_scratch + 2 * S_SIZE;
-        T* s_coeff4 = s_scratch + 3 * S_SIZE;
-        T* s_coeff5 = s_scratch + 4 * S_SIZE;
-        T* s_mt     = s_scratch + 5 * S_SIZE;
+        T* s_coeff1 = scratch + 8 * BLOCKSIZE * BLOCKDIM + 0 * S_SIZE;
+        T* s_coeff2 = scratch + 8 * BLOCKSIZE * BLOCKDIM + 1 * S_SIZE;
+        T* s_coeff3 = scratch + 8 * BLOCKSIZE * BLOCKDIM + 2 * S_SIZE;
+        T* s_coeff4 = scratch + 8 * BLOCKSIZE * BLOCKDIM + 3 * S_SIZE;
+        T* s_coeff5 = scratch + 8 * BLOCKSIZE * BLOCKDIM + 4 * S_SIZE;
+        T* s_mt     = scratch + 8 * BLOCKSIZE * BLOCKDIM + 5 * S_SIZE;
+
+        int* s_mask = mask + 32;
 
         CHECK_CUDA(cudaMemset(w, 0, sizeof(T) * BLOCKSIZE * BLOCKDIM));
         CHECK_CUDA(cudaMemset(v, 0, sizeof(T) * BLOCKSIZE * BLOCKDIM));
@@ -406,8 +358,6 @@ void linalg::tridiagonal_spike_solver_small(int      m,
                                             T**      S_B,
                                             T*       scratch,
                                             int*     mask,
-                                            T*       s_scratch,
-                                            int*     s_mask,
                                             int      level)
 {
     ROUTINE_TRACE("tridiagonal_spike_solver_small");
@@ -416,7 +366,7 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T**, T**, int);
     using solve_fused_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
     using solve_fused_launch_ptr2
-        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, int*, T*, int*);
+        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, int*);
 
     static const std::map<int, solve_launch_ptr> solve_dispatch = {
         {4, tridiagonal_spike_solver_one_thread_per_system<256, 4>},
@@ -426,18 +376,11 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         {64, tridiagonal_spike_solver_one_thread_per_system<256, 64>},
     };
 
-    static const std::map<int, solve_fused_launch_ptr> solve_fused_dispatch = {
+    static const std::map<int, solve_fused_launch_ptr2> solve_fused_dispatch2 = {
         {128, tridiagonal_spike_solver_fused<32, 4>},
         {256, tridiagonal_spike_solver_fused<32, 8>},
         {512, tridiagonal_spike_solver_fused<32, 16>},
         {1024, tridiagonal_spike_solver_fused<32, 32>},
-    };
-
-    static const std::map<int, solve_fused_launch_ptr2> solve_fused_dispatch2 = {
-        {128, tridiagonal_spike_solver_fused2<32, 4>},
-        {256, tridiagonal_spike_solver_fused2<32, 8>},
-        {512, tridiagonal_spike_solver_fused2<32, 16>},
-        {1024, tridiagonal_spike_solver_fused2<32, 32>},
     };
 
     if(m <= 64)
@@ -456,21 +399,11 @@ void linalg::tridiagonal_spike_solver_small(int      m,
     }
     else
     {
-        // auto dispatch_it = solve_fused_dispatch.lower_bound(m);
-        // if(dispatch_it != solve_fused_dispatch.end())
-        // {
-        //     dispatch_it->second(m, n, lower_diag, main_diag, upper_diag, B, X);
-        // }
-        // else
-        // {
-        //     std::cout << "Error: Dispath for problem size <= 1024 failed." << std::endl;
-        //     return;
-        // }
         auto dispatch_it = solve_fused_dispatch2.lower_bound(m);
         if(dispatch_it != solve_fused_dispatch2.end())
         {
             dispatch_it->second(
-                m, n, lower_diag, main_diag, upper_diag, B, X, scratch, mask, s_scratch, s_mask);
+                m, n, lower_diag, main_diag, upper_diag, B, X, scratch, mask);
         }
         else
         {
@@ -501,8 +434,6 @@ template void linalg::tridiagonal_spike_solver_small<double>(int,
                                                              double**,
                                                              double*,
                                                              int*,
-                                                             double*,
-                                                             int*,
                                                              int);
 template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             int,
@@ -522,8 +453,6 @@ template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             float**,
                                                             float**,
                                                             float**,
-                                                            float*,
-                                                            int*,
                                                             float*,
                                                             int*,
                                                             int);

@@ -48,9 +48,7 @@ namespace linalg
                                       T**      S_upper,
                                       T**      S_B,
                                       T*       scratch,
-                                      int*     mask,
-                                      T*       s_scratch,
-                                      int*     s_mask);
+                                      int*     mask);
 }
 
 #endif // CUDA_TRIDIAGONAL_PARTIAL_PIVOTING_H

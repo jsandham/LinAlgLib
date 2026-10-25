@@ -49,8 +49,6 @@ namespace linalg
                                         T**      S_B,
                                         T*       scratch,
                                         int*     mask,
-                                        T*       s_scratch,
-                                        int*     s_mask,
                                         int      level = 0);
 }
 

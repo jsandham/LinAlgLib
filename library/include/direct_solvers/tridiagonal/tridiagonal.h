@@ -111,8 +111,8 @@ namespace linalg
 
         vector<T>   scratch;
         vector<int> mask;
-        vector<T>   s_scratch;
-        vector<int> s_mask;
+        // vector<T>   s_scratch;
+        // vector<int> s_mask;
     };
 
     template <typename T>
