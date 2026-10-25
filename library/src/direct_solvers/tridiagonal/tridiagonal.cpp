@@ -128,7 +128,9 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
         constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
         pivot_data.scratch.resize(32 * 32 * 8);
-        pivot_data.mask.resize(1);
+        pivot_data.mask.resize(32);
+        pivot_data.s_scratch.resize(2 * 32 * 6);
+        pivot_data.s_mask.resize(2);
 
         int current_m = m;
         for(int level = 0; level < pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
@@ -192,6 +194,8 @@ void linalg::tridiagonal_solver<T>::move_to_device()
 
         pivot_data.scratch.move_to_device();
         pivot_data.mask.move_to_device();
+        pivot_data.s_scratch.move_to_device();
+        pivot_data.s_mask.move_to_device();
 
         for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
@@ -233,6 +237,8 @@ void linalg::tridiagonal_solver<T>::move_to_host()
 
         pivot_data.scratch.move_to_host();
         pivot_data.mask.move_to_host();
+        pivot_data.s_scratch.move_to_host();
+        pivot_data.s_mask.move_to_host();
 
         for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {

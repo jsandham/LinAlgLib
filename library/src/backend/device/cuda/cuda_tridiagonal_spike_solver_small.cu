@@ -111,7 +111,14 @@ namespace linalg
                                         T* __restrict__ w,
                                         T* __restrict__ v,
                                         T* __restrict__ mt,
-                                        int* __restrict__ pivot_mask)
+                                        int* __restrict__ pivot_mask,
+                                        T* __restrict__ s_coeff1,
+                                        T* __restrict__ s_coeff2,
+                                        T* __restrict__ s_coeff3,
+                                        T* __restrict__ s_coeff4,
+                                        T* __restrict__ s_coeff5,
+                                        T* __restrict__ s_mt,
+                                        int* __restrict__ s_pivot_mask)
     {
         ROUTINE_TRACE("launch_solve_fused_wvmt");
 
@@ -127,12 +134,19 @@ namespace linalg
                                                                        w,
                                                                        v,
                                                                        mt,
-                                                                       pivot_mask);
+                                                                       pivot_mask,
+                                                                       s_coeff1,
+                                                                       s_coeff2,
+                                                                       s_coeff3,
+                                                                       s_coeff4,
+                                                                       s_coeff5,
+                                                                       s_mt,
+                                                                       s_pivot_mask);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, uint32_t NCOLS, typename T>
-    static void launch_solve_fused2(int m,
+    static void launch_solve_rhs_fused(int m,
                                     int n,
                                     const T* __restrict__ coeff1,
                                     const T* __restrict__ coeff2,
@@ -143,13 +157,37 @@ namespace linalg
                                     const T* __restrict__ v,
                                     const T* __restrict__ mt,
                                     const int* __restrict__ mask,
+                                    const T* __restrict__ s_coeff1,
+                                    const T* __restrict__ s_coeff2,
+                                    const T* __restrict__ s_coeff3,
+                                    const T* __restrict__ s_coeff4,
+                                    const T* __restrict__ s_coeff5,
+                                    const T* __restrict__ s_mt,
+                                    const int* __restrict__ s_mask,
                                     const T* __restrict__ B,
                                     T* __restrict__ X)
     {
-        ROUTINE_TRACE("launch_solve_fused2");
+        ROUTINE_TRACE("launch_solve_rhs_fused");
 
-        solve_fused_kernel2<BLOCKSIZE, BLOCKDIM, NCOLS><<<n / NCOLS, BLOCKSIZE>>>(
-            m, coeff1, coeff2, coeff3, coeff4, coeff5, w, v, mt, mask, B, X);
+        solve_fused_rhs_kernel<BLOCKSIZE, BLOCKDIM, NCOLS><<<n / NCOLS, BLOCKSIZE>>>(m,
+                                                                                  coeff1,
+                                                                                  coeff2,
+                                                                                  coeff3,
+                                                                                  coeff4,
+                                                                                  coeff5,
+                                                                                  w,
+                                                                                  v,
+                                                                                  mt,
+                                                                                  mask,
+                                                                                  s_coeff1,
+                                                                                  s_coeff2,
+                                                                                  s_coeff3,
+                                                                                  s_coeff4,
+                                                                                  s_coeff5,
+                                                                                  s_mt,
+                                                                                  s_mask,
+                                                                                  B,
+                                                                                  X);
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
@@ -220,7 +258,9 @@ namespace linalg
                                                 const T* __restrict__ B,
                                                 T* __restrict__ X,
                                                 T* __restrict__ scratch,
-                                                int* __restrict__ mask)
+                                                int* __restrict__ mask,
+                                                T* __restrict__ s_scratch,
+                                                int* __restrict__ s_mask)
     {
         ROUTINE_TRACE("tridiagonal_spike_solver_fused2");
 
@@ -233,31 +273,94 @@ namespace linalg
         T* v      = scratch + 6 * BLOCKSIZE * BLOCKDIM;
         T* mt     = scratch + 7 * BLOCKSIZE * BLOCKDIM;
 
+        constexpr int S_SIZE = 2 * BLOCKSIZE;
+
+        T* s_coeff1 = s_scratch + 0 * S_SIZE;
+        T* s_coeff2 = s_scratch + 1 * S_SIZE;
+        T* s_coeff3 = s_scratch + 2 * S_SIZE;
+        T* s_coeff4 = s_scratch + 3 * S_SIZE;
+        T* s_coeff5 = s_scratch + 4 * S_SIZE;
+        T* s_mt     = s_scratch + 5 * S_SIZE;
+
         CHECK_CUDA(cudaMemset(w, 0, sizeof(T) * BLOCKSIZE * BLOCKDIM));
         CHECK_CUDA(cudaMemset(v, 0, sizeof(T) * BLOCKSIZE * BLOCKDIM));
         // CHECK_CUDA(cudaMemset(scratch, 0, sizeof(T) * 8 * BLOCKSIZE * BLOCKDIM));
 
-        launch_solve_fused_wvmt<BLOCKSIZE, BLOCKDIM>(
-            m, lower, main, upper, coeff1, coeff2, coeff3, coeff4, coeff5, w, v, mt, mask);
+        launch_solve_fused_wvmt<BLOCKSIZE, BLOCKDIM>(m,
+                                                     lower,
+                                                     main,
+                                                     upper,
+                                                     coeff1,
+                                                     coeff2,
+                                                     coeff3,
+                                                     coeff4,
+                                                     coeff5,
+                                                     w,
+                                                     v,
+                                                     mt,
+                                                     mask,
+                                                     s_coeff1,
+                                                     s_coeff2,
+                                                     s_coeff3,
+                                                     s_coeff4,
+                                                     s_coeff5,
+                                                     s_mt,
+                                                     s_mask);
 
         if(n < 500)
         {
             // For small number of columns we want to launch enough blocks to try and saturate the GPU
             // as much as possible. TODO: We should tune this based on the card being used.
-            launch_solve_fused2<BLOCKSIZE, BLOCKDIM, 1>(
-                m, n, coeff1, coeff2, coeff3, coeff4, coeff5, w, v, mt, mask, B, X);
+            launch_solve_rhs_fused<BLOCKSIZE, BLOCKDIM, 1>(m,
+                                                        n,
+                                                        coeff1,
+                                                        coeff2,
+                                                        coeff3,
+                                                        coeff4,
+                                                        coeff5,
+                                                        w,
+                                                        v,
+                                                        mt,
+                                                        mask,
+                                                        s_coeff1,
+                                                        s_coeff2,
+                                                        s_coeff3,
+                                                        s_coeff4,
+                                                        s_coeff5,
+                                                        s_mt,
+                                                        s_mask,
+                                                        B,
+                                                        X);
         }
         else
         {
             int remainder = n % 8;
             int nn        = n - remainder;
 
-            launch_solve_fused2<BLOCKSIZE, BLOCKDIM, 8>(
-                m, nn, coeff1, coeff2, coeff3, coeff4, coeff5, w, v, mt, mask, B, X);
+            launch_solve_rhs_fused<BLOCKSIZE, BLOCKDIM, 8>(m,
+                                                        nn,
+                                                        coeff1,
+                                                        coeff2,
+                                                        coeff3,
+                                                        coeff4,
+                                                        coeff5,
+                                                        w,
+                                                        v,
+                                                        mt,
+                                                        mask,
+                                                        s_coeff1,
+                                                        s_coeff2,
+                                                        s_coeff3,
+                                                        s_coeff4,
+                                                        s_coeff5,
+                                                        s_mt,
+                                                        s_mask,
+                                                        B,
+                                                        X);
 
             if(remainder > 0)
             {
-                launch_solve_fused2<BLOCKSIZE, BLOCKDIM, 1>(m,
+                launch_solve_rhs_fused<BLOCKSIZE, BLOCKDIM, 1>(m,
                                                             remainder,
                                                             coeff1,
                                                             coeff2,
@@ -268,6 +371,13 @@ namespace linalg
                                                             v,
                                                             mt,
                                                             mask,
+                                                            s_coeff1,
+                                                            s_coeff2,
+                                                            s_coeff3,
+                                                            s_coeff4,
+                                                            s_coeff5,
+                                                            s_mt,
+                                                            s_mask,
                                                             B + m * nn,
                                                             X + m * nn);
             }
@@ -296,6 +406,8 @@ void linalg::tridiagonal_spike_solver_small(int      m,
                                             T**      S_B,
                                             T*       scratch,
                                             int*     mask,
+                                            T*       s_scratch,
+                                            int*     s_mask,
                                             int      level)
 {
     ROUTINE_TRACE("tridiagonal_spike_solver_small");
@@ -304,7 +416,7 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T**, T**, int);
     using solve_fused_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
     using solve_fused_launch_ptr2
-        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, int*);
+        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, int*, T*, int*);
 
     static const std::map<int, solve_launch_ptr> solve_dispatch = {
         {4, tridiagonal_spike_solver_one_thread_per_system<256, 4>},
@@ -357,7 +469,8 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         auto dispatch_it = solve_fused_dispatch2.lower_bound(m);
         if(dispatch_it != solve_fused_dispatch2.end())
         {
-            dispatch_it->second(m, n, lower_diag, main_diag, upper_diag, B, X, scratch, mask);
+            dispatch_it->second(
+                m, n, lower_diag, main_diag, upper_diag, B, X, scratch, mask, s_scratch, s_mask);
         }
         else
         {
@@ -388,6 +501,8 @@ template void linalg::tridiagonal_spike_solver_small<double>(int,
                                                              double**,
                                                              double*,
                                                              int*,
+                                                             double*,
+                                                             int*,
                                                              int);
 template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             int,
@@ -407,6 +522,8 @@ template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             float**,
                                                             float**,
                                                             float**,
+                                                            float*,
+                                                            int*,
                                                             float*,
                                                             int*,
                                                             int);
