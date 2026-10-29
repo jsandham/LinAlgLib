@@ -67,11 +67,11 @@ bool testing::test_tridiagonal_solver(Arguments arg)
         main_diag[i] = main_dist(gen);
         if(i > 0)
         {
-            lower_diag[i] = lower_dist(gen);
+            lower_diag[i] = arg.gamma * lower_dist(gen);
         }
         if(i < m - 1)
         {
-            upper_diag[i] = upper_dist(gen);
+            upper_diag[i] = arg.gamma * upper_dist(gen);
         }
     }
 
