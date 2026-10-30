@@ -58,10 +58,10 @@ namespace linalg
     {
         ROUTINE_TRACE("construct_prolongation_using_smoothed_aggregation");
 
-        if(aggregates.get_size() < 300)
-        {
-            aggregates.print_vector("aggregates");
-        }
+        // if(aggregates.get_size() < 300)
+        // {
+        //     aggregates.print_vector("aggregates");
+        // }
 
         // Determine number of columns in the prolongation matrix. This will be
         // the maximum aggregate plus one.
@@ -76,9 +76,6 @@ namespace linalg
         n++;
 
         prolongation.resize(A.get_m(), (int)n, 0);
-
-        std::cout << "prolongation.n: " << prolongation.get_n() << " A.m: " << A.get_m()
-                  << "A.nnz: " << A.get_nnz() << std::endl;
 
         const int*    csr_row_ptr_A = A.get_row_ptr();
         const int*    csr_col_ind_A = A.get_col_ind();
@@ -122,13 +119,6 @@ namespace linalg
         {
             csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
         }
-
-        // std::cout << "prolongation.csr_row_ptr" << std::endl;
-        // for (int i = 0; i < prolongation.get_m() + 1; i++)
-        // {
-        // 	std::cout << csr_row_ptr_P[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
 
         assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
 
@@ -228,15 +218,23 @@ void linalg::saamg_setup(const csr_matrix<double>& mat_A, int max_level, hierarc
     vector<int64_t> aggregates;
     vector<int64_t> aggregate_root_nodes;
 
+    if(!mat_A.is_on_host())
+    {
+        connections.move_to_device();
+        aggregates.move_to_device();
+        aggregate_root_nodes.move_to_device();
+    }
+
     int level = 0;
     while(level < max_level)
     {
-        std::cout << "Compute operators at coarse level: " << level << std::endl;
-
         const csr_matrix<double>& A_fine   = hierarchy.A_cs[level];
         csr_matrix<double>&       A_coarse = hierarchy.A_cs[level + 1];
         csr_matrix<double>&       P        = hierarchy.prolongations[level];
         csr_matrix<double>&       R        = hierarchy.restrictions[level];
+
+        std::cout << "Compute operators at coarse level: " << level << " size: " << A_fine.get_m()
+                  << std::endl;
 
         connections.resize(A_fine.get_nnz(), 0);
         aggregates.resize(A_fine.get_m(), 0);

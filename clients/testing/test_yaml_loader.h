@@ -508,8 +508,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         params.backends       = read_group_values("backend", testing::backend::CPU);
         params.uplos          = read_group_values("uplo", testing::uplo::lower);
         params.precond_types  = read_group_values("precond", testing::preconditioner::none);
-        params.cycle_types    = read_group_values("cycle", testing::cycle_type::none);
-        params.smoother_types = read_group_values("smoother", testing::smoother_type::none);
+        params.cycle_types    = read_group_values("cycle_type", testing::cycle_type::none);
+        params.smoother_types = read_group_values("smoother_type", testing::smoother_type::none);
         params.pivoting_strategies
             = read_group_values("pivoting_strategy", testing::pivoting_strategy::none);
         params.presmoothings  = read_group_values("presmoothing", -1);

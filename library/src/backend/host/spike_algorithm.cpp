@@ -562,7 +562,6 @@ namespace linalg
         const int m_pad = ((m + BLOCKDIM - 1) / BLOCKDIM) * BLOCKDIM;
 
         {
-            ROUTINE_TRACE("AAAAA");
             for(size_t i = 0; i < static_cast<size_t>(m_pad); i++)
             {
                 lower_pad[level][i] = static_cast<T>(0);
@@ -611,8 +610,6 @@ namespace linalg
         const int S_size = 2 * m_pad / BLOCKDIM;
 
         {
-            ROUTINE_TRACE("BBBBB");
-
             for(int i = 0; i < S_size; i++)
             {
                 S_lower[level][i] = static_cast<T>(0);
