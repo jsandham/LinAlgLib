@@ -57,6 +57,7 @@ namespace testing
         double                     beta;
         double                     gamma;
         double                     omega;
+        testing::data_distribution distribution;
 
         std::string generate_test_name() const
         {
@@ -81,6 +82,10 @@ namespace testing
             if(this->pivoting_strategy != pivoting_strategy::none)
             {
                 name += "_" + pivoting_strategy_to_string(this->pivoting_strategy);
+            }
+            if(this->distribution != testing::data_distribution::uniform)
+            {
+                name += "_" + data_distribution_to_string(this->distribution);
             }
             if(this->presmoothing >= 0)
             {

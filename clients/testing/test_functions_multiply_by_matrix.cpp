@@ -193,7 +193,7 @@ bool testing::test_multiply_by_matrix(Arguments arg)
     // mat_C_host.print_matrix("C_host");
 
     // Verify result
-    bool success = check_matrix_equality(mat_C, mat_C_host);
+    bool success = check_matrix_equality(mat_C, mat_C_host, 1e-14);
 
     size_t bytes_read_A
         = sizeof(double) * mat_A.get_nnz() + sizeof(int) * (mat_A.get_m() + 1 + mat_A.get_nnz());

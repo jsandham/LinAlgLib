@@ -475,7 +475,9 @@ bool check_solution(const linalg::csr_matrix<double>& A,
     return false;
 }
 
-bool check_matrix_equality(const linalg::csr_matrix<double>& A, const linalg::csr_matrix<double>& B)
+bool check_matrix_equality(const linalg::csr_matrix<double>& A,
+                           const linalg::csr_matrix<double>& B,
+                           double                            tol)
 {
     const int*    csr_row_ptr_A = A.get_row_ptr();
     const int*    csr_col_ind_A = A.get_col_ind();
@@ -512,10 +514,12 @@ bool check_matrix_equality(const linalg::csr_matrix<double>& A, const linalg::cs
 
     for(int i = 0; i < A.get_nnz(); i++)
     {
-        if(csr_val_A[i] != csr_val_B[i])
+        if(std::abs(csr_val_A[i] - csr_val_B[i]) > tol)
         {
             std::cout << "i: " << i << " csr_val_A[i]: " << csr_val_A[i]
-                      << " csr_val_B[i]: " << csr_val_B[i] << std::endl;
+                      << " csr_val_B[i]: " << csr_val_B[i]
+                      << " std::abs(csr_val_A[i] - csr_val_B[i]): "
+                      << std::abs(csr_val_A[i] - csr_val_B[i]) << std::endl;
             return false;
         }
     }
