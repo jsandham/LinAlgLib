@@ -47,21 +47,6 @@ jobs:
           Add-Content -Path $env:GITHUB_PATH -Value $cmakeBin
           & "$cmakeBin\cmake.exe" --version
 
-      - name: Download quick_ci matrices (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3
-          cd clients/matrices
-          python3 matrix_downloader.py quick_ci
-
-      - name: Download quick_ci matrices (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Set-Location clients/matrices
-          python matrix_downloader.py quick_ci
-
       - name: Configure
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -69,6 +54,23 @@ jobs:
       - name: Build
         run: |
           cmake --build build --config ${{ matrix.build_type }} -- -m
+
+      - name: Download quick_ci matrices (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd clients/matrices
+          python3 matrix_downloader.py quick_ci
+          cd ../..
+          cmake -E copy_directory clients/matrices build/clients/testing/matrices
+
+      - name: Download quick_ci matrices (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Location clients/matrices
+          python matrix_downloader.py quick_ci
+          Set-Location ..\..
+          cmake -E copy_directory clients/matrices build/clients/testing/matrices
 
       - name: Run tests
         run: |
@@ -115,25 +117,29 @@ jobs:
           ln -sfn /tmp/cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ || true
           cmake --version || true
 
-      - name: Download quick_ci matrices
-        run: |
-          if command -v apt-get >/dev/null 2>&1; then
-            apt-get update
-            apt-get install -y python3
-          elif command -v yum >/dev/null 2>&1; then
-            yum -y install python3
-          else
-            echo "Package manager not found for Python installation" >&2
-            exit 1
-          fi
-          cd clients/matrices
-          python3 matrix_downloader.py quick_ci
-
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} -- -m
+
+      - name: Download quick_ci matrices
+        run: |
+          if ! command -v python3 >/dev/null 2>&1; then
+            if command -v apt-get >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y python3
+            elif command -v yum >/dev/null 2>&1; then
+              yum -y install python3
+            else
+              echo "Package manager not found for Python installation" >&2
+              exit 1
+            fi
+          fi
+          cd clients/matrices
+          python3 matrix_downloader.py quick_ci
+          cd ../..
+          cmake -E copy_directory clients/matrices build/clients/testing/matrices
 
       - name: Run tests
         run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure -R "/quick"
@@ -177,6 +183,14 @@ jobs:
           python3 -m pip install --user gcovr
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
+      - name: Configure coverage build
+        run: |
+          cmake -S . -B build-coverage -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build coverage build
+        run: |
+          cmake --build build-coverage --config Debug -- -m
+
       - name: Download quick_ci matrices
         run: |
           if command -v python3 >/dev/null 2>&1; then
@@ -189,14 +203,8 @@ jobs:
             echo "Python interpreter not found" >&2
             exit 1
           fi
-
-      - name: Configure coverage build
-        run: |
-          cmake -S . -B build-coverage -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
-
-      - name: Build coverage build
-        run: |
-          cmake --build build-coverage --config Debug -- -m
+          cd ../..
+          cmake -E copy_directory clients/matrices build-coverage/clients/testing/matrices
 
       - name: Run tests for coverage
         run: |

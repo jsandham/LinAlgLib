@@ -107,19 +107,13 @@ bool testing::test_csric0(Arguments arg)
 
     linalg::csr_matrix<double> mat_L(csr_row_ptr, csr_col_ind, csr_val, m, m, nnz);
 
-    // mat_L.print_matrix("L");
-
     // Compute transpose L^T
     linalg::csr_matrix<double> mat_LT;
     mat_L.transpose(mat_LT);
 
-    // mat_LT.print_matrix("LT");
-
     // Form A = L * L^T
     linalg::csr_matrix<double> mat_A;
     mat_L.multiply_by_matrix(mat_A, mat_LT);
-
-    // mat_A.print_matrix("A");
 
     if(arg.backend == backend::GPU)
     {
@@ -152,8 +146,6 @@ bool testing::test_csric0(Arguments arg)
 
     linalg::csr_matrix<double> mat_L_solution;
     mat_L_solution.copy_lower_triangular_from(mat_A, false);
-
-    // mat_L_solution.print_matrix("L solution");
 
     linalg::destroy_csric0_descr(descr);
 

@@ -1,5 +1,5 @@
 Tests:
-  small:
+  quick_ci:
     postsmoothing: [2]
     presmoothing: [2]
     max_iters: [1000]
@@ -14,7 +14,7 @@ Tests:
                   "matrices/SPD/fv3/fv3.mtx"]
     backend: [CPU]
 
-  smal2:
+  small:
     postsmoothing: [2]
     presmoothing: [2]
     max_iters: [1000]
