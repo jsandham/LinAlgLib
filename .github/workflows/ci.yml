@@ -55,20 +55,20 @@ jobs:
         run: |
           cmake --build build --config ${{ matrix.build_type }} -- -m
 
-      - name: Download quick_ci matrices (Linux)
+      - name: Prepare quick_ci matrices (Linux)
         if: runner.os == 'Linux'
         run: |
           cd clients/matrices
-          python3 matrix_downloader.py quick_ci
+          python3 matrix_downloader.py quick_ci --bundled
           cd ../..
           cmake -E copy_directory clients/matrices build/clients/testing/matrices
 
-      - name: Download quick_ci matrices (Windows)
+      - name: Prepare quick_ci matrices (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Set-Location clients/matrices
-          python matrix_downloader.py quick_ci
+          python matrix_downloader.py quick_ci --bundled
           Set-Location ..\..
           cmake -E copy_directory clients/matrices build/clients/testing/matrices
 
@@ -123,7 +123,7 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} -- -m
 
-      - name: Download quick_ci matrices
+      - name: Prepare quick_ci matrices
         run: |
           if ! command -v python3 >/dev/null 2>&1; then
             if command -v apt-get >/dev/null 2>&1; then
@@ -137,7 +137,7 @@ jobs:
             fi
           fi
           cd clients/matrices
-          python3 matrix_downloader.py quick_ci
+          python3 matrix_downloader.py quick_ci --bundled
           cd ../..
           cmake -E copy_directory clients/matrices build/clients/testing/matrices
 
@@ -191,14 +191,14 @@ jobs:
         run: |
           cmake --build build-coverage --config Debug -- -m
 
-      - name: Download quick_ci matrices
+      - name: Prepare quick_ci matrices
         run: |
           if command -v python3 >/dev/null 2>&1; then
             cd clients/matrices
-            python3 matrix_downloader.py quick_ci
+            python3 matrix_downloader.py quick_ci --bundled
           elif command -v python >/dev/null 2>&1; then
             cd clients/matrices
-            python matrix_downloader.py quick_ci
+            python matrix_downloader.py quick_ci --bundled
           else
             echo "Python interpreter not found" >&2
             exit 1
