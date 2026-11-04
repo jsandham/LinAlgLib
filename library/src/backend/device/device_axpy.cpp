@@ -24,6 +24,8 @@
 //
 //********************************************************************************
 
+// #include "../../../include/linalg_buffers.h"
+
 #include "device_axpy.h"
 
 #include <iostream>
@@ -83,12 +85,15 @@ void linalg::device_axpbypgz(double                alpha,
     }
 }
 
-double linalg::device_dot_product(const vector<double>& x, const vector<double>& y)
+double linalg::device_dot_product(const vector<double>&  x,
+                                  const vector<double>&  y,
+                                  dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::device_dot_product");
     if constexpr(is_cuda_available())
     {
-        return RETURN_CALL_CUDA(cuda_dot_product(x.get_vec(), y.get_vec(), x.get_size()));
+        return RETURN_CALL_CUDA(
+            cuda_dot_product(x.get_vec(), y.get_vec(), buffer.get_buffer(), x.get_size()));
     }
     std::cout << "Error: Not device backend available for the function " << __func__ << std::endl;
     return 0.0;

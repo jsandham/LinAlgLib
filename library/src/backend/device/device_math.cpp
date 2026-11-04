@@ -36,11 +36,11 @@
 #include "cuda/cuda_math.h"
 #endif
 
-double linalg::device_norm_euclid(const vector<double>& array)
+double linalg::device_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer)
 {
     ROUTINE_TRACE("linalg::device_norm_euclid");
 
-    return std::sqrt(device_dot_product(array, array));
+    return std::sqrt(device_dot_product(array, array, buffer));
 }
 
 double linalg::device_norm_inf(const vector<double>& array)

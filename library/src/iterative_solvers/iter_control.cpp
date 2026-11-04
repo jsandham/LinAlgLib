@@ -64,6 +64,11 @@ bool iter_control::residual_converges(double residual_norm, double initial_resid
     assert(residual_norm >= 0.0);
     assert(initial_residual_norm >= 0.0);
 
+    if(initial_residual_norm <= abs_tol)
+    {
+        return true;
+    }
+
     if(residual_norm <= abs_tol)
     {
         return true;

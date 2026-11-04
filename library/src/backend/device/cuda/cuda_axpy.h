@@ -35,7 +35,7 @@ namespace linalg
     template <typename T>
     void cuda_axpbypgz(int size, T alpha, const T* x, T beta, const T* y, T gamma, T* z);
     template <typename T>
-    T cuda_dot_product(const T* x, const T* y, int size);
+    T cuda_dot_product(const T* x, const T* y, T* buffer, int size);
 }
 
 #endif

@@ -27,6 +27,7 @@
 #ifndef GMRES_H
 #define GMRES_H
 
+#include "../../linalg_buffers.h"
 #include "../../linalg_export.h"
 
 #include "../iter_control.h"
@@ -243,6 +244,9 @@ namespace linalg
         vector<double> res;
         /*! \brief Intermediate vector for preconditioning or other operations. */
         vector<double> z;
+
+        dp_opt_buffer<double>
+            buffer; /*!< \brief Buffer for device operations, used to optimize memory usage and performance on GPU backends. */
 
         /*! \brief The restart parameter `m` for GMRES(m).
      * \details This defines the maximum dimension of the krylov subspace before restarting.

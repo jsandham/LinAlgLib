@@ -68,21 +68,17 @@ void linalg::cuda_axpbypgz(int size, T alpha, const T* x, T beta, const T* y, T 
 // dot product z = x*y
 //-------------------------------------------------------------------------------
 template <typename T>
-T linalg::cuda_dot_product(const T* x, const T* y, int size)
+T linalg::cuda_dot_product(const T* x, const T* y, T* buffer, int size)
 {
     ROUTINE_TRACE("linalg::cuda_dot_product_impl");
-    T* workspace = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&workspace, sizeof(T) * 256));
-
-    dot_product_kernel_part1<256><<<256, 256>>>(size, x, y, workspace);
+    dot_product_kernel_part1<256><<<256, 256>>>(size, x, y, buffer);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    dot_product_kernel_part2<256><<<1, 256>>>(workspace);
+    dot_product_kernel_part2<256><<<1, 256>>>(buffer);
     CHECK_CUDA_LAUNCH_ERROR();
 
     T result;
-    CHECK_CUDA(cudaMemcpy(&result, workspace, sizeof(T), cudaMemcpyDeviceToHost));
-    CHECK_CUDA(cudaFree(workspace));
+    CHECK_CUDA(cudaMemcpy(&result, buffer, sizeof(T), cudaMemcpyDeviceToHost));
 
     return result;
 }
@@ -95,5 +91,5 @@ template void linalg::cuda_axpbypgz<double>(
     int, double, const double*, double, const double*, double, double*);
 template void
     linalg::cuda_axpbypgz<float>(int, float, const float*, float, const float*, float, float*);
-template double linalg::cuda_dot_product<double>(const double*, const double*, int);
-template float  linalg::cuda_dot_product<float>(const float*, const float*, int);
+template double linalg::cuda_dot_product<double>(const double*, const double*, double*, int);
+template float  linalg::cuda_dot_product<float>(const float*, const float*, float*, int);

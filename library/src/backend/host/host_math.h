@@ -43,11 +43,12 @@
 #include "host_ssor.h"
 #include "host_tridiagonal.h"
 
+#include "linalg_buffers.h"
 #include "linalg_export.h"
 
 namespace linalg
 {
-    double host_norm_euclid(const vector<double>& array);
+    double host_norm_euclid(const vector<double>& array, dp_opt_buffer<double>& buffer);
     double host_norm_inf(const vector<double>& array);
     void
         host_jacobi_solve(const vector<double>& rhs, const vector<double>& diag, vector<double>& x);

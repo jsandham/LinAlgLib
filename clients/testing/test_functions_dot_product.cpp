@@ -42,6 +42,9 @@ bool testing::test_dot_product(Arguments arg)
     x.fill(2.0);
     y.fill(3.0);
 
+    linalg::dp_opt_buffer<double> buffer;
+    buffer.allocate_buffer(size);
+
     if(arg.backend == backend::GPU)
     {
         x.move_to_device();
@@ -53,7 +56,7 @@ bool testing::test_dot_product(Arguments arg)
     // Warmup
     for(int i = 0; i < 4; i++)
     {
-        result = linalg::dot_product(x, y);
+        result = linalg::dot_product(x, y, buffer);
     }
     linalg::synchronize();
 
@@ -61,7 +64,7 @@ bool testing::test_dot_product(Arguments arg)
     auto t1 = std::chrono::high_resolution_clock::now();
     for(int i = 0; i < 100; i++)
     {
-        result = linalg::dot_product(x, y);
+        result = linalg::dot_product(x, y, buffer);
     }
     linalg::synchronize();
     auto t2 = std::chrono::high_resolution_clock::now();

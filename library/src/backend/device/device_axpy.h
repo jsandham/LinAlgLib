@@ -26,6 +26,7 @@
 #ifndef DEVICE_AXPY_H
 #define DEVICE_AXPY_H
 
+#include "linalg_buffers.h"
 #include "vector.h"
 
 namespace linalg
@@ -38,7 +39,9 @@ namespace linalg
                            const vector<double>& y,
                            double                gamma,
                            vector<double>&       z);
-    double device_dot_product(const vector<double>& x, const vector<double>& y);
+    double device_dot_product(const vector<double>&  x,
+                              const vector<double>&  y,
+                              dp_opt_buffer<double>& buffer);
 }
 
 #endif

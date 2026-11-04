@@ -29,6 +29,7 @@ target_sources(linalglib
     linalg_primitives.cpp
     linalg_math.cpp
     linalg_memory.cpp
+    linalg_buffers.cpp
     vector.cpp
     csr_matrix.cpp
     perfetto_trace.cpp
