@@ -1,5 +1,29 @@
 Tests:
+  quick_ci:
+    postsmoothing: [2]
+    presmoothing: [2]
+    max_iters: [1000]
+    cycle_type: [vcycle]
+    smoother_type: [gauss_seidel, symmetric_gauss_seidel, SSOR]
+    matrix_file: ["matrices/SPD/nos4/nos4.mtx",
+                  "matrices/SPD/nos5/nos5.mtx"]
+    backend: [CPU]
+
+  quick_ci2:
+    postsmoothing: [2]
+    presmoothing: [2]
+    max_iters: [1000]
+    cycle_type: [vcycle]
+    smoother_type: [jacobi, SOR]
+    matrix_file: ["matrices/SPD/nos4/nos4.mtx"]
+    backend: [CPU]
+
   small:
+    postsmoothing: [2]
+    presmoothing: [2]
+    max_iters: [1000]
+    cycle_type: [vcycle]
+    smoother_type: [jacobi, gauss_seidel, symmetric_gauss_seidel, SOR, SSOR]
     matrix_file: ["matrices/SPD/bcsstm02/bcsstm02.mtx",
                   "matrices/SPD/mesh1em6/mesh1em6.mtx",
                   "matrices/SPD/mesh3em5/mesh3em5.mtx",
@@ -14,4 +38,4 @@ Tests:
                   "matrices/SPD/crystm03/crystm03.mtx",
                   "matrices/SPD/finan512/finan512.mtx",
                   "matrices/SPD/thermomech_TK/thermomech_TK.mtx"]
-    max_iters: [1000]
+    backend: [CPU]

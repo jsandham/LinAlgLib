@@ -316,6 +316,45 @@ namespace YAML
             return true;
         }
     };
+
+    template <>
+    struct convert<testing::data_distribution>
+    {
+        static Node encode(const testing::data_distribution& rhs)
+        {
+            Node node;
+            switch(rhs)
+            {
+            case testing::data_distribution::uniform:
+                node = "uniform";
+                break;
+            case testing::data_distribution::normal:
+                node = "normal";
+                break;
+            }
+
+            return node;
+        }
+
+        static bool decode(const Node& node, testing::data_distribution& rhs)
+        {
+            const std::string type = node.as<std::string>();
+            if(type == "uniform")
+            {
+                rhs = testing::data_distribution::uniform;
+            }
+            else if(type == "normal")
+            {
+                rhs = testing::data_distribution::normal;
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
+        }
+    };
 }
 
 template <typename T>
@@ -445,6 +484,7 @@ struct TestParameters
     std::vector<double>                     betas;
     std::vector<double>                     gammas;
     std::vector<double>                     omegas;
+    std::vector<testing::data_distribution> data_distributions;
 };
 
 template <std::size_t I = 0, typename F, typename Tuple, typename... Args>
@@ -508,8 +548,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         params.backends       = read_group_values("backend", testing::backend::CPU);
         params.uplos          = read_group_values("uplo", testing::uplo::lower);
         params.precond_types  = read_group_values("precond", testing::preconditioner::none);
-        params.cycle_types    = read_group_values("cycle", testing::cycle_type::none);
-        params.smoother_types = read_group_values("smoother", testing::smoother_type::none);
+        params.cycle_types    = read_group_values("cycle_type", testing::cycle_type::none);
+        params.smoother_types = read_group_values("smoother_type", testing::smoother_type::none);
         params.pivoting_strategies
             = read_group_values("pivoting_strategy", testing::pivoting_strategy::none);
         params.presmoothings  = read_group_values("presmoothing", -1);
@@ -522,6 +562,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         params.betas          = read_group_values("beta", -99.0);
         params.gammas         = read_group_values("gamma", -99.0);
         params.omegas         = read_group_values("omega", -1.0);
+        params.data_distributions
+            = read_group_values("distribution", testing::data_distribution::uniform);
 
         size_t total_tests = 1;
         total_tests *= params.matrices.size();
@@ -541,6 +583,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
         total_tests *= params.betas.size();
         total_tests *= params.gammas.size();
         total_tests *= params.omegas.size();
+        total_tests *= params.data_distributions.size();
 
         std::cout << "total_tests: " << total_tests << std::endl;
 
@@ -564,7 +607,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                 double                     alpha,
                 double                     beta,
                 double                     gamma,
-                double                     omega) {
+                double                     omega,
+                testing::data_distribution data_distribution) {
                 tests.emplace_back(testing::Arguments{
                     category_enum,
                     fixture_enum,
@@ -586,6 +630,7 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
                     beta,
                     gamma,
                     omega,
+                    data_distribution,
                 });
             },
             params.matrices,
@@ -604,7 +649,8 @@ inline std::vector<testing::Arguments> generate_tests(const std::string category
             params.alphas,
             params.betas,
             params.gammas,
-            params.omegas);
+            params.omegas,
+            params.data_distributions);
 
         // for(size_t i = 0; i < total_tests; i++)
         // {

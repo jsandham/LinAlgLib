@@ -80,9 +80,9 @@ namespace linalg
     struct pivoting_data
     {
         /*! \brief Maximum number of recursion levels used by the tridiagonal solver. */
-        constexpr static int tridiagonal_max_recursion_levels = 3;
+        constexpr static int tridiagonal_max_recursion_levels = 8;
         /*! \brief Block dimension for pivoting operations and recursion. */
-        constexpr static int block_dim = 256;
+        constexpr static int block_dim = 32;
 
         /*! Padded lower-diagonal values for pivoting recursion. */
         vector<T> lower_pad[tridiagonal_max_recursion_levels];
@@ -94,11 +94,11 @@ namespace linalg
         vector<T> B_pad[tridiagonal_max_recursion_levels];
 
         /*! Working vector used during pivoting factorization. */
-        vector<T> w[tridiagonal_max_recursion_levels];
+        vector<T> w_pad[tridiagonal_max_recursion_levels];
         /*! Working vector used during pivoting factorization. */
-        vector<T> v[tridiagonal_max_recursion_levels];
+        vector<T> v_pad[tridiagonal_max_recursion_levels];
         /*! Working vector used during pivoting factorization. */
-        vector<T> mt[tridiagonal_max_recursion_levels];
+        vector<T> mt_pad[tridiagonal_max_recursion_levels];
 
         /*! Lower block of the Schur complement for each recursion level. */
         vector<T> S_lower[tridiagonal_max_recursion_levels];
@@ -108,8 +108,14 @@ namespace linalg
         vector<T> S_upper[tridiagonal_max_recursion_levels];
         /*! Right-hand side block of the Schur complement for each recursion level. */
         vector<T> S_B[tridiagonal_max_recursion_levels];
+
+        vector<T>   scratch;
+        vector<int> mask;
+        // vector<T>   s_scratch;
+        // vector<int> s_mask;
     };
 
+    template <typename T>
     /*! \ingroup tridiagonal_solvers
      *  \brief Tridiagonal system solver with optional pivoting support.
      */
@@ -123,10 +129,10 @@ namespace linalg
         bool on_host;
 
         // Non-pivoting data
-        non_pivoting_data<double> non_pivot_data;
+        non_pivoting_data<T> non_pivot_data;
 
         // Pivoting data
-        pivoting_data<double> pivot_data;
+        pivoting_data<T> pivot_data;
 
     public:
         /*! Construct a tridiagonal solver for an m-by-n system using the given pivot strategy. */
@@ -144,11 +150,11 @@ namespace linalg
         void move_to_host();
 
         /*! Solve a tridiagonal system from its diagonals and right-hand side. */
-        void solve(const vector<double>& lower_diag,
-                   const vector<double>& main_diag,
-                   const vector<double>& upper_diag,
-                   const vector<double>& rhs,
-                   vector<double>&       solution);
+        void solve(const vector<T>& lower_diag,
+                   const vector<T>& main_diag,
+                   const vector<T>& upper_diag,
+                   const vector<T>& rhs,
+                   vector<T>&       solution);
     };
 }
 

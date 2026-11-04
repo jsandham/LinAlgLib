@@ -184,16 +184,15 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix<double>& A,
     // Exclusive sum
     exclusive_scan(aggregates);
 
-    if(aggregates.get_size() < 300)
-    {
-        aggregates.print_vector("aggregates after scan");
-    }
+    // if(aggregates.get_size() < 300)
+    // {
+    //     aggregates.print_vector("aggregates after scan");
+    // }
 
     //max_state.print_vector("max_state");
     //aggregates.print_vector("aggregates after exclusive sum");
     //aggregate_root_nodes.print_vector("aggregate_root_nodes");
 
-    std::cout << "D" << std::endl;
     // Add any unassigned nodes to an existing aggregation
     for(int k = 0; k < 2; k++)
     {
@@ -203,13 +202,11 @@ bool linalg::compute_aggregates_using_pmis(const csr_matrix<double>& A,
             A, connections, state, aggregates, aggregate_root_nodes, max_state);
     }
 
-    std::cout << "E" << std::endl;
-
-    if(aggregates.get_size() < 300)
-    {
-        aggregates.print_vector("aggregates final");
-        aggregate_root_nodes.print_vector("aggregate_root_nodes final");
-    }
+    // if(aggregates.get_size() < 300)
+    // {
+    //     aggregates.print_vector("aggregates final");
+    //     aggregate_root_nodes.print_vector("aggregate_root_nodes final");
+    // }
 
     return true;
 }

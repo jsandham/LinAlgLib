@@ -117,7 +117,7 @@ __global__ void pcr_tiled_forward_kernel(int m,
         b = b_new;
         c = c_new;
 
-        for (int rhs = 0; rhs < NUM_RHS; rhs++)
+        for(int rhs = 0; rhs < NUM_RHS; rhs++)
         {
             sd[BLOCKSIZE * rhs + tid] = d_new[rhs];
 
@@ -349,8 +349,19 @@ __global__ void pcr_tiled_backward_kernel(int m,
 
             // For internal threads, a_mod and c_mod represent the "spikes"
             // pointing to the boundary variables of the tile.
-            const T x_final
-                = (d_mod - (a_mod * x_interface_left) - (c_mod * x_interface_right)) / b_mod;
+            //const T x_final
+            //    = (d_mod - (a_mod * x_interface_left) - (c_mod * x_interface_right)) / b_mod;
+            T x_final = static_cast<T>(0);
+
+            if(a_mod == static_cast<T>(0) && c_mod == static_cast<T>(0))
+            {
+                x_final = d_mod / b_mod;
+            }
+            else
+            {
+                x_final
+                    = (d_mod - (a_mod * x_interface_left) - (c_mod * x_interface_right)) / b_mod;
+            }
 
             // 4. Store result to global memory
             X_final[m * (NUM_RHS * blockIdx.y + rhs) + gid] = x_final;

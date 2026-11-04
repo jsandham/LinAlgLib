@@ -34,6 +34,13 @@
 
 bool testing::test_amg(AMG_solver solver_type, Arguments arg)
 {
+    // amg_solve smoothers / coarsest-level GS still use host pointer loops.
+    if(arg.backend == backend::GPU)
+    {
+        std::cout << "AMG GPU test not supported" << std::endl;
+        return false;
+    }
+
     linalg::csr_matrix<double> mat_A;
     mat_A.read_mtx(arg.filename);
 
@@ -53,14 +60,17 @@ bool testing::test_amg(AMG_solver solver_type, Arguments arg)
 
     linalg::hierarchy hierachy;
 
-    // mat_A.move_to_device();
-    // vec_x.move_to_device();
-    // vec_init_x.move_to_device();
-    // vec_b.move_to_device();
-    // vec_e.move_to_device();
-    // hierachy.move_to_device();
-
     mat_A.multiply_by_vector(vec_b, vec_e);
+
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_device();
+        vec_x.move_to_device();
+        vec_init_x.move_to_device();
+        vec_b.move_to_device();
+        vec_e.move_to_device();
+        hierachy.move_to_device();
+    }
 
     int max_levels = 100;
 
@@ -89,9 +99,12 @@ bool testing::test_amg(AMG_solver solver_type, Arguments arg)
     case testing::cycle_type::fcycle:
         cycle = linalg::cycle::fcycle;
         break;
+    default:
+        break;
     }
 
-    linalg::smoother smoother = linalg::smoother::jacobi;
+    // Match saamg_example defaults when YAML omits smoother.
+    linalg::smoother smoother = linalg::smoother::gauss_seidel;
     switch(arg.smoother_type)
     {
     case testing::smoother_type::jacobi:
@@ -109,17 +122,19 @@ bool testing::test_amg(AMG_solver solver_type, Arguments arg)
     case testing::smoother_type::SSOR:
         smoother = linalg::smoother::SSOR;
         break;
+    default:
+        break;
     }
 
-    // mat_A.move_to_host();
-    // vec_x.move_to_host();
-    // vec_init_x.move_to_host();
-    // vec_b.move_to_host();
-    // vec_e.move_to_host();
-    // hierachy.move_to_host();
+    // YAML sentinel -1 means "unset". Without positive pre/post-smoothing
+    // counts, amg_solve's V-cycle skips apply_smoother entirely and will not
+    // converge on many SPD matrices (relative residual stays O(1)).
+    const int presmoothing  = (arg.presmoothing >= 0) ? arg.presmoothing : 2;
+    const int postsmoothing = (arg.postsmoothing >= 0) ? arg.postsmoothing : 1;
 
     std::cout << "arg.presmoothing: " << arg.presmoothing
               << " arg.postsmoothing: " << arg.postsmoothing
+              << " using presmoothing: " << presmoothing << " postsmoothing: " << postsmoothing
               << " arg.cycle: " << cycle_type_to_string(arg.cycle_type)
               << " arg.smoother: " << smoother_type_to_string(arg.smoother_type) << std::endl;
 
@@ -127,10 +142,20 @@ bool testing::test_amg(AMG_solver solver_type, Arguments arg)
     control.max_cycle = arg.max_iters;
 
     // int cycles = amg_solve(hierachy, x.data(), b.data(), arg.presmoothing, arg.postsmoothing, arg.cycle, arg.smoother, control);
-    int cycles = amg_solve(
-        hierachy, vec_x, vec_b, arg.presmoothing, arg.postsmoothing, cycle, smoother, control);
+    int cycles
+        = amg_solve(hierachy, vec_x, vec_b, presmoothing, postsmoothing, cycle, smoother, control);
 
     std::cout << "cycles: " << cycles << std::endl;
+
+    if(arg.backend == backend::GPU)
+    {
+        mat_A.move_to_host();
+        vec_x.move_to_host();
+        vec_init_x.move_to_host();
+        vec_b.move_to_host();
+        vec_e.move_to_host();
+        hierachy.move_to_host();
+    }
 
     int norm_type = 0;
 

@@ -59,7 +59,8 @@ bool check_solution(const linalg::csr_matrix<double>& A,
                     int                               norm_type);
 
 bool check_matrix_equality(const linalg::csr_matrix<double>& A,
-                           const linalg::csr_matrix<double>& B);
+                           const linalg::csr_matrix<double>& B,
+                           double                            tol);
 
 bool check_vector_equality(const linalg::vector<double>& x, const linalg::vector<double>& y);
 

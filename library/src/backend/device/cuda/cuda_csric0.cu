@@ -101,28 +101,6 @@ void linalg::cuda_csric0_analysis(int           m,
                                                                           descr->done_array);
     CHECK_CUDA_LAUNCH_ERROR();
 
-    std::vector<int> hdiag_ind(m, 10);
-    CHECK_CUDA(
-        cudaMemcpy(hdiag_ind.data(), descr->diag_ind, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    std::cout << "diag_ind" << std::endl;
-    for(int i = 0; i < m; i++)
-    {
-        std::cout << hdiag_ind[i] << " ";
-    }
-    std::cout << "" << std::endl;
-
-    std::vector<int> hdone_array(m, 0);
-    CHECK_CUDA(
-        cudaMemcpy(hdone_array.data(), descr->done_array, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    std::cout << "done_array" << std::endl;
-    for(int i = 0; i < m; i++)
-    {
-        std::cout << hdone_array[i] << " ";
-    }
-    std::cout << "" << std::endl;
-
     fill_identity_permuation_kernel<256><<<((m - 1) / 256 + 1), 256>>>(m, descr->row_perm);
     CHECK_CUDA_LAUNCH_ERROR();
 
@@ -133,17 +111,6 @@ void linalg::cuda_csric0_analysis(int           m,
 
     // Use sort_by_key: sorts d_keys and applies the identical permutation to d_values
     thrust::sort_by_key(d_keys, d_keys + m, d_values);
-
-    std::vector<int> hrow_perm(m, 0);
-    CHECK_CUDA(
-        cudaMemcpy(hrow_perm.data(), descr->row_perm, sizeof(int) * m, cudaMemcpyDeviceToHost));
-
-    std::cout << "row_perm" << std::endl;
-    for(int i = 0; i < m; i++)
-    {
-        std::cout << hrow_perm[i] << " ";
-    }
-    std::cout << "" << std::endl;
 }
 
 template <typename T>

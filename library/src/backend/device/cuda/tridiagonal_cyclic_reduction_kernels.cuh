@@ -188,7 +188,7 @@ __global__ void thomas_pcr_wavefront_kernel2(int m,
 
             const T a_right_patch
                 = (i < (M / WF_SIZE - 1))
-                      ? __shfl_sync(0xFFFFFFFF, a[i + 1], right - WF_SIZE, WF_SIZE)
+                      ? __(0xFFFFFFFF, a[i + 1], right - WF_SIZE, WF_SIZE)
                       : static_cast<T>(0);
             const T b_right_patch
                 = (i < (M / WF_SIZE - 1))

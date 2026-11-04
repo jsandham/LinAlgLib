@@ -69,9 +69,6 @@ namespace linalg
 
         prolongation.resize(A.get_m(), (int)n, 0);
 
-        std::cout << "prolongation.n: " << prolongation.get_n() << " A.m: " << A.get_m()
-                  << "A.nnz: " << A.get_nnz() << std::endl;
-
         int* csr_row_ptr_P = prolongation.get_row_ptr();
 
         std::vector<int> table(prolongation.get_n(), -1);
@@ -95,13 +92,6 @@ namespace linalg
         {
             csr_row_ptr_P[i + 1] += csr_row_ptr_P[i];
         }
-
-        // std::cout << "prolongation.csr_row_ptr" << std::endl;
-        // for (int i = 0; i < prolongation.get_m() + 1; i++)
-        // {
-        // 	std::cout << csr_row_ptr_P[i] << " ";
-        // }
-        // std::cout << "" << std::endl;
 
         assert(nnz == csr_row_ptr_P[prolongation.get_m()]);
 
@@ -158,12 +148,13 @@ void linalg::uaamg_setup(const csr_matrix<double>& A, int max_level, hierarchy& 
     int level = 0;
     while(level < max_level)
     {
-        std::cout << "Compute operators at coarse level: " << level << std::endl;
-
         const csr_matrix<double>& A_fine   = hierarchy.A_cs[level];
         csr_matrix<double>&       A_coarse = hierarchy.A_cs[level + 1];
         csr_matrix<double>&       P        = hierarchy.prolongations[level];
         csr_matrix<double>&       R        = hierarchy.restrictions[level];
+
+        std::cout << "Compute operators at coarse level: " << level << " size: " << A_fine.get_m()
+                  << std::endl;
 
         // A_fine.print_matrix("A_fine");
 
@@ -173,23 +164,15 @@ void linalg::uaamg_setup(const csr_matrix<double>& A, int max_level, hierarchy& 
         connections.zeros();
         aggregates.zeros();
 
-        std::cout << "1111" << std::endl;
-
         // Compute strength of connections
         compute_strong_connections(A_fine, eps, connections);
-
-        std::cout << "2222" << std::endl;
 
         // Compute aggregations using parallel maximal independent set
         compute_aggregates_using_pmis(A_fine, connections, aggregates, aggregate_root_nodes);
 
-        std::cout << "3333" << std::endl;
-
         // Construct prolongation matrix using smoothed aggregation
         construct_prolongation_using_unsmoothed_aggregation(
             A_fine, connections, aggregates, aggregate_root_nodes, P);
-
-        std::cout << "4444" << std::endl;
 
         if(P.get_n() == 0)
         {
@@ -201,10 +184,6 @@ void linalg::uaamg_setup(const csr_matrix<double>& A, int max_level, hierarchy& 
 
         // Compute coarse grid matrix using Galarkin triple product A_c = R * A_f * P
         galarkin_triple_product(R, A_fine, P, A_coarse);
-
-        std::cout << "R.m: " << R.get_m() << " R.n: " << R.get_n()
-                  << " A_fine.get_m(): " << A_fine.get_m() << " A_fine.get_n(): " << A_fine.get_n()
-                  << " P.m: " << P.get_m() << " P.n: " << P.get_n() << std::endl;
 
         level++;
         eps *= 0.5;

@@ -142,7 +142,7 @@ MATRICES_BY_CATEGORY = {
 }
 
 
-def download_matrices_for_category(category):
+def download_matrices_for_category(category, use_bundled_archives=False):
     normalized_category = category.lower().replace("-", "_")
     if normalized_category not in MATRICES_BY_CATEGORY:
         raise ValueError(
@@ -151,15 +151,34 @@ def download_matrices_for_category(category):
             )
         )
 
+    if use_bundled_archives and normalized_category != "quick_ci":
+        raise ValueError("Bundled archives are only available for the quick_ci category")
+
     for url, filepath in MATRICES_BY_CATEGORY[normalized_category]:
-        download_and_extract_matrix(url, filepath)
+        if use_bundled_archives:
+            if not os.path.isfile(filepath):
+                raise FileNotFoundError("Bundled matrix archive not found: {}".format(filepath))
+            extract_tar_file(filepath)
+        else:
+            download_and_extract_matrix(url, filepath)
 
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    if len(sys.argv) > 1:
-        download_matrices_for_category(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("category", nargs="?")
+    parser.add_argument(
+        "--bundled",
+        action="store_true",
+        help="Extract repository-provided archives instead of downloading matrices",
+    )
+    args = parser.parse_args()
+
+    if args.category:
+        download_matrices_for_category(args.category, args.bundled)
     else:
+        if args.bundled:
+            parser.error("--bundled requires a category")
         for category in ("quick_ci", "small", "medium", "large"):
             download_matrices_for_category(category)

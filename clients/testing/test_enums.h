@@ -149,6 +149,12 @@ namespace testing
         none
     };
 
+    enum class data_distribution
+    {
+        uniform,
+        normal
+    };
+
     inline std::string category_to_string(category category)
     {
         switch(category)
@@ -260,6 +266,19 @@ namespace testing
             return "lower";
         case uplo::upper:
             return "upper";
+        }
+
+        return "invalid";
+    }
+
+    inline std::string data_distribution_to_string(data_distribution distribution)
+    {
+        switch(distribution)
+        {
+        case data_distribution::uniform:
+            return "uniform";
+        case data_distribution::normal:
+            return "normal";
         }
 
         return "invalid";

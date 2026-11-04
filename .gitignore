@@ -11,6 +11,7 @@
 *.mtx
 *.gz
 *.tar.gz
+!clients/matrices/SPD/nos[1-7].tar.gz
 
 build
 

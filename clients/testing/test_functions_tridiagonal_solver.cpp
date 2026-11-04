@@ -45,11 +45,11 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     int n = arg.n;
 
     // Create tridiagonal matrix coefficients
-    linalg::vector<double> lower_diag(m);
-    linalg::vector<double> main_diag(m);
-    linalg::vector<double> upper_diag(m);
-    linalg::vector<double> rhs(m * n);
-    linalg::vector<double> solution(m * n);
+    linalg::vector<float> lower_diag(m);
+    linalg::vector<float> main_diag(m);
+    linalg::vector<float> upper_diag(m);
+    linalg::vector<float> rhs(m * n);
+    linalg::vector<float> solution(m * n);
 
     std::mt19937 gen(123456);
 
@@ -57,6 +57,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     std::uniform_real_distribution<double> main_dist(2.0, 2.5);
     std::uniform_real_distribution<double> lower_dist(0.5, 1.0);
     std::uniform_real_distribution<double> upper_dist(0.5, 1.0);
+    std::uniform_real_distribution<double> rhs_dist(0.5, 1.0);
 
     // Initialize with the same system as test_tridiagonal_solver
     lower_diag[0]     = 0.0;
@@ -66,11 +67,11 @@ bool testing::test_tridiagonal_solver(Arguments arg)
         main_diag[i] = main_dist(gen);
         if(i > 0)
         {
-            lower_diag[i] = lower_dist(gen);
+            lower_diag[i] = arg.gamma * lower_dist(gen);
         }
         if(i < m - 1)
         {
-            upper_diag[i] = upper_dist(gen);
+            upper_diag[i] = arg.gamma * upper_dist(gen);
         }
     }
 
@@ -78,10 +79,10 @@ bool testing::test_tridiagonal_solver(Arguments arg)
     {
         for(int j = 0; j < m; j++)
         {
-            rhs[m * i + j] = 1.0;
+            rhs[m * i + j] = rhs_dist(gen); //1.0;
         }
-        rhs[m * i + 0]       = 1.0;
-        rhs[m * i + (m - 1)] = 1.0;
+        rhs[m * i + 0]       = rhs_dist(gen); //1.0;
+        rhs[m * i + (m - 1)] = rhs_dist(gen); //1.0;
     }
 
     // Create the solver
@@ -95,7 +96,7 @@ bool testing::test_tridiagonal_solver(Arguments arg)
         pivoting = linalg::pivoting_strategy::partial;
         break;
     }
-    linalg::tridiagonal_solver solver(m, n, pivoting);
+    linalg::tridiagonal_solver<float> solver(m, n, pivoting);
 
     if(arg.backend == backend::GPU)
     {
@@ -153,19 +154,30 @@ bool testing::test_tridiagonal_solver(Arguments arg)
             {
                 ax = std::fma(upper_diag[j], solution[m * i + j + 1], ax);
             }
+
+            double temp = std::abs(rhs[m * i + j] - ax);
+
+            // Check for Nan
+            if(std::isnan(temp))
+            {
+                max_residual = std::numeric_limits<double>::max();
+                std::cout << "Nan detected" << std::endl;
+                break;
+            }
+
             max_residual = std::max(max_residual, std::abs(rhs[m * i + j] - ax));
         }
     }
 
     std::cout << "Maximum residual: " << max_residual << std::endl;
 
-    size_t total_bytes_read_write = sizeof(double) * (3 * m + 2 * m * n);
+    size_t total_bytes_read_write = sizeof(float) * (3 * m + 2 * m * n);
     double total_gbytes           = (double)100 * total_bytes_read_write / 1e9;
     double bandwidth              = total_gbytes / (ms_float.count() / 1e3);
 
     std::cout << "Effective Bandwidth: " << bandwidth << " GB/s" << std::endl;
 
-    double tolerance = 1e-15;
+    double tolerance = 1e-6;
     bool   success   = (max_residual < tolerance);
 
     if(!success)

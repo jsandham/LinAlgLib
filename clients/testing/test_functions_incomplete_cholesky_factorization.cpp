@@ -168,7 +168,7 @@ bool testing::test_compute_incomplete_cholesky_factorization(Arguments arg)
     mat_A.print_matrix("Computed Cholesky Factorization");
     mat_A_reference.print_matrix("Reference Cholesky Factorization");
 
-    bool success = check_matrix_equality(mat_A, mat_A_reference);
+    bool success = check_matrix_equality(mat_A, mat_A_reference, 1e-14);
     if(!success)
     {
         std::cout << "Cholesky result does not match reference solution." << std::endl;
