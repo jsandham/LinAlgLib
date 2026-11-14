@@ -109,8 +109,8 @@ namespace linalg
         /*! Right-hand side block of the Schur complement for each recursion level. */
         vector<T> S_B[tridiagonal_max_recursion_levels];
 
-        vector<T>   scratch;
-        vector<int> mask;
+        vector<T>   scratch[tridiagonal_max_recursion_levels];
+        vector<int> mask[tridiagonal_max_recursion_levels];
         // vector<T>   s_scratch;
         // vector<int> s_mask;
     };

@@ -62,6 +62,8 @@ void linalg::device_partial_pivoting_algorithm(int               m,
         T*        S_main_ptrs[L];
         T*        S_upper_ptrs[L];
         T*        S_B_ptrs[L];
+        T*        scratch_ptrs[L];
+        int*      mask_ptrs[L];
 
         for(int i = 0; i < L; i++)
         {
@@ -76,6 +78,8 @@ void linalg::device_partial_pivoting_algorithm(int               m,
             S_main_ptrs[i]    = pivot_data.S_main[i].get_vec();
             S_upper_ptrs[i]   = pivot_data.S_upper[i].get_vec();
             S_B_ptrs[i]       = pivot_data.S_B[i].get_vec();
+            scratch_ptrs[i]   = pivot_data.scratch[i].get_vec();
+            mask_ptrs[i]      = pivot_data.mask[i].get_vec();
         }
 
         CALL_CUDA(cuda_partial_pivoting_solver(m,
@@ -96,8 +100,8 @@ void linalg::device_partial_pivoting_algorithm(int               m,
                                                S_main_ptrs,
                                                S_upper_ptrs,
                                                S_B_ptrs,
-                                               pivot_data.scratch.get_vec(),
-                                               pivot_data.mask.get_vec()));
+                                               scratch_ptrs,
+                                               mask_ptrs));
     }
     else
     {

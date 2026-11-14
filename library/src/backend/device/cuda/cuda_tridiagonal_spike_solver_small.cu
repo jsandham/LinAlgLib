@@ -183,22 +183,21 @@ namespace linalg
                                                                const T* __restrict__ upper_diag,
                                                                const T* __restrict__ B,
                                                                T* __restrict__ X,
-                                                               T** B_pad,
-                                                               T** mt,
-                                                               int level)
+                                                               T* B_pad,
+                                                               T* mt)
     {
         ROUTINE_TRACE("tridiagonal_spike_solver_one_thread_per_system");
 
-        // launch_transpose<BLOCKSIZE, BLOCKDIM>(m, n, B, B_pad[level]);
+        // launch_transpose<BLOCKSIZE, BLOCKDIM>(m, n, B, B_pad);
         // launch_solve_one_thread_per_system<BLOCKSIZE, BLOCKDIM>(
-        //     m, n, lower_diag, main_diag, upper_diag, B_pad[level]);
-        // launch_transpose<BLOCKSIZE, BLOCKDIM>(n, m, B_pad[level], X);
+        //     m, n, lower_diag, main_diag, upper_diag, B_pad);
+        // launch_transpose<BLOCKSIZE, BLOCKDIM>(n, m, B_pad, X);
 
-        launch_transpose<BLOCKSIZE, BLOCKDIM>(m, n, B, B_pad[level]);
-        launch_LBMT_solve_mt(m, lower_diag, main_diag, upper_diag, mt[level]);
+        launch_transpose<BLOCKSIZE, BLOCKDIM>(m, n, B, B_pad);
+        launch_LBMT_solve_mt(m, lower_diag, main_diag, upper_diag, mt);
         launch_LBMT_solve_rhs_one_thread_per_system<BLOCKSIZE, BLOCKDIM>(
-            m, n, lower_diag, main_diag, upper_diag, mt[level], B_pad[level]);
-        launch_transpose<BLOCKSIZE, BLOCKDIM>(n, m, B_pad[level], X);
+            m, n, lower_diag, main_diag, upper_diag, mt, B_pad);
+        launch_transpose<BLOCKSIZE, BLOCKDIM>(n, m, B_pad, X);
     }
 
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
@@ -345,27 +344,17 @@ void linalg::tridiagonal_spike_solver_small(int      m,
                                             const T* upper_diag,
                                             const T* B,
                                             T*       X,
-                                            T**      lower_pad,
-                                            T**      main_pad,
-                                            T**      upper_pad,
                                             T**      B_pad,
-                                            T**      w_pad,
-                                            T**      v_pad,
                                             T**      mt_pad,
-                                            T**      S_lower,
-                                            T**      S_main,
-                                            T**      S_upper,
-                                            T**      S_B,
-                                            T*       scratch,
-                                            int*     mask,
+                                            T**      scratch,
+                                            int**    mask,
                                             int      level)
 {
     ROUTINE_TRACE("tridiagonal_spike_solver_small");
 
     using solve_launch_ptr
-        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T**, T**, int);
-    using solve_fused_launch_ptr = void (*)(int, int, const T*, const T*, const T*, const T*, T*);
-    using solve_fused_launch_ptr2
+        = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, T*);
+    using solve_fused_launch_ptr
         = void (*)(int, int, const T*, const T*, const T*, const T*, T*, T*, int*);
 
     static const std::map<int, solve_launch_ptr> solve_dispatch = {
@@ -376,7 +365,7 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         {64, tridiagonal_spike_solver_one_thread_per_system<256, 64>},
     };
 
-    static const std::map<int, solve_fused_launch_ptr2> solve_fused_dispatch2 = {
+    static const std::map<int, solve_fused_launch_ptr> solve_fused_dispatch = {
         {128, tridiagonal_spike_solver_fused<32, 4>},
         {256, tridiagonal_spike_solver_fused<32, 8>},
         {512, tridiagonal_spike_solver_fused<32, 16>},
@@ -389,7 +378,7 @@ void linalg::tridiagonal_spike_solver_small(int      m,
         if(dispatch_it != solve_dispatch.end())
         {
             dispatch_it->second(
-                m, n, lower_diag, main_diag, upper_diag, B, X, B_pad, mt_pad, level);
+                m, n, lower_diag, main_diag, upper_diag, B, X, B_pad[level], mt_pad[level]);
         }
         else
         {
@@ -399,11 +388,11 @@ void linalg::tridiagonal_spike_solver_small(int      m,
     }
     else
     {
-        auto dispatch_it = solve_fused_dispatch2.lower_bound(m);
-        if(dispatch_it != solve_fused_dispatch2.end())
+        auto dispatch_it = solve_fused_dispatch.lower_bound(m);
+        if(dispatch_it != solve_fused_dispatch.end())
         {
             dispatch_it->second(
-                m, n, lower_diag, main_diag, upper_diag, B, X, scratch, mask);
+                m, n, lower_diag, main_diag, upper_diag, B, X, scratch[level], mask[level]);
         }
         else
         {
@@ -424,16 +413,7 @@ template void linalg::tridiagonal_spike_solver_small<double>(int,
                                                              double**,
                                                              double**,
                                                              double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double**,
-                                                             double*,
-                                                             int*,
+                                                             int**,
                                                              int);
 template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             int,
@@ -445,14 +425,5 @@ template void linalg::tridiagonal_spike_solver_small<float>(int,
                                                             float**,
                                                             float**,
                                                             float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float**,
-                                                            float*,
-                                                            int*,
+                                                            int**,
                                                             int);
