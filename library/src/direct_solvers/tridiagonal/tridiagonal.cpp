@@ -127,9 +127,6 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
     {
         constexpr int BLOCKDIM = pivoting_data<T>::block_dim;
 
-        pivot_data.scratch.resize(32 * 32 * 8 + 2 * 32 * 6);
-        pivot_data.mask.resize(32 + 2);
-
         int current_m = m;
         for(int level = 0; level < pivoting_data<T>::tridiagonal_max_recursion_levels; level++)
         {
@@ -154,6 +151,9 @@ linalg::tridiagonal_solver<T>::tridiagonal_solver(int m, int n, pivoting_strateg
             pivot_data.S_main[level].resize(S_size);
             pivot_data.S_upper[level].resize(S_size);
             pivot_data.S_B[level].resize(S_size * n);
+
+            pivot_data.scratch[level].resize(32 * 32 * 8 + 2 * 32 * 6);
+            pivot_data.mask[level].resize(32 + 2);
 
             std::cout << "level: " << level << " current_m: " << current_m << " m_pad: " << m_pad
                       << " S_size: " << S_size << std::endl;
@@ -190,9 +190,6 @@ void linalg::tridiagonal_solver<T>::move_to_device()
             non_pivot_data.spike_X[i].move_to_device();
         }
 
-        pivot_data.scratch.move_to_device();
-        pivot_data.mask.move_to_device();
-
         for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_device();
@@ -206,6 +203,8 @@ void linalg::tridiagonal_solver<T>::move_to_device()
             pivot_data.S_main[i].move_to_device();
             pivot_data.S_upper[i].move_to_device();
             pivot_data.S_B[i].move_to_device();
+            pivot_data.scratch[i].move_to_device();
+            pivot_data.mask[i].move_to_device();
         }
 
         on_host = false;
@@ -231,9 +230,6 @@ void linalg::tridiagonal_solver<T>::move_to_host()
             non_pivot_data.spike_X[i].move_to_host();
         }
 
-        pivot_data.scratch.move_to_host();
-        pivot_data.mask.move_to_host();
-
         for(int i = 0; i < pivoting_data<T>::tridiagonal_max_recursion_levels; i++)
         {
             pivot_data.lower_pad[i].move_to_host();
@@ -247,6 +243,8 @@ void linalg::tridiagonal_solver<T>::move_to_host()
             pivot_data.S_main[i].move_to_host();
             pivot_data.S_upper[i].move_to_host();
             pivot_data.S_B[i].move_to_host();
+            pivot_data.scratch[i].move_to_host();
+            pivot_data.mask[i].move_to_host();
         }
 
         on_host = true;

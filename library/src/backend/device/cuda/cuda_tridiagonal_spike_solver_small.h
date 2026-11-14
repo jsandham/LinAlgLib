@@ -36,19 +36,10 @@ namespace linalg
                                         const T* upper_diag,
                                         const T* B,
                                         T*       X,
-                                        T**      lower_pad,
-                                        T**      main_pad,
-                                        T**      upper_pad,
                                         T**      B_pad,
-                                        T**      w_pad,
-                                        T**      v_pad,
                                         T**      mt_pad,
-                                        T**      S_lower,
-                                        T**      S_main,
-                                        T**      S_upper,
-                                        T**      S_B,
-                                        T*       scratch,
-                                        int*     mask,
+                                        T**      scratch,
+                                        int**    mask,
                                         int      level = 0);
 }
 

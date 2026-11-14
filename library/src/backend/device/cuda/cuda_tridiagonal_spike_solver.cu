@@ -6,6 +6,7 @@
 #include "../../../../include/direct_solvers/tridiagonal/tridiagonal.h"
 
 #include "cuda_tridiagonal_spike_solver.h"
+#include "cuda_tridiagonal_spike_solver_small.h"
 
 #include "tridiagonal_spike_kernels.cuh"
 
@@ -173,49 +174,6 @@ namespace linalg
         CHECK_CUDA_LAUNCH_ERROR();
     }
 
-    template <uint32_t S_SIZE, typename T>
-    static void launch_s_solve_kernel(int m,
-                                      int n,
-                                      const T* __restrict__ S_lower,
-                                      const T* __restrict__ S_main,
-                                      const T* __restrict__ S_upper,
-                                      T* __restrict__ S_rhs)
-    {
-        ROUTINE_TRACE("launch_s_solve_kernel");
-        S_solve_kernel<S_SIZE><<<n, 1>>>(m, n, S_lower, S_main, S_upper, S_rhs);
-        CHECK_CUDA_LAUNCH_ERROR();
-    }
-
-    // template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    // static void launch_s_solve_fused_kernel(int m,
-    //                                         int n,
-    //                                         const T* __restrict__ S_lower,
-    //                                         const T* __restrict__ S_main,
-    //                                         const T* __restrict__ S_upper,
-    //                                         T* __restrict__ S_rhs)
-    // {
-    //     ROUTINE_TRACE("launch_s_solve_fused_kernel");
-
-    //     S_solve_fused_kernel<BLOCKSIZE, BLOCKDIM>
-    //         <<<n, BLOCKSIZE>>>(S_lower, S_main, S_upper, S_rhs);
-    //     CHECK_CUDA_LAUNCH_ERROR();
-    // }
-
-    template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
-    static void launch_s_solve_fused_kernel(int m,
-                                            int n,
-                                            const T* __restrict__ S_lower,
-                                            const T* __restrict__ S_main,
-                                            const T* __restrict__ S_upper,
-                                            T* __restrict__ S_rhs)
-    {
-        ROUTINE_TRACE("launch_s_solve_fused_kernel");
-
-        S_solve_fused_kernel<BLOCKSIZE, BLOCKDIM, 1>
-            <<<n, BLOCKSIZE>>>(m, S_lower, S_main, S_upper, S_rhs);
-        CHECK_CUDA_LAUNCH_ERROR();
-    }
-
     template <uint32_t BLOCKSIZE, uint32_t BLOCKDIM, typename T>
     static void launch_scatter_S_B_to_B_pad(int m_pad, int n, const T* S_B, T* B_pad)
     {
@@ -283,6 +241,8 @@ void linalg::tridiagonal_spike_solver(int      m,
                                       T**      S_main,
                                       T**      S_upper,
                                       T**      S_B,
+                                      T**      scratch,
+                                      int**    mask,
                                       int      level)
 {
     ROUTINE_TRACE("tridiagonal_spike_solver");
@@ -360,54 +320,20 @@ void linalg::tridiagonal_spike_solver(int      m,
                                               S_upper[level],
                                               S_B[level]);
 
-    using S_solve_launch_ptr = void (*)(int, int, const T*, const T*, const T*, T*);
-
-    // static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
-    //     {2, launch_s_solve_kernel<2>},
-    //     {4, launch_s_solve_kernel<4>},
-    //     {6, launch_s_solve_kernel<6>},
-    //     {8, launch_s_solve_kernel<8>},
-    //     {10, launch_s_solve_kernel<10>},
-    //     {12, launch_s_solve_kernel<12>},
-    //     {14, launch_s_solve_kernel<14>},
-    //     {16, launch_s_solve_kernel<16>},
-    //     {18, launch_s_solve_kernel<18>},
-    //     {20, launch_s_solve_kernel<20>},
-    //     {22, launch_s_solve_kernel<22>},
-    //     {24, launch_s_solve_kernel<24>},
-    //     {26, launch_s_solve_kernel<26>},
-    //     {28, launch_s_solve_kernel<28>},
-    //     {30, launch_s_solve_kernel<30>},
-    //     {32, launch_s_solve_kernel<32>},
-    // };
-    static const std::map<int, S_solve_launch_ptr> s_solve_dispatch = {
-        {2, launch_s_solve_kernel<2>},
-        {4, launch_s_solve_kernel<4>},
-        {6, launch_s_solve_kernel<6>},
-        {8, launch_s_solve_kernel<8>},
-        {10, launch_s_solve_kernel<10>},
-        {12, launch_s_solve_kernel<12>},
-        {14, launch_s_solve_kernel<14>},
-        {16, launch_s_solve_kernel<16>},
-        {18, launch_s_solve_kernel<18>},
-        {20, launch_s_solve_kernel<20>},
-        {22, launch_s_solve_kernel<22>},
-        {24, launch_s_solve_kernel<24>},
-        {26, launch_s_solve_kernel<26>},
-        {28, launch_s_solve_kernel<28>},
-        {30, launch_s_solve_kernel<30>},
-        {32, launch_s_solve_kernel<32>},
-        {64, launch_s_solve_fused_kernel<32, 2>},
-        {128, launch_s_solve_fused_kernel<32, 4>},
-        {256, launch_s_solve_fused_kernel<32, 8>},
-        {512, launch_s_solve_fused_kernel<32, 16>},
-        {1024, launch_s_solve_fused_kernel<32, 32>},
-    };
-
-    auto dispatch_it = s_solve_dispatch.lower_bound(s_size);
-    if(dispatch_it != s_solve_dispatch.end())
+    if(s_size <= 1024)
     {
-        dispatch_it->second(s_size, n, S_lower[level], S_main[level], S_upper[level], S_B[level]);
+        tridiagonal_spike_solver_small(s_size,
+                                       n,
+                                       S_lower[level],
+                                       S_main[level],
+                                       S_upper[level],
+                                       S_B[level],
+                                       S_B[level],
+                                       B_pad,
+                                       mt_pad,
+                                       scratch,
+                                       mask,
+                                       level);
     }
     else
     {
@@ -435,6 +361,8 @@ void linalg::tridiagonal_spike_solver(int      m,
                                  S_main,
                                  S_upper,
                                  S_B,
+                                 scratch,
+                                 mask,
                                  level + 1);
     }
 
@@ -467,6 +395,8 @@ template void linalg::tridiagonal_spike_solver<double>(int,
                                                        double**,
                                                        double**,
                                                        double**,
+                                                       double**,
+                                                       int**,
                                                        int);
 template void linalg::tridiagonal_spike_solver<float>(int,
                                                       int,
@@ -486,4 +416,6 @@ template void linalg::tridiagonal_spike_solver<float>(int,
                                                       float**,
                                                       float**,
                                                       float**,
+                                                      float**,
+                                                      int**,
                                                       int);
